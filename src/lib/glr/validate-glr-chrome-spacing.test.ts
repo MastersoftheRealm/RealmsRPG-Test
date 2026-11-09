@@ -19,6 +19,7 @@ import {
   validateUsmListShellSource,
   validateUsmQuantityChromeSource,
   validateGlrRowLayoutSource,
+  validateGlrPublicBarrelSource,
 } from './validate-glr-chrome-spacing';
 
 const repoRoot = path.resolve(__dirname, '../../..');
@@ -212,6 +213,19 @@ describe('GLR chrome + spacing norms (TASK-631, TASK-637)', () => {
         'unified-selection-modal-list.tsx',
         `<ListHeader rightSlotWidth={showQuantity ? USM_QUANTITY_RIGHT_SLOT_WIDTH : undefined} />
          <GridListRow rightSlotWidth={showQuantity ? USM_QUANTITY_RIGHT_SLOT_WIDTH : undefined} />`,
+      ),
+    ).toEqual([]);
+  });
+
+  it('rejects re-exporting chrome spacing scan types from lib/glr barrel (LIB2-014)', () => {
+    expect(
+      validateGlrPublicBarrelSource(
+        `export {\n  type GlrChromeSpacingScanResult,\n  type RowChromeFlags,\n} from './validate-glr-chrome-spacing';\n`,
+      ),
+    ).not.toEqual([]);
+    expect(
+      validateGlrPublicBarrelSource(
+        `export { chipLabelsFromDetailSections, type GlrRowFactSnapshot } from './validate-glr-facts';\n`,
       ),
     ).toEqual([]);
   });

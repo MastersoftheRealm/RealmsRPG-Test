@@ -9,6 +9,10 @@ vi.mock('@/lib/supabase/server', () => ({
   createServiceRoleClient: vi.fn(),
 }));
 
+vi.mock('@/lib/character-persistence-server', () => ({
+  getRelationalCharacterDocument: vi.fn(),
+}));
+
 vi.mock('@/lib/rate-limit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/rate-limit')>();
   return {
@@ -33,10 +37,12 @@ vi.mock('@/lib/campaign-invite', async (importOriginal) => {
 import { addCharacterToCampaignAction, joinCampaignAction } from './actions';
 import { requireAuth } from '@/lib/supabase/session';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
+import { getRelationalCharacterDocument } from '@/lib/character-persistence-server';
 
 const mockRequireAuth = vi.mocked(requireAuth);
 const mockCreateClient = vi.mocked(createClient);
 const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
+const mockGetRelationalCharacterDocument = vi.mocked(getRelationalCharacterDocument);
 
 const PLAYER = { uid: 'player-1', name: 'Player One' };
 const OWNER = { uid: 'owner-1', name: 'RM' };
@@ -49,6 +55,7 @@ const STORED = {
   archetype: { type: 'power' },
   ancestry: { name: 'Riverfolk' },
   visibility: 'private',
+  updatedAt: '2026-01-01T00:00:00.000Z',
 };
 
 function forgedExtras() {
@@ -61,14 +68,23 @@ function forgedExtras() {
   } as const;
 }
 
+function rosterEntryFromRpcArgs(args: Record<string, unknown>): Record<string, unknown> {
+  const raw = args.p_roster_entry;
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    return raw as Record<string, unknown>;
+  }
+  return {};
+}
+
 describe('campaign actions use stored character data, not forged display fields', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGetRelationalCharacterDocument.mockResolvedValue(STORED as never);
   });
 
   it('joinCampaignAction ignores extra runtime fields and persists roster from storage', async () => {
     mockRequireAuth.mockResolvedValue(PLAYER);
-    let updatedCharacters: unknown[] | null = null;
+    let rpcRosterEntry: Record<string, unknown> | null = null;
 
     mockCreateClient.mockResolvedValue({
       from: vi.fn((table: string) => {
@@ -78,14 +94,11 @@ describe('campaign actions use stored character data, not forged display fields'
               eq: vi.fn(() => ({
                 eq: vi.fn(() => ({
                   maybeSingle: vi.fn(async () => ({
-                    data: { id: CHAR_ID, data: STORED },
+                    data: { id: CHAR_ID },
                     error: null,
                   })),
                 })),
               })),
-            })),
-            update: vi.fn(() => ({
-              eq: vi.fn(() => ({ eq: vi.fn(async () => ({ error: null })) })),
             })),
           };
         }
@@ -118,10 +131,6 @@ describe('campaign actions use stored character data, not forged display fields'
                 })),
               })),
             })),
-            update: vi.fn((payload: { characters: unknown[] }) => {
-              updatedCharacters = payload.characters;
-              return { eq: vi.fn(async () => ({ error: null })) };
-            }),
           };
         }
         if (table === 'campaign_members') {
@@ -129,10 +138,16 @@ describe('campaign actions use stored character data, not forged display fields'
             select: vi.fn(() => ({
               eq: vi.fn(async () => ({ data: [], error: null })),
             })),
-            upsert: vi.fn(async () => ({ error: null })),
           };
         }
         throw new Error(table);
+      }),
+      rpc: vi.fn(async (_name: string, args: Record<string, unknown>) => {
+        rpcRosterEntry = rosterEntryFromRpcArgs(args);
+        return {
+          data: { status: 'updated', campaignId: 'camp-1', visibilityUpdated: true },
+          error: null,
+        };
       }),
     } as never);
 
@@ -143,19 +158,18 @@ describe('campaign actions use stored character data, not forged display fields'
     } as { inviteCode: string; characterId: string });
 
     expect(result.success).toBe(true);
-    expect(updatedCharacters).not.toBeNull();
-    const entry = (updatedCharacters as unknown as Array<Record<string, unknown>>)[0]!;
-    expect(entry.characterName).toBe('Trusted Hero');
-    expect(entry.level).toBe(7);
-    expect(entry.portrait).toBe('https://cdn.test/real.png');
-    expect(entry.species).toBe('Riverfolk');
-    expect(entry.archetype).toBe('Power');
-    expect(entry.characterName).not.toBe('Forged Spoof');
+    expect(rpcRosterEntry).not.toBeNull();
+    expect(rpcRosterEntry!.characterName).toBe('Trusted Hero');
+    expect(rpcRosterEntry!.level).toBe(7);
+    expect(rpcRosterEntry!.portrait).toBe('https://cdn.test/real.png');
+    expect(rpcRosterEntry!.species).toBe('Riverfolk');
+    expect(rpcRosterEntry!.archetype).toBe('Power');
+    expect(rpcRosterEntry!.characterName).not.toBe('Forged Spoof');
   });
 
   it('addCharacterToCampaignAction rejects a non-owner without writing the campaign', async () => {
     mockRequireAuth.mockResolvedValue(PLAYER);
-    const update = vi.fn();
+    const rpc = vi.fn();
     mockCreateClient.mockResolvedValue({
       from: vi.fn((table: string) => {
         if (table === 'campaigns') {
@@ -168,12 +182,12 @@ describe('campaign actions use stored character data, not forged display fields'
                 })),
               })),
             })),
-            update,
           };
         }
         throw new Error(table);
       }),
     } as never);
+    mockCreateServiceRoleClient.mockReturnValue({ rpc } as never);
 
     const result = await addCharacterToCampaignAction({
       campaignId: 'camp-1',
@@ -183,15 +197,15 @@ describe('campaign actions use stored character data, not forged display fields'
 
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/Realm Master/i);
-    expect(update).not.toHaveBeenCalled();
+    expect(rpc).not.toHaveBeenCalled();
   });
 
   it('addCharacterToCampaignAction persists roster fields from the stored character for the owner', async () => {
     mockRequireAuth.mockResolvedValue(OWNER);
-    let campaignUpdatePayload: unknown;
-    const campaignUpdate = vi.fn((payload: unknown) => {
-      campaignUpdatePayload = payload;
-      return { eq: vi.fn(async () => ({ error: null })) };
+    let rpcRosterEntry: Record<string, unknown> | null = null;
+    const rpc = vi.fn(async (_name: string, args: Record<string, unknown>) => {
+      rpcRosterEntry = rosterEntryFromRpcArgs(args);
+      return { data: { status: 'updated', visibilityUpdated: false }, error: null };
     });
 
     mockCreateClient.mockResolvedValue({
@@ -206,7 +220,6 @@ describe('campaign actions use stored character data, not forged display fields'
                 })),
               })),
             })),
-            update: campaignUpdate,
           };
         }
         if (table === 'characters') {
@@ -215,21 +228,13 @@ describe('campaign actions use stored character data, not forged display fields'
               eq: vi.fn(() => ({
                 eq: vi.fn(() => ({
                   maybeSingle: vi.fn(async () => ({
-                    data: { id: CHAR_ID, data: STORED },
+                    data: { id: CHAR_ID },
                     error: null,
                   })),
                 })),
               })),
             })),
-            update: vi.fn(() => ({
-              eq: vi.fn(() => ({
-                eq: vi.fn(async () => ({ error: null })),
-              })),
-            })),
           };
-        }
-        if (table === 'campaign_members') {
-          return { upsert: vi.fn(async () => ({ error: null })) };
         }
         if (table === 'user_profiles') {
           return {
@@ -244,6 +249,8 @@ describe('campaign actions use stored character data, not forged display fields'
       }),
     } as never);
 
+    mockCreateServiceRoleClient.mockReturnValue({ rpc } as never);
+
     const result = await addCharacterToCampaignAction({
       campaignId: 'camp-1',
       characterId: CHAR_ID,
@@ -251,11 +258,12 @@ describe('campaign actions use stored character data, not forged display fields'
     } as { campaignId: string; characterId: string });
 
     expect(result.success).toBe(true);
-    expect(campaignUpdate).toHaveBeenCalled();
-    const payload = campaignUpdatePayload as { characters: Array<Record<string, unknown>> };
-    const entry = payload.characters[0]!;
-    expect(entry.characterName).toBe('Trusted Hero');
-    expect(entry.level).toBe(7);
-    expect(entry.archetype).toBe('Power');
+    expect(rpc).toHaveBeenCalledWith(
+      'add_campaign_character_relational',
+      expect.objectContaining({ p_character_id: CHAR_ID }),
+    );
+    expect(rpcRosterEntry!.characterName).toBe('Trusted Hero');
+    expect(rpcRosterEntry!.level).toBe(7);
+    expect(rpcRosterEntry!.archetype).toBe('Power');
   });
 });

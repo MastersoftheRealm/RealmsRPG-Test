@@ -26,7 +26,6 @@ import {
   bodyToColumnar,
   toDbRow,
   rowToItemSpecies,
-  mergeLegacySpeciesRowWithImageColumns,
   bodyToColumnarSpecies,
   toDbRowSpecies,
   type ColumnarLibraryType,
@@ -34,17 +33,10 @@ import {
 import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
 import { validateUserLibraryWriteBody } from '@/lib/library-mutation-validation';
 import { isAdmin } from '@/lib/admin';
+import { USER_LIBRARY_COLUMNAR_TABLES } from '@/lib/library-columnar-keys';
 
 const isColumnar = (t: string): t is ColumnarLibraryType =>
   COLUMNAR_LIBRARY_TYPES.includes(t as ColumnarLibraryType);
-
-const TABLE: Record<ColumnarLibraryType, string> = {
-  powers: 'user_powers',
-  techniques: 'user_techniques',
-  'empowered-techniques': 'user_empowered_techniques',
-  items: 'user_items',
-  creatures: 'user_creatures',
-};
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ type: string }> }) {
   try {
@@ -70,7 +62,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         // ilike narrows server-side (escape LIKE metacharacters); strict match in JS.
         const pattern = nameFilter.replace(/[%_\\]/g, (c) => `\\${c}`);
         const { data: rows, error: dbError } = await supabase
-          .from(TABLE[type])
+          .from(USER_LIBRARY_COLUMNAR_TABLES[type])
           .select('id, name')
           .eq('user_id', user.uid)
           .ilike('name', pattern);
@@ -95,7 +87,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     if (isColumnar(type)) {
       const { data: rows, error: dbError } = await supabase
-        .from(TABLE[type])
+        .from(USER_LIBRARY_COLUMNAR_TABLES[type])
         .select('*')
         .eq('user_id', user.uid);
       if (dbError) throw dbError;
@@ -117,12 +109,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (dbError) throw dbError;
     const list = (rows ?? []) as Record<string, unknown>[];
     await enrichRowsWithBankImageUrls(supabase, list);
-    const items = list.map((r) => {
-      if (r.data !== undefined && r.data !== null) {
-        return mergeLegacySpeciesRowWithImageColumns(r);
-      }
-      return rowToItemSpecies(r);
-    });
+    const items = list.map((r) => rowToItemSpecies(r));
     items.sort((a, b) => {
       const na = String((a as Record<string, unknown>).name ?? '');
       const nb = String((b as Record<string, unknown>).name ?? '');
@@ -172,7 +159,7 @@ export async function POST(
     const rolePolicy = await getRolePolicyForUser(user.uid, supabase);
 
     if (isColumnar(type)) {
-      const table = TABLE[type];
+      const table = USER_LIBRARY_COLUMNAR_TABLES[type];
       const now = new Date();
 
       if (type === 'powers') {
@@ -322,14 +309,7 @@ export async function POST(
         return NextResponse.json({ error: 'Item not found' }, { status: 404 });
       }
       const existingRow = existing as Record<string, unknown>;
-      const copyItem =
-        existingRow.data !== undefined && existingRow.data !== null
-          ? {
-              id: existingRow.id,
-              docId: existingRow.id,
-              ...(existingRow.data as Record<string, unknown>),
-            }
-          : rowToItemSpecies(existingRow);
+      const copyItem = rowToItemSpecies(existingRow);
       const baseName = String((copyItem.name as string) || 'Item').trim();
       const copyData = { ...copyItem, name: `${baseName} (Copy)` };
       delete (copyData as Record<string, unknown>).id;

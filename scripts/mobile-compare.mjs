@@ -1,5 +1,6 @@
 /**
- * Measure comparable mobile density metrics on our own pages.
+ * Measure mobile density metrics on Realms list pages (localhost only) so density
+ * claims are numbers instead of vibes.
  *
  * Metrics per page:
  *   - chromeBeforeContent: y of the first list/content row (how far you scroll
@@ -10,11 +11,26 @@
 import { chromium, devices } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const targets = [
+/** @typedef {{ id: string, url: string, rowSel: string }} MobileCompareTarget */
+
+/** @type {MobileCompareTarget[]} */
+export const MOBILE_COMPARE_TARGETS = [
   { id: 'realms-codex', url: 'http://localhost:3100/codex', rowSel: '[data-glr-row]' },
   { id: 'realms-library', url: 'http://localhost:3100/library', rowSel: '[data-glr-row]' },
 ];
+
+const LOCAL_COMPARE_URL_PREFIX = 'http://localhost:';
+
+/**
+ * URLs the compare script must not request (any non-localhost target).
+ * @param {MobileCompareTarget[]} targets
+ * @returns {string[]}
+ */
+export function findDisallowedMobileCompareUrls(targets) {
+  return targets.map((t) => t.url).filter((url) => !url.startsWith(LOCAL_COMPARE_URL_PREFIX));
+}
 
 const OUT = path.resolve(path.join(process.cwd(), 'reports', 'mobile-audit-output'));
 
@@ -58,51 +74,69 @@ const METRICS = (rowSel) => {
   };
 };
 
-const browser = await chromium.launch();
-const context = await browser.newContext({
-  ...devices['iPhone 13'],
-  viewport: { width: 390, height: 844 },
-  deviceScaleFactor: 2,
-  isMobile: true,
-  hasTouch: true,
-});
-await mkdir(path.join(OUT, 'compare'), { recursive: true });
-
-const results = [];
-for (const t of targets) {
-  const page = await context.newPage();
-  try {
-    await page.goto(t.url, { waitUntil: 'domcontentloaded', timeout: 45000 });
-    await page.waitForTimeout(5000);
-    // Consent/ad chrome would otherwise dominate the reference measurements.
-    for (const name of [/reject non-essential/i, /accept all/i, /dismiss/i]) {
-      await page
-        .getByRole('button', { name })
-        .first()
-        .click({ timeout: 2500 })
-        .catch(() => {});
-    }
-    await page.waitForTimeout(1500);
-    await page.evaluate(() => {
-      for (const el of document.querySelectorAll(
-        '[id*="ad-"],[class*="advert"],[class*="cookie"],[id*="onetrust"]',
-      )) {
-        el.remove();
-      }
-    });
-    await page.waitForTimeout(500);
-    const m = await page.evaluate(METRICS, t.rowSel);
-    await page.screenshot({ path: path.join(OUT, 'compare', `${t.id}.png`) });
-    results.push({ id: t.id, url: t.url, ...m });
-    console.log(
-      `${t.id}  medianControlH=${m.medianControlHeight}  chromeBeforeContent=${m.chromeBeforeContent}  medianRowH=${m.medianRowHeight}  buckets=${JSON.stringify(m.controlHeightBuckets)}`,
-    );
-  } catch (err) {
-    results.push({ id: t.id, url: t.url, error: err.message.split('\n')[0] });
-    console.log(`${t.id}  ERROR ${err.message.split('\n')[0]}`);
-  } finally {
-    await page.close();
+async function runMobileCompare() {
+  const blocked = findDisallowedMobileCompareUrls(MOBILE_COMPARE_TARGETS);
+  if (blocked.length) {
+    console.error(`mobile-compare refuses third-party URLs (CONFIG-014): ${blocked.join(', ')}`);
+    process.exit(2);
   }
+
+  const browser = await chromium.launch();
+  const context = await browser.newContext({
+    ...devices['iPhone 13'],
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 2,
+    isMobile: true,
+    hasTouch: true,
+  });
+  await mkdir(path.join(OUT, 'compare'), { recursive: true });
+
+  const results = [];
+  for (const t of MOBILE_COMPARE_TARGETS) {
+    const page = await context.newPage();
+    try {
+      await page.goto(t.url, { waitUntil: 'domcontentloaded', timeout: 45000 });
+      await page.waitForTimeout(5000);
+      for (const name of [/reject non-essential/i, /accept all/i, /dismiss/i]) {
+        await page
+          .getByRole('button', { name })
+          .first()
+          .click({ timeout: 2500 })
+          .catch(() => {});
+      }
+      await page.waitForTimeout(1500);
+      await page.evaluate(() => {
+        for (const el of document.querySelectorAll(
+          '[id*="ad-"],[class*="advert"],[class*="cookie"],[id*="onetrust"]',
+        )) {
+          el.remove();
+        }
+      });
+      await page.waitForTimeout(500);
+      const m = await page.evaluate(METRICS, t.rowSel);
+      await page.screenshot({ path: path.join(OUT, 'compare', `${t.id}.png`) });
+      results.push({ id: t.id, url: t.url, ...m });
+      console.log(
+        `${t.id}  medianControlH=${m.medianControlHeight}  chromeBeforeContent=${m.chromeBeforeContent}  medianRowH=${m.medianRowHeight}  buckets=${JSON.stringify(m.controlHeightBuckets)}`,
+      );
+    } catch (err) {
+      results.push({ id: t.id, url: t.url, error: err.message.split('\n')[0] });
+      console.log(`${t.id}  ERROR ${err.message.split('\n')[0]}`);
+    } finally {
+      await page.close();
+    }
+  }
+  await writeFile(path.join(OUT, 'compare', 'metrics.json'), JSON.stringify(results, null, 2));
+  await browser.close();
 }
-await writeFile(path.join(OUT, 'compare', 'metrics.json'), JSON.stringify(results, null, 2));
-await browser.close();
+
+const invokedDirectly =
+  process.argv[1] !== undefined &&
+  path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));
+
+if (invokedDirectly) {
+  runMobileCompare().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

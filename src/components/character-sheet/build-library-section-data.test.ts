@@ -100,10 +100,22 @@ describe('buildLibrarySectionData feat caps align with core_rules', () => {
   });
 });
 
-describe('buildLibrarySectionData owner-only remove power', () => {
+describe('buildLibrarySectionData owner-only mutating handlers', () => {
   const rules = {} as Partial<CoreRulesMap>;
+  const mutatingKeys = [
+    'onRemovePower',
+    'onTogglePowerInnate',
+    'onSelectPowerVariant',
+    'onRemoveTechnique',
+    'onRemoveWeapon',
+    'onRemoveShield',
+    'onRemoveArmor',
+    'onRemoveEquipment',
+    'onCurrencyChange',
+    'onRemoveFeat',
+  ] as const;
 
-  it('exposes onRemovePower only when isOwner is true (#502)', () => {
+  it('exposes mutating handlers only when isOwner is true (#502 + viewer gating)', () => {
     const owned = buildLibrarySectionData({
       character,
       enrichedData: null,
@@ -120,7 +132,9 @@ describe('buildLibrarySectionData owner-only remove power', () => {
       isOwner: false,
       rules,
     });
-    expect(owned.onRemovePower).toEqual(expect.any(Function));
-    expect(readOnly.onRemovePower).toBeUndefined();
+    for (const key of mutatingKeys) {
+      expect(owned[key]).toEqual(expect.any(Function));
+      expect(readOnly[key]).toBeUndefined();
+    }
   });
 });

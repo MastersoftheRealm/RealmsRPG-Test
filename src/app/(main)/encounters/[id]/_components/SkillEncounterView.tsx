@@ -61,6 +61,8 @@ function SkillEncounterViewInner(
     sequenceSuccesses,
     sequenceFailures,
     linkedCampaign,
+    existingCampaignCharacterIds,
+    availableCampaignCharacters,
     useInitiative,
     draggedId,
     dragOverId,
@@ -127,6 +129,7 @@ function SkillEncounterViewInner(
           useInitiative={useInitiative}
           isMixedEncounter={isMixedEncounter}
           combatTurnOrderLength={combatTurnOrder.length}
+          availableCampaignCharacterCount={availableCampaignCharacters.length}
           addingAllChars={addingAllChars}
           newParticipantName={newParticipantName}
           setNewParticipantName={setNewParticipantName}
@@ -147,6 +150,7 @@ function SkillEncounterViewInner(
           onAdd={model.addCombatantsAsParticipants}
           onAddParticipants={model.addParticipantsFromModal}
           mode="skill"
+          existingCampaignCharacterIds={existingCampaignCharacterIds}
         />
       )}
 

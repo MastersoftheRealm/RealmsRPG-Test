@@ -16,7 +16,7 @@ TASK-586 wired v1 surfaces under a nested dual affordance (edit mode revealed bo
 
 ## Decision
 
-1. **Persisted shape:** `character.tempModifiers` (JSONB key on `characters.data`) — sparse integer deltas. Omit zeros. See `CharacterTempModifiers` in `src/types/character.ts`. No DB migration (document-only schema).
+1. **Persisted shape:** `character.tempModifiers` in `character_temp_modifiers` — sparse integer deltas. Omit zeros. See `CharacterTempModifiers` in `src/types/character.ts`; the relational persistence boundary maps the public document shape to the child row.
 2. **Sheet-level exclusive modes:** Play / Edit / Temp Modifier. Entering Edit closes Temp and vice versa. Toolbar: pencil FAB for Edit; `SlidersHorizontal` FAB for Temp (do not nest Temp under the pencil). Campaign / other-user sheets stay view-only (no Edit, no Temp chrome). Level-up still opens Edit (spend), not Temp.
 3. **Edit chrome:** Spend/edit only. Per-section `EditSectionToggle` opens/closes spend on Abilities and Skills (same as Library / Archetype pencils). Identity / HE pool / library eyes stay Edit-gated. No Temp toggles or dual-mode pairs.
 4. **Temp chrome:** Temp only. Per-section `TempModifierToggle` on Abilities/Skills and per-stat sliders on header LargeStatBlocks + Terminal open/close that surface’s steppers — not everything editable at once. Icon tint: none = blue, + = gold, − = danger (same as the value). No spend pencils. Play view shows neither chrome; existing temp value tints still display.

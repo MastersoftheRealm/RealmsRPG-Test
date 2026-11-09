@@ -14,19 +14,53 @@ vi.mock('@/lib/supabase/server', () => ({
   createServiceRoleClient: vi.fn(),
 }));
 
-import { REALMS_IMAGES_LIST_LIMIT } from '@/lib/realms-images';
+vi.mock('@/lib/rate-limit', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/rate-limit')>();
+  return {
+    ...actual,
+    uploadLimiter: {
+      check: vi.fn(() =>
+        Promise.resolve({ success: true, remaining: 9, reset: Date.now() + 60_000 }),
+      ),
+    },
+  };
+});
+
+vi.mock('@/lib/validate-image', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/validate-image')>();
+  return {
+    ...actual,
+    validateImageMagicBytes: vi.fn(async () => true),
+    detectImageMime: vi.fn(async () => 'image/png'),
+  };
+});
+
+vi.mock('@/lib/realms-images-server', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/realms-images-server')>();
+  return {
+    ...actual,
+    replaceImageCategories: vi.fn(async () => ({ ok: true as const })),
+    fetchRealmsImageById: vi.fn(),
+  };
+});
+
+import { REALMS_IMAGES_LIST_LIMIT, type RealmsImage } from '@/lib/realms-images';
 import { encodeRealmsImagesListCursor } from '@/lib/realms-images-list-cursor';
 import { GET, POST } from './route';
 import { requireLiveUser } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
+import { replaceImageCategories, fetchRealmsImageById } from '@/lib/realms-images-server';
 
 const mockRequireLiveUser = vi.mocked(requireLiveUser);
 const mockIsAdmin = vi.mocked(isAdmin);
 const mockCreateClient = vi.mocked(createClient);
 const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
+const mockReplaceImageCategories = vi.mocked(replaceImageCategories);
+const mockFetchRealmsImageById = vi.mocked(fetchRealmsImageById);
 
 const USER = { uid: 'user-123', email: 'hero@example.com' };
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 type Row = { id: string; name: string };
 
@@ -83,6 +117,79 @@ function makePostRequest() {
     method: 'POST',
     headers: { origin: 'http://localhost' },
   });
+}
+
+function makeStreamedMultipartPost(totalBytes: number) {
+  const chunkSize = 64 * 1024;
+  const chunk = new Uint8Array(chunkSize).fill(0x41);
+  let sent = 0;
+  let bytesConsumed = 0;
+
+  const stream = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      if (sent >= totalBytes) {
+        controller.close();
+        return;
+      }
+      const remaining = totalBytes - sent;
+      const size = Math.min(chunk.byteLength, remaining);
+      bytesConsumed += size;
+      controller.enqueue(chunk.subarray(0, size));
+      sent += size;
+    },
+  });
+
+  type NextRequestInit = NonNullable<ConstructorParameters<typeof NextRequest>[1]>;
+  const init: NextRequestInit & { duplex: 'half' } = {
+    method: 'POST',
+    headers: {
+      origin: 'http://localhost',
+      'content-type': 'multipart/form-data; boundary=----vitest',
+    },
+    body: stream,
+    duplex: 'half',
+  };
+
+  const request = new NextRequest('http://localhost/api/images', init);
+  return { request, getBytesConsumed: () => bytesConsumed };
+}
+
+function makePostRequestWithImageForm() {
+  const form = new FormData();
+  form.set(
+    'file',
+    new File([new Uint8Array([137, 80, 78, 71])], 'asset.png', { type: 'image/png' }),
+  );
+  form.set('name', 'Regression asset');
+  form.set('categories', JSON.stringify(['weapon']));
+  return new NextRequest('http://localhost/api/images', {
+    method: 'POST',
+    headers: { origin: 'http://localhost' },
+    body: form,
+  });
+}
+
+function createAdminUploadSupabase() {
+  const storageUpload = vi.fn().mockResolvedValue({ error: null });
+  const rowInsert = vi.fn().mockResolvedValue({ error: null });
+  return {
+    storageUpload,
+    rowInsert,
+    client: {
+      storage: {
+        from: vi.fn(() => ({
+          upload: storageUpload,
+          getPublicUrl: vi.fn((path: string) => ({
+            data: { publicUrl: `https://cdn.test/${path}` },
+          })),
+        })),
+      },
+      from: vi.fn((table: string) => {
+        if (table !== 'realms_images') throw new Error(`Unexpected table: ${table}`);
+        return { insert: rowInsert };
+      }),
+    },
+  };
 }
 
 async function readJson<T>(response: Response): Promise<T> {
@@ -225,5 +332,56 @@ describe('POST /api/images', () => {
     expect(response.status).toBe(403);
     await expect(readJson(response)).resolves.toEqual({ error: 'Admin access required' });
     expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
+  });
+
+  it('rejects an oversized upload before buffering the full body (API-024)', async () => {
+    mockRequireLiveUser.mockResolvedValue(USER);
+    mockIsAdmin.mockResolvedValue(true);
+
+    const totalBytes = MAX_IMAGE_BYTES + 2 * 1024 * 1024;
+    const { request, getBytesConsumed } = makeStreamedMultipartPost(totalBytes);
+    const formDataSpy = vi.spyOn(request, 'formData');
+
+    const response = await POST(request);
+
+    expect(response.status).toBe(400);
+    await expect(readJson(response)).resolves.toEqual({ error: 'Image must be less than 5MB' });
+    expect(formDataSpy).not.toHaveBeenCalled();
+    expect(getBytesConsumed()).toBeLessThan(totalBytes);
+    expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
+  });
+
+  it('reaches the storage upload path when the user is admin (COMP3-021)', async () => {
+    mockRequireLiveUser.mockResolvedValue(USER);
+    mockIsAdmin.mockResolvedValue(true);
+
+    const { client, storageUpload, rowInsert } = createAdminUploadSupabase();
+    mockCreateServiceRoleClient.mockReturnValue(client as never);
+
+    const createdImage: RealmsImage = {
+      id: 'img-regression-1',
+      name: 'Regression asset',
+      categories: ['weapon'],
+      storagePath: 'realms/img-regression-1.png',
+      publicUrl: 'https://cdn.test/realms/img-regression-1.png',
+      createdAt: '2026-11-08T00:00:00.000Z',
+      updatedAt: '2026-11-08T00:00:00.000Z',
+      createdBy: USER.uid,
+    };
+    mockFetchRealmsImageById.mockResolvedValue(createdImage);
+    mockReplaceImageCategories.mockResolvedValue({ ok: true });
+
+    const response = await POST(makePostRequestWithImageForm());
+
+    expect(response.status).toBe(201);
+    expect(mockIsAdmin).toHaveBeenCalledWith(USER.uid);
+    expect(mockCreateServiceRoleClient).toHaveBeenCalled();
+    expect(storageUpload).toHaveBeenCalled();
+    expect(rowInsert).toHaveBeenCalled();
+    expect(mockReplaceImageCategories).toHaveBeenCalled();
+    await expect(readJson(response)).resolves.toMatchObject({
+      id: createdImage.id,
+      name: createdImage.name,
+    });
   });
 });

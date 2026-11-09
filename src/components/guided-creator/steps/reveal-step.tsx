@@ -58,7 +58,7 @@ import { buildGuidedCharacterPayload } from '@/lib/guided-creator/build-characte
 import { mergeLibraryBySource } from '@/lib/library/source-scope';
 import { resolveGuidedSpeciesContext } from '@/lib/guided-creator/guided-species-resolve';
 import { cleanForSave } from '@/lib/data-enrichment';
-import { persistFinishedCharacter } from '@/lib/character/persist-finished-character';
+import { persistFinishedCharacter } from '@/services/persist-finished-character';
 import { formatCharacterCreateFailureMessage, resolveClientRequestId } from '@/lib/character-save';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';

@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Plus, Wand2, Swords, Shield, Shirt, Sword, Users, Sparkles } from 'lucide-react';
@@ -122,7 +122,11 @@ const TABS: Tab[] = [
 type LibraryMode = 'my' | 'public';
 
 export default function LibraryPage() {
-  return <LibraryContent />;
+  return (
+    <Suspense fallback={<LoadingState message="Loading..." padding="md" />}>
+      <LibraryContent />
+    </Suspense>
+  );
 }
 
 function LibraryContent() {

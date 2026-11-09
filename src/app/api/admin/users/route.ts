@@ -7,10 +7,10 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
 import { requireAdminSession } from '@/lib/admin';
 import { adminUsersQuerySchema, parseAdminUsersPaging, validateQuery } from '@/lib/api-validation';
 import { buildAdminUsersOrFilter } from '@/lib/admin-users-search';
+import { createServiceRoleClient } from '@/lib/supabase/server';
 import {
   buildRateLimitKey,
   resolveClientIp,
@@ -19,15 +19,6 @@ import {
 } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
-
-function getSupabaseAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) {
-    throw new Error('Supabase admin env not configured');
-  }
-  return createSupabaseAdminClient(url, key);
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -53,7 +44,7 @@ export async function GET(request: NextRequest) {
     const { limit, offset } = parseAdminUsersPaging(queryResult.data);
     const search = queryResult.data.q?.trim();
 
-    const supabase = getSupabaseAdmin();
+    const supabase = createServiceRoleClient();
     let query = supabase
       .from('user_profiles')
       .select('id, username, username_display, display_name, role')

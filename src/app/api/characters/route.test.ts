@@ -107,9 +107,9 @@ type MockSupabaseConfig = {
     hint?: string | undefined;
     code?: string | undefined;
   } | null;
-  /** Row returned for `select('id, data')` — the duplicate source lookup. */
-  duplicateSource?: { id: string; data: Record<string, unknown> } | null | undefined;
-  /** Sheet blob for `.select('data')` on idempotent replay (else last insert). */
+  /** Relational document returned for the duplicate source lookup. */
+  duplicateSource?: { id: string; document: Record<string, unknown> } | null | undefined;
+  /** Relational document returned for idempotent replay (else last RPC insert). */
   replayCharacterSheet?: Record<string, unknown> | null | undefined;
 };
 
@@ -165,32 +165,24 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
                   eq: vi.fn().mockResolvedValue({ count: characterCount, error: null }),
                 };
               }
+              const eqCalls: [string, unknown][] = [];
               // `.eq()` returns itself so the idempotency lookup can chain user_id +
               // client_request_id before `.maybeSingle()`.
               const query: Record<string, unknown> = {
                 order: vi.fn().mockResolvedValue({ data: characters, error: charactersError }),
                 maybeSingle: vi.fn(async () => {
-                  if (cols === 'id, data') {
-                    return { data: duplicateSource, error: null };
-                  }
-                  if (cols === 'data') {
-                    storedSheetSelectCalls++;
-                    const sheet =
-                      replayCharacterSheet ??
-                      (insertedRows.length > 0
-                        ? (insertedRows[insertedRows.length - 1]?.data as
-                            | Record<string, unknown>
-                            | undefined)
-                        : undefined);
-                    return sheet
-                      ? { data: { data: sheet }, error: null }
-                      : { data: null, error: null };
+                  const filters = Object.fromEntries(eqCalls);
+                  if (duplicateSource && filters.id === duplicateSource.id) {
+                    return { data: { id: duplicateSource.id }, error: null };
                   }
                   const id = cols === 'id' ? replayedId() : null;
                   return { data: id ? { id } : null, error: null };
                 }),
               };
-              query.eq = vi.fn().mockReturnValue(query);
+              query.eq = vi.fn((column: string, value: unknown) => {
+                eqCalls.push([column, value]);
+                return query;
+              });
               return query;
             },
           ),
@@ -221,6 +213,41 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
         };
       }
       throw new Error(`Unexpected table: ${table}`);
+    }),
+    rpc: vi.fn(async (name: string, args: Record<string, unknown>) => {
+      if (name === 'get_character_relational_document') {
+        const characterId = args.p_character_id as string;
+        if (duplicateSource?.id === characterId) {
+          return { data: duplicateSource.document, error: null };
+        }
+        storedSheetSelectCalls++;
+        const inserted = insertedRows.find((row) => row.id === characterId);
+        const sheet =
+          replayCharacterSheet ??
+          (inserted?.document as Record<string, unknown> | undefined) ??
+          null;
+        return { data: sheet, error: null };
+      }
+      if (name === 'create_character_relational') {
+        const document = args.p_document as Record<string, unknown>;
+        insert({
+          id: args.p_character_id,
+          user_id: TEST_USER.uid,
+          document,
+          name: document.name,
+          level: document.level,
+          client_request_id: args.p_client_request_id,
+        });
+        if (insertError && insertError.code !== '23505') {
+          return { data: null, error: insertError };
+        }
+        const id =
+          insertError?.code === '23505'
+            ? (replayCharacterIdAfterInsert ?? replayCharacterId ?? insertId)
+            : insertId;
+        return { data: { status: insertError ? 'replayed' : 'created', id }, error: null };
+      }
+      throw new Error(`Unexpected RPC: ${name}`);
     }),
     insertMock: insert,
     insertedRows,
@@ -292,7 +319,7 @@ describe('GET /api/characters', () => {
         characters: [
           {
             id: 'char-1',
-            data: { name: 'Aria', level: 3, portrait: 'https://example.com/p.png' },
+            portrait: 'https://example.com/p.png',
             updated_at: '2026-07-01T12:00:00.000Z',
             name: 'Aria',
             level: 3,
@@ -417,7 +444,7 @@ describe('POST /api/characters', () => {
       insertId: 'copied-char-id',
       duplicateSource: {
         id: sourceId,
-        data: {
+        document: {
           name: 'Aria',
           level: 4,
           notes: 'kept',
@@ -436,7 +463,7 @@ describe('POST /api/characters', () => {
     expect(saved.user_id).toBe(TEST_USER.uid);
     expect(saved.name).toBe('Aria (Copy)');
     expect(saved.level).toBe(4);
-    const savedData = saved.data as Record<string, unknown>;
+    const savedData = saved.document as Record<string, unknown>;
     expect(savedData.name).toBe('Aria (Copy)');
     expect(savedData.level).toBe(4);
     expect(savedData.notes).toBe('kept');
@@ -524,7 +551,7 @@ describe('POST /api/characters', () => {
 
       expect(response.status).toBe(200);
       await expect(readJson(response)).resolves.toEqual({ id: 'clamped-currency-id' });
-      const inserted = supabase.insertedRows[0]?.data as
+      const inserted = supabase.insertedRows[0]?.document as
         | { currency?: number | undefined }
         | undefined;
       expect(inserted?.currency).toBe(0);
@@ -721,7 +748,7 @@ describe('POST /api/characters', () => {
       mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
       const firstSupabase = createMockSupabase({
         insertId: 'duplicate-copy-id',
-        duplicateSource: { id: sourceId, data: overSource },
+        duplicateSource: { id: sourceId, document: overSource },
       });
       mockCreateClient.mockResolvedValue(firstSupabase as never);
 
@@ -731,12 +758,12 @@ describe('POST /api/characters', () => {
         id: string;
         legalityWarnings?: Array<{ code: string; level: number }> | undefined;
       }>(firstResponse);
-      const savedSheet = defined(firstSupabase.insertedRows[0]).data as Record<string, unknown>;
+      const savedSheet = defined(firstSupabase.insertedRows[0]).document as Record<string, unknown>;
 
       const replaySupabase = createMockSupabase({
         replayCharacterId: 'duplicate-copy-id',
         replayCharacterSheet: savedSheet,
-        duplicateSource: { id: sourceId, data: overSource },
+        duplicateSource: { id: sourceId, document: overSource },
       });
       mockCreateClient.mockResolvedValue(replaySupabase as never);
 
@@ -795,7 +822,7 @@ describe('POST /api/characters', () => {
         insertError: { code: '23505' },
         replayCharacterIdAfterInsert: 'race-dupe-id',
         replayCharacterSheet: winnerStoredSheet,
-        duplicateSource: { id: sourceId, data: legalSource },
+        duplicateSource: { id: sourceId, document: legalSource },
         codexFeats: [{ id: 'c1', name: 'Needs L4', lvl_req: 4 }],
       });
       mockCreateClient.mockResolvedValue(raceSupabase as never);
@@ -846,7 +873,7 @@ describe('POST /api/characters', () => {
 
       const replaySupabase = createMockSupabase({
         replayCharacterId: 'already-created-id',
-        replayCharacterSheet: freshSupabase.insertedRows[0]?.data as Record<string, unknown>,
+        replayCharacterSheet: freshSupabase.insertedRows[0]?.document as Record<string, unknown>,
       });
       mockCreateClient.mockResolvedValue(replaySupabase as never);
 
@@ -892,7 +919,7 @@ describe('POST /api/characters', () => {
         expect.objectContaining({ client_request_id: clientRequestId }),
       );
       // The key is routing metadata, not character data.
-      const savedData = defined(supabase.insertedRows[0]).data as Record<string, unknown>;
+      const savedData = defined(supabase.insertedRows[0]).document as Record<string, unknown>;
       expect(savedData.clientRequestId).toBeUndefined();
     });
 

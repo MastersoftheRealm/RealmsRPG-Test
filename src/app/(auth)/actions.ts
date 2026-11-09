@@ -121,6 +121,7 @@ export async function createUserProfileAction(data: {
     const chosenUsername = needsUsername
       ? (requestedUsername ?? existingUsernameDisplay)
       : existingUsername;
+    let profileRowEnsured = Boolean(existing);
 
     for (let attempt = 1; attempt <= MAX_GENERATED_USERNAME_ATTEMPTS; attempt++) {
       const usernameDisplay = chosenUsername ?? generateDefaultUsername();
@@ -132,49 +133,78 @@ export async function createUserProfileAction(data: {
       // session client (86e3jt562). The checks above already ran.
       const writer = createServiceRoleClient();
       const displayNameWrite = profileDisplayNameWriteValue(data.displayName);
-      const profileWrite = existing
-        ? await writer
-            .from('user_profiles')
-            .update({
-              email,
-              updated_at: now,
-              ...(displayNameWrite !== undefined ? { display_name: displayNameWrite } : {}),
-              ...(needsUsername
-                ? {
-                    username: normalized,
-                    username_display: usernameDisplay,
-                    last_username_change: null,
-                  }
-                : {}),
-            })
-            .eq('id', uid)
-        : await writer.from('user_profiles').insert({
-            id: uid,
-            email,
-            display_name: displayNameWrite ?? null,
-            username: normalized,
-            username_display: usernameDisplay,
-            created_at: now,
-            updated_at: now,
-          });
+
+      if (!profileRowEnsured) {
+        const shellWrite = await writer.from('user_profiles').insert({
+          id: uid,
+          email,
+          display_name: displayNameWrite ?? null,
+          created_at: now,
+          updated_at: now,
+        });
+        if (shellWrite.error) throw shellWrite.error;
+        profileRowEnsured = true;
+      }
+
+      // Claim (or confirm) the `usernames` mapping before writing profile username
+      // columns — same order as changeUsernameAction so a taken mapping never leaves
+      // a profile row behind. Insert only: upsert would overwrite another user's `user_id`.
+      const { error: usernameError } = await writer
+        .from('usernames')
+        .insert({ username: normalized, user_id: uid });
+      const claimedNewRow = !usernameError;
+      if (usernameError) {
+        if (isUsernameConflict(usernameError)) {
+          const { data: existingRow, error: lookupError } = await writer
+            .from('usernames')
+            .select('user_id')
+            .eq('username', normalized)
+            .maybeSingle();
+          if (lookupError) throw lookupError;
+          if ((existingRow as { user_id?: string | undefined } | null)?.user_id !== uid) {
+            if (canRetry) continue;
+            return { success: false, error: USERNAME_TAKEN_ERROR };
+          }
+        } else {
+          throw usernameError;
+        }
+      }
+
+      const profileWrite = await writer
+        .from('user_profiles')
+        .update({
+          email,
+          updated_at: now,
+          ...(displayNameWrite !== undefined ? { display_name: displayNameWrite } : {}),
+          ...(needsUsername
+            ? {
+                username: normalized,
+                username_display: usernameDisplay,
+                last_username_change: null,
+              }
+            : {}),
+        })
+        .eq('id', uid);
 
       if (profileWrite.error) {
+        if (claimedNewRow) {
+          const { error: releaseError } = await writer
+            .from('usernames')
+            .delete()
+            .eq('username', normalized)
+            .eq('user_id', uid);
+          if (releaseError) {
+            console.error(
+              'Failed to release reserved username after a failed profile write:',
+              releaseError,
+            );
+          }
+        }
         if (isUniqueViolation(profileWrite.error)) {
           if (canRetry) continue;
           return { success: false, error: USERNAME_TAKEN_ERROR };
         }
         throw profileWrite.error;
-      }
-
-      // Keep the `usernames` mapping in step with what the profile now holds.
-      const { error: usernameError } = await writer
-        .from('usernames')
-        .upsert({ username: normalized, user_id: uid }, { onConflict: 'username' });
-      if (usernameError) {
-        if (isUsernameConflict(usernameError)) {
-          return { success: false, error: USERNAME_TAKEN_ERROR };
-        }
-        throw usernameError;
       }
 
       return { success: true };

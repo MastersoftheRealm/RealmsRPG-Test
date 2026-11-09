@@ -1,10 +1,19 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SaveArchetypeWithPathInput } from '@/app/(main)/admin/codex/codex-archetype-write';
+import { FakeSupabase } from '@/lib/codex/fake-supabase';
+import { fetchCachedOfficialColumnarItems } from '@/lib/official-library-get-payload';
 import {
+  archetypePathDataFromSaveInput,
+  buildSaveArchetypePathValidationContext,
   normalizeCodexCommaListColumn,
   normalizeSaveArchetypeWithPathInput,
   saveArchetypeWithPathInputError,
+  saveArchetypeWithPathPublishError,
 } from '@/lib/codex-archetype-path-save-validation';
+
+vi.mock('@/lib/official-library-get-payload', () => ({
+  fetchCachedOfficialColumnarItems: vi.fn(async () => []),
+}));
 
 const validBase: SaveArchetypeWithPathInput = {
   id: '5',
@@ -109,6 +118,113 @@ describe('normalizeCodexCommaListColumn', () => {
     ['empty', '', null],
   ] as const)('normalizes %s to canonical TEXT storage', (_label, input, expected) => {
     expect(normalizeCodexCommaListColumn(input)).toBe(expected);
+  });
+});
+
+describe('buildSaveArchetypePathValidationContext', () => {
+  beforeEach(() => {
+    vi.mocked(fetchCachedOfficialColumnarItems).mockClear();
+    vi.mocked(fetchCachedOfficialColumnarItems).mockResolvedValue([]);
+  });
+
+  it('loads listed-only official items and powers (matches admin workspace)', async () => {
+    const db = new FakeSupabase({
+      codex_equipment: [],
+      codex_skills: [],
+      codex_parts: [],
+      codex_properties: [],
+    });
+    await buildSaveArchetypePathValidationContext(db as never, validBase);
+    expect(fetchCachedOfficialColumnarItems).toHaveBeenCalledWith(db, 'items', false);
+    expect(fetchCachedOfficialColumnarItems).toHaveBeenCalledWith(db, 'powers', false);
+  });
+});
+
+describe('saveArchetypeWithPathPublishError', () => {
+  it('rejects innate recommendations on a pure martial path', () => {
+    const error = saveArchetypeWithPathPublishError(
+      {
+        ...validBase,
+        type: 'martial',
+        level1_innate_powers: '99',
+        martial_prof_start: 1,
+      },
+      {
+        archetypeType: 'martial',
+        martialProfStart: 1,
+        resolveInnatePower: () => ({
+          id: '99',
+          name: 'Test',
+          energy: 1,
+          partIds: [],
+          partNames: [],
+        }),
+      },
+    );
+    expect(error).toMatch(/Innate Energy > 0/i);
+  });
+
+  it('rejects unlisted innate ids when resolveInnatePower is listed-only', () => {
+    const error = saveArchetypeWithPathPublishError(
+      {
+        ...validBase,
+        type: 'powered-martial',
+        power_prof_start: 2,
+        martial_prof_start: 1,
+        level1_innate_powers: 'unlisted-inn',
+      },
+      {
+        archetypeType: 'powered-martial',
+        powerProfStart: 2,
+        martialProfStart: 1,
+        resolveInnatePower: (id) =>
+          id === 'inn'
+            ? {
+                id: 'inn',
+                name: 'Listed only',
+                energy: 1,
+                partIds: [],
+                partNames: [],
+                actionType: 'basic',
+              }
+            : null,
+      },
+    );
+    expect(error).toMatch(/not found in official library/i);
+  });
+
+  it('blocks loadout TP over budget like the admin workspace validator', () => {
+    const error = saveArchetypeWithPathPublishError(
+      {
+        ...validBase,
+        level1_loadouts: {
+          loadouts: [
+            {
+              id: 'heavy',
+              title: 'Heavy kit',
+              armaments: [{ id: 'a', quantity: 1 }],
+            },
+          ],
+        },
+      },
+      {
+        resolveItemTrainingPoints: () => 10,
+        trainingPointLimit: 5,
+      },
+    );
+    expect(error).toMatch(/Heavy kit/i);
+  });
+});
+
+describe('archetypePathDataFromSaveInput', () => {
+  it('parses advanced JSON override fields from the save payload shape', () => {
+    const pathData = archetypePathDataFromSaveInput({
+      ...validBase,
+      level1_innate_powers: '42',
+      level1_guidance_groups: [{ id: 'g1', title: 'Starter', feats: ['1'] }],
+    });
+    expect(pathData?.level1?.innatePowers).toEqual(['42']);
+    expect(pathData?.level1?.guidance_groups?.[0]?.id).toBe('g1');
   });
 });
 

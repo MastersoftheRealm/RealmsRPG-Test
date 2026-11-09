@@ -480,11 +480,36 @@ export interface GlrChromeSpacingScanResult {
   errors: string[];
 }
 
+const GLR_PUBLIC_BARREL_PATH = 'src/lib/glr/index.ts';
+
+/** Test-only scan validators must not be re-exported from the public GLR barrel (LIB2-014). */
+export function validateGlrPublicBarrelSource(source: string): string[] {
+  const errors: string[] = [];
+  if (/from\s+['"]\.\/validate-glr-chrome-spacing['"]/.test(source)) {
+    errors.push(
+      `${GLR_PUBLIC_BARREL_PATH}: must not re-export validate-glr-chrome-spacing (test-only scanner)`,
+    );
+  }
+  if (/\bGlrChromeSpacingScanResult\b/.test(source)) {
+    errors.push(
+      `${GLR_PUBLIC_BARREL_PATH}: GlrChromeSpacingScanResult is test-only and must not be on the public barrel`,
+    );
+  }
+  if (/\btype RowChromeFlags\b/.test(source) || /,\s*type RowChromeFlags\b/.test(source)) {
+    errors.push(
+      `${GLR_PUBLIC_BARREL_PATH}: RowChromeFlags is test-only and must not be on the public barrel`,
+    );
+  }
+  return errors;
+}
+
 /** Scan all registered GLR shell + tab + grid sources. */
 export function scanGlrChromeSpacingSources(
   readFile: (relativePath: string) => string,
 ): GlrChromeSpacingScanResult {
   const errors: string[] = [];
+
+  errors.push(...validateGlrPublicBarrelSource(readFile(GLR_PUBLIC_BARREL_PATH)));
 
   for (const path of GLR_LIST_SHELL_SOURCES) {
     errors.push(...validateGlrListShellSource(path, readFile(path)));

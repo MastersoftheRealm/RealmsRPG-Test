@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { ChipSelect, ImageUploadModal, ListRowThumbnail } from '@/components/patterns';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ChipSelect, ListRowThumbnail } from '@/components/patterns';
+import { ImageUploadModal } from '@/components/patterns/chrome/image-upload-modal';
 import { Modal, Button, Input, Alert, useToast } from '@/components/ui';
 import {
   REALMS_IMAGE_CATEGORY_OPTIONS,
@@ -39,6 +40,7 @@ export function AdminImageEditModal({
   const [categories, setCategories] = useState<RealmsImageCategory[]>(image?.categories ?? []);
   const [pendingBlob, setPendingBlob] = useState<Blob | null>(null);
   const [localPreview, setLocalPreview] = useState<string | null>(null);
+  const localPreviewObjectUrlRef = useRef<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(image?.publicUrl ?? null);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadMode, setUploadMode] = useState<'create' | 'replace'>('create');
@@ -49,6 +51,7 @@ export function AdminImageEditModal({
   const [deletePrepError, setDeletePrepError] = useState<string | null>(null);
   const [preparingDelete, setPreparingDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [wasOpen, setWasOpen] = useState(isOpen);
 
   useEffect(() => {
     if (!isOpen || !image?.id) return;
@@ -70,6 +73,40 @@ export function AdminImageEditModal({
       cancelled = true;
     };
   }, [isOpen, image?.id]);
+
+  const replaceLocalPreviewBlob = useCallback((blob: Blob) => {
+    const previous = localPreviewObjectUrlRef.current;
+    if (previous) URL.revokeObjectURL(previous);
+    const next = URL.createObjectURL(blob);
+    localPreviewObjectUrlRef.current = next;
+    setLocalPreview(next);
+  }, []);
+
+  if (isOpen && !wasOpen) {
+    setWasOpen(true);
+  } else if (!isOpen && wasOpen) {
+    setLocalPreview(null);
+    setWasOpen(false);
+  }
+
+  useEffect(() => {
+    if (isOpen) return;
+    const url = localPreviewObjectUrlRef.current;
+    if (url) {
+      URL.revokeObjectURL(url);
+      localPreviewObjectUrlRef.current = null;
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    return () => {
+      const url = localPreviewObjectUrlRef.current;
+      if (url) {
+        URL.revokeObjectURL(url);
+        localPreviewObjectUrlRef.current = null;
+      }
+    };
+  }, []);
 
   const displayPreview = useMemo(() => {
     if (localPreview) return localPreview;
@@ -100,9 +137,7 @@ export function AdminImageEditModal({
       return;
     }
 
-    if (localPreview) URL.revokeObjectURL(localPreview);
-    const objectUrl = URL.createObjectURL(blob);
-    setLocalPreview(objectUrl);
+    replaceLocalPreviewBlob(blob);
     setPendingBlob(blob);
     setShowUploadModal(false);
   };

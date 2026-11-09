@@ -3,10 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { formatCreatorPartEnergy } from '@/components/creator/power-part-card';
 import { PART_IDS } from '@/lib/id-constants';
 import { deriveArea, formatAreaForDisplay } from '@/lib/calculators/power-calc';
-import {
-  analyzePowerEnergy,
-  buildPowerAdvancedCalculationGroups,
-} from '@/lib/calculators';
+import { analyzePowerEnergy, buildPowerAdvancedCalculationGroups } from '@/lib/calculators';
 import type { PowerPart } from '@/hooks/codex-types';
 import { powerCreatorSummaryArea } from '@/app/(main)/power-creator/power-creator-from-shared';
 import { formatCanTargetLine } from '@/lib/game/targeted-defenses';
@@ -101,15 +98,11 @@ describe('86e3jwt6c Area summary includes the level', () => {
 
   it('reads the level from the area part option', () => {
     expect(
-      deriveArea([
-        { id: PART_IDS.SPHERE_OF_EFFECT, name: 'Sphere of Effect', op_1_lvl: 0 },
-      ]),
+      deriveArea([{ id: PART_IDS.SPHERE_OF_EFFECT, name: 'Sphere of Effect', op_1_lvl: 0 }]),
     ).toBe('Level 1 Sphere');
-    expect(
-      deriveArea([
-        { id: PART_IDS.LINE_OF_EFFECT, name: 'Line of Effect', op_1_lvl: 4 },
-      ]),
-    ).toBe('Level 5 Line');
+    expect(deriveArea([{ id: PART_IDS.LINE_OF_EFFECT, name: 'Line of Effect', op_1_lvl: 4 }])).toBe(
+      'Level 5 Line',
+    );
     expect(deriveArea([])).toBe('1 target');
   });
 });
@@ -121,7 +114,9 @@ describe('86e3jtt7p percentage parts are not flat Energy', () => {
     expect(formatCreatorPartEnergy(0.875, true, 'multiplier')).toBe('-12.5%');
     expect(formatCreatorPartEnergy(4, false, 'multiplier')).toBe('4');
     expect(formatCreatorPartEnergy(2, false, 'option')).toBe('+2');
-    expect(partCard).toContain("formatCreatorPartEnergy(part.base_en, part.percentage, 'multiplier')");
+    expect(partCard).toContain(
+      "formatCreatorPartEnergy(part.base_en, part.percentage, 'multiplier')",
+    );
     expect(partCard).toContain("formatCreatorPartEnergy(part.op_1_en, part.percentage, 'option')");
     expect(partCard).not.toContain('formatCost(part.base_en');
     expect(partCard).not.toContain('formatCost(part.op_1_en');

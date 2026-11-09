@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { buildCodexChangelogPersistPayload } from '@/lib/codex-changelog-display';
-import { asDbInsert } from '@/lib/supabase/database';
+import { asDbJson } from '@/lib/supabase/database';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 
 export type CodexChangeOperation = 'create' | 'update' | 'delete';
@@ -24,17 +24,15 @@ export async function recordCodexChange(input: RecordCodexChangeInput): Promise<
     input.beforeData,
     input.afterData,
   );
-  const { error } = await supabase.from('codex_change_logs').insert(
-    asDbInsert<'codex_change_logs'>({
-      entity_type: input.entityType,
-      entity_id: input.entityId,
-      operation: input.operation,
-      changed_by_user_id: input.changedByUserId,
-      before_data: persist.before_data,
-      after_data: persist.after_data,
-      changed_fields: persist.changed_fields,
-    }),
-  );
+  const { error } = await supabase.from('codex_change_logs').insert({
+    entity_type: input.entityType,
+    entity_id: input.entityId,
+    operation: input.operation,
+    changed_by_user_id: input.changedByUserId,
+    before_data: asDbJson(persist.before_data),
+    after_data: asDbJson(persist.after_data),
+    changed_fields: asDbJson(persist.changed_fields),
+  });
 
   // Never throw: the audit trail must not be able to fail a mutation that already
   // succeeded. Throwing here made createCodexDoc report failure after the entity was

@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { IMAGE_CROPPER_KEYBOARD_HINT, imageCropperA11yProps } from './image-upload-modal';
 
+describe('patterns barrel (COMP3-033)', () => {
+  it('does not re-export ImageUploadModal (import modal module directly to load crop CSS)', async () => {
+    const patterns = await import('@/components/patterns');
+    expect(patterns).not.toHaveProperty('ImageUploadModal');
+  });
+});
+
 describe('ImageUploadModal crop a11y (86e3k0jw8)', () => {
   it('names the crop area and links keyboard instructions', () => {
     const props = imageCropperA11yProps('crop-hint');

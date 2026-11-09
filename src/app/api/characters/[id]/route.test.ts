@@ -48,18 +48,11 @@ vi.mock('@/lib/character-save', () => ({
   prepareCharacterForSave: vi.fn((data: unknown) => data),
 }));
 
-vi.mock('@/lib/character-list-columns', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/lib/character-list-columns')>();
-  return {
-    ...actual,
-    getCharacterListColumns: vi.fn(() => ({})),
-  };
-});
-
 vi.mock('@/lib/game/archetype-display', () => ({
   fetchArchetypeNameMap: vi.fn(() => Promise.resolve(new Map())),
 }));
 
+import { characterPortraitStoragePaths } from '@/lib/portrait-storage';
 import { GET, PATCH, DELETE } from './route';
 import { getSession } from '@/lib/supabase/session';
 import { createClient } from '@/lib/supabase/server';
@@ -80,7 +73,7 @@ const OTHER = { uid: 'other-user', email: 'other@example.com' };
 type CharacterRow = {
   id: string;
   user_id: string;
-  data: Record<string, unknown>;
+  document: Record<string, unknown>;
   created_at: string;
   updated_at: string;
   visibility?: string | null | undefined;
@@ -89,21 +82,36 @@ type CharacterRow = {
 function makeCharacterRow(
   id: string,
   userId: string,
-  overrides: Partial<CharacterRow['data']> = {},
+  overrides: Partial<CharacterRow['document']> = {},
   column?: { visibility?: string | null | undefined },
 ): CharacterRow {
-  const data = { name: 'Test Hero', level: 1, visibility: 'private', ...overrides };
+  const document = { name: 'Test Hero', level: 1, visibility: 'private', ...overrides };
   return {
     id,
     user_id: userId,
-    data,
+    document,
     created_at: '2026-07-01T12:00:00.000Z',
     updated_at: '2026-07-01T12:00:00.000Z',
-    visibility: column && 'visibility' in column ? column.visibility : (data.visibility as string),
+    visibility:
+      column && 'visibility' in column ? column.visibility : (document.visibility as string),
   };
 }
 
-function createMockSupabase(characterRow: CharacterRow | null) {
+type CampaignVisibilityMock = {
+  memberCampaignIds: string[];
+  ownedCampaignIds?: string[] | undefined;
+  campaigns: Array<{ id: string; characters: unknown }>;
+};
+
+type MockSupabaseOptions = {
+  deleteError?: { message: string } | null;
+};
+
+function createMockSupabase(
+  characterRow: CharacterRow | null,
+  campaignVisibility?: CampaignVisibilityMock,
+  options?: MockSupabaseOptions,
+) {
   const buildSelectChain = () => {
     const eqCalls: [string, string][] = [];
     const chain = {
@@ -162,12 +170,40 @@ function createMockSupabase(characterRow: CharacterRow | null) {
   };
 
   const update = vi.fn((payload: Record<string, unknown>) => buildUpdateChain(payload));
+  const rpcMock = vi.fn(async (name: string, args: Record<string, unknown>) => {
+    if (name === 'get_character_relational_document') {
+      return { data: characterRow?.document ?? null, error: null };
+    }
+    if (name === 'patch_character_relational') {
+      if (!characterRow || args.p_character_id !== characterRow.id) {
+        return { data: { status: 'not_found' }, error: null };
+      }
+      if (
+        typeof args.p_expected_updated_at === 'string' &&
+        args.p_expected_updated_at !== characterRow.updated_at
+      ) {
+        return {
+          data: { status: 'conflict', updatedAt: characterRow.updated_at },
+          error: null,
+        };
+      }
+      return {
+        data: { status: 'updated', updatedAt: '2026-08-14T00:00:00.000Z' },
+        error: null,
+      };
+    }
+    throw new Error(`Unexpected RPC: ${name}`);
+  });
   const removePortrait = vi.fn().mockResolvedValue({ error: null });
+  const listPortrait = vi.fn().mockResolvedValue({ data: [], error: null });
 
   const client = {
     lastUpdate,
     update,
+    rpc: rpcMock,
+    rpcMock,
     removePortrait,
+    listPortrait,
     from: vi.fn((table: string) => {
       if (table === 'characters') {
         return {
@@ -175,16 +211,45 @@ function createMockSupabase(characterRow: CharacterRow | null) {
           update,
           delete: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({ error: null }),
+              eq: vi.fn().mockResolvedValue({ error: options?.deleteError ?? null }),
             }),
           }),
         };
       }
-      if (table === 'campaign_members' || table === 'campaigns') {
+      if (table === 'campaign_members') {
         return {
           select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null }),
-            in: vi.fn().mockResolvedValue({ data: [], error: null }),
+            eq: vi.fn().mockImplementation(async (col: string) => {
+              if (!campaignVisibility || col !== 'user_id') {
+                return { data: [], error: null };
+              }
+              return {
+                data: campaignVisibility.memberCampaignIds.map((campaign_id) => ({ campaign_id })),
+                error: null,
+              };
+            }),
+          }),
+        };
+      }
+      if (table === 'campaigns') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockImplementation(async (col: string) => {
+              if (!campaignVisibility || col !== 'owner_id') {
+                return { data: [], error: null };
+              }
+              const owned = campaignVisibility.ownedCampaignIds ?? [];
+              return {
+                data: owned.map((id) => ({ id })),
+                error: null,
+              };
+            }),
+            in: vi.fn().mockImplementation(async () => {
+              if (!campaignVisibility) {
+                return { data: [], error: null };
+              }
+              return { data: campaignVisibility.campaigns, error: null };
+            }),
           }),
         };
       }
@@ -206,7 +271,7 @@ function createMockSupabase(characterRow: CharacterRow | null) {
     }),
     storage: {
       from: vi.fn(() => ({
-        list: vi.fn().mockResolvedValue({ data: [], error: null }),
+        list: listPortrait,
         remove: removePortrait,
       })),
     },
@@ -355,7 +420,45 @@ describe('GET /api/characters/[id]', () => {
     expect(mockGetOwnerLibraryAndEnrichmentForView).toHaveBeenCalledWith(
       expect.anything(),
       OWNER.uid,
-      row.data,
+      row.document,
+    );
+  });
+
+  it('returns 200 for campaign visibility when roster characters is a JSON string with snake_case keys (API-013)', async () => {
+    const charId = 'char-campaign-shared';
+    const campaignId = 'campaign-shared-1';
+    const row = makeCharacterRow(
+      charId,
+      OWNER.uid,
+      { visibility: 'campaign' },
+      { visibility: 'campaign' },
+    );
+    const rosterJson = JSON.stringify([
+      { user_id: OWNER.uid, character_id: charId, character_name: 'Test Hero' },
+    ]);
+    mockGetSession.mockResolvedValue({ user: OTHER, error: null });
+    mockCreateClient.mockResolvedValue(
+      createMockSupabase(row, {
+        memberCampaignIds: [campaignId],
+        campaigns: [{ id: campaignId, characters: rosterJson }],
+      }) as never,
+    );
+
+    const response = await GET(makeGetRequest(charId), {
+      params: Promise.resolve({ id: charId }),
+    });
+
+    expect(response.status).toBe(200);
+    const body = await readJson<{
+      character: { id: string };
+      libraryForView: unknown;
+      enrichment: unknown;
+    }>(response);
+    expect(body.character.id).toBe(charId);
+    expect(mockGetOwnerLibraryAndEnrichmentForView).toHaveBeenCalledWith(
+      expect.anything(),
+      OWNER.uid,
+      row.document,
     );
   });
 
@@ -420,9 +523,8 @@ describe('PATCH /api/characters/[id]', () => {
   });
 
   it('returns 404 when another user tries to update a character (IDOR)', async () => {
-    const row = makeCharacterRow('char-private', OWNER.uid);
     mockGetSession.mockResolvedValue({ user: OTHER, error: null });
-    mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
+    mockCreateClient.mockResolvedValue(createMockSupabase(null) as never);
 
     const response = await PATCH(makePatchRequest('char-private', { name: 'Stolen' }), {
       params: Promise.resolve({ id: 'char-private' }),
@@ -504,14 +606,18 @@ describe('PATCH /api/characters/[id]', () => {
     });
 
     expect(response.status).toBe(200);
-    expect(supabase.update).toHaveBeenCalled();
-    const payload = supabase.lastUpdate.payload;
-    expect(payload).toBeTruthy();
-    const data = payload!.data as Record<string, unknown>;
-    expect(data.name).toBe('Updated Hero');
-    expect(data.notes).toBe('keep me');
-    expect(data.level).toBe(3);
-    expect(typeof data.updatedAt).toBe('string');
+    expect(supabase.rpcMock).toHaveBeenCalledWith(
+      'patch_character_relational',
+      expect.objectContaining({
+        p_character_id: 'char-owned',
+        p_patch: { name: 'Updated Hero' },
+      }),
+    );
+    const patchArgs = supabase.rpcMock.mock.calls.find(
+      ([name]) => name === 'patch_character_relational',
+    )?.[1] as { p_patch?: Record<string, unknown> } | undefined;
+    expect(patchArgs?.p_patch).not.toHaveProperty('notes');
+    expect(patchArgs?.p_patch).not.toHaveProperty('level');
   });
 
   it('returns 409 and does not write when updatedAt is stale', async () => {
@@ -529,7 +635,10 @@ describe('PATCH /api/characters/[id]', () => {
 
     expect(response.status).toBe(409);
     await expect(readJson(response)).resolves.toEqual({ error: 'Character was updated elsewhere' });
-    expect(supabase.update).not.toHaveBeenCalled();
+    expect(supabase.rpcMock).toHaveBeenCalledWith(
+      'patch_character_relational',
+      expect.objectContaining({ p_expected_updated_at: '2026-01-01T00:00:00.000Z' }),
+    );
   });
 
   it('applies a matching updatedAt lock and stamps a new token', async () => {
@@ -546,7 +655,10 @@ describe('PATCH /api/characters/[id]', () => {
     const body = await readJson<{ ok: boolean; updatedAt: string }>(response);
     expect(body.ok).toBe(true);
     expect(body.updatedAt).not.toBe(row.updated_at);
-    expect(supabase.lastUpdate.payload?.updated_at).toBeTruthy();
+    expect(supabase.rpcMock).toHaveBeenCalledWith(
+      'patch_character_relational',
+      expect.objectContaining({ p_expected_updated_at: row.updated_at }),
+    );
   });
 
   it('deletes the stored portrait when the sheet stops referencing it', async () => {
@@ -927,5 +1039,43 @@ describe('DELETE /api/characters/[id]', () => {
 
     expect(response.status).toBe(200);
     await expect(readJson(response)).resolves.toEqual({ ok: true });
+  });
+
+  it('does not remove portrait storage when the character row delete fails (API-011)', async () => {
+    const row = makeCharacterRow('char-owned', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createMockSupabase(row, undefined, {
+      deleteError: { message: 'delete blocked' },
+    });
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await DELETE(makeDeleteRequest('char-owned'), {
+      params: Promise.resolve({ id: 'char-owned' }),
+    });
+
+    expect(response.status).toBe(500);
+    expect(supabase.removePortrait).not.toHaveBeenCalled();
+    expect(supabase.listPortrait).not.toHaveBeenCalled();
+  });
+
+  it('removes portrait objects by storage path after a successful delete, not folder listing (API-011)', async () => {
+    const row = makeCharacterRow('char-owned', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createMockSupabase(row);
+    supabase.listPortrait.mockResolvedValue({
+      data: Array.from({ length: 100 }, (_, i) => ({ name: `other-character-${i}.png` })),
+      error: null,
+    });
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await DELETE(makeDeleteRequest('char-owned'), {
+      params: Promise.resolve({ id: 'char-owned' }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(supabase.listPortrait).not.toHaveBeenCalled();
+    expect(supabase.removePortrait).toHaveBeenCalledWith(
+      characterPortraitStoragePaths(OWNER.uid, 'char-owned'),
+    );
   });
 });

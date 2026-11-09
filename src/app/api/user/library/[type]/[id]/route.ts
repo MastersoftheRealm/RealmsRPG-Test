@@ -2,7 +2,7 @@
  * User Library Item API
  * =====================
  * Get, update, delete a single library item. Columnar for powers/techniques/items/creatures;
- * species uses legacy data.
+ * species uses columnar user_species.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -22,7 +22,6 @@ import {
   bodyToColumnar,
   toDbRow,
   rowToItemSpecies,
-  mergeLegacySpeciesRowWithImageColumns,
   bodyToColumnarSpecies,
   toDbRowSpecies,
   type ColumnarLibraryType,
@@ -30,17 +29,10 @@ import {
 import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
 import { validateUserLibraryWriteBody } from '@/lib/library-mutation-validation';
 import { isAdmin } from '@/lib/admin';
+import { USER_LIBRARY_COLUMNAR_TABLES } from '@/lib/library-columnar-keys';
 
 const isColumnar = (t: string): t is ColumnarLibraryType =>
   COLUMNAR_LIBRARY_TYPES.includes(t as ColumnarLibraryType);
-
-const TABLE: Record<ColumnarLibraryType, string> = {
-  powers: 'user_powers',
-  techniques: 'user_techniques',
-  'empowered-techniques': 'user_empowered_techniques',
-  items: 'user_items',
-  creatures: 'user_creatures',
-};
 
 export async function GET(
   _request: NextRequest,
@@ -60,7 +52,7 @@ export async function GET(
 
     if (isColumnar(type)) {
       const { data: row, error: dbError } = await supabase
-        .from(TABLE[type])
+        .from(USER_LIBRARY_COLUMNAR_TABLES[type])
         .select('*')
         .eq('id', id)
         .eq('user_id', user.uid)
@@ -82,9 +74,6 @@ export async function GET(
     if (!row) return NextResponse.json(null, { status: 404 });
     const r = row as Record<string, unknown>;
     await enrichRowsWithBankImageUrls(supabase, [r]);
-    if (r.data !== undefined && r.data !== null) {
-      return NextResponse.json(mergeLegacySpeciesRowWithImageColumns(r));
-    }
     return NextResponse.json(rowToItemSpecies(r));
   } catch (err) {
     console.error('[API Error] GET /api/user/library/[type]/[id]:', err);
@@ -120,7 +109,7 @@ export async function PATCH(
 
     if (isColumnar(type)) {
       const { data: existing, error: existingErr } = await supabase
-        .from(TABLE[type])
+        .from(USER_LIBRARY_COLUMNAR_TABLES[type])
         .select('*')
         .eq('id', id)
         .eq('user_id', user.uid)
@@ -147,7 +136,7 @@ export async function PATCH(
       const { scalars, payload } = bodyToColumnar(type, merged);
       const updateRow = toDbRow({ ...scalars, payload, updatedAt: new Date() });
       const { error: updateErr } = await supabase
-        .from(TABLE[type])
+        .from(USER_LIBRARY_COLUMNAR_TABLES[type])
         .update(updateRow)
         .eq('id', id)
         .eq('user_id', user.uid);
@@ -226,7 +215,7 @@ export async function DELETE(
 
     if (isColumnar(type)) {
       const { data: existing, error: existingErr } = await supabase
-        .from(TABLE[type])
+        .from(USER_LIBRARY_COLUMNAR_TABLES[type])
         .select('id')
         .eq('id', id)
         .eq('user_id', user.uid)
@@ -236,7 +225,7 @@ export async function DELETE(
         return NextResponse.json({ error: 'Item not found' }, { status: 404 });
       }
       const { error: delErr } = await supabase
-        .from(TABLE[type])
+        .from(USER_LIBRARY_COLUMNAR_TABLES[type])
         .delete()
         .eq('id', id)
         .eq('user_id', user.uid);

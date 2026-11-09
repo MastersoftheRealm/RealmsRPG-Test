@@ -31,6 +31,7 @@ import {
   createEmptyAdminUsersDirectorySlice,
   type AdminUsersDirectorySlice,
 } from './admin-users-directory-state';
+import { shouldApplyAdminUsersSearchChange } from './admin-users-search-applied';
 import { useAdminUsersLoadMore } from './use-admin-users-load-more';
 
 type UserRole = 'new_player' | 'playtester' | 'developer' | 'admin';
@@ -79,6 +80,10 @@ export default function AdminUsersPage() {
   const [searchApplied, setSearchApplied] = useState('');
   const [listEpoch, setListEpoch] = useState(0);
   const listEpochRef = useRef(0);
+  const searchAppliedRef = useRef(searchApplied);
+  useEffect(() => {
+    searchAppliedRef.current = searchApplied;
+  });
   const [pendingChange, setPendingChange] = useState<{
     userId: string;
     label: string;
@@ -124,11 +129,13 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     const handle = window.setTimeout(() => {
+      if (!shouldApplyAdminUsersSearchChange(searchAppliedRef.current, searchQuery)) return;
       listEpochRef.current += 1;
       const owner = { generation: listEpochRef.current, q: searchQuery };
       flushSync(() => {
         setSearchApplied(searchQuery);
         setListEpoch(listEpochRef.current);
+        setSyncedAt(0);
         setDirectory((prev) => adminUsersDirectoryReducer(prev, { type: 'query_switch', owner }));
       });
     }, 300);

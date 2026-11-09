@@ -4,7 +4,10 @@
  * `campaigns.characters` is JSONB; entries may use camelCase or legacy snake_case keys.
  */
 
-import type { CampaignCharacter } from '@/types/campaign';
+import type { Campaign, CampaignCharacter } from '@/types/campaign';
+import type { Tables } from '@/lib/supabase/database';
+
+type CampaignRow = Tables<'campaigns'>;
 
 export function normalizeCampaignRosterCharacters(raw: unknown): CampaignCharacter[] {
   let arr: unknown[] = [];
@@ -57,7 +60,7 @@ function archetypeDisplayNameFromType(archetypeType?: string): CampaignCharacter
 
 /**
  * SEC-06: derive the campaign roster fields (name/level/species/archetype/portrait)
- * from the authoritative character `data` JSONB rather than trusting client input,
+ * from the authoritative relational character document rather than trusting client input,
  * so a player cannot misrepresent their character to other campaign members.
  */
 export function buildRosterFieldsFromCharacterData(charData: Record<string, unknown>): {
@@ -102,4 +105,21 @@ export function isCharacterOnCampaignRoster(
   return normalizeCampaignRosterCharacters(rosterRaw).some(
     (x) => x.userId === u && x.characterId === c,
   );
+}
+
+export function rowToCampaign(row: CampaignRow, memberIds: string[], isOwner: boolean): Campaign {
+  const characters = normalizeCampaignRosterCharacters(row.characters);
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description ?? undefined,
+    ownerId: row.owner_id,
+    ownerUsername: row.owner_username ?? undefined,
+    // Only the Realm Master (owner) should see/share the invite code.
+    inviteCode: isOwner ? row.invite_code : '',
+    characters,
+    memberIds,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
 }

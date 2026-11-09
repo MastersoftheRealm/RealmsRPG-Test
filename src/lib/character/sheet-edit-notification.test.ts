@@ -6,6 +6,7 @@ import {
   buildSheetEditNotification,
   computeSheetPointPools,
 } from './sheet-edit-notification';
+import { normalizeCharacterOnLoad } from '@/lib/character/schema-normalize';
 
 const baseCharacter: Character = {
   id: '1',
@@ -194,6 +195,37 @@ describe('computeSheetPointPools', () => {
 
     expect(pools.abilityRemaining).toBeGreaterThan(0);
     expect(pools.profRemaining).toBeGreaterThan(0);
+  });
+
+  it('reads legacy aliases the same as post-load normalization for point pools (LIB1-033)', () => {
+    const baseWithoutCanonicalProf = { ...baseCharacter };
+    delete baseWithoutCanonicalProf.mart_prof;
+    delete baseWithoutCanonicalProf.pow_prof;
+    const rawLegacy = {
+      ...baseWithoutCanonicalProf,
+      defenseSkills: { might: 0, reflex: 0, will: 0, fortitude: 0 },
+      martialProficiency: 1,
+      powerProficiency: 1,
+      archetype: { id: 'a', type: 'mixed' },
+    } as unknown as Character;
+    const normalized = normalizeCharacterOnLoad(
+      rawLegacy as unknown as Record<string, unknown>,
+    ) as Character;
+
+    const legacyPools = computeSheetPointPools({
+      character: rawLegacy,
+      characterSpeciesSkills: [],
+      featsDb: [],
+      rules: undefined,
+    });
+    const normalizedPools = computeSheetPointPools({
+      character: normalized,
+      characterSpeciesSkills: [],
+      featsDb: [],
+      rules: undefined,
+    });
+
+    expect(legacyPools).toEqual(normalizedPools);
   });
 
   it('uses core_rules characterFeatsPerLevel for feat slot budgets', () => {

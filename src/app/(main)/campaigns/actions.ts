@@ -7,24 +7,33 @@
 
 'use server';
 
-import { asDbJson, asDbUpdate } from '@/lib/supabase/database';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/supabase/session';
 import { ensureUserProfile } from '@/lib/ensure-user-profile';
 import { reportError } from '@/lib/observability';
-import { getCharacterListColumns } from '@/lib/character-list-columns';
-import {
-  normalizeInviteCodeInput,
-  isValidInviteCodeFormat,
-  visibilityForCampaignMembership,
-} from '@/lib/campaign-invite';
+import { getRelationalCharacterDocument } from '@/lib/character-persistence-server';
+import { normalizeInviteCodeInput, isValidInviteCodeFormat } from '@/lib/campaign-invite';
 import { buildRosterFieldsFromCharacterData } from '@/lib/campaign-roster';
 import { getRolePolicyForUser } from '@/lib/role-policy';
 import { buildRateLimitKey, inviteCodeLimiter } from '@/lib/rate-limit';
 import { formatRoleQuotaExceededMessage } from '@/lib/role-quota-messages';
+import { asDbJson } from '@/lib/supabase/database';
 import type { CampaignCharacter } from '@/types/campaign';
 import { generateInviteCode } from '@/lib/campaign-invite-code';
 import { MAX_CAMPAIGN_CHARACTERS, OWNER_MAX_CHARACTERS } from './constants';
+
+type CampaignCharacterMutationResult = {
+  status?: string | undefined;
+  campaignId?: string | undefined;
+  visibilityUpdated?: boolean | undefined;
+};
+
+function campaignCharacterMutationResult(value: unknown): CampaignCharacterMutationResult {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error('Campaign character mutation returned an invalid payload');
+  }
+  return value as CampaignCharacterMutationResult;
+}
 
 async function getUsernameByUid(uid: string): Promise<string | undefined> {
   const supabase = await createClient();
@@ -171,7 +180,7 @@ export async function joinCampaignAction(data: { inviteCode: string; characterId
 
     const { data: charRow } = await supabase
       .from('characters')
-      .select('id, data')
+      .select('id')
       .eq('id', data.characterId)
       .eq('user_id', user.uid)
       .maybeSingle();
@@ -182,7 +191,10 @@ export async function joinCampaignAction(data: { inviteCode: string; characterId
       };
     }
     // SEC-06: trust the stored character row for roster fields, not the client args.
-    const charData = (charRow.data as Record<string, unknown>) ?? {};
+    const charData = await getRelationalCharacterDocument(supabase, data.characterId);
+    if (!charData) {
+      return { success: false, error: 'Character not found' };
+    }
     const rosterFields = buildRosterFieldsFromCharacterData(charData);
 
     const { data: campaignRow, error: campErr } = await dbService
@@ -252,42 +264,59 @@ export async function joinCampaignAction(data: { inviteCode: string; characterId
       ownerUsername: ownerUsername || user.name || undefined,
     };
 
-    const characters = [...(campaignData || []), newChar];
-
-    // BE-02/06: campaign_members is the single source of truth for membership.
-    // 86e3jryyr: service role bypasses RLS. A valid invite code is the only
-    // authorization for joining a campaign the caller does not own.
-    const { error: memErr } = await dbService
-      .from('campaign_members')
-      .upsert(
-        { campaign_id: campaignId, user_id: user.uid },
-        { onConflict: 'campaign_id,user_id' },
-      );
-    if (memErr) {
-      console.error('joinCampaignAction campaign_members:', memErr);
+    const { data: mutationData, error: mutationError } = await dbService.rpc(
+      'join_campaign_character_relational',
+      {
+        p_actor_id: user.uid,
+        p_invite_code: code,
+        p_character_id: data.characterId,
+        p_roster_entry: asDbJson(newChar),
+        p_expected_updated_at: typeof charData.updatedAt === 'string' ? charData.updatedAt : null,
+        p_max_campaign_characters: MAX_CAMPAIGN_CHARACTERS,
+        p_max_players_per_campaign: ownerPolicy.maxPlayersPerCampaign,
+      },
+    );
+    if (mutationError) {
+      console.error('joinCampaignAction relational mutation:', mutationError);
       return { success: false, error: 'Failed to join campaign' };
     }
-
-    const { error: updErr } = await dbService
-      .from('campaigns')
-      .update(asDbUpdate<'campaigns'>({ characters: asDbJson(characters) }))
-      .eq('id', campaignId);
-    if (updErr) {
-      console.error('joinCampaignAction campaigns update:', updErr);
-      return { success: false, error: 'Failed to join campaign' };
+    const mutation = campaignCharacterMutationResult(mutationData);
+    if (mutation.status === 'campaign_not_found') {
+      return { success: false, error: 'Invalid invite code. No campaign found.' };
+    }
+    if (mutation.status === 'character_not_found') {
+      return { success: false, error: 'Character not found' };
+    }
+    if (mutation.status === 'already_in_campaign') {
+      return { success: false, error: 'This character is already in the campaign.' };
+    }
+    if (mutation.status === 'campaign_full') {
+      return {
+        success: false,
+        error: `This campaign has reached the maximum of ${MAX_CAMPAIGN_CHARACTERS} characters.`,
+      };
+    }
+    if (mutation.status === 'player_limit') {
+      return {
+        success: false,
+        error: `This campaign has reached the role limit of ${ownerPolicy.maxPlayersPerCampaign} player(s).`,
+      };
+    }
+    if (mutation.status === 'character_limit') {
+      return { success: false, error: 'You can only have one character per campaign.' };
+    }
+    if (mutation.status === 'conflict') {
+      return { success: false, error: 'Character changed while joining campaign' };
+    }
+    if (mutation.status !== 'updated') {
+      throw new Error(`Unexpected campaign join status: ${String(mutation.status)}`);
     }
 
-    const { visibility, visibilityUpdated } = visibilityForCampaignMembership(charData.visibility);
-    const now = new Date().toISOString();
-    const merged = { ...charData, visibility, updatedAt: now };
-    const listCols = getCharacterListColumns(merged);
-    await supabase
-      .from('characters')
-      .update({ data: merged, updated_at: now, ...listCols })
-      .eq('id', data.characterId)
-      .eq('user_id', user.uid);
-
-    return { success: true, campaignId, visibilityUpdated };
+    return {
+      success: true,
+      campaignId: mutation.campaignId ?? campaignId,
+      visibilityUpdated: mutation.visibilityUpdated === true,
+    };
   } catch (error) {
     console.error('Join campaign error:', error);
     return { success: false, error: 'Failed to join campaign' };
@@ -319,7 +348,7 @@ export async function addCharacterToCampaignAction(data: {
 
     const { data: charRow } = await supabase
       .from('characters')
-      .select('id, data')
+      .select('id')
       .eq('id', data.characterId)
       .eq('user_id', user.uid)
       .maybeSingle();
@@ -327,7 +356,10 @@ export async function addCharacterToCampaignAction(data: {
       return { success: false, error: 'Character not found' };
     }
     // SEC-06: roster fields come from the stored character, not client args.
-    const charData = (charRow.data as Record<string, unknown>) ?? {};
+    const charData = await getRelationalCharacterDocument(supabase, data.characterId);
+    if (!charData) {
+      return { success: false, error: 'Character not found' };
+    }
     const rosterFields = buildRosterFieldsFromCharacterData(charData);
 
     const campaignData = (campaignRow.characters as unknown as CampaignCharacter[]) ?? [];
@@ -358,32 +390,65 @@ export async function addCharacterToCampaignAction(data: {
       ...rosterFields,
       ownerUsername: ownerUsername || undefined,
     };
-    const characters = [...campaignData, newChar];
+    let dbService: ReturnType<typeof createServiceRoleClient>;
+    try {
+      dbService = createServiceRoleClient();
+    } catch {
+      console.error('addCharacterToCampaignAction: SUPABASE_SERVICE_ROLE_KEY missing');
+      return {
+        success: false,
+        error: 'Server cannot update the campaign right now. Please contact support.',
+      };
+    }
 
-    // BE-02/06: campaign_members is the single source of truth for membership.
-    // 86e3jryyr: same owner-and-self insert as create. Do not rewrite the row.
-    await supabase
-      .from('campaign_members')
-      .upsert(
-        { campaign_id: data.campaignId, user_id: user.uid },
-        { onConflict: 'campaign_id,user_id', ignoreDuplicates: true },
-      );
-    await supabase
-      .from('campaigns')
-      .update(asDbUpdate<'campaigns'>({ characters: asDbJson(characters) }))
-      .eq('id', data.campaignId);
-
-    const { visibility, visibilityUpdated } = visibilityForCampaignMembership(charData.visibility);
-    const now = new Date().toISOString();
-    const merged = { ...charData, visibility, updatedAt: now };
-    const listCols = getCharacterListColumns(merged);
-    await supabase
-      .from('characters')
-      .update({ data: merged, updated_at: now, ...listCols })
-      .eq('id', data.characterId)
-      .eq('user_id', user.uid);
-
-    return { success: true, visibilityUpdated };
+    const { data: mutationData, error: mutationError } = await dbService.rpc(
+      'add_campaign_character_relational',
+      {
+        p_actor_id: user.uid,
+        p_campaign_id: data.campaignId,
+        p_character_id: data.characterId,
+        p_roster_entry: asDbJson(newChar),
+        p_expected_updated_at: typeof charData.updatedAt === 'string' ? charData.updatedAt : null,
+        p_max_campaign_characters: MAX_CAMPAIGN_CHARACTERS,
+        p_owner_max_characters: OWNER_MAX_CHARACTERS,
+      },
+    );
+    if (mutationError) throw mutationError;
+    const mutation = campaignCharacterMutationResult(mutationData);
+    if (mutation.status === 'campaign_not_found') {
+      return { success: false, error: 'Campaign not found' };
+    }
+    if (mutation.status === 'forbidden') {
+      return {
+        success: false,
+        error: 'Only the Realm Master can add characters to their campaign',
+      };
+    }
+    if (mutation.status === 'character_not_found') {
+      return { success: false, error: 'Character not found' };
+    }
+    if (mutation.status === 'already_in_campaign') {
+      return { success: false, error: 'This character is already in the campaign.' };
+    }
+    if (mutation.status === 'campaign_full') {
+      return {
+        success: false,
+        error: `This campaign has reached the maximum of ${MAX_CAMPAIGN_CHARACTERS} characters.`,
+      };
+    }
+    if (mutation.status === 'character_limit') {
+      return {
+        success: false,
+        error: `You can add up to ${OWNER_MAX_CHARACTERS} of your own characters.`,
+      };
+    }
+    if (mutation.status === 'conflict') {
+      return { success: false, error: 'Character changed while joining campaign' };
+    }
+    if (mutation.status !== 'updated') {
+      throw new Error(`Unexpected campaign add status: ${String(mutation.status)}`);
+    }
+    return { success: true, visibilityUpdated: mutation.visibilityUpdated === true };
   } catch (error) {
     console.error('Add character error:', error);
     return { success: false, error: 'Failed to add character' };
@@ -401,14 +466,13 @@ export async function removeCharacterFromCampaignAction(data: {
 
     const { data: campaignRow } = await supabase
       .from('campaigns')
-      .select('id, owner_id, characters')
+      .select('id, owner_id')
       .eq('id', data.campaignId)
       .maybeSingle();
     if (!campaignRow) {
       return { success: false, error: 'Campaign not found' };
     }
 
-    const campaignData = (campaignRow.characters as unknown as CampaignCharacter[]) ?? [];
     const isOwner = campaignRow.owner_id === user.uid;
     const isRemovingOwn = data.userId === user.uid;
 
@@ -420,17 +484,6 @@ export async function removeCharacterFromCampaignAction(data: {
       };
     }
 
-    const characters = (campaignData || []).filter(
-      (c) => !(c.userId === data.userId && c.characterId === data.characterId),
-    );
-    // BE-02/06: membership lives in campaign_members; derive remaining roster
-    // owners to decide whether the removed user keeps any characters here.
-    const remainingUserIds = new Set(characters.map((c) => c.userId));
-
-    // Roster mutation runs via the service role after the ownership/self check
-    // above. Members no longer hold a direct `campaigns` UPDATE RLS grant
-    // (TASK-329), so a player removing their own character can't write the row
-    // with the user-scoped client.
     let dbWrite: ReturnType<typeof createServiceRoleClient>;
     try {
       dbWrite = createServiceRoleClient();
@@ -442,17 +495,32 @@ export async function removeCharacterFromCampaignAction(data: {
       };
     }
 
-    await dbWrite
-      .from('campaigns')
-      .update(asDbUpdate<'campaigns'>({ characters: asDbJson(characters) }))
-      .eq('id', data.campaignId);
-
-    if (!remainingUserIds.has(data.userId)) {
-      await dbWrite
-        .from('campaign_members')
-        .delete()
-        .eq('campaign_id', data.campaignId)
-        .eq('user_id', data.userId);
+    const { data: mutationData, error: mutationError } = await dbWrite.rpc(
+      'remove_campaign_character_relational',
+      {
+        p_actor_id: user.uid,
+        p_campaign_id: data.campaignId,
+        p_character_owner_id: data.userId,
+        p_character_id: data.characterId,
+      },
+    );
+    if (mutationError) throw mutationError;
+    const mutation = campaignCharacterMutationResult(mutationData);
+    if (mutation.status === 'campaign_not_found') {
+      return { success: false, error: 'Campaign not found' };
+    }
+    if (mutation.status === 'forbidden') {
+      return {
+        success: false,
+        error:
+          'You can only remove your own character, or the Realm Master can remove any character.',
+      };
+    }
+    if (mutation.status === 'character_not_found') {
+      return { success: false, error: 'Character not found in campaign' };
+    }
+    if (mutation.status !== 'updated') {
+      throw new Error(`Unexpected campaign removal status: ${String(mutation.status)}`);
     }
 
     return { success: true };

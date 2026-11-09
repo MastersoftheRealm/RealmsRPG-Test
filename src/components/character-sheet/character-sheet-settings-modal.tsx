@@ -173,9 +173,7 @@ export function CharacterSheetSettingsModal({
                     aria-label="Character visibility"
                     options={visibilityOptions}
                     value={selectedVisibility}
-                    title={
-                      visibilityOptions.find((opt) => opt.value === selectedVisibility)?.label
-                    }
+                    title={visibilityOptions.find((opt) => opt.value === selectedVisibility)?.label}
                     onChange={(e) => setSelectedVisibility(e.target.value as CharacterVisibility)}
                   />
                   <p className="mt-2 text-sm break-normal text-text-primary md:hidden">

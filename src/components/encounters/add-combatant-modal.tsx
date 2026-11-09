@@ -84,6 +84,7 @@ export interface AddCombatantModalProps {
   onAddParticipants?: ((participants: SkillParticipant[]) => void) | undefined;
   /** Mixed encounter pages reuse combat/skill views — pass those modes, not a third value. */
   mode: 'combat' | 'skill';
+  existingCampaignCharacterIds?: Iterable<string> | undefined;
 }
 
 /** Roll initiative: d20 + acuity bonus */
@@ -96,6 +97,7 @@ export function AddCombatantModal({
   onAdd,
   onAddParticipants,
   mode,
+  existingCampaignCharacterIds,
 }: AddCombatantModalProps) {
   const [tab, setTab] = useState<TabId>('library');
   const addHandlerRef = useRef<() => void | Promise<void>>(() => undefined);
@@ -159,6 +161,7 @@ export function AddCombatantModal({
           onClose={onClose}
           setAddFooter={setAddFooter}
           addHandlerRef={addHandlerRef}
+          existingCampaignCharacterIds={existingCampaignCharacterIds}
         />
       )}
     </Modal>
@@ -370,6 +373,7 @@ function CampaignCharactersTab({
   onClose,
   setAddFooter,
   addHandlerRef,
+  existingCampaignCharacterIds,
 }: {
   onAdd: (combatants: TrackedCombatant[]) => void;
   onAddParticipants?: ((participants: SkillParticipant[]) => void) | undefined;
@@ -377,6 +381,7 @@ function CampaignCharactersTab({
   onClose: () => void;
   setAddFooter: (footer: AddFooterChrome | null) => void;
   addHandlerRef: AddHandlerRef;
+  existingCampaignCharacterIds?: Iterable<string> | undefined;
 }) {
   const { data: campaigns = [], isLoading } = useCampaignsFull();
   const { user } = useAuthStore();
@@ -385,8 +390,21 @@ function CampaignCharactersTab({
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [selectedChars, setSelectedChars] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
+  const existingCharacterIds = useMemo(
+    () => new Set(existingCampaignCharacterIds ?? []),
+    [existingCampaignCharacterIds],
+  );
+  const selectedAvailableCount = useMemo(() => {
+    if (!selectedCampaign) return 0;
+    return selectedCampaign.characters.filter(
+      (c) =>
+        selectedChars.has(`${c.userId}-${c.characterId}`) &&
+        !existingCharacterIds.has(c.characterId),
+    ).length;
+  }, [existingCharacterIds, selectedCampaign, selectedChars]);
 
-  const toggleChar = (key: string) => {
+  const toggleChar = (key: string, alreadyAdded: boolean) => {
+    if (alreadyAdded) return;
     setSelectedChars((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
@@ -400,9 +418,12 @@ function CampaignCharactersTab({
     setLoading(true);
 
     try {
-      const chars = selectedCampaign.characters.filter((c) =>
-        selectedChars.has(`${c.userId}-${c.characterId}`),
+      const chars = selectedCampaign.characters.filter(
+        (c) =>
+          selectedChars.has(`${c.userId}-${c.characterId}`) &&
+          !existingCharacterIds.has(c.characterId),
       );
+      if (chars.length === 0) return;
 
       // Same ?scope=encounter fetcher as combat HP sync (member-readable; not the RM-view GET)
       const results = await Promise.all(
@@ -491,6 +512,7 @@ function CampaignCharactersTab({
   }, [
     selectedCampaign,
     selectedChars,
+    existingCharacterIds,
     queryClient,
     user,
     mode,
@@ -503,10 +525,10 @@ function CampaignCharactersTab({
   useStickyAddFooter(
     setAddFooter,
     addHandlerRef,
-    Boolean(selectedCampaign) && selectedChars.size > 0,
+    Boolean(selectedCampaign) && selectedAvailableCount > 0,
     loading
       ? 'Loading characters...'
-      : `Add ${selectedChars.size} Character${selectedChars.size > 1 ? 's' : ''}`,
+      : `Add ${selectedAvailableCount} Character${selectedAvailableCount > 1 ? 's' : ''}`,
     handleAdd,
     loading,
   );
@@ -562,16 +584,22 @@ function CampaignCharactersTab({
           <div className="max-h-[250px] space-y-1 overflow-y-auto">
             {(selectedCampaign.characters || []).map((c) => {
               const key = `${c.userId}-${c.characterId}`;
-              const isSelected = selectedChars.has(key);
+              const alreadyAdded = existingCharacterIds.has(c.characterId);
+              const isSelected = !alreadyAdded && selectedChars.has(key);
               return (
                 <button
                   key={key}
-                  onClick={() => toggleChar(key)}
+                  type="button"
+                  onClick={() => toggleChar(key, alreadyAdded)}
+                  disabled={alreadyAdded}
+                  aria-disabled={alreadyAdded}
                   className={cn(
                     'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors',
-                    isSelected
-                      ? 'border border-primary-subtle-border bg-primary-subtle-bg'
-                      : 'border border-transparent hover:bg-surface-alt',
+                    alreadyAdded
+                      ? 'cursor-not-allowed border border-transparent opacity-60'
+                      : isSelected
+                        ? 'border border-primary-subtle-border bg-primary-subtle-bg'
+                        : 'border border-transparent hover:bg-surface-alt',
                   )}
                 >
                   <div
@@ -590,6 +618,11 @@ function CampaignCharactersTab({
                       Lv {c.level}
                       {c.species && ` \u00b7 ${c.species}`}
                     </span>
+                    {alreadyAdded && (
+                      <span className="ml-2 text-xs font-medium text-text-secondary">
+                        Already added
+                      </span>
+                    )}
                   </div>
                 </button>
               );

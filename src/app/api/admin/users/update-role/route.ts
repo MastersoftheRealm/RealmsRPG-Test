@@ -5,8 +5,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
 import { requireLiveAdminSession } from '@/lib/admin';
+import { createServiceRoleClient } from '@/lib/supabase/server';
 import { adminUpdateRoleSchema, validateJson } from '@/lib/api-validation';
 import {
   strictLimiter,
@@ -16,15 +16,6 @@ import {
 } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
-
-function getSupabaseAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) {
-    throw new Error('Supabase admin env not configured');
-  }
-  return createSupabaseAdminClient(url, key);
-}
 
 export async function PATCH(request: NextRequest) {
   try {
@@ -52,7 +43,7 @@ export async function PATCH(request: NextRequest) {
 
     const { userId, username, role } = validation.data;
 
-    const supabase = getSupabaseAdmin();
+    const supabase = createServiceRoleClient();
     const profileQuery = supabase.from('user_profiles').select('id, role').limit(1);
     const { data: profile, error: profileError } = userId
       ? await profileQuery.eq('id', userId).maybeSingle()

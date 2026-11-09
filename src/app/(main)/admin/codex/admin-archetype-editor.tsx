@@ -47,11 +47,7 @@ export function AdminArchetypeEditor({
 }: AdminArchetypeEditorProps) {
   return (
     <div className="space-y-4">
-      <AdminArchetypeEditorMeta
-        form={form}
-        setForm={setForm}
-        copySourceName={copySourceName}
-      />
+      <AdminArchetypeEditorMeta form={form} setForm={setForm} copySourceName={copySourceName} />
       <div className="space-y-3 rounded-lg border border-border-light p-4">
         <div>
           <h3 className="text-sm font-semibold text-text-primary">Archetype Path Builder</h3>

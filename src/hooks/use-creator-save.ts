@@ -37,7 +37,8 @@ import {
   findOfficialLibraryItemByName,
 } from '@/services/library-service';
 import { officialLibraryKeys } from '@/hooks/use-official-library';
-import { userLibraryKeys } from '@/hooks/use-user-library';
+import { invalidateUserLibraryAfterMutation } from '@/hooks/use-user-library';
+import { useAuthStore } from '@/stores/auth-store';
 import { useAdmin } from '@/hooks/use-admin';
 import {
   isOfficialSaveTarget,
@@ -47,16 +48,6 @@ import {
 } from '@/lib/library/catalog-listing';
 
 export type { CreatorSaveTarget };
-
-/** Partial query keys for user library; invalidating these refreshes load-modal lists after save */
-const USER_LIBRARY_QUERY_KEYS: Record<CreatorLibraryType, readonly string[]> = {
-  powers: ['user-powers'],
-  techniques: ['user-techniques'],
-  'empowered-techniques': ['user-empowered-techniques'],
-  items: ['user-items'],
-  creatures: ['user-creatures'],
-  species: ['user-species'],
-};
 
 export type CreatorLibraryType =
   | 'powers'
@@ -159,6 +150,7 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
 
   const { isAdmin } = useAdmin();
   const canSaveToOfficial = canSaveToOfficialOption ?? isAdmin;
+  const { user } = useAuthStore();
 
   const queryClient = useQueryClient();
   const { showToast } = useToast();
@@ -253,14 +245,10 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
             existingId ? { existingId } : undefined,
           );
           setLoadedLibraryId(savedId);
-          await queryClient.invalidateQueries({
-            queryKey: [...USER_LIBRARY_QUERY_KEYS[type]],
-            refetchType: 'all',
-          });
-          await queryClient.invalidateQueries({
-            queryKey: userLibraryKeys.countsRoot,
-            refetchType: 'all',
-          });
+          const uid = user?.uid;
+          if (uid) {
+            await invalidateUserLibraryAfterMutation(queryClient, type, uid);
+          }
           setSaveMessage({ type: 'success', text: successMessage });
         }
         setTimeout(() => {
@@ -298,6 +286,7 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
       onSaveSuccess,
       onSaveCommitted,
       queryClient,
+      user,
     ],
   );
 

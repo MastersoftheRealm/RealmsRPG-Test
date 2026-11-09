@@ -83,6 +83,7 @@ function useAuthMutationClient(dbClient: unknown) {
 
 const USER = { uid: 'user-1', email: 'hero@example.com' };
 const UNIQUE_VIOLATION = { code: '23505', message: 'duplicate key value' };
+const FK_VIOLATION = { code: '23503', message: 'foreign key violation' };
 
 type QueryResult = {
   data: unknown;
@@ -323,12 +324,12 @@ describe('setProfilePhotoFromLibraryAction', () => {
 
 describe('createUserProfileAction', () => {
   it('retries a generated username when the insert collides', async () => {
-    let insertAttempts = 0;
+    let profileUpdateAttempts = 0;
     const { client, ops } = createSupabaseStub((op) => {
       if (op.table === 'user_profiles' && op.action === 'select') return ok(null);
-      if (op.table === 'user_profiles' && op.action === 'insert') {
-        insertAttempts += 1;
-        return insertAttempts === 1 ? { data: null, error: UNIQUE_VIOLATION } : ok();
+      if (op.table === 'user_profiles' && op.action === 'update') {
+        profileUpdateAttempts += 1;
+        return profileUpdateAttempts === 1 ? { data: null, error: UNIQUE_VIOLATION } : ok();
       }
       return ok();
     });
@@ -337,20 +338,26 @@ describe('createUserProfileAction', () => {
     const result = await createUserProfileAction({});
 
     expect(result).toEqual({ success: true });
-    expect(insertAttempts).toBe(2);
+    expect(profileUpdateAttempts).toBe(2);
     expect(opLabels(ops)).toEqual([
       'select:user_profiles',
       'insert:user_profiles',
-      'insert:user_profiles',
-      'upsert:usernames',
+      'insert:usernames',
+      'update:user_profiles',
+      'delete:usernames',
+      'insert:usernames',
+      'update:user_profiles',
     ]);
   });
 
   it('reports a chosen username that is already taken', async () => {
-    const { client } = createSupabaseStub((op) => {
+    const { client, ops } = createSupabaseStub((op) => {
       if (op.table === 'user_profiles' && op.action === 'select') return ok(null);
-      if (op.table === 'user_profiles' && op.action === 'insert') {
+      if (op.table === 'usernames' && op.action === 'insert') {
         return { data: null, error: UNIQUE_VIOLATION };
+      }
+      if (op.table === 'usernames' && op.action === 'select') {
+        return ok({ user_id: 'other-user' });
       }
       return ok();
     });
@@ -359,6 +366,9 @@ describe('createUserProfileAction', () => {
     const result = await createUserProfileAction({ username: 'TakenName' });
 
     expect(result).toEqual({ success: false, error: 'This username is already taken' });
+    const shell = ops.find((op) => op.table === 'user_profiles' && op.action === 'insert');
+    expect(shell?.payload).not.toHaveProperty('username');
+    expect(opLabels(ops)).not.toContain('update:user_profiles');
   });
 
   it('does not clear display_name when displayName is omitted on update (PAGES1-001)', async () => {
@@ -393,6 +403,111 @@ describe('createUserProfileAction', () => {
 
     expect(result.success).toBe(false);
     expect(result).toMatchObject({ error: expect.stringContaining('at most') });
+  });
+
+  it('does not reassign a username row another user already owns (PAGES1-002)', async () => {
+    const OTHER_USER = 'other-user';
+    const { client, ops } = createSupabaseStub((op) => {
+      if (op.table === 'user_profiles' && op.action === 'select') return ok(null);
+      if (op.table === 'usernames' && op.action === 'insert') {
+        return { data: null, error: UNIQUE_VIOLATION };
+      }
+      if (op.table === 'usernames' && op.action === 'select') {
+        return ok({ user_id: OTHER_USER });
+      }
+      return ok();
+    });
+    useStub(client);
+
+    const result = await createUserProfileAction({ username: 'TakenName' });
+
+    expect(result).toEqual({ success: false, error: 'This username is already taken' });
+    expect(opLabels(ops)).toEqual([
+      'select:user_profiles',
+      'insert:user_profiles',
+      'insert:usernames',
+      'select:usernames',
+    ]);
+    expect(opLabels(ops)).not.toContain('update:user_profiles');
+    expect(opLabels(ops)).not.toContain('upsert:usernames');
+    expect(opLabels(ops)).not.toContain('update:usernames');
+    expect(opLabels(ops)).not.toContain('delete:usernames');
+  });
+
+  it('records the username mapping on a successful first claim (PAGES1-002)', async () => {
+    let profileShellInserted = false;
+    const { client, ops } = createSupabaseStub((op) => {
+      if (op.table === 'user_profiles' && op.action === 'select') return ok(null);
+      if (op.table === 'user_profiles' && op.action === 'insert') {
+        profileShellInserted = true;
+        return ok();
+      }
+      if (op.table === 'usernames' && op.action === 'insert') {
+        if (!profileShellInserted) return { data: null, error: FK_VIOLATION };
+        return ok();
+      }
+      return ok();
+    });
+    useStub(client);
+
+    const result = await createUserProfileAction({ username: 'NewPlayer' });
+
+    expect(result).toEqual({ success: true });
+    const shell = ops.find((op) => op.table === 'user_profiles' && op.action === 'insert');
+    expect(shell?.payload).not.toHaveProperty('username');
+    const claim = ops.find((op) => op.table === 'usernames' && op.action === 'insert');
+    expect(claim?.payload).toEqual({ username: 'newplayer', user_id: USER.uid });
+    const profileUpdate = ops.find((op) => op.table === 'user_profiles' && op.action === 'update');
+    expect(profileUpdate?.payload).toMatchObject({
+      username: 'newplayer',
+      username_display: 'NewPlayer',
+    });
+    expect(opLabels(ops)).not.toContain('upsert:usernames');
+    expect(opLabels(ops)).toEqual([
+      'select:user_profiles',
+      'insert:user_profiles',
+      'insert:usernames',
+      'update:user_profiles',
+    ]);
+  });
+
+  it('succeeds when the mapping row already belongs to this user (PAGES1-002)', async () => {
+    const { client, ops } = createSupabaseStub((op) => {
+      if (op.table === 'user_profiles' && op.action === 'select') {
+        return ok({
+          id: USER.uid,
+          username: 'chosenname',
+          username_display: 'ChosenName',
+        });
+      }
+      if (op.table === 'usernames' && op.action === 'insert') {
+        return { data: null, error: UNIQUE_VIOLATION };
+      }
+      if (op.table === 'usernames' && op.action === 'select') {
+        return ok({ user_id: USER.uid });
+      }
+      return ok();
+    });
+    useStub(client);
+
+    const result = await createUserProfileAction({});
+
+    expect(result).toEqual({ success: true });
+    expect(opLabels(ops)).toEqual([
+      'select:user_profiles',
+      'insert:usernames',
+      'select:usernames',
+      'update:user_profiles',
+    ]);
+    expect(ops[1]).toMatchObject({ table: 'usernames', action: 'insert' });
+    expect(ops[2]).toMatchObject({
+      table: 'usernames',
+      action: 'select',
+      filters: { username: 'chosenname' },
+    });
+    expect(opLabels(ops)).not.toContain('upsert:usernames');
+    expect(opLabels(ops)).not.toContain('update:usernames');
+    expect(opLabels(ops)).not.toContain('delete:usernames');
   });
 
   it('never overwrites an existing username', async () => {

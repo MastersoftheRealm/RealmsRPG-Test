@@ -14,9 +14,12 @@
 
 import { useState, useCallback, useRef, useEffect, lazy, Suspense, useId } from 'react';
 import type { Area, Point } from 'react-easy-crop';
-import 'react-easy-crop/react-easy-crop.css';
 
-const Cropper = lazy(() => import('react-easy-crop'));
+const Cropper = lazy(async () => {
+  await import('react-easy-crop/react-easy-crop.css');
+  const mod = await import('react-easy-crop');
+  return { default: mod.default };
+});
 import { cn } from '@/lib/utils';
 import { Modal } from '@/components/ui';
 import { Button, Alert } from '@/components/ui';

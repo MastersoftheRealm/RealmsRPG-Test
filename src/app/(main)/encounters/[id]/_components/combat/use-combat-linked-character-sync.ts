@@ -9,11 +9,10 @@
 
 import { useEffect, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { campaignKeys, useCampaignCharacterEncounters, useGameRules } from '@/hooks';
+import { campaignKeys, useCampaignCharacterEncounters } from '@/hooks';
 import type { Encounter, TrackedCombatant } from '@/types/encounter';
 import type { CampaignCharacterEncounterData } from '@/types/campaign';
 import { createClient } from '@/lib/supabase/client';
-import { computeMaxHealthEnergy } from '@/lib/game/calculations';
 import { readResourcesFromCharacterData } from '@/lib/encounter/character-resource-sync';
 
 type SetEncounter = React.Dispatch<React.SetStateAction<Encounter | null>>;
@@ -78,7 +77,6 @@ export function useCombatLinkedCharacterSync({
   encounter: Encounter;
   setEncounter: SetEncounter;
 }) {
-  const { rules } = useGameRules();
   const queryClient = useQueryClient();
 
   const linked = useMemo(
@@ -185,22 +183,19 @@ export function useCombatLinkedCharacterSync({
           table: 'characters',
           filter,
         },
-        (payload: { new: { id: string; data?: unknown | undefined } }) => {
+        (payload: {
+          new: {
+            id: string;
+            current_health?: number | null | undefined;
+            current_energy?: number | null | undefined;
+            action_points?: number | null | undefined;
+          };
+        }) => {
           const row = payload.new;
           const charId = row.id;
-          const raw = row.data;
-          const data = (typeof raw === 'object' && raw !== null ? raw : {}) as Record<
-            string,
-            unknown
-          >;
-          const resources = readResourcesFromCharacterData(data);
-          const { maxHealth: computedMaxHp, maxEnergy: computedMaxEn } = computeMaxHealthEnergy(
-            data,
-            rules,
-          );
-          const currentHp = resources.currentHealth;
-          const currentEn = resources.currentEnergy;
-          const ap = resources.actionPoints;
+          const currentHp = row.current_health ?? undefined;
+          const currentEn = row.current_energy ?? undefined;
+          const ap = row.action_points ?? undefined;
           setEncounter((prev) => {
             if (!prev) return prev;
             const hasMatch = prev.combatants.some(
@@ -213,19 +208,23 @@ export function useCombatLinkedCharacterSync({
                 if ((c as TrackedCombatant).sourceId !== charId) return c;
                 const updates: Partial<TrackedCombatant> = { ...c };
                 if (currentHp !== undefined) updates.currentHealth = currentHp;
-                updates.maxHealth = resources.healthMax ?? computedMaxHp;
                 if (currentEn !== undefined) updates.currentEnergy = currentEn;
-                updates.maxEnergy = resources.energyMax ?? computedMaxEn;
                 if (ap !== undefined) updates.ap = ap;
                 return { ...c, ...updates };
               }),
             };
           });
+          if (campaignId) {
+            void queryClient.refetchQueries({
+              queryKey: campaignKeys.characterEncounters(campaignId),
+              type: 'active',
+            });
+          }
         },
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [encounterId, characterIdsKeyForSync, setEncounter, rules]);
+  }, [encounterId, characterIdsKeyForSync, setEncounter, campaignId, queryClient]);
 }

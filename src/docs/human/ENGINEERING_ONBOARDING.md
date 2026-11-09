@@ -188,7 +188,7 @@ API conventions in this repo:
 - Routes:
   - `GET/POST /api/characters`
   - `GET/PATCH/DELETE /api/characters/[id]`
-- Character table shape is hybrid (list columns + JSONB data payload).
+- Character persistence is relational: scalar fields on `characters` and ordered selections/state in `character_*` child tables.
 - Character list columns are derived at write time for faster list rendering/filtering.
 
 ---

@@ -7,7 +7,6 @@ vi.mock('@/lib/supabase/session', () => ({
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
-  createServiceRoleClient: vi.fn(),
 }));
 
 vi.mock('@/lib/character-view-enrichment-server', () => ({
@@ -16,13 +15,12 @@ vi.mock('@/lib/character-view-enrichment-server', () => ({
 
 import { GET } from './route';
 import { getSession } from '@/lib/supabase/session';
-import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { emptyCharacterViewEnrichment } from '@/lib/character-view-enrichment';
 import { getOwnerLibraryAndEnrichmentForView } from '@/lib/character-view-enrichment-server';
 
 const mockGetSession = vi.mocked(getSession);
 const mockCreateClient = vi.mocked(createClient);
-const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
 const mockGetOwnerLibraryAndEnrichmentForView = vi.mocked(getOwnerLibraryAndEnrichmentForView);
 
 const RM = { uid: 'rm-user', email: 'rm@example.com' };
@@ -43,7 +41,7 @@ const EMPTY_LIBRARY_FOR_VIEW = {
 type CharacterRow = {
   id: string;
   user_id: string;
-  data: Record<string, unknown>;
+  document: Record<string, unknown>;
   created_at: string;
   updated_at: string;
   visibility?: string | null | undefined;
@@ -56,7 +54,7 @@ type CampaignRow = {
 };
 
 function makeCharacterRow(
-  overrides: Partial<CharacterRow['data']> = {},
+  overrides: Partial<CharacterRow['document']> = {},
   columnVisibility: CharacterRow['visibility'] = 'campaign',
 ): CharacterRow {
   const dataVisibility =
@@ -64,7 +62,7 @@ function makeCharacterRow(
   return {
     id: CHARACTER_ID,
     user_id: PLAYER.uid,
-    data: {
+    document: {
       name: 'Roster Hero',
       level: 2,
       visibility: dataVisibility,
@@ -74,9 +72,9 @@ function makeCharacterRow(
       actionPoints: 3,
       ...overrides,
     },
-    visibility: columnVisibility,
     created_at: '2026-07-01T12:00:00.000Z',
     updated_at: '2026-07-01T12:00:00.000Z',
+    visibility: columnVisibility,
   };
 }
 
@@ -89,15 +87,69 @@ function makeCampaignRow(): CampaignRow {
 }
 
 function createMockSupabase({
+  viewerId,
   campaignRow,
   memberUserIds = [],
   characterRow = null,
 }: {
+  viewerId: string;
   campaignRow: CampaignRow | null;
   memberUserIds?: string[] | undefined;
   characterRow?: CharacterRow | null | undefined;
 }) {
   return {
+    rpc: vi.fn(async (name: string, args: Record<string, string>) => {
+      if (name === 'get_campaign_character_relational_document') {
+        if (!campaignRow) return { data: { status: 'campaign_not_found' }, error: null };
+        if (viewerId !== campaignRow.owner_id && !memberUserIds.includes(viewerId)) {
+          return { data: { status: 'not_member' }, error: null };
+        }
+        const characterOwnerId = String(args.p_character_owner_id ?? '');
+        if (
+          characterOwnerId !== campaignRow.owner_id &&
+          !memberUserIds.includes(characterOwnerId)
+        ) {
+          return { data: { status: 'character_not_rostered' }, error: null };
+        }
+        const roster = campaignRow.characters as Array<{
+          userId: string;
+          characterId: string;
+        }>;
+        if (
+          !roster.some(
+            (entry) =>
+              entry.userId === args.p_character_owner_id &&
+              entry.characterId === args.p_character_id,
+          )
+        ) {
+          return { data: { status: 'character_not_rostered' }, error: null };
+        }
+        if (!characterRow) return { data: { status: 'character_not_found' }, error: null };
+        const visibility = characterRow.visibility ?? 'private';
+        if (
+          visibility === 'private' &&
+          viewerId !== characterRow.user_id &&
+          viewerId !== campaignRow.owner_id
+        ) {
+          return { data: { status: 'private' }, error: null };
+        }
+        return {
+          data: {
+            status: 'ok',
+            character: {
+              ...characterRow.document,
+              id: characterRow.id,
+              userId: characterRow.user_id,
+              createdAt: characterRow.created_at,
+              updatedAt: characterRow.updated_at,
+              visibility,
+            },
+          },
+          error: null,
+        };
+      }
+      throw new Error(`Unexpected RPC: ${name}`);
+    }),
     from: vi.fn((table: string) => {
       if (table === 'campaigns') {
         return {
@@ -190,12 +242,13 @@ function stubAuthedClient(args: {
 }) {
   mockGetSession.mockResolvedValue({ user: args.user, error: null });
   const supabase = createMockSupabase({
+    viewerId: args.user.uid,
     campaignRow: makeCampaignRow(),
     memberUserIds: args.memberUserIds ?? [MEMBER.uid, PLAYER.uid],
     characterRow: args.characterRow === undefined ? makeCharacterRow() : args.characterRow,
   });
   mockCreateClient.mockResolvedValue(supabase as never);
-  mockCreateServiceRoleClient.mockReturnValue(supabase as never);
+  return supabase;
 }
 
 describe('GET /api/campaigns/[id]/characters/[userId]/[characterId]', () => {
@@ -231,13 +284,19 @@ describe('GET /api/campaigns/[id]/characters/[userId]/[characterId]', () => {
   });
 
   it('returns the full sheet to a campaign member when visibility is campaign (86e39knu2)', async () => {
-    stubAuthedClient({ user: MEMBER });
+    const supabase = stubAuthedClient({ user: MEMBER });
 
     const response = await GET(makeGetRequest(), routeParams());
 
     expect(response.status).toBe(200);
     const body = await readJson<{ visibility: string }>(response);
     expect(body.visibility).toBe('campaign');
+    expect(supabase.rpc).toHaveBeenCalledOnce();
+    expect(supabase.rpc).toHaveBeenCalledWith('get_campaign_character_relational_document', {
+      p_campaign_id: CAMPAIGN_ID,
+      p_character_owner_id: PLAYER.uid,
+      p_character_id: CHARACTER_ID,
+    });
     expect(mockGetOwnerLibraryAndEnrichmentForView).toHaveBeenCalled();
   });
 
@@ -270,12 +329,12 @@ describe('GET /api/campaigns/[id]/characters/[userId]/[characterId]', () => {
   it('returns 404 when roster JSON still lists a user who left the campaign (API-003)', async () => {
     mockGetSession.mockResolvedValue({ user: MEMBER, error: null });
     const supabase = createMockSupabase({
+      viewerId: MEMBER.uid,
       campaignRow: makeCampaignRow(),
       memberUserIds: [MEMBER.uid],
       characterRow: makeCharacterRow(),
     });
     mockCreateClient.mockResolvedValue(supabase as never);
-    mockCreateServiceRoleClient.mockReturnValue(supabase as never);
 
     const response = await GET(makeGetRequest(), routeParams());
 
@@ -318,7 +377,7 @@ describe('GET /api/campaigns/[id]/characters/[userId]/[characterId]', () => {
     expect(mockGetOwnerLibraryAndEnrichmentForView).toHaveBeenCalledWith(
       expect.anything(),
       PLAYER.uid,
-      row.data,
+      expect.objectContaining(row.document),
     );
   });
 

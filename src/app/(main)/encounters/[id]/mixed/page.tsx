@@ -20,6 +20,7 @@ import { defaultSkillEncounterState } from '@/types/encounter';
 import CombatEncounterView from '../_components/CombatEncounterView';
 import SkillEncounterView from '../_components/SkillEncounterView';
 import { EncounterPageHeader } from '../_components/EncounterPageHeader';
+import { OpenTabletopButton } from '../_components/OpenTabletopButton';
 import {
   readMixedEncounterViewTab,
   writeMixedEncounterViewTab,
@@ -176,6 +177,13 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
           onCancelEdit={handleCancelEditName}
           isSaving={isSaving}
           hasUnsavedChanges={hasUnsavedChanges}
+          actions={
+            <OpenTabletopButton
+              encounterId={encounterId}
+              campaignId={encounter.campaignId}
+              onBeforeOpen={saveNow}
+            />
+          }
         />
 
         <CloudSyncOfflineBanner

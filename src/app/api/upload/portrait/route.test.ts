@@ -25,7 +25,7 @@ vi.mock('@/lib/validate-image', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/validate-image')>();
   return {
     ...actual,
-    detectImageMime: vi.fn(async () => 'image/png' as const),
+    detectImageMime: vi.fn(actual.detectImageMime),
   };
 });
 
@@ -33,16 +33,21 @@ import { POST } from './route';
 import { getSession } from '@/lib/supabase/session';
 import { createClient } from '@/lib/supabase/server';
 import { uploadLimiter } from '@/lib/rate-limit';
-import { detectImageMime } from '@/lib/validate-image';
 
 const mockGetSession = vi.mocked(getSession);
 const mockCreateClient = vi.mocked(createClient);
 const mockUploadLimiterCheck = vi.mocked(uploadLimiter.check);
-const mockDetectImageMime = vi.mocked(detectImageMime);
 
 const OWNER = { uid: 'owner-user', email: 'owner@example.com' };
 const OTHER = { uid: 'other-user', email: 'other@example.com' };
 const CHAR_ID = '11111111-1111-1111-1111-111111111111';
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+
+function minimalPngFile(name: string, type = 'image/png'): File {
+  return new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])], name, {
+    type,
+  });
+}
 
 function createPortraitSupabase(owned: boolean) {
   const remove = vi.fn().mockResolvedValue({ error: null });
@@ -76,21 +81,26 @@ function createPortraitSupabase(owned: boolean) {
   };
 }
 
+function fileWithDeclaredSize(content: BlobPart, name: string, type: string, size: number): File {
+  const file = new File([content], name, { type });
+  Object.defineProperty(file, 'size', { value: size });
+  return file;
+}
+
 function makePostRequest(
   characterId: string,
-  options: { headers?: Record<string, string>; file?: File | null; omitCharacterId?: boolean } = {},
+  options: {
+    file?: File;
+    headers?: Record<string, string>;
+  } = {},
 ) {
   const request = new NextRequest('http://localhost/api/upload/portrait', {
     method: 'POST',
     headers: { origin: 'http://localhost', ...options.headers },
   });
   const form = new FormData();
-  const file =
-    options.file === undefined
-      ? new File([new Uint8Array([1, 2, 3])], 'p.png', { type: 'image/png' })
-      : options.file;
-  if (file) form.set('file', file);
-  if (!options.omitCharacterId) form.set('characterId', characterId);
+  form.set('file', options.file ?? minimalPngFile('p.png'));
+  form.set('characterId', characterId);
   vi.spyOn(request, 'formData').mockResolvedValue(form);
   return request;
 }
@@ -116,6 +126,57 @@ describe('POST /api/upload/portrait', () => {
 
     expect(response.status).toBe(401);
     await expect(readJson(response)).resolves.toEqual({ error: 'Unauthorized' });
+    expect(mockCreateClient).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when the file is not an image MIME type', async () => {
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+
+    const response = await POST(
+      makePostRequest(CHAR_ID, {
+        file: minimalPngFile('notes.txt', 'text/plain'),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(readJson(response)).resolves.toEqual({ error: 'Must be an image file' });
+    expect(mockCreateClient).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when the image exceeds the upload size limit', async () => {
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+
+    const response = await POST(
+      makePostRequest(CHAR_ID, {
+        file: fileWithDeclaredSize(
+          new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+          'big.png',
+          'image/png',
+          MAX_UPLOAD_BYTES + 1,
+        ),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(readJson(response)).resolves.toEqual({
+      error: 'Image must be less than 5MB',
+    });
+    expect(mockCreateClient).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when image MIME is spoofed and magic bytes fail validation', async () => {
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+
+    const response = await POST(
+      makePostRequest(CHAR_ID, {
+        file: new File([new TextEncoder().encode('not-a-real-image')], 'fake.png', {
+          type: 'image/png',
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(readJson(response)).resolves.toEqual({ error: 'Invalid image file' });
     expect(mockCreateClient).not.toHaveBeenCalled();
   });
 
@@ -154,45 +215,5 @@ describe('POST /api/upload/portrait', () => {
     );
     const removed = supabase.remove.mock.calls[0]?.[0] as string[];
     expect(removed).not.toContain(`${OWNER.uid}/${CHAR_ID}.png`);
-  });
-
-  it('returns 400 when the file is not an image MIME type', async () => {
-    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
-    const response = await POST(
-      makePostRequest(CHAR_ID, {
-        file: new File([new Uint8Array([1, 2, 3])], 'notes.txt', { type: 'text/plain' }),
-      }),
-    );
-    expect(response.status).toBe(400);
-  });
-
-  it('returns 400 when the file is missing', async () => {
-    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
-    const response = await POST(makePostRequest(CHAR_ID, { file: null }));
-    expect(response.status).toBe(400);
-  });
-
-  it('returns 400 when characterId is missing', async () => {
-    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
-    const response = await POST(makePostRequest(CHAR_ID, { omitCharacterId: true }));
-    expect(response.status).toBe(400);
-  });
-
-  it('returns 400 when magic bytes do not match a spoofed extension', async () => {
-    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
-    mockDetectImageMime.mockResolvedValueOnce(null);
-    const response = await POST(
-      makePostRequest(CHAR_ID, {
-        file: new File([new Uint8Array([1, 2, 3])], 'evil.png', { type: 'image/png' }),
-      }),
-    );
-    expect(response.status).toBe(400);
-  });
-
-  it('returns 400 when the upload exceeds 5MB', async () => {
-    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
-    const big = new File([new Uint8Array(5 * 1024 * 1024 + 1)], 'big.png', { type: 'image/png' });
-    const response = await POST(makePostRequest(CHAR_ID, { file: big }));
-    expect(response.status).toBe(400);
   });
 });

@@ -34,6 +34,7 @@ import { getSession } from '@/lib/supabase/session';
 import { createClient } from '@/lib/supabase/server';
 import { standardLimiter } from '@/lib/rate-limit';
 import { isAdmin } from '@/lib/admin';
+import { USER_LIBRARY_COLUMNAR_TABLES } from '@/lib/library-columnar-keys';
 
 const mockGetSession = vi.mocked(getSession);
 const mockCreateClient = vi.mocked(createClient);
@@ -190,6 +191,68 @@ describe('GET /api/user/library/[type]/[id]', () => {
     const body = await readJson<{ id: string; name: string }>(response);
     expect(body.id).toBe('pow-owned');
     expect(body.name).toBe('Firebolt');
+  });
+
+  it('loads columnar powers through USER_LIBRARY_COLUMNAR_TABLES', async () => {
+    const row = makeLibraryRow('pow-owned', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+
+    const fromTables: string[] = [];
+    const probeTable = 'user_powers_shared_map_probe_api_021';
+    const previousPowersTable = USER_LIBRARY_COLUMNAR_TABLES.powers;
+    USER_LIBRARY_COLUMNAR_TABLES.powers = probeTable;
+
+    try {
+      const supabase = createMockSupabase(row);
+      mockCreateClient.mockResolvedValue({
+        from: vi.fn((table: string) => {
+          fromTables.push(table);
+          if (table !== probeTable) throw new Error(`Unexpected table: ${table}`);
+          return supabase.from('user_powers');
+        }),
+      } as never);
+
+      const response = await GET(
+        makeGetRequest('powers', 'pow-owned'),
+        params('powers', 'pow-owned'),
+      );
+
+      expect(response.status).toBe(200);
+      expect(fromTables).toEqual([probeTable]);
+    } finally {
+      USER_LIBRARY_COLUMNAR_TABLES.powers = previousPowersTable;
+    }
+  });
+
+  it('species by id maps with rowToItemSpecies and prefers the name column over legacy data.name', async () => {
+    const speciesRow = {
+      id: 'sp-col',
+      user_id: OWNER.uid,
+      name: 'Column Name',
+      description: '',
+      type: '',
+      payload: {},
+      data: { name: 'Stale JSON Name' },
+    };
+
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const speciesSelectChain = {
+      eq: vi.fn((): typeof speciesSelectChain => speciesSelectChain),
+      maybeSingle: vi.fn(async () => ({ data: speciesRow, error: null })),
+    };
+    mockCreateClient.mockResolvedValue({
+      from: vi.fn((table: string) => {
+        if (table !== 'user_species') throw new Error(`Unexpected table: ${table}`);
+        return { select: vi.fn(() => speciesSelectChain) };
+      }),
+    } as never);
+
+    const response = await GET(makeGetRequest('species', 'sp-col'), params('species', 'sp-col'));
+
+    expect(response.status).toBe(200);
+    const body = await readJson<{ id: string; name: string }>(response);
+    expect(body.id).toBe('sp-col');
+    expect(body.name).toBe('Column Name');
   });
 });
 

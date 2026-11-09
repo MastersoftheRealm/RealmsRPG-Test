@@ -283,7 +283,7 @@ The API returns a `hint` in the 500 body when it detects permission/RLS errors; 
 - **Response body:** Call `GET https://realmsrpg.com/api/codex?debug=1`. The 500 JSON will include `debug: { message, code }` with the real Postgres/Supabase error (e.g. `"permission denied for table codex_feats"`, or `"42P01"` for relation not found). Paste that when asking for help.
 - **Vercel:** Project → Logs → filter by `/api/codex`. Look for `[Codex API] Database error:` and the message that follows.
 - **Supabase:** Dashboard → **Logs** → Postgres (or API). Look for failed queries or RLS violations around the time of the request.
-- **RLS check:** In owner-approved database apply (see 07-database-operations.md) run:  
+- **RLS check:** In owner-approved database apply (see 07-database-operations.md) run:
   `SET ROLE anon; SELECT * FROM public.codex_feats LIMIT 1;`  
   If that returns "permission denied" or 0 rows when the table has data, RLS is blocking anon. Confirm each codex table and `core_rules` has a SELECT policy in the live database (see `sql/supabase-codex-rls-public.sql`, deleted 2026-10-29; git history) in Table Editor → Policies.
 - **Script errors:** If the RLS script failed partway (e.g. a table name typo or missing table), later policies may not have been created. Re-run the script and note any red error lines; fix missing tables first, then run the script again.

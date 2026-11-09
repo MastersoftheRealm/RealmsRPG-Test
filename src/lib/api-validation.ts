@@ -26,13 +26,43 @@ import {
   CREATOR_NAME_MAX_LENGTH,
   CREATOR_NAME_TOO_LONG_MESSAGE,
 } from '@/lib/creator/creator-text-limits';
+import {
+  CAMPAIGN_ROLL_MODIFIER_LABEL_MAX_LENGTH,
+  CAMPAIGN_ROLL_MODIFIER_LABEL_TOO_LONG_MESSAGE,
+  CAMPAIGN_ROLL_TITLE_MAX_LENGTH,
+  CAMPAIGN_ROLL_TITLE_TOO_LONG_MESSAGE,
+} from '@/lib/rolls/campaign-roll-limits';
+import { DIE_MAX, ROLL_LOG_BUILDER_DICE_POOL_MAX, type DieType } from '@/lib/rolls/die';
 import { getCanonicalSiteUrl } from '@/lib/site-url';
+
+const CAMPAIGN_ROLL_DIE_TYPES = [
+  'd2',
+  'd4',
+  'd6',
+  'd8',
+  'd10',
+  'd12',
+  'd20',
+  'd100',
+] as const satisfies readonly DieType[];
+
+const CAMPAIGN_ROLL_TYPES = ['attack', 'damage', 'skill', 'ability', 'defense', 'custom'] as const;
 
 // =============================================================================
 // Helpers
 // =============================================================================
 
 const MAX_PAYLOAD_BYTES = 2 * 1024 * 1024; // 2 MB
+
+type ReadBodyWithLimitOptions = {
+  maxBytes?: number | undefined;
+  tooLargeResponse?: (() => NextResponse) | undefined;
+};
+
+function payloadTooLargeResponse(options?: ReadBodyWithLimitOptions): NextResponse {
+  if (options?.tooLargeResponse) return options.tooLargeResponse();
+  return NextResponse.json({ error: 'Payload too large (max 2 MB)' }, { status: 413 });
+}
 
 const STATE_CHANGING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
@@ -129,24 +159,27 @@ export function verifyMutationRequest(
  * Read the body with a hard byte cap. `Content-Length` is only a fast path —
  * chunked requests omit it, so the stream is counted as it arrives.
  */
-export async function readBodyWithLimit(
+async function readBodyBytesWithLimit(
   request: NextRequest,
-): Promise<{ success: true; text: string } | { success: false; error: NextResponse }> {
+  options?: ReadBodyWithLimitOptions,
+): Promise<{ success: true; bytes: Uint8Array } | { success: false; error: NextResponse }> {
+  const maxBytes = options?.maxBytes ?? MAX_PAYLOAD_BYTES;
   const tooLarge = {
     success: false as const,
-    error: NextResponse.json({ error: 'Payload too large (max 2 MB)' }, { status: 413 }),
+    error: payloadTooLargeResponse(options),
   };
 
   const declaredLength = Number.parseInt(request.headers.get('content-length') ?? '', 10);
-  if (Number.isFinite(declaredLength) && declaredLength > MAX_PAYLOAD_BYTES) {
+  if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
     return tooLarge;
   }
 
   const stream = request.body;
   if (!stream) {
     const text = await request.text();
-    if (new TextEncoder().encode(text).byteLength > MAX_PAYLOAD_BYTES) return tooLarge;
-    return { success: true, text };
+    const bytes = new TextEncoder().encode(text);
+    if (bytes.byteLength > maxBytes) return tooLarge;
+    return { success: true, bytes };
   }
 
   const reader = stream.getReader();
@@ -157,7 +190,7 @@ export async function readBodyWithLimit(
     if (done) break;
     if (!value) continue;
     total += value.byteLength;
-    if (total > MAX_PAYLOAD_BYTES) {
+    if (total > maxBytes) {
       await reader.cancel().catch(() => {});
       return tooLarge;
     }
@@ -170,7 +203,53 @@ export async function readBodyWithLimit(
     buffer.set(chunk, offset);
     offset += chunk.byteLength;
   }
-  return { success: true, text: new TextDecoder().decode(buffer) };
+  return { success: true, bytes: buffer };
+}
+
+export async function readBodyWithLimit(
+  request: NextRequest,
+  options?: ReadBodyWithLimitOptions,
+): Promise<{ success: true; text: string } | { success: false; error: NextResponse }> {
+  const read = await readBodyBytesWithLimit(request, options);
+  if (!read.success) return read;
+  return { success: true, text: new TextDecoder().decode(read.bytes) };
+}
+
+/**
+ * Parse multipart form data only after the raw body stays within a byte cap
+ * (multipart handlers must not call `request.formData()` on the live stream).
+ */
+export async function readFormDataWithLimit(
+  request: NextRequest,
+  options: ReadBodyWithLimitOptions & { maxBytes: number },
+): Promise<{ success: true; formData: FormData } | { success: false; error: NextResponse }> {
+  const read = await readBodyBytesWithLimit(request, options);
+  if (!read.success) return read;
+
+  const contentType = request.headers.get('content-type');
+  if (!contentType?.includes('multipart/form-data')) {
+    return {
+      success: false,
+      error: NextResponse.json(
+        { error: 'Content-Type must be multipart/form-data' },
+        { status: 415 },
+      ),
+    };
+  }
+
+  try {
+    const formData = await new Request(request.url, {
+      method: request.method,
+      headers: { 'content-type': contentType },
+      body: Buffer.from(read.bytes),
+    }).formData();
+    return { success: true, formData };
+  } catch {
+    return {
+      success: false,
+      error: NextResponse.json({ error: 'Invalid multipart body' }, { status: 400 }),
+    };
+  }
 }
 
 /** Read + parse a JSON body under the size cap. */
@@ -308,7 +387,7 @@ export const characterCreateSchema = withSafeJsonBlob({
   duplicateOf: z.string().uuid().optional(),
   /**
    * Idempotency key (TASK-738): the route replays the first result for a repeated key
-   * instead of inserting a second character. Stored in its own column, not the JSON blob.
+   * instead of inserting a second character. Stored in its own relational column.
    */
   clientRequestId: z.string().uuid().optional(),
 }).refine((body) => body.duplicateOf != null || (body.name != null && body.name.length > 0), {
@@ -328,7 +407,7 @@ export const characterUpdateSchema = withSafeJsonBlob({
   /** Storage public URL or external URL after upload */
   portrait: z.string().min(1).max(4000).optional(),
   /** `characters.updated_at` the client loaded; mismatch → 409. Omitted = no lock. */
-  updatedAt: z.string().min(1).max(40).optional(),
+  updatedAt: z.iso.datetime({ offset: true, local: true }).optional(),
 });
 
 // =============================================================================
@@ -472,28 +551,54 @@ export const libraryItemUpdateSchema = withSafeJsonBlob({
 // Campaign Roll Schemas
 // =============================================================================
 
+const campaignRollDieSchema = z
+  .object({
+    type: z.enum(CAMPAIGN_ROLL_DIE_TYPES),
+    value: z.number().int().finite(),
+  })
+  .superRefine((die, ctx) => {
+    const max = DIE_MAX[die.type];
+    if (die.value < 1 || die.value > max) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Die value must be between 1 and ${max} for ${die.type}`,
+        path: ['value'],
+      });
+    }
+  });
+
 const campaignRollPayloadSchema = z
   .object({
     /** Client RollEntry may include id; the route assigns a new row id server-side. */
     id: z.string().optional(),
-    type: z.string().min(1),
-    title: z.string().min(1),
-    dice: z.array(z.unknown()).optional().default([]),
-    modifier: z.number().optional().default(0),
-    modifierLabel: z.string().optional(),
-    total: z.number().optional().default(0),
-    isCrit: z.boolean().optional().default(false),
-    isCritFail: z.boolean().optional().default(false),
-    critMessage: z.string().nullable().optional(),
+    type: z.enum(CAMPAIGN_ROLL_TYPES),
+    title: z
+      .string()
+      .min(1)
+      .max(CAMPAIGN_ROLL_TITLE_MAX_LENGTH, CAMPAIGN_ROLL_TITLE_TOO_LONG_MESSAGE),
+    dice: z.array(campaignRollDieSchema).max(ROLL_LOG_BUILDER_DICE_POOL_MAX).optional().default([]),
+    modifier: z.number().finite().optional().default(0),
+    modifierLabel: z
+      .string()
+      .max(CAMPAIGN_ROLL_MODIFIER_LABEL_MAX_LENGTH, CAMPAIGN_ROLL_MODIFIER_LABEL_TOO_LONG_MESSAGE)
+      .optional(),
+    critMessage: z
+      .string()
+      .max(CHARACTER_NAME_MAX_LENGTH, CHARACTER_NAME_TOO_LONG_MESSAGE)
+      .nullable()
+      .optional(),
     /** Ignored server-side; stored timestamp is always set on insert. */
     timestamp: z.union([z.string(), z.number(), z.date()]).optional(),
   })
-  .strict();
+  .strip();
 
 export const campaignRollCreateSchema = z
   .object({
     characterId: z.string().min(1, 'characterId required'),
-    characterName: z.string().min(1, 'characterName required'),
+    characterName: z
+      .string()
+      .min(1, 'characterName required')
+      .max(CHARACTER_NAME_MAX_LENGTH, CHARACTER_NAME_TOO_LONG_MESSAGE),
     roll: campaignRollPayloadSchema,
   })
   .strict();
@@ -574,6 +679,18 @@ export const resourceIdParamSchema = z
     id: z.string().trim().min(1, 'Invalid ID'),
   })
   .strict();
+
+const tabletopRouteIdSchema = z.string().trim().min(1, 'Invalid ID');
+
+export const tabletopActionRouteParamsSchema = z
+  .object({ actionId: tabletopRouteIdSchema })
+  .strict();
+
+export const tabletopCampaignRouteParamsSchema = z
+  .object({ campaignId: tabletopRouteIdSchema })
+  .strict();
+
+export const tabletopSceneRouteParamsSchema = z.object({ sceneId: tabletopRouteIdSchema }).strict();
 
 export const campaignsListQuerySchema = z
   .object({

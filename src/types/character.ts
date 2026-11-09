@@ -70,7 +70,7 @@ export type CharacterLibraryTabId =
 /** Subsections within Library Feats / Inventory tabs (hideable in edit mode). */
 export type CharacterLibrarySectionId = 'stateFeats' | 'weapons' | 'shields' | 'armor';
 
-/** Notes tab collapsible section ids (order + visibility on the character JSON blob). */
+/** Notes tab collapsible section ids (order + visibility in relational character state). */
 export type NotesTabSectionId =
   | 'physical'
   | 'appearance'

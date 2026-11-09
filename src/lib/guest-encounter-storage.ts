@@ -6,6 +6,7 @@
  */
 
 import type { Encounter, EncounterSummary } from '@/types/encounter';
+import { assertNoDuplicateCampaignCharacters } from '@/lib/encounter/unique-campaign-characters';
 
 const GUEST_LIST_KEY = 'realms_guest_encounters';
 const GUEST_PREFIX = 'local-';
@@ -68,6 +69,7 @@ export function createGuestEncounter(
     createdAt: now,
     updatedAt: now,
   };
+  assertNoDuplicateCampaignCharacters(encounter);
   if (typeof window !== 'undefined') {
     localStorage.setItem(encounterStorageKey(id), JSON.stringify(encounter));
     const list = getGuestEncountersList();
@@ -91,6 +93,7 @@ export function saveGuestEncounter(
     createdAt: existing.createdAt,
     updatedAt: new Date().toISOString(),
   };
+  assertNoDuplicateCampaignCharacters(updated);
   localStorage.setItem(encounterStorageKey(id), JSON.stringify(updated));
   const list = getGuestEncountersList();
   const idx = list.findIndex((e) => e.id === id);

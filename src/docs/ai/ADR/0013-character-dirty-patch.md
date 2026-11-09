@@ -1,13 +1,13 @@
 # ADR-0013: Character dirty-key PATCH + updatedAt 409
 
-- **Status:** Accepted
+- **Status:** Accepted; persistence amended by ADR-0031
 - **Date:** 2026-08-14
 - **Deciders:** owner (audit program: Wave 2 P0 after TASK-740) / agent (Architect role)
 - **Task:** TASK-741
 
 ## Context
 
-`PATCH /api/characters/[id]` already merged the JSON body into the stored blob, but every sheet
+`PATCH /api/characters/[id]` originally merged the JSON body into the stored blob, but every sheet
 autosave sent `cleanForSave` of the **whole** character (all ~50 allow-listed keys). Two tabs, or a
 GM HP write plus a player inventory edit, last-write-wins the entire document. There was no
 `updatedAt` precondition. Autosave retry/pagehide already landed (TASK-736).
@@ -18,13 +18,14 @@ separate `version int` column.
 ## Decision
 
 1. **Dirty-key body.** Clients send only keys that changed (plus optional `updatedAt`). The route
-   merges those keys into the stored `data` JSONB. Omitted keys stay as stored. A JSON `null`
+   merges those keys into the relational document assembled by ADR-0031. Omitted keys stay as
+   stored. A JSON `null`
    removes that key. Sheet autosave sends `null` when a saved key was cleared (the last temp
    modifier, an emptied trait customization) so the old value does not return on reload
    (86e3juw04). Meta keys
-   (`id`, `userId`, `createdAt`, `updatedAt`) are never copied from the client into the blob
-   (`prepareCharacterForSave` already strips them from the client body; the route stamps blob
-   `updatedAt` via `applyCharacterDirtyPatch(..., { blobUpdatedAt })` to match the column).
+   (`id`, `userId`, `createdAt`, `updatedAt`) are never copied from the client into persisted
+   character state (`prepareCharacterForSave` strips them; the route stamps the assembled
+   document via `applyCharacterDirtyPatch(..., { documentUpdatedAt })`).
 2. **Optimistic lock on `characters.updated_at`.** When the client sends `updatedAt` and the row
    has a column value, mismatch → **409** `{ error: string }` and no write. Match → UPDATE also
    `.eq('updated_at', <value just read>)` so a concurrent writer still 409s. Legacy null column or
@@ -39,8 +40,8 @@ separate `version int` column.
 
 - Positive: inventory/notes/level in tab A survive HP/resource writes in tab B; stale tabs 409
   instead of silently restoring an old full document.
-- Negative / follow-ups: campaign server actions that write `characters.data` should stamp
-  `updated_at` (they already merge); resource sync still omits `updatedAt` by design (HP LWW)
+- Negative / follow-ups: campaign character actions and relational child writes stamp the parent
+  `updated_at`; resource sync still omits `updatedAt` by design (HP LWW)
   via `saveCharacter(..., { skipLock: true })`. Same-tab races (autosave + resource sync +
   pending resave) are serialized by `lib/character/save-lock.ts` (TASK-786): per-id PATCH
   queue, in-memory newest `updatedAt`, and resource sync only when HP/EN/AP change.

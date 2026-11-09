@@ -12,6 +12,7 @@ import {
   useQuery,
   useMutation,
   useQueryClient,
+  type QueryClient,
   UseQueryResult,
   UseMutationResult,
 } from '@tanstack/react-query';
@@ -65,9 +66,20 @@ export const userLibraryKeys = {
   counts: (userId: string) => ['user-library-counts', userId] as const,
 };
 
-/** Keys delete/duplicate must invalidate (collection + tab badges). */
+/** Keys delete/duplicate and creator save must invalidate (collection + tab badges). */
 export function userLibraryAfterMutationKeys(type: LibraryItemType, userId: string) {
   return [libraryQueryKey(type, userId), userLibraryKeys.counts(userId)] as const;
+}
+
+/** Refresh My Library list + tab counts after save, delete, duplicate, or rename. */
+export async function invalidateUserLibraryAfterMutation(
+  queryClient: QueryClient,
+  type: LibraryItemType,
+  userId: string,
+): Promise<void> {
+  for (const queryKey of userLibraryAfterMutationKeys(type, userId)) {
+    await queryClient.invalidateQueries({ queryKey, refetchType: 'all' });
+  }
 }
 
 // =============================================================================
@@ -253,9 +265,7 @@ function useDeleteLibraryItem(type: LibraryItemType): UseMutationResult<void, Er
     onSuccess: () => {
       const uid = user?.uid;
       if (uid) {
-        for (const queryKey of userLibraryAfterMutationKeys(type, uid)) {
-          queryClient.invalidateQueries({ queryKey });
-        }
+        void invalidateUserLibraryAfterMutation(queryClient, type, uid);
       }
     },
   });
@@ -271,9 +281,7 @@ function useDuplicateLibraryItem(type: LibraryItemType): UseMutationResult<strin
     onSuccess: () => {
       const uid = user?.uid;
       if (uid) {
-        for (const queryKey of userLibraryAfterMutationKeys(type, uid)) {
-          queryClient.invalidateQueries({ queryKey });
-        }
+        void invalidateUserLibraryAfterMutation(queryClient, type, uid);
       }
     },
   });

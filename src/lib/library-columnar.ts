@@ -507,22 +507,6 @@ function toStrArray(val: unknown): string[] {
   return [];
 }
 
-/** Flatten a legacy `data` JSON species row, overlaying columnar image columns. */
-export function mergeLegacySpeciesRowWithImageColumns(
-  row: Record<string, unknown>,
-): Record<string, unknown> {
-  const d = (row.data as Record<string, unknown>) ?? {};
-  const imageId = row.image_id ?? row.imageId ?? d.image_id ?? d.imageId;
-  const imageUrl = row.image_url ?? row.imageUrl ?? d.image_url ?? d.imageUrl;
-  return {
-    id: row.id,
-    docId: row.id,
-    ...d,
-    ...(typeof imageId === 'string' && imageId.trim() ? { image_id: imageId.trim() } : {}),
-    ...(typeof imageUrl === 'string' && imageUrl.trim() ? { image_url: imageUrl.trim() } : {}),
-  };
-}
-
 /** Build client-shaped species from columnar row (user_species). */
 export function rowToItemSpecies(row: Record<string, unknown>): Record<string, unknown> {
   const rawPayload = row.payload;
