@@ -22,6 +22,7 @@ import {
   initialSelectedIdsForPhase,
   pathRecommendationKindForEquipmentPhase,
 } from '@/lib/guided-creator/guided-equipment-l2';
+import { guidedLoadoutTrainingPointsOverspendMessage } from '@/lib/guided-creator/loadout-tp';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { l2GridColumnsForPhase, l2HeaderColumnsForPhase } from './guided-equipment-l2-grid';
 
@@ -131,6 +132,7 @@ export function GuidedEquipmentL2Modal({
     (selected: SelectableItem[]) => {
       const currencySpent = computeL2CurrencySpent(phase, draft, selected, catalog);
       const tpSpent = computeL2TpSpent(phase, draft, selected, catalog);
+      const tpOverspendMessage = guidedLoadoutTrainingPointsOverspendMessage(tpSpent, tpLimit);
       return (
         <LoadoutBudgetBar
           currencyTotal={currencyStarting}
@@ -140,6 +142,11 @@ export function GuidedEquipmentL2Modal({
           currencyLabel={l2Copy.currencyLabel}
           trainingPointsLabel={l2Copy.tpLabel}
         >
+          {tpOverspendMessage ? (
+            <p className="text-center font-nunito text-sm text-warning-fg" role="alert">
+              {tpOverspendMessage}
+            </p>
+          ) : null}
           {error ? (
             <p className="text-center font-nunito text-sm text-warning-fg" role="alert">
               {error}

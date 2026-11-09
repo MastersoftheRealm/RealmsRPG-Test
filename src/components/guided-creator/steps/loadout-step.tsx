@@ -58,6 +58,7 @@ import {
   resolveCatalogRowUnitCost,
   resolveRefUnitCost,
 } from '@/lib/guided-creator/equipment-currency';
+import { guidedLoadoutTrainingPointsOverspendMessage } from '@/lib/guided-creator/loadout-tp';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import {
   applyLivePathFilter,
@@ -458,12 +459,23 @@ export function LoadoutStep() {
 
   const phaseTitleCopy = phaseCopy[equipmentPhase];
 
+  const tpOverspendMessage = guidedLoadoutTrainingPointsOverspendMessage(
+    tpSummary.spent,
+    tpSummary.limit,
+  );
+
   const overspendNotice =
     currencyOverspend > 0 ? (
       <p className="font-nunito text-sm text-warning-fg" role="alert">
         {stepCopy.overspent(currencyOverspend)}
       </p>
     ) : null;
+
+  const tpOverspendNotice = tpOverspendMessage ? (
+    <p className="font-nunito text-sm text-warning-fg" role="alert">
+      {tpOverspendMessage}
+    </p>
+  ) : null;
 
   return (
     <GuidedStepLayout
@@ -485,6 +497,7 @@ export function LoadoutStep() {
       ) : isInlineCatalog ? (
         <div className="space-y-5">
           {overspendNotice}
+          {tpOverspendNotice}
           <LoadoutBudgetBar
             currencyTotal={currencyStarting}
             currencySpent={currencySpent}
@@ -550,6 +563,7 @@ export function LoadoutStep() {
       ) : (
         <div className="space-y-5">
           {overspendNotice}
+          {tpOverspendNotice}
           <GuidedEquipmentPhaseLayout
             currencyTotal={currencyStarting}
             currencySpent={currencySpent}
