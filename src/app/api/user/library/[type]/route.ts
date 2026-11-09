@@ -32,17 +32,10 @@ import {
 } from '@/lib/library-columnar';
 import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
 import { validateUserLibraryWriteBody } from '@/lib/library-mutation-validation';
+import { USER_LIBRARY_COLUMNAR_TABLES } from '@/lib/library-columnar-keys';
 
 const isColumnar = (t: string): t is ColumnarLibraryType =>
   COLUMNAR_LIBRARY_TYPES.includes(t as ColumnarLibraryType);
-
-const TABLE: Record<ColumnarLibraryType, string> = {
-  powers: 'user_powers',
-  techniques: 'user_techniques',
-  'empowered-techniques': 'user_empowered_techniques',
-  items: 'user_items',
-  creatures: 'user_creatures',
-};
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ type: string }> }) {
   try {
@@ -68,7 +61,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         // ilike narrows server-side (escape LIKE metacharacters); strict match in JS.
         const pattern = nameFilter.replace(/[%_\\]/g, (c) => `\\${c}`);
         const { data: rows, error: dbError } = await supabase
-          .from(TABLE[type])
+          .from(USER_LIBRARY_COLUMNAR_TABLES[type])
           .select('id, name')
           .eq('user_id', user.uid)
           .ilike('name', pattern);
@@ -93,7 +86,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     if (isColumnar(type)) {
       const { data: rows, error: dbError } = await supabase
-        .from(TABLE[type])
+        .from(USER_LIBRARY_COLUMNAR_TABLES[type])
         .select('*')
         .eq('user_id', user.uid);
       if (dbError) throw dbError;
@@ -164,7 +157,7 @@ export async function POST(
     const rolePolicy = await getRolePolicyForUser(user.uid, supabase);
 
     if (isColumnar(type)) {
-      const table = TABLE[type];
+      const table = USER_LIBRARY_COLUMNAR_TABLES[type];
       const now = new Date();
 
       if (type === 'powers') {
