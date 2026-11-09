@@ -16,17 +16,17 @@ vi.mock('@/lib/rate-limit', () => ({
   },
 }));
 
-vi.mock('@supabase/supabase-js', () => ({
-  createClient: vi.fn(),
+vi.mock('@/lib/supabase/server', () => ({
+  createServiceRoleClient: vi.fn(),
 }));
 
 import { GET } from './route';
 import { requireAdminSession } from '@/lib/admin';
-import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
+import { createServiceRoleClient } from '@/lib/supabase/server';
 import { standardLimiter } from '@/lib/rate-limit';
 
 const mockRequireAdminSession = vi.mocked(requireAdminSession);
-const mockCreateSupabaseAdminClient = vi.mocked(createSupabaseAdminClient);
+const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
 const mockStandardLimiterCheck = vi.mocked(standardLimiter.check);
 
 const ADMIN_ID = 'admin-user-123';
@@ -88,6 +88,7 @@ describe('GET /api/admin/users', () => {
 
     expect(response.status).toBe(401);
     await expect(readJson(response)).resolves.toEqual({ error: 'Unauthorized' });
+    expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
   });
 
   it('returns 403 when the user is authenticated but not admin', async () => {
@@ -101,11 +102,12 @@ describe('GET /api/admin/users', () => {
 
     expect(response.status).toBe(403);
     await expect(readJson(response)).resolves.toEqual({ error: 'Forbidden' });
+    expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
   });
 
   it('returns user list for an authenticated admin', async () => {
     mockRequireAdminSession.mockResolvedValue({ ok: true, userId: ADMIN_ID });
-    mockCreateSupabaseAdminClient.mockReturnValue(
+    mockCreateServiceRoleClient.mockReturnValue(
       createMockSupabaseAdmin([
         {
           id: 'user-1',
@@ -136,7 +138,7 @@ describe('GET /api/admin/users', () => {
 
   it('does not include email addresses in the JSON response', async () => {
     mockRequireAdminSession.mockResolvedValue({ ok: true, userId: ADMIN_ID });
-    mockCreateSupabaseAdminClient.mockReturnValue(
+    mockCreateServiceRoleClient.mockReturnValue(
       createMockSupabaseAdmin([
         {
           id: 'user-1',
