@@ -1,4 +1,4 @@
-/** Data Cache tags for public codex / rules reads (pair with `updateTag` on admin saves). */
+/** Data Cache tags for public codex / rules reads (pair with `revalidateTag` on admin saves). */
 
 export const CODEX_API_CACHE_TAG = 'codex-api';
 

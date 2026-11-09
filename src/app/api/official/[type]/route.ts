@@ -8,8 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import type { z } from 'zod';
-import { revalidateTag } from 'next/cache';
-import { codexTableWriteCacheTags, officialLibraryWriteCacheTags } from '@/lib/codex/cache-tags';
+import { invalidateOfficialLibraryPublicCaches } from '@/lib/api/public-catalog-cache-invalidation';
 import {
   officialListMayUsePublicCdn,
   PRIVATE_MUST_REVALIDATE_CACHE_CONTROL,
@@ -240,17 +239,6 @@ function officialCacheControlHeader(
   return PRIVATE_MUST_REVALIDATE_CACHE_CONTROL;
 }
 
-function revalidateOfficialLibraryAfterWrite(table: string): void {
-  for (const tag of officialLibraryWriteCacheTags(table)) {
-    revalidateTag(tag, 'max');
-  }
-  if (table === SPECIES_TABLE) {
-    for (const tag of codexTableWriteCacheTags(table)) {
-      revalidateTag(tag, 'max');
-    }
-  }
-}
-
 export async function GET(request: NextRequest, { params }: { params: Promise<{ type: string }> }) {
   try {
     const paramResult = await validateRouteParams(params, officialLibraryTypeParamSchema);
@@ -391,7 +379,7 @@ export async function POST(
             beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
             afterData: afterRow,
           });
-          revalidateOfficialLibraryAfterWrite(SPECIES_TABLE);
+          invalidateOfficialLibraryPublicCaches(SPECIES_TABLE);
           return NextResponse.json({ id: existingId });
         }
         return NextResponse.json({ error: 'Official item not found' }, { status: 404 });
@@ -412,7 +400,7 @@ export async function POST(
             beforeData: null,
             afterData: (inserted as Record<string, unknown> | null) ?? null,
           });
-          revalidateOfficialLibraryAfterWrite(SPECIES_TABLE);
+          invalidateOfficialLibraryPublicCaches(SPECIES_TABLE);
           return NextResponse.json({ id });
         }
         if (insertError.code !== '23505') {
@@ -468,7 +456,7 @@ export async function POST(
           beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
           afterData: updatedRows[0] as Record<string, unknown>,
         });
-        revalidateOfficialLibraryAfterWrite(table);
+        invalidateOfficialLibraryPublicCaches(table);
         return NextResponse.json({ id: existingId });
       }
       return NextResponse.json({ error: 'Official item not found' }, { status: 404 });
@@ -501,7 +489,7 @@ export async function POST(
       beforeData: null,
       afterData: (inserted as Record<string, unknown> | null) ?? null,
     });
-    revalidateOfficialLibraryAfterWrite(table);
+    invalidateOfficialLibraryPublicCaches(table);
     return NextResponse.json({ id });
   } catch (err) {
     logApiError('POST /api/official/[type]', err);
@@ -563,7 +551,7 @@ export async function PATCH(
       beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
       afterData: updatedRows[0] as Record<string, unknown>,
     });
-    revalidateOfficialLibraryAfterWrite(table);
+    invalidateOfficialLibraryPublicCaches(table);
     return NextResponse.json({
       id: validation.data.id,
       catalogListing: validation.data.catalogListing,
@@ -629,7 +617,7 @@ export async function DELETE(
     // Tombstone so the id is never handed to a different entity, which would silently
     // repoint every saved character that referenced the deleted one.
     await retireCodexId(supabase, table, id);
-    revalidateOfficialLibraryAfterWrite(table);
+    invalidateOfficialLibraryPublicCaches(table);
     return NextResponse.json({ ok: true });
   } catch (err) {
     logApiError('DELETE /api/official/[type]', err);

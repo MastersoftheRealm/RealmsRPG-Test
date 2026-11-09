@@ -2,12 +2,12 @@
  * Admin Sources membership writes — payload shape, auth, and optimistic lock.
  */
 
-import { revalidatePath, updateTag } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CODEX_API_CACHE_TAG, codexApiTableCacheTag } from '@/lib/codex/cache-tags';
 import { FakeSupabase } from '@/lib/codex/fake-supabase';
 
-vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), updateTag: vi.fn() }));
+vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }));
 vi.mock('@/lib/admin', () => ({
   requireAdminSession: vi.fn(async () => ({ ok: true, userId: 'admin-1' })),
   requireLiveAdminSession: vi.fn(async () => ({ ok: true, userId: 'admin-1' })),
@@ -383,12 +383,14 @@ describe('renameAdminCodexSource', () => {
     expect(currentDb.updateCalls).toEqual([]);
     expect(defined(defined(currentDb.tables.codex_feats)[0]).sources).toEqual(['Core']);
     expect(
-      vi.mocked(updateTag).mock.calls.filter((call) => call[0] === CODEX_API_CACHE_TAG),
+      vi.mocked(revalidateTag).mock.calls.filter((call) => call[0] === CODEX_API_CACHE_TAG),
     ).toHaveLength(1);
-    expect(updateTag).toHaveBeenCalledTimes(1 + CODEX_SOURCE_TABLES.length);
+    expect(revalidateTag).toHaveBeenCalledWith(CODEX_API_CACHE_TAG, 'max');
     for (const table of CODEX_SOURCE_TABLES) {
-      expect(updateTag).toHaveBeenCalledWith(codexApiTableCacheTag(table));
+      expect(revalidateTag).toHaveBeenCalledWith(codexApiTableCacheTag(table), 'max');
     }
+    expect(revalidatePath).toHaveBeenCalledWith('/api/codex');
+    expect(revalidatePath).toHaveBeenCalledWith('/api/codex?collection=coreRules');
     expect(revalidatePath).toHaveBeenCalledWith('/codex');
     expect(revalidatePath).toHaveBeenCalledWith('/admin/codex');
     expect(revalidatePath).toHaveBeenCalledWith('/admin/sources');
@@ -416,7 +418,7 @@ describe('renameAdminCodexSource', () => {
       expect(currentDb.updateCalls).toEqual([]);
       expect(defined(defined(currentDb.tables.codex_feats)[0]).sources).toEqual(['Core']);
     }
-    expect(updateTag).not.toHaveBeenCalled();
+    expect(revalidateTag).not.toHaveBeenCalled();
   });
 
   it('does not bust caches when the function returns an error', async () => {
@@ -431,7 +433,7 @@ describe('renameAdminCodexSource', () => {
     });
     expect(currentDb.rpcCalls).toHaveLength(1);
     expect(currentDb.updateCalls).toEqual([]);
-    expect(updateTag).not.toHaveBeenCalled();
+    expect(revalidateTag).not.toHaveBeenCalled();
     expect(revalidatePath).not.toHaveBeenCalled();
     expect(defined(defined(currentDb.tables.codex_feats)[0]).sources).toEqual(['Core']);
   });

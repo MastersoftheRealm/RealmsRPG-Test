@@ -320,6 +320,35 @@ describe('GET /api/codex', () => {
     expect(mockGetSession).toHaveBeenCalled();
   });
 
+  it('CDN-caches a cookie-less coreRules collection read via the public client', async () => {
+    mockCreatePublicClient.mockReturnValue(mockSupabase() as never);
+    const response = await GET(new Request('http://localhost/api/codex?collection=coreRules'));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Cache-Control')).toBe(CODEX_PUBLIC_CDN_CACHE_CONTROL);
+    expect(mockGetSession).not.toHaveBeenCalled();
+    expect(mockCreateClient).not.toHaveBeenCalled();
+    expect(mockCreatePublicClient).toHaveBeenCalled();
+  });
+
+  it('sends private no-store for coreRules when an admin passes includeUnlisted=1', async () => {
+    mockCreatePublicClient.mockReturnValue(mockSupabase() as never);
+    mockGetSession.mockResolvedValue({
+      user: { uid: 'admin-1', email: 'admin@example.com' },
+      error: null,
+    });
+    mockIsAdmin.mockResolvedValue(true);
+
+    const response = await GET(
+      new Request('http://localhost/api/codex?collection=coreRules&includeUnlisted=1'),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Cache-Control')).toBe(PRIVATE_NO_STORE_CACHE_CONTROL);
+    expect(mockGetSession).toHaveBeenCalled();
+    expect(mockCreateClient).toHaveBeenCalledTimes(1);
+  });
+
   it('CDN-caches a cookie-less creatureFeats collection read via the public client', async () => {
     mockCreatePublicClient.mockReturnValue(mockSupabase() as never);
     const response = await GET(new Request('http://localhost/api/codex?collection=creatureFeats'));

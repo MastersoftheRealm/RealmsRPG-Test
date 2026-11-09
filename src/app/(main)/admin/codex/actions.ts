@@ -5,8 +5,11 @@ import { recordCodexChange, type RecordCodexChangeInput } from '@/lib/codex-chan
 import { featTagsToNormalizeInput, parseFeatTagsFromDb } from '@/lib/codex/feat-tags';
 import { fromPublicTable, type PublicTableName, type TablesInsert } from '@/lib/supabase/database';
 import { createServiceRoleClient } from '@/lib/supabase/server';
-import { revalidatePath, updateTag } from 'next/cache';
-import { codexTableWriteCacheTags, CORE_RULES_CACHE_TAG } from '@/lib/codex/cache-tags';
+import { revalidatePath } from 'next/cache';
+import {
+  invalidateCodexArchetypePathPublicCaches,
+  invalidateCodexCollectionPublicCaches,
+} from '@/lib/api/public-catalog-cache-invalidation';
 import {
   assertCodexCollection,
   isColumnarCollection,
@@ -36,13 +39,7 @@ function revalidatePublicCodexCaches(collection: CodexCollection, table: string)
   revalidatePath('/admin/codex');
   revalidatePath('/admin/sources');
   revalidatePath('/codex');
-  if (collection === 'core_rules') {
-    updateTag(CORE_RULES_CACHE_TAG);
-    return;
-  }
-  for (const tag of codexTableWriteCacheTags(table)) {
-    updateTag(tag);
-  }
+  invalidateCodexCollectionPublicCaches(collection, table);
 }
 
 const CONFLICT_MESSAGE =
@@ -431,9 +428,7 @@ export async function saveArchetypeWithPath(
     });
 
     revalidatePublicCodexCaches('codex_archetypes', 'codex_archetypes');
-    for (const tag of codexTableWriteCacheTags('codex_archetype_levels')) {
-      updateTag(tag);
-    }
+    invalidateCodexArchetypePathPublicCaches();
     return { success: true, id };
   } catch (e) {
     return {
