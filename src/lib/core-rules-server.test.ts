@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { fetchCoreRules, resetCoreRulesCacheForTests } from './core-rules-server';
+import {
+  fetchCoreRules,
+  fetchCoreRulesUncached,
+  resetCoreRulesCacheForTests,
+} from './core-rules-server';
 
 function mockCoreRulesClient(
   rows: { id: string; data: unknown }[] | null,
@@ -85,6 +89,24 @@ describe('fetchCoreRules', () => {
     };
     await expect(fetchCoreRules(client as never)).resolves.toEqual({});
     await expect(fetchCoreRules(client as never)).resolves.toEqual({});
+    expect(selectCalls).toBe(2);
+  });
+
+  it('fetchCoreRulesUncached always hits Supabase (no Data Cache)', async () => {
+    let selectCalls = 0;
+    const client = {
+      from: (table: string) => {
+        expect(table).toBe('core_rules');
+        return {
+          select: async () => {
+            selectCalls += 1;
+            return { data: [{ id: 'PROGRESSION_PLAYER', data: { baseHealth: 8 } }], error: null };
+          },
+        };
+      },
+    };
+    await fetchCoreRulesUncached(client as never);
+    await fetchCoreRulesUncached(client as never);
     expect(selectCalls).toBe(2);
   });
 

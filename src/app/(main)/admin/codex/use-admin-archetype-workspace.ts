@@ -55,12 +55,16 @@ export function useAdminArchetypeWorkspace() {
   const { data: codexSkills = [] } = useCodexSkills(ADMIN_CODEX_QUERY_OPTIONS);
   const { data: codexEquipment = [] } = useCodexEquipment(ADMIN_CODEX_QUERY_OPTIONS);
   const { data: powerPartsDb = [] } = useCodexPowerParts(ADMIN_CODEX_QUERY_OPTIONS);
-  const { data: officialPowers = [], isLoading: isLoadingOfficialPowers } =
-    useOfficialLibrary('powers');
+  const { data: officialPowers = [], isLoading: isLoadingOfficialPowers } = useOfficialLibrary(
+    'powers',
+    { includeUnlisted: true },
+  );
   const { data: officialTechniques = [], isLoading: isLoadingOfficialTechniques } =
-    useOfficialLibrary('techniques');
-  const { data: officialItems = [], isLoading: isLoadingOfficialItems } =
-    useOfficialLibrary('items');
+    useOfficialLibrary('techniques', { includeUnlisted: true });
+  const { data: officialItems = [], isLoading: isLoadingOfficialItems } = useOfficialLibrary(
+    'items',
+    { includeUnlisted: true },
+  );
   const { data: itemProperties = [] } = useCodexItemProperties(ADMIN_CODEX_QUERY_OPTIONS);
   const queryClient = useQueryClient();
   const {

@@ -29,6 +29,7 @@ vi.mock('@/lib/admin', () => ({
 
 vi.mock('@/lib/core-rules-server', () => ({
   fetchCoreRules: vi.fn(async () => ({ PROGRESSION_PLAYER: { baseHealth: 8 } })),
+  fetchCoreRulesUncached: vi.fn(async () => ({ PROGRESSION_PLAYER: { baseHealth: 8 } })),
 }));
 
 vi.mock('@/lib/entity-image-enrich-server', () => ({
@@ -47,7 +48,9 @@ import {
   CODEX_PUBLIC_CDN_CACHE_CONTROL,
   PRIVATE_MUST_REVALIDATE_CACHE_CONTROL,
   PRIVATE_NO_STORE_CACHE_CONTROL,
+  VERCEL_CACHE_TAG_HEADER,
 } from '@/lib/api/public-cdn-cache';
+import { codexPublicCollectionCdnCacheTag } from '@/lib/codex/cache-tags';
 import { createPublicClient } from '@/lib/supabase/public-client';
 import { CODEX_PAYLOAD_KEYS, type CodexPayload } from '@/types/codex';
 
@@ -318,6 +321,39 @@ describe('GET /api/codex', () => {
     expect(response.headers.get('Cache-Control')).toBe(PRIVATE_NO_STORE_CACHE_CONTROL);
     expect(mockCreateClient).toHaveBeenCalledTimes(1);
     expect(mockGetSession).toHaveBeenCalled();
+  });
+
+  it('CDN-caches a cookie-less coreRules collection read via the public client', async () => {
+    mockCreatePublicClient.mockReturnValue(mockSupabase() as never);
+    const response = await GET(new Request('http://localhost/api/codex?collection=coreRules'));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Cache-Control')).toBe(CODEX_PUBLIC_CDN_CACHE_CONTROL);
+    expect(response.headers.get(VERCEL_CACHE_TAG_HEADER)).toContain(
+      codexPublicCollectionCdnCacheTag('coreRules'),
+    );
+    expect(mockGetSession).not.toHaveBeenCalled();
+    expect(mockCreateClient).not.toHaveBeenCalled();
+    expect(mockCreatePublicClient).toHaveBeenCalled();
+  });
+
+  it('sends private no-store for coreRules when an admin passes includeUnlisted=1', async () => {
+    mockCreatePublicClient.mockReturnValue(mockSupabase() as never);
+    mockGetSession.mockResolvedValue({
+      user: { uid: 'admin-1', email: 'admin@example.com' },
+      error: null,
+    });
+    mockIsAdmin.mockResolvedValue(true);
+
+    const response = await GET(
+      new Request('http://localhost/api/codex?collection=coreRules&includeUnlisted=1'),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Cache-Control')).toBe(PRIVATE_NO_STORE_CACHE_CONTROL);
+    expect(mockGetSession).toHaveBeenCalled();
+    expect(mockCreateClient).toHaveBeenCalledTimes(1);
+    expect(mockReadCachedPublicDataWhenValid).not.toHaveBeenCalled();
   });
 
   it('CDN-caches a cookie-less creatureFeats collection read via the public client', async () => {

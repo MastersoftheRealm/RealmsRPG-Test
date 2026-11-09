@@ -7,7 +7,7 @@ import {
   loadAdminCodexSourceRows,
   type AdminCodexSourceRowsPayload,
 } from '@/lib/codex/admin-source-rows';
-import { CODEX_API_CACHE_TAG, codexApiTableCacheTag } from '@/lib/codex/cache-tags';
+import { invalidateCodexApiAfterSourceRenameFromServerAction } from '@/lib/api/public-catalog-cache-invalidation';
 import { assertCodexCollection } from '@/lib/codex/collections';
 import {
   CODEX_SOURCE_TABLES,
@@ -22,7 +22,7 @@ import {
   collapseCodexSourceName,
 } from '@/lib/codex/sources';
 import { createServiceRoleClient } from '@/lib/supabase/server';
-import { revalidatePath, updateTag } from 'next/cache';
+import { revalidatePath } from 'next/cache';
 import {
   ADMIN_SOURCES_ADD_FAILED,
   ADMIN_SOURCES_LOAD_ERROR,
@@ -206,10 +206,7 @@ function renameTotal(data: unknown): number {
 
 /** One cache bust per tag. This does not write a table. */
 function revalidateAfterSourceRename(): void {
-  updateTag(CODEX_API_CACHE_TAG);
-  for (const table of CODEX_SOURCE_TABLES) {
-    updateTag(codexApiTableCacheTag(table));
-  }
+  invalidateCodexApiAfterSourceRenameFromServerAction(CODEX_SOURCE_TABLES);
   revalidatePath('/codex');
   revalidatePath('/admin/codex');
   revalidatePath('/admin/sources');

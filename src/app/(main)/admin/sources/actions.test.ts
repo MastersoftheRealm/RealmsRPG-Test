@@ -385,10 +385,12 @@ describe('renameAdminCodexSource', () => {
     expect(
       vi.mocked(updateTag).mock.calls.filter((call) => call[0] === CODEX_API_CACHE_TAG),
     ).toHaveLength(1);
-    expect(updateTag).toHaveBeenCalledTimes(1 + CODEX_SOURCE_TABLES.length);
     for (const table of CODEX_SOURCE_TABLES) {
       expect(updateTag).toHaveBeenCalledWith(codexApiTableCacheTag(table));
     }
+    expect(vi.mocked(updateTag).mock.calls.some((call) => call[0] === 'codex-api:cdn:full')).toBe(
+      true,
+    );
     expect(revalidatePath).toHaveBeenCalledWith('/codex');
     expect(revalidatePath).toHaveBeenCalledWith('/admin/codex');
     expect(revalidatePath).toHaveBeenCalledWith('/admin/sources');

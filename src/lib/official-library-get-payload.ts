@@ -33,6 +33,50 @@ function officialPayloadCacheTags(table: string, listedOnly: boolean): string[] 
   return [OFFICIAL_LIBRARY_CACHE_TAG, officialLibraryCacheTag(table, listedOnly)];
 }
 
+async function buildOfficialSpeciesItems(
+  supabase: TypedSupabaseClient,
+  includeUnlisted: boolean,
+): Promise<Record<string, unknown>[]> {
+  const speciesRows = await fetchOfficialSpeciesRows(supabase, includeUnlisted);
+  await enrichRowsWithBankImageUrls(supabase, speciesRows);
+  const items = speciesRows.map((r) => {
+    const item = rowToItemSpecies(r as Record<string, unknown>);
+    (item as Record<string, unknown>)._source = 'official';
+    (item as Record<string, unknown>).catalogListing = parseCatalogListing(r.catalog_listing);
+    return item as Record<string, unknown>;
+  });
+  sortLibraryItemsByName(items);
+  return items;
+}
+
+async function buildOfficialColumnarItems(
+  supabase: TypedSupabaseClient,
+  type: ColumnarLibraryType,
+  includeUnlisted: boolean,
+): Promise<Record<string, unknown>[]> {
+  const officialRows = await fetchOfficialColumnarRows(supabase, type, includeUnlisted);
+  await enrichRowsWithBankImageUrls(supabase, officialRows);
+  const items = officialRows.map((r) => rowToItem(type, r, 'official') as Record<string, unknown>);
+  sortLibraryItemsByName(items);
+  return items;
+}
+
+/** Admin `includeUnlisted=1` reads skip unstable_cache so reload never sees a stale body. */
+export async function fetchUncachedOfficialSpeciesItems(
+  supabase: TypedSupabaseClient,
+  includeUnlisted: boolean,
+): Promise<Record<string, unknown>[]> {
+  return buildOfficialSpeciesItems(supabase, includeUnlisted);
+}
+
+export async function fetchUncachedOfficialColumnarItems(
+  supabase: TypedSupabaseClient,
+  type: ColumnarLibraryType,
+  includeUnlisted: boolean,
+): Promise<Record<string, unknown>[]> {
+  return buildOfficialColumnarItems(supabase, type, includeUnlisted);
+}
+
 export async function fetchCachedOfficialSpeciesItems(
   supabase: TypedSupabaseClient,
   includeUnlisted: boolean,
@@ -42,18 +86,7 @@ export async function fetchCachedOfficialSpeciesItems(
     ['official-api-payload', 'species', `listedOnly=${listedOnly}`],
     officialPayloadCacheTags('codex_species', listedOnly),
     CODEX_PUBLIC_ISR_SECONDS,
-    async () => {
-      const speciesRows = await fetchOfficialSpeciesRows(supabase, includeUnlisted);
-      await enrichRowsWithBankImageUrls(supabase, speciesRows);
-      const items = speciesRows.map((r) => {
-        const item = rowToItemSpecies(r as Record<string, unknown>);
-        (item as Record<string, unknown>)._source = 'official';
-        (item as Record<string, unknown>).catalogListing = parseCatalogListing(r.catalog_listing);
-        return item as Record<string, unknown>;
-      });
-      sortLibraryItemsByName(items);
-      return items;
-    },
+    () => buildOfficialSpeciesItems(supabase, includeUnlisted),
     (items) => items.length > 0,
   );
 }
@@ -69,15 +102,7 @@ export async function fetchCachedOfficialColumnarItems(
     ['official-api-payload', type, `listedOnly=${listedOnly}`],
     officialPayloadCacheTags(table, listedOnly),
     CODEX_PUBLIC_ISR_SECONDS,
-    async () => {
-      const officialRows = await fetchOfficialColumnarRows(supabase, type, includeUnlisted);
-      await enrichRowsWithBankImageUrls(supabase, officialRows);
-      const items = officialRows.map(
-        (r) => rowToItem(type, r, 'official') as Record<string, unknown>,
-      );
-      sortLibraryItemsByName(items);
-      return items;
-    },
+    () => buildOfficialColumnarItems(supabase, type, includeUnlisted),
     (items) => items.length > 0,
   );
 }

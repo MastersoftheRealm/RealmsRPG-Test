@@ -59,7 +59,7 @@ async function saveCategory(
 
 export default function AdminCoreRulesPage() {
   const { tabGroupId, sharedPanelId } = useTabGroup();
-  const { rules, isLoading } = useGameRules();
+  const { rules, isLoading } = useGameRules({ admin: true });
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState(defined(TABS[0]).id);
   const [editData, setEditData] = useState<Record<string, unknown>>({});
