@@ -15,7 +15,8 @@ import {
   fetchOfficialLibrary,
   fetchOfficialLibraryCounts,
 } from '@/services/library-service';
-import { userLibraryKeys } from '@/hooks/use-user-library';
+import { invalidateUserLibraryAfterMutation } from '@/hooks/use-user-library';
+import { useAuthStore } from '@/stores/auth-store';
 import type { CatalogListing } from '@/lib/library/catalog-listing';
 import type { LibraryTabCounts } from '@/lib/library/library-tab-counts';
 import type { LibraryItemType, LibraryRow } from '@/types/library';
@@ -54,17 +55,9 @@ export function useOfficialLibraryCounts(options?: {
   });
 }
 
-const USER_LIBRARY_KEY_MAP: Record<LibraryItemType, string> = {
-  powers: 'user-powers',
-  techniques: 'user-techniques',
-  'empowered-techniques': 'user-empowered-techniques',
-  items: 'user-items',
-  creatures: 'user-creatures',
-  species: 'user-species',
-};
-
 export function useAddOfficialToLibrary<T extends LibraryItemType>(type: T) {
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
 
   return useMutation({
     mutationFn: (item: LibraryRow<T>) => addOfficialItemToLibrary(type, item),
@@ -73,14 +66,10 @@ export function useAddOfficialToLibrary<T extends LibraryItemType>(type: T) {
         queryKey: officialLibraryKeys.all,
         refetchType: 'all',
       });
-      await queryClient.invalidateQueries({
-        queryKey: [USER_LIBRARY_KEY_MAP[type]],
-        refetchType: 'all',
-      });
-      await queryClient.invalidateQueries({
-        queryKey: userLibraryKeys.countsRoot,
-        refetchType: 'all',
-      });
+      const uid = user?.uid;
+      if (uid) {
+        await invalidateUserLibraryAfterMutation(queryClient, type, uid);
+      }
     },
   });
 }
