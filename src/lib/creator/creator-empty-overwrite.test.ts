@@ -39,6 +39,11 @@ describe('creator empty overwrite guard', () => {
         parts: [],
       }),
     ).toBe(true);
+    expect(
+      creatorPayloadWouldHollowExistingRow('powers', {
+        description: 'Renamed',
+      }),
+    ).toBe(false);
   });
 
   it('flags items with no description and no properties', () => {

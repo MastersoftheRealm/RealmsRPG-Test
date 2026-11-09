@@ -13,6 +13,12 @@ function arrayIsEmpty(value: unknown): boolean {
   return !Array.isArray(value) || value.length === 0;
 }
 
+/** Empty only when the save payload included the field (creators always send explicit arrays). */
+function savedArrayFieldEmpty(data: Record<string, unknown>, key: string): boolean {
+  if (!(key in data)) return false;
+  return arrayIsEmpty(data[key]);
+}
+
 function empoweredPartsEmpty(data: Record<string, unknown>): boolean {
   const power = data.power;
   const technique = data.technique;
@@ -32,23 +38,21 @@ function empoweredPartsEmpty(data: Record<string, unknown>): boolean {
 }
 
 function creatureContentEmpty(data: Record<string, unknown>): boolean {
-  return (
-    arrayIsEmpty(data.powers) &&
-    arrayIsEmpty(data.techniques) &&
-    arrayIsEmpty(data.feats) &&
-    arrayIsEmpty(data.armaments)
-  );
+  const keys = ['powers', 'techniques', 'feats', 'armaments'] as const;
+  const present = keys.filter((key) => key in data);
+  if (present.length === 0) return false;
+  return present.every((key) => savedArrayFieldEmpty(data, key));
 }
 
 function partsOrPropertiesEmpty(type: CreatorLibraryType, data: Record<string, unknown>): boolean {
   switch (type) {
     case 'powers':
     case 'techniques':
-      return arrayIsEmpty(data.parts);
+      return savedArrayFieldEmpty(data, 'parts');
     case 'empowered-techniques':
       return empoweredPartsEmpty(data);
     case 'items':
-      return arrayIsEmpty(data.properties);
+      return savedArrayFieldEmpty(data, 'properties');
     case 'creatures':
       return creatureContentEmpty(data);
     default:

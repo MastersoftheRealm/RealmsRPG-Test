@@ -48,8 +48,7 @@ describe('website bugs batch 19 — power creator save/load', () => {
   });
 
   it('clears ?edit= after the unsaved-guard sentinel pop, not before it (86e3jwurq)', () => {
-    expect(powerWorkspace).toContain('creatorEditClearPlan');
-    expect(powerWorkspace).toContain('bindCreatorEditClear');
+    expect(powerWorkspace).toContain('commitCreatorEditClearAfterSave');
     expect(powerWorkspace).toContain('acceptDraft()');
     expect(powerPage).toContain('router.replace(href, { scroll: false })');
     expect(powerPage).not.toContain("router.replace('/power-creator'");
