@@ -5,6 +5,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   changedFilesDiffArgs,
+  findCreateTableSetupViolations,
   findGrantViolations,
   isIgnoredSqlGrantCheckPath,
   resolveBaseRef,
@@ -13,15 +14,53 @@ import {
 
 const scriptPath = path.join(process.cwd(), 'scripts/check-sql-table-grants.mjs');
 
-describe('sqlDefinesCreateTableWithoutGrant', () => {
-  it('flags CREATE TABLE without GRANT', () => {
-    expect(sqlDefinesCreateTableWithoutGrant('CREATE TABLE public.foo (id int);')).toBe(true);
+function compliantPublicTableSql(table = 'public.foo') {
+  return `CREATE TABLE ${table} (id int);
+ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "read own" ON ${table} FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON ${table} TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ${table} TO service_role;`;
+}
+
+describe('word-only GRANT gap (CONFIG-017 / TESTS3-010)', () => {
+  const partialGrantOnly = `CREATE TABLE public.foo (id int);
+GRANT SELECT ON public.foo TO authenticated;`;
+
+  it('legacy word-only check incorrectly treated any GRANT as sufficient', () => {
+    const code = partialGrantOnly.replace(/\bgrant\b/i, 'grant');
+    const legacyWouldPass = (() => {
+      const stripped = code
+        .replace(/--[^\n]*/g, '')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .toLowerCase();
+      return /\bcreate\s+table\b/.test(stripped) && /\bgrant\b/.test(stripped);
+    })();
+    expect(legacyWouldPass).toBe(true);
+    expect(findCreateTableSetupViolations(partialGrantOnly).length).toBeGreaterThan(0);
+    expect(sqlDefinesCreateTableWithoutGrant(partialGrantOnly)).toBe(true);
   });
 
-  it('passes when GRANT is present', () => {
-    const sql = `CREATE TABLE public.foo (id int);
-GRANT SELECT ON public.foo TO authenticated;`;
-    expect(sqlDefinesCreateTableWithoutGrant(sql)).toBe(false);
+  it('passes when the file matches sql/_TEMPLATE_new_table.sql requirements', () => {
+    expect(findCreateTableSetupViolations(compliantPublicTableSql())).toEqual([]);
+    expect(sqlDefinesCreateTableWithoutGrant(compliantPublicTableSql())).toBe(false);
+  });
+});
+
+describe('findCreateTableSetupViolations', () => {
+  it('flags CREATE TABLE without RLS, policies, or grants', () => {
+    expect(sqlDefinesCreateTableWithoutGrant('CREATE TABLE public.foo (id int);')).toBe(true);
+    expect(findCreateTableSetupViolations('CREATE TABLE public.foo (id int);')).toEqual(
+      expect.arrayContaining([
+        'public.foo: missing ENABLE ROW LEVEL SECURITY in the same file',
+        'public.foo: missing CREATE POLICY in the same file',
+        expect.stringMatching(/GRANT missing SELECT, INSERT, UPDATE, DELETE TO authenticated/),
+        expect.stringMatching(/GRANT missing SELECT, INSERT, UPDATE, DELETE TO service_role/),
+      ]),
+    );
+  });
+
+  it('passes when RLS, policy, and full grants are present', () => {
+    expect(sqlDefinesCreateTableWithoutGrant(compliantPublicTableSql())).toBe(false);
   });
 
   it('ignores files with no CREATE TABLE', () => {
@@ -37,11 +76,12 @@ GRANT SELECT ON public.foo TO authenticated;`;
     expect(
       sqlDefinesCreateTableWithoutGrant('CrEaTe TaBlE If NoT eXiStS myschema.bar (id int);'),
     ).toBe(true);
-    expect(
-      sqlDefinesCreateTableWithoutGrant(
-        'CREATE TABLE IF NOT EXISTS "public"."Items" (id int);\nGrant Select, Insert, Update, Delete On "public"."Items" To authenticated;',
-      ),
-    ).toBe(false);
+    const quotedItems = `CREATE TABLE IF NOT EXISTS "public"."Items" (id int);
+ALTER TABLE "public"."Items" ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON "public"."Items" FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON "public"."Items" TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON "public"."Items" TO service_role;`;
+    expect(sqlDefinesCreateTableWithoutGrant(quotedItems)).toBe(false);
   });
 
   it('does not treat CREATE TABLE or GRANT inside comments as SQL', () => {
@@ -80,7 +120,11 @@ GRANT SELECT ON public.foo TO authenticated;`;
     ).toBe(true);
     expect(
       sqlDefinesCreateTableWithoutGrant(
-        "CREATE TABLE public.foo (note text default 'a -- still a string');\nGRANT SELECT ON public.foo TO authenticated;",
+        `CREATE TABLE public.foo (note text default 'a -- still a string');
+ALTER TABLE public.foo ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON public.foo FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.foo TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.foo TO service_role;`,
       ),
     ).toBe(false);
     expect(
@@ -103,6 +147,16 @@ GRANT SELECT ON public.foo TO authenticated;`;
   it('does not treat CREATE TABLESPACE as CREATE TABLE', () => {
     expect(sqlDefinesCreateTableWithoutGrant("CREATE TABLESPACE foo LOCATION '/tmp';")).toBe(false);
   });
+
+  it('accepts split GRANT statements that cover each role', () => {
+    const sql = `CREATE TABLE public.foo (id int);
+ALTER TABLE public.foo ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON public.foo FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT ON public.foo TO authenticated;
+GRANT UPDATE, DELETE ON public.foo TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.foo TO service_role;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual([]);
+  });
 });
 
 describe('isIgnoredSqlGrantCheckPath', () => {
@@ -121,19 +175,21 @@ describe('findGrantViolations', () => {
     expect(findGrantViolations(['AGENTS.md', 'src/app/page.tsx'])).toEqual([]);
   });
 
-  it('flags CREATE TABLE without GRANT only when that path is in the changed list', () => {
+  it('flags incomplete setup only when that path is in the changed list', () => {
     const fixtureRel = 'sql/.vitest-create-table-without-grant.sql';
     const fixtureAbs = path.join(process.cwd(), fixtureRel);
     const inlineSql = 'CREATE TABLE public.vitest_grant_fixture (id int);\n';
     fs.writeFileSync(fixtureAbs, inlineSql);
     try {
-      expect(findGrantViolations([fixtureRel])).toEqual([
-        {
-          file: fixtureRel,
-          reason:
-            'contains CREATE TABLE but no GRANT (add explicit grants in the same file; see sql/_TEMPLATE_new_table.sql)',
-        },
-      ]);
+      expect(findGrantViolations([fixtureRel])).toEqual(
+        expect.arrayContaining([
+          {
+            file: fixtureRel,
+            reason:
+              'public.vitest_grant_fixture: missing ENABLE ROW LEVEL SECURITY in the same file',
+          },
+        ]),
+      );
     } finally {
       fs.unlinkSync(fixtureAbs);
     }
