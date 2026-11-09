@@ -42,6 +42,19 @@ describe('admin-users-search', () => {
         'uid-abc',
       ),
     ).toBe(true);
+    expect(
+      profileMatchesAdminUserSearch(
+        {
+          id: 'user-1',
+          username: 'x',
+          username_display: 'x',
+          email: 'matcher@example.com',
+          display_name: null,
+          role: 'new_player',
+        },
+        'matcher@',
+      ),
+    ).toBe(true);
   });
 
   it('buildAdminUsersOrFilter quotes literals and includes role.in when labels match', () => {

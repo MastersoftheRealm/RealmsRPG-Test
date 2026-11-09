@@ -258,13 +258,14 @@ export default function AdminUsersPage() {
                         className="truncate text-sm text-text-secondary"
                         title={u.displayName || undefined}
                       >
-                        {u.displayName || '(none)'}
+                        Display name:{' '}
+                        <span className="text-text-primary">{u.displayName || '—'}</span>
                       </p>
                       <p
                         className="truncate text-sm text-text-secondary"
                         title={u.email || undefined}
                       >
-                        {u.email || '(none)'}
+                        Email: <span className="text-text-primary">{u.email || '—'}</span>
                       </p>
                       <p className="text-sm text-text-secondary">
                         Role:{' '}
