@@ -6,7 +6,8 @@
 const PORTRAIT_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'] as const;
 
 export function characterPortraitStoragePaths(userId: string, characterId: string): string[] {
-  return PORTRAIT_EXTENSIONS.map((ext) => `${userId}/${characterId}.${ext}`);
+  const charId = characterId.trim();
+  return PORTRAIT_EXTENSIONS.map((ext) => `${userId}/${charId}.${ext}`);
 }
 
 /** True when the saved portrait URL is this character's own storage object. */

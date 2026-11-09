@@ -52,6 +52,7 @@ vi.mock('@/lib/game/archetype-display', () => ({
   fetchArchetypeNameMap: vi.fn(() => Promise.resolve(new Map())),
 }));
 
+import { characterPortraitStoragePaths } from '@/lib/portrait-storage';
 import { GET, PATCH, DELETE } from './route';
 import { getSession } from '@/lib/supabase/session';
 import { createClient } from '@/lib/supabase/server';
@@ -102,9 +103,14 @@ type CampaignVisibilityMock = {
   campaigns: Array<{ id: string; characters: unknown }>;
 };
 
+type MockSupabaseOptions = {
+  deleteError?: { message: string } | null;
+};
+
 function createMockSupabase(
   characterRow: CharacterRow | null,
   campaignVisibility?: CampaignVisibilityMock,
+  options?: MockSupabaseOptions,
 ) {
   const buildSelectChain = () => {
     const eqCalls: [string, string][] = [];
@@ -189,6 +195,7 @@ function createMockSupabase(
     throw new Error(`Unexpected RPC: ${name}`);
   });
   const removePortrait = vi.fn().mockResolvedValue({ error: null });
+  const listPortrait = vi.fn().mockResolvedValue({ data: [], error: null });
 
   const client = {
     lastUpdate,
@@ -196,6 +203,7 @@ function createMockSupabase(
     rpc: rpcMock,
     rpcMock,
     removePortrait,
+    listPortrait,
     from: vi.fn((table: string) => {
       if (table === 'characters') {
         return {
@@ -203,7 +211,7 @@ function createMockSupabase(
           update,
           delete: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({ error: null }),
+              eq: vi.fn().mockResolvedValue({ error: options?.deleteError ?? null }),
             }),
           }),
         };
@@ -263,7 +271,7 @@ function createMockSupabase(
     }),
     storage: {
       from: vi.fn(() => ({
-        list: vi.fn().mockResolvedValue({ data: [], error: null }),
+        list: listPortrait,
         remove: removePortrait,
       })),
     },
@@ -1031,5 +1039,43 @@ describe('DELETE /api/characters/[id]', () => {
 
     expect(response.status).toBe(200);
     await expect(readJson(response)).resolves.toEqual({ ok: true });
+  });
+
+  it('does not remove portrait storage when the character row delete fails (API-011)', async () => {
+    const row = makeCharacterRow('char-owned', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createMockSupabase(row, undefined, {
+      deleteError: { message: 'delete blocked' },
+    });
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await DELETE(makeDeleteRequest('char-owned'), {
+      params: Promise.resolve({ id: 'char-owned' }),
+    });
+
+    expect(response.status).toBe(500);
+    expect(supabase.removePortrait).not.toHaveBeenCalled();
+    expect(supabase.listPortrait).not.toHaveBeenCalled();
+  });
+
+  it('removes portrait objects by storage path after a successful delete, not folder listing (API-011)', async () => {
+    const row = makeCharacterRow('char-owned', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createMockSupabase(row);
+    supabase.listPortrait.mockResolvedValue({
+      data: Array.from({ length: 100 }, (_, i) => ({ name: `other-character-${i}.png` })),
+      error: null,
+    });
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await DELETE(makeDeleteRequest('char-owned'), {
+      params: Promise.resolve({ id: 'char-owned' }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(supabase.listPortrait).not.toHaveBeenCalled();
+    expect(supabase.removePortrait).toHaveBeenCalledWith(
+      characterPortraitStoragePaths(OWNER.uid, 'char-owned'),
+    );
   });
 });
