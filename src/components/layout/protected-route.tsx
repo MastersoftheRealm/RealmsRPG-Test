@@ -7,9 +7,10 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores';
 import { LoadingState } from '@/components/ui/spinner';
+import { buildProtectedRouteLoginUrl } from '@/lib/auth/sign-in-guard';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -19,14 +20,14 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user, loading, initialized } = useAuthStore();
 
   useEffect(() => {
     if (initialized && !loading && !user) {
-      const returnTo = encodeURIComponent(pathname || '/');
-      router.push(`/login?returnTo=${returnTo}`);
+      router.push(buildProtectedRouteLoginUrl(pathname || '/', searchParams.toString()));
     }
-  }, [user, loading, initialized, router, pathname]);
+  }, [user, loading, initialized, router, pathname, searchParams]);
 
   // Still initializing
   if (!initialized || loading) {

@@ -1,3 +1,5 @@
+import 'server-only';
+
 /**
  * Supabase Server Client
  * ======================
@@ -6,11 +8,14 @@
  * All app tables live in the public schema (Path C); no custom schemas.
  */
 
-import 'server-only';
-
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import type { Database } from '@/types/database.types';
+import type { TypedSupabaseClient } from '@/lib/supabase/database';
+import { createSupabaseAuthCookieMethods } from '@/lib/supabase/supabase-auth-cookies';
+
+export type ServiceRoleSupabaseClient = TypedSupabaseClient;
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!;
@@ -19,18 +24,20 @@ export async function createClient() {
   const cookieStore = await cookies();
 
   return createServerClient(supabaseUrl, supabaseKey, {
-    cookies: {
-      getAll() {
-        return cookieStore.getAll();
-      },
-      setAll(cookiesToSet) {
+    cookies: createSupabaseAuthCookieMethods({
+      getAll: () => cookieStore.getAll(),
+      set: (name, value, options) => {
         try {
-          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
+          if (options === undefined) {
+            cookieStore.set(name, value);
+          } else {
+            cookieStore.set(name, value, options);
+          }
         } catch {
           // Ignore in Server Components (middleware handles refresh)
         }
       },
-    },
+    }),
   });
 }
 
@@ -39,8 +46,8 @@ export async function createClient() {
  * after the request has been authorized (e.g. isAdmin() check).
  * Requires SUPABASE_SERVICE_ROLE_KEY in env.
  */
-export function createServiceRoleClient() {
+export function createServiceRoleClient(): ServiceRoleSupabaseClient {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseUrl || !key) throw new Error('Supabase service role not configured');
-  return createSupabaseClient(supabaseUrl, key);
+  return createSupabaseClient<Database>(supabaseUrl, key);
 }

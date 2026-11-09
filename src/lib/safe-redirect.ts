@@ -42,3 +42,10 @@ export function sanitizeRedirectPath(path: string | null | undefined, fallback =
 
   return trimmed;
 }
+
+/** Safe `/login` URL with optional post-auth `returnTo` (allowlisted via {@link sanitizeRedirectPath}). */
+export function buildLoginRedirectUrl(destinationPath?: string | null): string {
+  const safe = sanitizeRedirectPath(destinationPath, '');
+  if (!safe || safe === '/') return '/login';
+  return `/login?returnTo=${encodeURIComponent(safe)}`;
+}

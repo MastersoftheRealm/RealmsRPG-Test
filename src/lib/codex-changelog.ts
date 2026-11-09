@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { buildCodexChangelogPersistPayload } from '@/lib/codex-changelog-display';
+import { asDbJson } from '@/lib/supabase/database';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 
 export type CodexChangeOperation = 'create' | 'update' | 'delete';
@@ -28,9 +29,9 @@ export async function recordCodexChange(input: RecordCodexChangeInput): Promise<
     entity_id: input.entityId,
     operation: input.operation,
     changed_by_user_id: input.changedByUserId,
-    before_data: persist.before_data,
-    after_data: persist.after_data,
-    changed_fields: persist.changed_fields,
+    before_data: asDbJson(persist.before_data),
+    after_data: asDbJson(persist.after_data),
+    changed_fields: asDbJson(persist.changed_fields),
   });
 
   // Never throw: the audit trail must not be able to fail a mutation that already

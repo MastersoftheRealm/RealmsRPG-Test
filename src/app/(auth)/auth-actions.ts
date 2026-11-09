@@ -1,6 +1,6 @@
 'use server';
 
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import {
   AUTH_LOGIN_RATE_LIMIT_MESSAGE,
@@ -18,6 +18,7 @@ import {
   resolveClientIp,
 } from '@/lib/rate-limit';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
+import { setAuthRememberSessionPreference } from '@/lib/supabase/supabase-auth-cookies';
 
 async function authEmailSiteOrigin(): Promise<
   { ok: true; origin: string } | { ok: false; error: string }
@@ -54,11 +55,27 @@ function mapSupabaseRateLimit(message: string): boolean {
   return lower.includes('rate') || lower.includes('too many');
 }
 
+/** Persist or clear the Remember-me preference before password or OAuth sign-in. */
+export async function setAuthRememberMeAction(remember: boolean): Promise<void> {
+  const cookieStore = await cookies();
+  setAuthRememberSessionPreference(
+    {
+      getAll: () => cookieStore.getAll(),
+      set: (name, value, options) => {
+        if (options === undefined) cookieStore.set(name, value);
+        else cookieStore.set(name, value, options);
+      },
+    },
+    remember,
+  );
+}
+
 /** Rate-limited password sign-in (H4 / app-layer auth limits). */
 export async function loginWithPasswordAction(
   email: string,
   password: string,
   captchaToken?: string | null,
+  rememberMe?: boolean | undefined,
 ): Promise<
   | { success: true }
   | {
@@ -85,6 +102,8 @@ export async function loginWithPasswordAction(
       rateLimited: true,
     };
   }
+
+  await setAuthRememberMeAction(rememberMe === true);
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({

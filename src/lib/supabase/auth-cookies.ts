@@ -7,8 +7,12 @@ import type { NextRequest } from 'next/server';
 /** Matches @supabase/ssr chunked session cookies (`sb-<ref>-auth-token`, `.0`, …). */
 const SUPABASE_AUTH_SESSION_COOKIE = /^sb-.+-auth-token(?:\.\d+)?$/;
 
+export function isSupabaseAuthSessionCookieName(name: string): boolean {
+  return SUPABASE_AUTH_SESSION_COOKIE.test(name);
+}
+
 export function hasSupabaseAuthSessionCookie(request: NextRequest): boolean {
-  return request.cookies.getAll().some((cookie) => SUPABASE_AUTH_SESSION_COOKIE.test(cookie.name));
+  return request.cookies.getAll().some((cookie) => isSupabaseAuthSessionCookieName(cookie.name));
 }
 
 /** Next.js link / router prefetch and segment prefetch (skip token refresh when safe). */
