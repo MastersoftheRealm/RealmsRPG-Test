@@ -482,8 +482,8 @@ function CreatureCreatorContent() {
         isAdmin={isAdmin}
         creature={creature}
         creatureLevel={creatureLevel}
-        creatureAbilityMin={getCreatureAbilityBounds(ws.rules).min}
-        creatureAbilityMax={getCreatureAbilityBounds(ws.rules).max}
+        creatureAbilityMin={getCreatureAbilityBounds().min}
+        creatureAbilityMax={getCreatureAbilityBounds().max}
         stats={stats}
         skillPointsHelp={skillPointsHelp}
         skillAllocations={skillAllocations}
