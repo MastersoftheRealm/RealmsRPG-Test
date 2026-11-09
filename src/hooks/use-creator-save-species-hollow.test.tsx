@@ -35,7 +35,7 @@ describe('useCreatorSave species hollow guard', () => {
     libraryMocks.findLibraryItemsByName.mockClear();
   });
 
-  it('allows updating an existing species with an empty description', async () => {
+  it('requires confirm before overwriting an existing species with an empty description', async () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -56,9 +56,19 @@ describe('useCreatorSave species hollow guard', () => {
       await result.current.handleSave();
     });
 
-    await waitFor(() => {
-      expect(libraryMocks.saveToLibrary).toHaveBeenCalled();
+    expect(result.current.showEmptyOverwriteConfirm).toBe(true);
+    expect(libraryMocks.saveToLibrary).not.toHaveBeenCalled();
+
+    await act(async () => {
+      await result.current.confirmEmptyOverwrite();
     });
-    expect(result.current.showEmptyOverwriteConfirm).toBe(false);
+
+    await waitFor(() => {
+      expect(libraryMocks.saveToLibrary).toHaveBeenCalledWith(
+        'species',
+        expect.objectContaining({ description: '' }),
+        { existingId: 'species-1' },
+      );
+    });
   });
 });

@@ -65,7 +65,6 @@ export function creatorPayloadWouldHollowExistingRow(
   type: CreatorLibraryType,
   data: Record<string, unknown>,
 ): boolean {
-  if (type === 'species') return false;
   return descriptionIsEmpty(data) || partsOrPropertiesEmpty(type, data);
 }
 

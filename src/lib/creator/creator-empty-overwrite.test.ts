@@ -95,10 +95,15 @@ describe('creator empty overwrite guard', () => {
     expect(creatorEmptyOverwriteDescription('technique')).toContain('overwrite');
   });
 
-  it('does not flag species saves for hollow content', () => {
+  it('flags species when description is empty on an existing row save', () => {
     expect(
       creatorPayloadWouldHollowExistingRow('species', {
         description: '',
+      }),
+    ).toBe(true);
+    expect(
+      creatorPayloadWouldHollowExistingRow('species', {
+        description: 'Forest elves',
       }),
     ).toBe(false);
   });
