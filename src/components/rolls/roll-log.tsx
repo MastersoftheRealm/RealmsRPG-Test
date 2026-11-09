@@ -24,6 +24,7 @@ import {
   DIE_IMAGES,
   DIE_MAX,
   d20CritAdjustment,
+  ROLL_LOG_BUILDER_DICE_PER_TYPE_MAX,
   generateRollId,
   rollDie,
   ROLL_LOG_BUILDER_DICE,
@@ -171,7 +172,10 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
 
   // Add a die to pool (left click)
   const addDie = (type: RollLogBuilderDieType) => {
-    setDicePool((prev) => ({ ...prev, [type]: Math.min(prev[type] + 1, 20) }));
+    setDicePool((prev) => ({
+      ...prev,
+      [type]: Math.min(prev[type] + 1, ROLL_LOG_BUILDER_DICE_PER_TYPE_MAX),
+    }));
   };
 
   // Remove a die from pool (right click)

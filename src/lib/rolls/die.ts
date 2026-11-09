@@ -4,6 +4,11 @@
 
 export type DieType = 'd2' | 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20' | 'd100';
 
+export type StoredRollKind = 'attack' | 'damage' | 'skill' | 'ability' | 'defense' | 'custom';
+
+/** Title used by the roll-log manual dice pool (`roll-log.tsx` executeRoll). */
+export const ROLL_LOG_CUSTOM_POOL_TITLE = 'Custom Roll';
+
 export const DIE_MAX: Record<DieType, number> = {
   d2: 2,
   d4: 4,
@@ -40,6 +45,12 @@ export const ROLL_LOG_BUILDER_DICE = [
 
 export type RollLogBuilderDieType = (typeof ROLL_LOG_BUILDER_DICE)[number];
 
+/** Per die type in the roll-log manual pool (`roll-log.tsx` addDie). */
+export const ROLL_LOG_BUILDER_DICE_PER_TYPE_MAX = 20;
+
+export const ROLL_LOG_BUILDER_DICE_POOL_MAX =
+  ROLL_LOG_BUILDER_DICE.length * ROLL_LOG_BUILDER_DICE_PER_TYPE_MAX;
+
 export function rollDie(type: DieType): number {
   const max = DIE_MAX[type];
   return Math.floor(Math.random() * max) + 1;
@@ -60,6 +71,56 @@ export function d20CritAdjustment(dice: ReadonlyArray<{ type: DieType; value: nu
   if (dice[0].value === 20) return { isCrit: true, isCritFail: false, adjustment: 2 };
   if (dice[0].value === 1) return { isCrit: false, isCritFail: true, adjustment: -2 };
   return { isCrit: false, isCritFail: false, adjustment: 0 };
+}
+
+export function storedRollUsesD20CritAdjustment(type: StoredRollKind, title: string): boolean {
+  if (type === 'attack' || type === 'skill' || type === 'ability' || type === 'defense') {
+    return true;
+  }
+  if (type === 'custom' && title === ROLL_LOG_CUSTOM_POOL_TITLE) {
+    return true;
+  }
+  return false;
+}
+
+export function normalizeCampaignRollDice(
+  dice: ReadonlyArray<{ type: DieType; value: number }>,
+): Array<{ type: DieType; value: number; isMax: boolean; isMin: boolean }> {
+  return dice.map((die) => ({
+    type: die.type,
+    value: die.value,
+    isMax: die.value === DIE_MAX[die.type],
+    isMin: die.value === 1,
+  }));
+}
+
+/** Stored roll total and crit flags from dice results already rolled on the client. */
+export function computeRollOutcome(
+  dice: ReadonlyArray<{ type: DieType; value: number }>,
+  modifier: number,
+  roll: { type: StoredRollKind; title: string },
+): {
+  total: number;
+  isCrit: boolean;
+  isCritFail: boolean;
+  critMessage: string | null;
+} {
+  const diceSum = dice.reduce((sum, die) => sum + die.value, 0);
+  const crit = storedRollUsesD20CritAdjustment(roll.type, roll.title)
+    ? d20CritAdjustment(dice)
+    : { isCrit: false, isCritFail: false, adjustment: 0 };
+  const total = diceSum + modifier + crit.adjustment;
+  const critMessage = crit.isCrit
+    ? 'Natural 20! +2 to the total!'
+    : crit.isCritFail
+      ? 'Natural 1! -2 from the total!'
+      : null;
+  return {
+    total,
+    isCrit: crit.isCrit,
+    isCritFail: crit.isCritFail,
+    critMessage,
+  };
 }
 
 export function generateRollId(prefix = 'roll'): string {

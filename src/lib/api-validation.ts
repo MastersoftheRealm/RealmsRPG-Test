@@ -26,7 +26,27 @@ import {
   CREATOR_NAME_MAX_LENGTH,
   CREATOR_NAME_TOO_LONG_MESSAGE,
 } from '@/lib/creator/creator-text-limits';
+import {
+  CAMPAIGN_ROLL_MODIFIER_LABEL_MAX_LENGTH,
+  CAMPAIGN_ROLL_MODIFIER_LABEL_TOO_LONG_MESSAGE,
+  CAMPAIGN_ROLL_TITLE_MAX_LENGTH,
+  CAMPAIGN_ROLL_TITLE_TOO_LONG_MESSAGE,
+} from '@/lib/rolls/campaign-roll-limits';
+import { DIE_MAX, ROLL_LOG_BUILDER_DICE_POOL_MAX, type DieType } from '@/lib/rolls/die';
 import { getCanonicalSiteUrl } from '@/lib/site-url';
+
+const CAMPAIGN_ROLL_DIE_TYPES = [
+  'd2',
+  'd4',
+  'd6',
+  'd8',
+  'd10',
+  'd12',
+  'd20',
+  'd100',
+] as const satisfies readonly DieType[];
+
+const CAMPAIGN_ROLL_TYPES = ['attack', 'damage', 'skill', 'ability', 'defense', 'custom'] as const;
 
 // =============================================================================
 // Helpers
@@ -531,28 +551,54 @@ export const libraryItemUpdateSchema = withSafeJsonBlob({
 // Campaign Roll Schemas
 // =============================================================================
 
+const campaignRollDieSchema = z
+  .object({
+    type: z.enum(CAMPAIGN_ROLL_DIE_TYPES),
+    value: z.number().int().finite(),
+  })
+  .superRefine((die, ctx) => {
+    const max = DIE_MAX[die.type];
+    if (die.value < 1 || die.value > max) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Die value must be between 1 and ${max} for ${die.type}`,
+        path: ['value'],
+      });
+    }
+  });
+
 const campaignRollPayloadSchema = z
   .object({
     /** Client RollEntry may include id; the route assigns a new row id server-side. */
     id: z.string().optional(),
-    type: z.string().min(1),
-    title: z.string().min(1),
-    dice: z.array(z.unknown()).optional().default([]),
-    modifier: z.number().optional().default(0),
-    modifierLabel: z.string().optional(),
-    total: z.number().optional().default(0),
-    isCrit: z.boolean().optional().default(false),
-    isCritFail: z.boolean().optional().default(false),
-    critMessage: z.string().nullable().optional(),
+    type: z.enum(CAMPAIGN_ROLL_TYPES),
+    title: z
+      .string()
+      .min(1)
+      .max(CAMPAIGN_ROLL_TITLE_MAX_LENGTH, CAMPAIGN_ROLL_TITLE_TOO_LONG_MESSAGE),
+    dice: z.array(campaignRollDieSchema).max(ROLL_LOG_BUILDER_DICE_POOL_MAX).optional().default([]),
+    modifier: z.number().finite().optional().default(0),
+    modifierLabel: z
+      .string()
+      .max(CAMPAIGN_ROLL_MODIFIER_LABEL_MAX_LENGTH, CAMPAIGN_ROLL_MODIFIER_LABEL_TOO_LONG_MESSAGE)
+      .optional(),
+    critMessage: z
+      .string()
+      .max(CHARACTER_NAME_MAX_LENGTH, CHARACTER_NAME_TOO_LONG_MESSAGE)
+      .nullable()
+      .optional(),
     /** Ignored server-side; stored timestamp is always set on insert. */
     timestamp: z.union([z.string(), z.number(), z.date()]).optional(),
   })
-  .strict();
+  .strip();
 
 export const campaignRollCreateSchema = z
   .object({
     characterId: z.string().min(1, 'characterId required'),
-    characterName: z.string().min(1, 'characterName required'),
+    characterName: z
+      .string()
+      .min(1, 'characterName required')
+      .max(CHARACTER_NAME_MAX_LENGTH, CHARACTER_NAME_TOO_LONG_MESSAGE),
     roll: campaignRollPayloadSchema,
   })
   .strict();
