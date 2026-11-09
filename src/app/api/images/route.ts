@@ -24,7 +24,12 @@ import {
   type RealmsImageCategory,
 } from '@/lib/realms-images';
 import { apiErrorResponse, logApiError } from '@/lib/api-error';
-import { imagesListQuerySchema, validateQuery, verifyMutationRequest } from '@/lib/api-validation';
+import {
+  imagesListQuerySchema,
+  readFormDataWithLimit,
+  validateQuery,
+  verifyMutationRequest,
+} from '@/lib/api-validation';
 import { escapeIlikePattern } from '@/lib/ilike-pattern';
 import {
   decodeRealmsImagesListCursor,
@@ -41,6 +46,8 @@ import {
 export const dynamic = 'force-dynamic';
 
 const MAX_SIZE = 5 * 1024 * 1024;
+/** Raw multipart cap: file limit plus typical boundaries and small text fields. */
+const MAX_POST_BODY_BYTES = MAX_SIZE + 384 * 1024;
 
 function parseCategoryFilter(raw: string | null): RealmsImageCategory[] | null {
   if (!raw?.trim()) return [];
@@ -158,7 +165,14 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const formData = await request.formData();
+    const body = await readFormDataWithLimit(request, {
+      maxBytes: MAX_POST_BODY_BYTES,
+      tooLargeResponse: () =>
+        NextResponse.json({ error: 'Image must be less than 5MB' }, { status: 400 }),
+    });
+    if (!body.success) return body.error;
+
+    const formData = body.formData;
     const file = formData.get('file') as File | null;
     const nameRaw = formData.get('name');
     const name = typeof nameRaw === 'string' ? nameRaw.trim() : '';
