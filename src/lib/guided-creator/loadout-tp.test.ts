@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { combineGuidedTpBudgets, wouldExceedSharedTp } from '@/lib/guided-creator/loadout-tp';
+import {
+  combineGuidedTpBudgets,
+  guidedLoadoutTrainingPointsOverspendMessage,
+  guidedTrainingPointsOverspendAmount,
+  wouldExceedSharedTp,
+} from '@/lib/guided-creator/loadout-tp';
 
 describe('loadout-tp shared budgets', () => {
   it('combines equipment and combat Training Points against one limit', () => {
@@ -14,5 +19,16 @@ describe('loadout-tp shared budgets', () => {
     expect(wouldExceedSharedTp(28, 30, 3)).toBe(true);
     expect(wouldExceedSharedTp(28, 30, 2)).toBe(false);
     expect(wouldExceedSharedTp(28, 30, 5, { alreadySelected: true })).toBe(false);
+  });
+
+  it('warns when Training Points spent exceed the guided pool without changing math', () => {
+    expect(guidedTrainingPointsOverspendAmount(25, 25)).toBe(0);
+    expect(guidedTrainingPointsOverspendAmount(24, 25)).toBe(0);
+    expect(guidedTrainingPointsOverspendAmount(35, 25)).toBe(10);
+
+    expect(guidedLoadoutTrainingPointsOverspendMessage(25, 25)).toBeNull();
+    expect(guidedLoadoutTrainingPointsOverspendMessage(35, 25)).toBe(
+      'You are 10 Training Points over budget. You can still continue.',
+    );
   });
 });

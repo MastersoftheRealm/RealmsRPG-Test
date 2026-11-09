@@ -54,6 +54,7 @@ import {
 import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
 import type { GuidedDraft } from '@/stores/guided-creator-store';
 import { computeGuidedRequiredTrainingSpent } from '@/lib/guided-creator/build-character';
+import { guidedLoadoutTrainingPointsOverspendMessage } from '@/lib/guided-creator/loadout-tp';
 import { selectedIdsFromL2Items } from '@/lib/guided-creator/powers-techniques-l2';
 import {
   calculateGuidedL1TheoreticalMaxEnergy,
@@ -540,16 +541,30 @@ export function PowersTechniquesStep() {
 
   const showInnateEnergyBar = isInnatePhase && innateEnergyMax > 0;
 
+  const tpOverspendMessage = guidedLoadoutTrainingPointsOverspendMessage(
+    tpBudget.spent,
+    tpBudget.limit,
+  );
+
+  const tpOverspendNotice = tpOverspendMessage ? (
+    <p className="text-center font-nunito text-sm text-warning-fg" role="alert">
+      {tpOverspendMessage}
+    </p>
+  ) : null;
+
   const budgetBar = (
-    <LoadoutBudgetBar
-      tpTotal={tpBudget.limit}
-      tpSpent={tpBudget.spent}
-      leading={
-        showInnateEnergyBar ? (
-          <InnateEnergyPointStatus total={innateEnergyMax} spent={innateEnergySpent} />
-        ) : null
-      }
-    />
+    <>
+      {tpOverspendNotice}
+      <LoadoutBudgetBar
+        tpTotal={tpBudget.limit}
+        tpSpent={tpBudget.spent}
+        leading={
+          showInnateEnergyBar ? (
+            <InnateEnergyPointStatus total={innateEnergyMax} spent={innateEnergySpent} />
+          ) : null
+        }
+      />
+    </>
   );
 
   const archetypeAbility = isTechniques
