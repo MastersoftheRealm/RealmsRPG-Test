@@ -13,6 +13,7 @@
 | [`characters-direct-write-deny.sql`](characters-direct-write-deny.sql) | Removes owner INSERT/UPDATE RLS on `public.characters` so saves must use the relational RPCs. Keep SELECT and DELETE. **Rollback:** commented block at the bottom of that file (not a second migration). **Lock:** policy DDL only — no `ACCESS EXCLUSIVE` table lock (unlike the contract stage). After apply, update [`src/docs/SUPABASE_SCHEMA.md`](../src/docs/SUPABASE_SCHEMA.md) character RLS prose and refresh types/baseline when credentials are available. Smoke test: [`characters-direct-write-deny-test.sql`](characters-direct-write-deny-test.sql). |
 | [`vtt-v1-tabletop.sql`](vtt-v1-tabletop.sql) | Virtual tabletop schema for branch-local development. Verify target state and obtain approval before applying outside the branch's local database. |
 | [`codex-rename-source.sql`](codex-rename-source.sql) | Admin utility: replaces `public.rename_codex_source` only. Safe to re-run on non-prod when Kadin approves; first real rename is a live data change and needs a backup. |
+| [`codex-category-offense-to-offensive.sql`](codex-category-offense-to-offensive.sql) | One-time data fix: `codex_feats` / `codex_parts` category `Offense` → `Offensive`. **Apply before** deploying app code that drops the feat category rewrite. Not applied from CI. |
 | [`role-quota-atomic.sql`](role-quota-atomic.sql) | `user_profiles` row lock + `assert_account_create_quota`, quota-aware `create_character_relational` and `insert_user_library_row_with_quota`. Apply after explicit OK and backup. |
 | [`schema/0000_baseline_2026-08-13.sql`](schema/0000_baseline_2026-08-13.sql) | Committed `pg_dump --schema-only` snapshot (**stale** vs live — regenerate before relying on it). |
 
@@ -89,7 +90,7 @@ Requires `DIRECT_URL` (or `DATABASE_URL`) and matching `pg_dump` major version. 
 3. Apply via Supabase MCP `apply_migration` or Dashboard on the approved project.
 4. Update `SUPABASE_SCHEMA.md`, regenerate types, and refresh the baseline when credentials are available.
 
-Codex **data** edits follow the same owner gate; the app normalizes some legacy values (for example feat category `Offense` → `Offensive`) without requiring a live UPDATE until a separate task applies one.
+Codex **data** edits follow the same owner gate. `codex-category-offense-to-offensive.sql` ships with the code that stops normalizing feat categories in the app; run the SQL before that deploy.
 
 ---
 
