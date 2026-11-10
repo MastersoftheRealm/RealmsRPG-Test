@@ -43,6 +43,7 @@ import {
   characterSaveWithoutOverlongName,
 } from '@/lib/character/character-name-limit';
 import {
+  applyCharacterDirtyPatch,
   applySheetAutosaveConflictFields,
   characterLockToken,
   mergeRemotePreservingDirty,
@@ -374,7 +375,6 @@ export function useCharacterSheetPageData(id: string) {
       const cleaned = prepared.cleaned;
       const dirty = prepared.dirty;
       if (Object.keys(dirty).length === 0) {
-        savedCleanRef.current = cleaned;
         return;
       }
       const mergedCleanRef: { current: Record<string, unknown> | null } = { current: null };
@@ -406,10 +406,11 @@ export function useCharacterSheetPageData(id: string) {
           };
         },
       });
-      const nextClean = mergedCleanRef.current ?? cleaned;
-      savedCleanRef.current = result.updatedAt
-        ? { ...nextClean, updatedAt: result.updatedAt }
-        : nextClean;
+      savedCleanRef.current = applyCharacterDirtyPatch(
+        savedCleanRef.current ?? {},
+        result.applied as Record<string, unknown>,
+        result.updatedAt ? { documentUpdatedAt: result.updatedAt } : undefined,
+      );
       if (result.updatedAt) {
         setCharacter((prev) => (prev ? { ...prev, updatedAt: result.updatedAt } : prev));
       }
