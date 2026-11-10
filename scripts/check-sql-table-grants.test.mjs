@@ -5,6 +5,8 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   changedFilesDiffArgs,
+  expandForeachExecuteFormatSql,
+  findCreateTableSetupViolations,
   findGrantViolations,
   isIgnoredSqlGrantCheckPath,
   resolveBaseRef,
@@ -13,15 +15,61 @@ import {
 
 const scriptPath = path.join(process.cwd(), 'scripts/check-sql-table-grants.mjs');
 
-describe('sqlDefinesCreateTableWithoutGrant', () => {
-  it('flags CREATE TABLE without GRANT', () => {
-    expect(sqlDefinesCreateTableWithoutGrant('CREATE TABLE public.foo (id int);')).toBe(true);
+function compliantPublicTableSql(table = 'public.foo') {
+  return `CREATE TABLE ${table} (id int);
+ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "read own" ON ${table} FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON ${table} TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ${table} TO service_role;`;
+}
+
+function compliantQuotedHyphenTable(quotedName) {
+  return `CREATE TABLE ${quotedName} (id int);
+ALTER TABLE ${quotedName} ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON ${quotedName} FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON ${quotedName} TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ${quotedName} TO service_role;`;
+}
+
+describe('word-only GRANT gap', () => {
+  const partialGrantOnly = `CREATE TABLE public.foo (id int);
+GRANT SELECT ON public.foo TO authenticated;`;
+
+  it('legacy word-only check incorrectly treated any GRANT as sufficient', () => {
+    const code = partialGrantOnly.replace(/\bgrant\b/i, 'grant');
+    const legacyWouldPass = (() => {
+      const stripped = code
+        .replace(/--[^\n]*/g, '')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .toLowerCase();
+      return /\bcreate\s+table\b/.test(stripped) && /\bgrant\b/.test(stripped);
+    })();
+    expect(legacyWouldPass).toBe(true);
+    expect(findCreateTableSetupViolations(partialGrantOnly).length).toBeGreaterThan(0);
+    expect(sqlDefinesCreateTableWithoutGrant(partialGrantOnly)).toBe(true);
   });
 
-  it('passes when GRANT is present', () => {
-    const sql = `CREATE TABLE public.foo (id int);
-GRANT SELECT ON public.foo TO authenticated;`;
-    expect(sqlDefinesCreateTableWithoutGrant(sql)).toBe(false);
+  it('passes when the file matches sql/_TEMPLATE_new_table.sql requirements', () => {
+    expect(findCreateTableSetupViolations(compliantPublicTableSql())).toEqual([]);
+    expect(sqlDefinesCreateTableWithoutGrant(compliantPublicTableSql())).toBe(false);
+  });
+});
+
+describe('findCreateTableSetupViolations', () => {
+  it('flags CREATE TABLE without RLS, policies, or grants', () => {
+    expect(sqlDefinesCreateTableWithoutGrant('CREATE TABLE public.foo (id int);')).toBe(true);
+    expect(findCreateTableSetupViolations('CREATE TABLE public.foo (id int);')).toEqual(
+      expect.arrayContaining([
+        'public.foo: missing ENABLE ROW LEVEL SECURITY in the same file',
+        'public.foo: missing CREATE POLICY in the same file',
+        expect.stringMatching(/GRANT missing SELECT, INSERT, UPDATE, DELETE TO authenticated/),
+        expect.stringMatching(/GRANT missing SELECT, INSERT, UPDATE, DELETE TO service_role/),
+      ]),
+    );
+  });
+
+  it('passes when RLS, policy, and full grants are present', () => {
+    expect(sqlDefinesCreateTableWithoutGrant(compliantPublicTableSql())).toBe(false);
   });
 
   it('ignores files with no CREATE TABLE', () => {
@@ -37,11 +85,12 @@ GRANT SELECT ON public.foo TO authenticated;`;
     expect(
       sqlDefinesCreateTableWithoutGrant('CrEaTe TaBlE If NoT eXiStS myschema.bar (id int);'),
     ).toBe(true);
-    expect(
-      sqlDefinesCreateTableWithoutGrant(
-        'CREATE TABLE IF NOT EXISTS "public"."Items" (id int);\nGrant Select, Insert, Update, Delete On "public"."Items" To authenticated;',
-      ),
-    ).toBe(false);
+    const quotedItems = `CREATE TABLE IF NOT EXISTS "public"."Items" (id int);
+ALTER TABLE "public"."Items" ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON "public"."Items" FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON "public"."Items" TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON "public"."Items" TO service_role;`;
+    expect(sqlDefinesCreateTableWithoutGrant(quotedItems)).toBe(false);
   });
 
   it('does not treat CREATE TABLE or GRANT inside comments as SQL', () => {
@@ -80,7 +129,11 @@ GRANT SELECT ON public.foo TO authenticated;`;
     ).toBe(true);
     expect(
       sqlDefinesCreateTableWithoutGrant(
-        "CREATE TABLE public.foo (note text default 'a -- still a string');\nGRANT SELECT ON public.foo TO authenticated;",
+        `CREATE TABLE public.foo (note text default 'a -- still a string');
+ALTER TABLE public.foo ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON public.foo FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.foo TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.foo TO service_role;`,
       ),
     ).toBe(false);
     expect(
@@ -103,6 +156,204 @@ GRANT SELECT ON public.foo TO authenticated;`;
   it('does not treat CREATE TABLESPACE as CREATE TABLE', () => {
     expect(sqlDefinesCreateTableWithoutGrant("CREATE TABLESPACE foo LOCATION '/tmp';")).toBe(false);
   });
+
+  it('accepts split GRANT statements that cover each role', () => {
+    const sql = `CREATE TABLE public.foo (id int);
+ALTER TABLE public.foo ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON public.foo FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT ON public.foo TO authenticated;
+GRANT UPDATE, DELETE ON public.foo TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.foo TO service_role;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual([]);
+  });
+
+  it('does not count a CREATE POLICY on a different table', () => {
+    const sql = `CREATE TABLE public.foo (id int);
+ALTER TABLE public.foo ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON public.other FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.foo TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.foo TO service_role;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining(['public.foo: missing CREATE POLICY in the same file']),
+    );
+  });
+
+  it('requires each new public table to have its own CREATE POLICY', () => {
+    const sql = `CREATE TABLE public.foo (id int);
+CREATE TABLE public.bar (id int);
+ALTER TABLE public.foo ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.bar ENABLE ROW LEVEL SECURITY;
+CREATE POLICY shared ON public.foo FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.foo TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.foo TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.bar TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.bar TO service_role;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining(['public.bar: missing CREATE POLICY in the same file']),
+    );
+  });
+
+  it('ignores spoofed RLS, policy, and GRANT text inside a quoted column default', () => {
+    const spoofed = [
+      'ALTER TABLE public.foo ENABLE ROW LEVEL SECURITY',
+      'CREATE POLICY p ON public.foo FOR SELECT TO authenticated USING (true)',
+      'GRANT SELECT, INSERT, UPDATE, DELETE ON public.foo TO authenticated',
+      'GRANT SELECT, INSERT, UPDATE, DELETE ON public.foo TO service_role',
+    ].join(' ');
+    const sql = `CREATE TABLE public.foo (
+  id int,
+  trap text default "${spoofed.replace(/"/g, '""')}"
+);`;
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining([
+        'public.foo: missing ENABLE ROW LEVEL SECURITY in the same file',
+        'public.foo: missing CREATE POLICY in the same file',
+        expect.stringMatching(/GRANT missing SELECT, INSERT, UPDATE, DELETE TO authenticated/),
+        expect.stringMatching(/GRANT missing SELECT, INSERT, UPDATE, DELETE TO service_role/),
+      ]),
+    );
+  });
+
+  it('does not treat SELECT (all) as granting every privilege', () => {
+    const sql = `CREATE TABLE public.foo (id int);
+ALTER TABLE public.foo ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON public.foo FOR SELECT TO authenticated USING (true);
+GRANT SELECT (all) ON public.foo TO authenticated;
+GRANT SELECT (all) ON public.foo TO service_role;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/GRANT missing INSERT, UPDATE, DELETE TO authenticated/),
+        expect.stringMatching(/GRANT missing INSERT, UPDATE, DELETE TO service_role/),
+      ]),
+    );
+  });
+
+  it('accepts ALL or ALL PRIVILEGES as the full privilege list', () => {
+    const sqlAll = `CREATE TABLE public.foo (id int);
+ALTER TABLE public.foo ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON public.foo FOR SELECT TO authenticated USING (true);
+GRANT ALL ON TABLE public.foo TO authenticated;
+GRANT ALL PRIVILEGES ON public.foo TO service_role;`;
+    expect(findCreateTableSetupViolations(sqlAll)).toEqual([]);
+  });
+
+  it('checks CREATE UNLOGGED TABLE like other new tables', () => {
+    expect(sqlDefinesCreateTableWithoutGrant('CREATE UNLOGGED TABLE public.foo (id int);')).toBe(
+      true,
+    );
+    expect(
+      sqlDefinesCreateTableWithoutGrant(
+        compliantPublicTableSql('public.foo').replace('CREATE TABLE', 'CREATE UNLOGGED TABLE'),
+      ),
+    ).toBe(false);
+  });
+
+  it('flags each distinct quoted hyphenated table even when another is fully set up', () => {
+    const sql = `${compliantQuotedHyphenTable('"foo-bar"')}\nCREATE TABLE "baz-qux" (id int);`;
+    expect(sqlDefinesCreateTableWithoutGrant(sql)).toBe(true);
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining([
+        'public.baz-qux: missing ENABLE ROW LEVEL SECURITY in the same file',
+        'public.baz-qux: missing CREATE POLICY in the same file',
+        expect.stringMatching(/public\.baz-qux: GRANT missing .+ TO authenticated/),
+      ]),
+    );
+  });
+
+  it('does not match a CREATE POLICY on a differently quoted spaced table name', () => {
+    const sql = `CREATE TABLE "Foo Bar" (id int);
+ALTER TABLE "Foo Bar" ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON "Other Table" FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON "Foo Bar" TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON "Foo Bar" TO service_role;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining(['public.foo bar: missing CREATE POLICY in the same file']),
+    );
+  });
+
+  it('does not treat a quoted SQL keyword as a real statement', () => {
+    const sql = `CREATE TABLE public.foo (id int);
+"alter" TABLE public.foo ENABLE ROW LEVEL SECURITY;
+"create" POLICY p ON public.foo FOR SELECT TO authenticated USING (true);
+"grant" SELECT, INSERT, UPDATE, DELETE ON public.foo TO authenticated;
+"grant" SELECT, INSERT, UPDATE, DELETE ON public.foo TO service_role;`;
+    expect(sqlDefinesCreateTableWithoutGrant(sql)).toBe(true);
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining([
+        'public.foo: missing ENABLE ROW LEVEL SECURITY in the same file',
+        'public.foo: missing CREATE POLICY in the same file',
+        expect.stringMatching(/GRANT missing SELECT, INSERT, UPDATE, DELETE TO authenticated/),
+        expect.stringMatching(/GRANT missing SELECT, INSERT, UPDATE, DELETE TO service_role/),
+      ]),
+    );
+  });
+});
+
+describe('loop-generated RLS and grants', () => {
+  it('counts EXECUTE format policies inside FOREACH loops', () => {
+    const sql = `CREATE TABLE public.child_rows (id int);
+DO $policy$
+DECLARE child text;
+BEGIN
+  FOREACH child IN ARRAY ARRAY['child_rows'] LOOP
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', child);
+    EXECUTE format(
+      'CREATE POLICY child_select ON public.%I FOR SELECT TO authenticated USING (EXISTS (SELECT 1 FROM public.parent p WHERE p.id = parent_id))',
+      child
+    );
+  END LOOP;
+END;
+$policy$;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.child_rows TO authenticated, service_role;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual([]);
+  });
+
+  it('allows RLS with SELECT-only policy (deny-by-default writes)', () => {
+    const sql = `CREATE TABLE public.locked_child (id int);
+ALTER TABLE public.locked_child ENABLE ROW LEVEL SECURITY;
+CREATE POLICY read_via_parent ON public.locked_child
+  FOR SELECT TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.parent p WHERE p.id = parent_id));
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.locked_child TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.locked_child TO service_role;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual([]);
+  });
+
+  it('accepts comma-separated table lists in one GRANT', () => {
+    const sql = `CREATE TABLE public.alpha (id int);
+CREATE TABLE public.beta (id int);
+ALTER TABLE public.alpha ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.beta ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pa ON public.alpha FOR SELECT TO authenticated USING (true);
+CREATE POLICY pb ON public.beta FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.alpha, public.beta TO authenticated, service_role;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual([]);
+  });
+
+  it('flags overly broad authenticated INSERT policies', () => {
+    const sql = `CREATE TABLE public.foo (id int);
+ALTER TABLE public.foo ENABLE ROW LEVEL SECURITY;
+CREATE POLICY read ON public.foo FOR SELECT TO authenticated USING (true);
+CREATE POLICY write ON public.foo FOR INSERT TO authenticated WITH CHECK (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.foo TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.foo TO service_role;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining([
+        'public.foo: overly broad write policy for anon/authenticated (PostgREST direct-write risk)',
+      ]),
+    );
+  });
+});
+
+describe('expandForeachExecuteFormatSql', () => {
+  it('substitutes each name from the FOREACH array into format SQL', () => {
+    const raw = `FOREACH child IN ARRAY ARRAY['foo','bar'] LOOP
+  EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', child);
+END LOOP;`;
+    const expanded = expandForeachExecuteFormatSql(raw);
+    expect(expanded).toContain('ALTER TABLE public.foo ENABLE ROW LEVEL SECURITY');
+    expect(expanded).toContain('ALTER TABLE public.bar ENABLE ROW LEVEL SECURITY');
+  });
 });
 
 describe('isIgnoredSqlGrantCheckPath', () => {
@@ -121,19 +372,21 @@ describe('findGrantViolations', () => {
     expect(findGrantViolations(['AGENTS.md', 'src/app/page.tsx'])).toEqual([]);
   });
 
-  it('flags CREATE TABLE without GRANT only when that path is in the changed list', () => {
+  it('flags incomplete setup only when that path is in the changed list', () => {
     const fixtureRel = 'sql/.vitest-create-table-without-grant.sql';
     const fixtureAbs = path.join(process.cwd(), fixtureRel);
     const inlineSql = 'CREATE TABLE public.vitest_grant_fixture (id int);\n';
     fs.writeFileSync(fixtureAbs, inlineSql);
     try {
-      expect(findGrantViolations([fixtureRel])).toEqual([
-        {
-          file: fixtureRel,
-          reason:
-            'contains CREATE TABLE but no GRANT (add explicit grants in the same file; see sql/_TEMPLATE_new_table.sql)',
-        },
-      ]);
+      expect(findGrantViolations([fixtureRel])).toEqual(
+        expect.arrayContaining([
+          {
+            file: fixtureRel,
+            reason:
+              'public.vitest_grant_fixture: missing ENABLE ROW LEVEL SECURITY in the same file',
+          },
+        ]),
+      );
     } finally {
       fs.unlinkSync(fixtureAbs);
     }

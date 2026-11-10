@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
- * Fail when a changed sql/ file defines CREATE TABLE without an explicit GRANT.
- * Only files in the diff are scanned, so untouched legacy migrations do not fail.
+ * Fail when a changed sql/ file defines CREATE TABLE without the repo template:
+ * ENABLE ROW LEVEL SECURITY, CREATE POLICY, and GRANT SELECT, INSERT, UPDATE, DELETE
+ * to authenticated and service_role (public tables). Only files in the diff are scanned.
  *
  * Base ref:
  * - pull_request: event pull_request.base.sha
@@ -11,6 +12,10 @@
  * Comments and quoted strings are not keywords. Dollar-quoted bodies are still
  * scanned, so a DO block that creates a table is caught; comments inside them
  * are ignored.
+ * EXECUTE format(...) inside FOREACH loops is expanded against the ARRAY list so
+ * loop-generated RLS and policies count. RLS with SELECT-only policies (no write
+ * policy) is valid deny-by-default; broad INSERT/UPDATE/DELETE/ALL policies for
+ * anon/authenticated are still flagged.
  * Ignores: sql/_TEMPLATE_new_table.sql, sql/schema/* baseline snapshots.
  */
 import { execFileSync } from 'node:child_process';
@@ -23,6 +28,9 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 const IGNORED_REL = new Set(['sql/_TEMPLATE_new_table.sql', 'sql/_template_new_table.sql']);
 
 const COMMIT_SHA = /^[0-9a-f]{40}(?:[0-9a-f]{24})?$/i;
+
+const REQUIRED_PRIVILEGES = ['select', 'insert', 'update', 'delete'];
+const REQUIRED_ROLES = ['authenticated', 'service_role'];
 
 /** @param {string} relPath posix-style path under repo root */
 export function isIgnoredSqlGrantCheckPath(relPath) {
@@ -102,19 +110,23 @@ export function sqlCodeWithoutCommentsAndLiterals(sql) {
     }
 
     if (c === '"') {
-      out += ' ';
+      let decoded = '';
       i += 1;
       while (i < n) {
         if (sql[i] === '"' && sql[i + 1] === '"') {
-          out += '  ';
+          decoded += '"';
           i += 2;
           continue;
         }
         const ch = sql[i];
-        out += ch === '\n' ? '\n' : ' ';
+        if (ch === '"') {
+          i += 1;
+          break;
+        }
+        decoded += ch;
         i += 1;
-        if (ch === '"') break;
       }
+      out += decodedToIdentifierToken(decoded);
       continue;
     }
 
@@ -140,11 +152,392 @@ export function sqlCodeWithoutCommentsAndLiterals(sql) {
   return out;
 }
 
-/** @param {string} sql */
+/**
+ * @param {string} name
+ */
+function quotedIdTokenForName(name) {
+  const normalized = name.replace(/""/g, '"').toLowerCase();
+  return `«Q${Buffer.from(normalized, 'utf8').toString('hex')}»`;
+}
+
+/**
+ * @param {string} token
+ * @returns {string | null} lowercase decoded name
+ */
+function decodeQuotedIdToken(token) {
+  const match = /^«Q([0-9a-f]+)»$/i.exec(token.trim());
+  if (!match) return null;
+  return Buffer.from(match[1], 'hex').toString('utf8');
+}
+
+/**
+ * Double-quoted identifiers become distinct opaque tokens so bodies cannot
+ * spoof SQL keywords or collide across different quoted names.
+ * @param {string} decoded
+ */
+function decodedToIdentifierToken(decoded) {
+  const name = decoded.replace(/""/g, '"');
+  return quotedIdTokenForName(name);
+}
+
+/**
+ * @param {string} token sanitized schema or table fragment
+ * @returns {string | null}
+ */
+function resolveNameToken(token) {
+  const trimmed = token.trim();
+  const decoded = decodeQuotedIdToken(trimmed);
+  if (decoded !== null) return decoded;
+  if (/^[a-z_][a-z0-9_]*$/i.test(trimmed)) return trimmed.toLowerCase();
+  return null;
+}
+
+/**
+ * @param {string} ref sanitized qualified or bare table reference
+ * @returns {{ schema: string, name: string } | null}
+ */
+function parseQualifiedTableRef(ref) {
+  const parts = ref
+    .trim()
+    .split(/\s*\.\s*/)
+    .filter(Boolean);
+  if (parts.length === 2) {
+    const schema = resolveNameToken(parts[0]);
+    const name = resolveNameToken(parts[1]);
+    if (schema && name) return { schema, name };
+    return null;
+  }
+  if (parts.length === 1) {
+    const name = resolveNameToken(parts[0]);
+    if (name) return { schema: 'public', name };
+  }
+  return null;
+}
+
+/** @param {string} name */
+function escapeRegExp(name) {
+  return name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * @param {string} schema
+ * @param {string} tableName lowercased unquoted name
+ */
+function tableReferencePattern(schema, tableName) {
+  const schemaLower = schema.toLowerCase();
+  const nameLower = tableName.toLowerCase();
+  const nameAlternates = [
+    escapeRegExp(quotedIdTokenForName(nameLower)),
+    escapeRegExp(nameLower),
+  ].join('|');
+  const schemaPart =
+    schemaLower === 'public'
+      ? `(?:(?:public|${escapeRegExp(quotedIdTokenForName('public'))})\\s*\\.\\s*)?`
+      : `(?:${escapeRegExp(quotedIdTokenForName(schemaLower))}|${escapeRegExp(schemaLower)})\\s*\\.\\s*`;
+  return `${schemaPart}(?:${nameAlternates})`;
+}
+
+/**
+ * @param {string} code sanitized sql (any case)
+ * @returns {{ schema: string, name: string }[]}
+ */
+export function extractCreateTableTargets(code) {
+  const re =
+    /\bcreate\s+(?:unlogged\s+)?table(?!\s+as\b)(?:\s+if\s+not\s+exists)?\s+((?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*)(?:\s*\.\s*(?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*))?)/gi;
+  /** @type {{ schema: string, name: string }[]} */
+  const targets = [];
+  let match;
+  while ((match = re.exec(code))) {
+    const parsed = parseQualifiedTableRef(match[1]);
+    if (parsed) targets.push(parsed);
+  }
+  return targets;
+}
+
+/**
+ * @param {string} grantOn
+ * @returns {string[]}
+ */
+function splitGrantTableList(grantOn) {
+  /** @type {string[]} */
+  const parts = [];
+  let current = '';
+  let inQuote = false;
+  for (let i = 0; i < grantOn.length; i++) {
+    const ch = grantOn[i];
+    if (ch === '"') {
+      if (inQuote && grantOn[i + 1] === '"') {
+        current += '""';
+        i += 1;
+        continue;
+      }
+      inQuote = !inQuote;
+      current += ch;
+      continue;
+    }
+    if (ch === ',' && !inQuote) {
+      if (current.trim()) parts.push(current.trim());
+      current = '';
+      continue;
+    }
+    current += ch;
+  }
+  if (current.trim()) parts.push(current.trim());
+  return parts;
+}
+
+/**
+ * @param {string} grantOn
+ * @returns {{ schema: string, name: string }[]}
+ */
+function parseGrantOnTables(grantOn) {
+  let normalized = grantOn.replace(/\s+/g, ' ').trim();
+  normalized = normalized.replace(/^table\s+/i, '');
+  if (/^all\s+tables\s+in\s+schema\b/i.test(normalized)) return [];
+  /** @type {{ schema: string, name: string }[]} */
+  const tables = [];
+  for (const piece of splitGrantTableList(normalized)) {
+    const parsed = parseQualifiedTableRef(piece);
+    if (parsed) tables.push(parsed);
+  }
+  return tables;
+}
+
+/**
+ * Expands EXECUTE format('…%I…', loopVar) for FOREACH loopVar IN ARRAY ARRAY[…].
+ * @param {string} rawSql
+ * @returns {string}
+ */
+export function expandForeachExecuteFormatSql(rawSql) {
+  /** @type {string[]} */
+  const statements = [];
+  const loopRe =
+    /FOREACH\s+([a-zA-Z_][a-zA-Z0-9_]*)\s+IN\s+ARRAY\s+ARRAY\s*\[([\s\S]*?)\]\s*LOOP/gi;
+  let loopMatch;
+  while ((loopMatch = loopRe.exec(rawSql))) {
+    const loopVar = loopMatch[1];
+    const arrayBody = loopMatch[2];
+    /** @type {string[]} */
+    const names = [];
+    for (const itemMatch of arrayBody.matchAll(/'((?:''|[^'])*)'/g)) {
+      const decoded = itemMatch[1].replace(/''/g, "'");
+      if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(decoded)) names.push(decoded);
+    }
+    if (!names.length) continue;
+
+    const bodyStart = loopMatch.index + loopMatch[0].length;
+    const bodySlice = rawSql.slice(bodyStart);
+    const endLoop = /\bEND\s+LOOP\s*;/i.exec(bodySlice);
+    if (!endLoop) continue;
+    const body = bodySlice.slice(0, endLoop.index);
+
+    const execRe = new RegExp(
+      String.raw`EXECUTE\s+format\s*\(\s*'((?:''|[^'])*)'\s*,\s*${loopVar}\s*\)`,
+      'gi',
+    );
+    let execMatch;
+    while ((execMatch = execRe.exec(body))) {
+      const formatSql = execMatch[1].replace(/''/g, "'");
+      for (const name of names) {
+        statements.push(formatSql.replace(/%I/g, name));
+      }
+    }
+  }
+  return statements.join('\n');
+}
+
+/**
+ * @param {string} privilegeList
+ * @returns {Set<string>}
+ */
+function parseGrantPrivileges(privilegeList) {
+  const privs = new Set();
+  const lower = privilegeList.replace(/\s+/g, ' ').trim().toLowerCase();
+  if (/^(all privileges|all)$/.test(lower)) {
+    for (const p of REQUIRED_PRIVILEGES) privs.add(p);
+    return privs;
+  }
+  for (const piece of lower.split(',')) {
+    let part = piece.trim();
+    if (!part) continue;
+    const paren = part.indexOf('(');
+    if (paren !== -1) part = part.slice(0, paren).trim();
+    if (!part) continue;
+    for (const p of REQUIRED_PRIVILEGES) {
+      if (new RegExp(`\\b${p}\\b`).test(part)) privs.add(p);
+    }
+  }
+  return privs;
+}
+
+/**
+ * @param {string} toClause
+ * @returns {Set<string>}
+ */
+function parseGrantRoles(toClause) {
+  const roles = new Set();
+  const lower = toClause.replace(/\s+/g, ' ').trim().toLowerCase();
+  for (const role of REQUIRED_ROLES) {
+    if (new RegExp(`\\b${role}\\b`).test(lower)) roles.add(role);
+  }
+  return roles;
+}
+
+/**
+ * @param {string} code sanitized sql
+ * @param {string} schema
+ * @param {string} tableName
+ * @returns {Map<string, Set<string>>}
+ */
+function grantsByRoleForTable(code, schema, tableName) {
+  /** @type {Map<string, Set<string>>} */
+  const byRole = new Map(REQUIRED_ROLES.map((role) => [role, new Set()]));
+  const re = /\bgrant\s+([^;]+?)\s+on\s+([^;]+?)\s+to\s+([^;]+)/gi;
+  let match;
+  while ((match = re.exec(code))) {
+    const onTables = parseGrantOnTables(match[2]);
+    if (!onTables.some((t) => t.schema === schema && t.name === tableName)) continue;
+    const privs = parseGrantPrivileges(match[1]);
+    const roles = parseGrantRoles(match[3]);
+    for (const role of roles) {
+      const bucket = byRole.get(role);
+      if (!bucket) continue;
+      for (const p of privs) bucket.add(p);
+    }
+  }
+  return byRole;
+}
+
+/**
+ * @param {string} clause lowercased policy tail
+ */
+function policyTargetsAnonOrAuthenticated(clause) {
+  return (
+    /\bto\s+(?:anon|authenticated)\b/.test(clause) ||
+    /\bto\s+[^;]*\b(?:anon|authenticated)\b/.test(clause)
+  );
+}
+
+/**
+ * @param {string} clause lowercased policy statement
+ */
+function policyWriteActionIsOverlyBroad(clause) {
+  if (!policyTargetsAnonOrAuthenticated(clause)) return false;
+  const forMatch = /\bfor\s+(all|insert|update|delete)\b/.exec(clause);
+  if (!forMatch) return false;
+  const action = forMatch[1];
+  const usingTrue = /\busing\s*\(\s*true\s*\)/.test(clause);
+  const withCheckTrue = /\bwith\s+check\s*\(\s*true\s*\)/.test(clause);
+  if (action === 'insert') return withCheckTrue || usingTrue;
+  return usingTrue || withCheckTrue;
+}
+
+/**
+ * @param {string} code sanitized sql
+ * @param {string} schema
+ * @param {string} tableName
+ * @returns {string[]}
+ */
+function findBroadWritePolicyViolations(code, schema, tableName) {
+  const ref = tableReferencePattern(schema, tableName);
+  const policyName = `(?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*)`;
+  const re = new RegExp(
+    `\\bcreate\\s+policy\\s+${policyName}\\s+on\\s+${ref}(?=\\s|;|$)([^;]*)`,
+    'gi',
+  );
+  /** @type {string[]} */
+  const violations = [];
+  let match;
+  while ((match = re.exec(code))) {
+    const clause = (match[0] + match[1]).replace(/\s+/g, ' ').trim().toLowerCase();
+    if (policyWriteActionIsOverlyBroad(clause)) {
+      violations.push(
+        `${schema}.${tableName}: overly broad write policy for anon/authenticated (PostgREST direct-write risk)`,
+      );
+      return violations;
+    }
+  }
+  return violations;
+}
+
+/**
+ * @param {string} code sanitized sql
+ * @param {string} schema
+ * @param {string} tableName
+ */
+function hasEnableRls(code, schema, tableName) {
+  const ref = tableReferencePattern(schema, tableName);
+  return new RegExp(
+    `\\balter\\s+table\\s+${ref}(?=\\s|;|$)\\s+enable\\s+row\\s+level\\s+security\\b`,
+    'i',
+  ).test(code);
+}
+
+/**
+ * @param {string} code sanitized sql
+ * @param {string} schema
+ * @param {string} tableName
+ */
+function hasCreatePolicy(code, schema, tableName) {
+  const ref = tableReferencePattern(schema, tableName);
+  const policyName = `(?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*)`;
+  return new RegExp(`\\bcreate\\s+policy\\s+${policyName}\\s+on\\s+${ref}(?=\\s|;|$)`, 'i').test(
+    code,
+  );
+}
+
+/**
+ * @param {string} sql raw file contents
+ * @returns {string[]} human-readable violation lines (empty when compliant or no CREATE TABLE)
+ */
+export function findCreateTableSetupViolations(sql) {
+  const expanded = expandForeachExecuteFormatSql(sql);
+  const effectiveSql = expanded ? `${sql}\n${expanded}` : sql;
+  const code = sqlCodeWithoutCommentsAndLiterals(effectiveSql);
+  const targets = extractCreateTableTargets(code);
+  if (!targets.length) return [];
+
+  /** @type {string[]} */
+  const violations = [];
+  const seen = new Set();
+
+  for (const { schema, name } of targets) {
+    const key = `${schema}.${name}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    const grants = grantsByRoleForTable(code, schema, name);
+
+    if (schema === 'public') {
+      if (!hasEnableRls(code, schema, name)) {
+        violations.push(`${key}: missing ENABLE ROW LEVEL SECURITY in the same file`);
+      }
+      if (!hasCreatePolicy(code, schema, name)) {
+        violations.push(`${key}: missing CREATE POLICY in the same file`);
+      }
+      violations.push(...findBroadWritePolicyViolations(code, schema, name));
+    }
+
+    for (const role of REQUIRED_ROLES) {
+      const held = grants.get(role) ?? new Set();
+      const missing = REQUIRED_PRIVILEGES.filter((p) => !held.has(p));
+      if (missing.length) {
+        violations.push(
+          `${key}: GRANT missing ${missing.join(', ').toUpperCase()} TO ${role} in the same file`,
+        );
+      }
+    }
+  }
+
+  return violations;
+}
+
+/**
+ * True when CREATE TABLE is present and template requirements are not met.
+ * @param {string} sql
+ */
 export function sqlDefinesCreateTableWithoutGrant(sql) {
-  const code = sqlCodeWithoutCommentsAndLiterals(sql).toLowerCase();
-  if (!/\bcreate\s+table\b/.test(code)) return false;
-  return !/\bgrant\b/.test(code);
+  return findCreateTableSetupViolations(sql).length > 0;
 }
 
 /**
@@ -162,12 +555,39 @@ export function findGrantViolations(changedRelPaths) {
     if (!fs.existsSync(abs)) continue;
 
     const sql = fs.readFileSync(abs, 'utf8');
-    if (sqlDefinesCreateTableWithoutGrant(sql)) {
-      violations.push({
-        file: normalized,
-        reason:
-          'contains CREATE TABLE but no GRANT (add explicit grants in the same file; see sql/_TEMPLATE_new_table.sql)',
-      });
+    const issues = findCreateTableSetupViolations(sql);
+    if (issues.length) {
+      for (const issue of issues) {
+        violations.push({
+          file: normalized,
+          reason: issue,
+        });
+      }
+    }
+  }
+  return violations;
+}
+
+/**
+ * Scan every sql/*.sql file (local QA; not used in diff-only CI).
+ * @param {string} [root]
+ * @returns {{ file: string; reason: string }[]}
+ */
+export function findViolationsInSqlTree(root = repoRoot) {
+  const sqlDir = path.join(root, 'sql');
+  if (!fs.existsSync(sqlDir)) return [];
+  /** @type {{ file: string; reason: string }[]} */
+  const violations = [];
+  for (const name of fs
+    .readdirSync(sqlDir)
+    .filter((f) => f.endsWith('.sql'))
+    .sort()) {
+    const rel = `sql/${name}`;
+    if (isIgnoredSqlGrantCheckPath(rel)) continue;
+    const sql = fs.readFileSync(path.join(sqlDir, name), 'utf8');
+    const issues = findCreateTableSetupViolations(sql);
+    for (const issue of issues) {
+      violations.push({ file: rel, reason: issue });
     }
   }
   return violations;
@@ -259,6 +679,22 @@ function listChangedSqlFiles(baseRef) {
 }
 
 function main() {
+  if (process.env.SQL_GRANTS_CHECK_TREE === '1') {
+    const violations = findViolationsInSqlTree();
+    if (violations.length) {
+      console.error('SQL grant check failed — sql/ tree has CREATE TABLE setup gaps:\n');
+      for (const v of violations) {
+        console.error(`  ${v.file}: ${v.reason}`);
+      }
+      process.exit(2);
+    }
+    const count = fs
+      .readdirSync(path.join(repoRoot, 'sql'))
+      .filter((f) => f.endsWith('.sql')).length;
+    console.log(`check-sql-table-grants: tree OK (${count} file(s) under sql/).`);
+    return;
+  }
+
   const baseRef = resolveBaseRef();
   if (!baseRef) {
     const eventName = process.env.GITHUB_EVENT_NAME;
@@ -281,7 +717,7 @@ function main() {
   }
 
   console.error(
-    'SQL grant check failed — new/changed migrations must GRANT in the same file as CREATE TABLE:\n',
+    'SQL grant check failed — new/changed migrations need RLS, policies, and explicit GRANTs in the same file as CREATE TABLE:\n',
   );
   for (const v of violations) {
     console.error(`  ${v.file}: ${v.reason}`);

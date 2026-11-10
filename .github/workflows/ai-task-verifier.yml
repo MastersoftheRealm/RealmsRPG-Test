@@ -66,5 +66,5 @@ jobs:
       - name: Validate shared/ui allowlist
         run: node scripts/validate-shared-ui-allowlist.js
 
-      - name: SQL CREATE TABLE requires explicit GRANT (changed files)
+      - name: SQL CREATE TABLE requires RLS, policies, and GRANTs (changed files)
         run: node scripts/check-sql-table-grants.mjs
