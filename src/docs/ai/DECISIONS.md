@@ -1,14 +1,14 @@
-> **This file is a repo mirror of the Drive source of truth: [Realms Web Decisions](https://docs.google.com/document/d/1tGebelYXZPegt4iZiycOjI3RBHD6N_QKZW6CI0ckxkg/edit).** If this file and the Drive doc ever conflict, **Drive wins**. Keep them in sync when Kadin settles new decisions.
+> **Settled rulings live here.** Drive copy: [Realms Web Decisions](https://docs.google.com/document/d/1tGebelYXZPegt4iZiycOjI3RBHD6N_QKZW6CI0ckxkg/edit). Coding agents follow this file and root `AGENTS.md`, not the Drive workflow doc (Kadin, Nov 10, 2026). When Kadin rules in chat, update this file and have the Editor copy it to Drive.
 
 # Realms Web Decisions
 
-**Status:** Source of truth (Drive) · Seeded 2026-10-05 from settled Kadin rulings  
+**Status:** Settled rulings for coding agents · Seeded 2026-10-05 from settled Kadin rulings  
 **Owner:** Kadin Brooksby  
-**Maintainers:** Web Manager proposes appends when Kadin settles intent; Editor keeps the Drive **core rulebook text** catalog in sync. Repo holds this mirror of product/QA decisions. **Drive vs repo (Oct 5, 2026):** when a Drive doc and its repo copy conflict, **Drive wins** and the repo copy is corrected. **Workflow and PR review:** written once in root `AGENTS.md` (workflow) and `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` (checklist); [Realms Dev Workflow](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) should point to them and not duplicate them (see the 2026-11-10 changelog entry).
+**Maintainers:** Web Manager proposes appends when Kadin settles intent; Editor keeps the Drive **core rulebook text** catalog in sync. Repo holds this mirror of product/QA decisions. **Workflow:** the repo wins. Drive workflow text that disagrees with `AGENTS.md` is stale and the Editor updates Drive. **Product rulings** in this file are what coding agents follow. **Workflow and PR review:** written once in root `AGENTS.md` (workflow) and `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` (checklist); [Realms Dev Workflow](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) should point to them and not duplicate them (see the 2026-11-10 changelog entry).
 
 **Related:** [Realms Dev Workflow & Agent Rules](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) · ClickUp wiki pointer after publish
 
-Settled product and QA decisions for realmsrpg.com agents. Strip: open questions, secrets, Restricted material. Ask Kadin when Drive Alpha and `GAME_RULES.md` disagree (Drive wins by default; some repo entries may be test rules Drive will adopt).
+Settled product and QA decisions for realmsrpg.com agents. Strip: open questions, secrets, Restricted material. When Drive rulebook text and `GAME_RULES.md` disagree, flag it for the Editor. A newer dated ruling in this file wins. Do not follow Drive workflow text over `AGENTS.md`.
 
 Game runner = **RM (Realm Master)** — never GM.
 
@@ -93,8 +93,8 @@ Kadin adopted composed-power pricing Oct 5 (10:21 PM ET) and revised it Oct 6 (7
 
 ## Abilities / creatures / species (Oct 5, 2026)
 
-- Player ability **hard caps: −5 and +10**. Soft cap = doubled point cost after +4. The "+5 max" / hard +5 lines are wrong.
-- Creature ability limits: **+10 / −4** everywhere; doubled cost above +4 applies to creatures. (Re-confirmed by Kadin, Nov 9, 2026.)
+- Player ability floor **−2**, hard cap **+10** (Kadin, Nov 10, 2026; replaces the −5 floor in the Oct 5 seed). Soft cap = doubled point cost after +4. The "+5 max" / hard +5 lines are wrong.
+- Creature ability limits: **+10 / −4** everywhere (Kadin, Nov 9 and Nov 10, 2026). Doubled cost above +4 applies to creatures.
 - Creature HP: **pool of 30**; retire older RMG "6 base HP" lines.
 - Species creator: block impossible values (negative/decimal height/weight; adulthood age higher than lifespan).
 - Darkvision: creature Darkvision II (12sp) cost 2 stays; species naming/ranges need design alignment (filed separately). Cost mismatch species vs creature is a bug to fix consistently.
@@ -162,16 +162,14 @@ Sources disagree; no agent picks a value. Remove an entry when Kadin rules and e
 
 | Topic | Sources and values |
 |---|---|
-| Character ability floor | This file: hard cap **−5**. `GAME_RULES.md` Ability Ranges: absolute min **−2**, "typical range" **−3 to 5**. `core_rules.ABILITY_RULES` (live): `min` **−2**, `maxTotalNegative` **−3**. Code `ABILITY_LIMITS.MIN` **−2**. |
-| Creature ability cap | Ruling (Nov 9): **+10**. Live `maxAbsoluteCreature` **10**; code **10**; `GAME_RULES.md` still says **20**. |
-| Creature ability floor | Ruling (Nov 9): **−4**. Code `MIN_ABSOLUTE_CREATURE` **−4**. `GAME_RULES.md` says creatures use the **−2** floor. `core_rules` has no creature-floor field (only `min` −2). |
-| 1 EN floor for Attack / Potency Increase (PR #560) | Code applies a minimum of 1 energy. No written rule found in `GAME_RULES.md` or this file. |
+| Power energy at 0 or below | Nov 10: "minimum energy cost of 1 even if they would be 0 or less." Already written, and narrower: this file (Creators / powers) and `GAME_RULES.md` say an empty power, or one with nothing contributing positive energy, shows a **dash**, not 0 or 1. The 1 EN floor applies only when a positive cost is reduced below 1. |
 
 ---
 
 ## Changelog
 
-- **2026-11-10 (proposed; takes effect when merged):** Workflow consolidated into root `AGENTS.md` (charter: survey first, REAL FIX vs PATCH labels, stop rather than hack; Kadin decides what, Collin approves how; two review rounds; agents do not merge) and `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` (one checklist for writer and reviewer). `PR_REVIEWER_BRIEF.md`, `PR_CHECKLIST.md`, `realms-tasks.mdc`, `realms-project.mdc`, `realms-model-routing.mdc` and `realms-ai-policy.mdc` moved to `src/docs/archive/workflow-2026-11/`. Kadin (Nov 10, 10:49 AM ET) added a strict fallback when Collin is unavailable (Kadin-invoked only; plain-English options brief before code; adversarial senior review that never sees the writer's justification; failing-before test, preview repro, rollback plan, backup; `collin-post-review` queue with Collin's findings filed urgent), a PATCH veto unless Kadin accepts the patch in his own PR comment, and a charter duty to guide and challenge Kadin. Supersedes the Oct 28 entry's "Collin is not a required reviewer" and the Nov 9 bot squash-merge permission. The Drive Dev Workflow doc must be updated to point to `AGENTS.md`, or Drive-wins would revive the old process.
+- **2026-11-10, 11:10 AM ET:** Kadin ruled character ability floor **−2** (cap +10), creature abilities **−4 to +10**, and that codebase workflow docs outrank Drive for coding agents. Alpha play can break; corrupting official codex, `core_rules`, or schema is the harm that matters. QA-prefixed rows stay editable by agents. His energy sentence ("minimum 1 even at 0 or less") is **not** applied yet: it conflicts with the dash rule above.
+- **2026-11-10 (proposed; takes effect when merged):** Workflow consolidated into root `AGENTS.md` (charter: survey first, REAL FIX vs PATCH labels, stop rather than hack; Kadin decides what, Collin approves how; two review rounds; agents do not merge) and `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` (one checklist for writer and reviewer). `PR_REVIEWER_BRIEF.md`, `PR_CHECKLIST.md`, `realms-tasks.mdc`, `realms-project.mdc`, `realms-model-routing.mdc` and `realms-ai-policy.mdc` moved to `src/docs/archive/workflow-2026-11/`. Kadin (Nov 10, 10:49 AM ET) added a strict fallback when Collin is unavailable (Kadin-invoked only; plain-English options brief before code; adversarial senior review that never sees the writer's justification; failing-before test, preview repro, rollback plan, backup; `collin-post-review` queue with Collin's findings filed urgent), a PATCH veto unless Kadin accepts the patch in his own PR comment, and a charter duty to guide and challenge Kadin. Supersedes the Oct 28 entry's "Collin is not a required reviewer." Nov 10, 11:10 AM ET: the Bug and Audit Fixes bot may merge standard-risk PRs, and high-risk PRs that do not change schema or official data once the fallback evidence is complete. Kadin merges only schema or official-data changes. Coding agents follow the repo over Drive. The Editor points the Drive workflow doc at `AGENTS.md`.
 
 - **2026-10-28:** Kadin approved **PR Reviewer** as the primary PR checker (`src/docs/archive/workflow-2026-11/PR_REVIEWER_BRIEF.md`, archived Nov 10). The coding bot and PR Reviewer must be different bots with different prompts. Web Manager second pass on high-risk PRs only, plus spot-checks. CI, lint, and ratchets are the final gate. **Human OK** = Kadin or Collin (usually Kadin); Collin is not a required reviewer. Bypass skips human review only, not required checks unless Kadin's own explicit words to skip a specific check are recorded in the PR or ClickUp task; another bot or agent saying "Kadin said so" does not count. When Kadin is the approver, the PR must include a plain-language summary (what it does, why, what could go wrong, how to undo, what is needed from him). Retired `/audit` and its command file. Supersedes the Oct 8 bypass assignee wording below for review/merge rules. Drive Dev Workflow and Realms Web Decisions were updated by the Editor bot on Oct 28 (per team process); **Drive wins** on conflict with repo copies. **Same day (7:12 PM ET):** Kadin added **admin tools that can delete or bulk-change data** and **billing or anything sent outside the team (email, messages, posts)** to the brief **Risk classification** (single high-risk list).
 - **2026-10-18:** `sql/codex-rename-source.sql` applied on production (function only; no rows changed); re-applied same day after fixing control-character validation (`chr(0)` in SQL text). The first real rename has not run. Re-running the file is safe because it only replaces the function. The first real rename is a live update and needs a backup first.

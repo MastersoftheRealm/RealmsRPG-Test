@@ -8,11 +8,11 @@ alwaysApply: false
 
 Applies to `codex_*`, `core_rules`, and bulk edits to official library content. Approvals and the "Test is production" rule: root `AGENTS.md` **Database safety**.
 
-| Allowed without approval | Needs Kadin's explicit OK + Collin's approval + fresh backup |
+| Allowed without extra approval | Needs Kadin's explicit OK and a named backup (Collin approves the SQL when available) |
 |---|---|
-| `SELECT`, audits, counts, previews | `UPDATE`, `INSERT`, `DELETE` on codex or `core_rules` |
-| Draft SQL in `sql/*.sql` | `execute_sql` / `apply_migration` that mutates |
-| Repo-only seed or CSV edits | Any MCP write that changes live data |
+| `SELECT`, audits, counts, previews | `UPDATE`, `INSERT`, `DELETE` on official codex or `core_rules` |
+| Create or edit records prefixed `QA` or `QA Test`. Never publish them as official Codex | `execute_sql` / `apply_migration` that changes schema or official rows |
+| Draft SQL in `sql/*.sql` | A schema change backed only by a Drive CSV. A CSV restores rows, not table structure |
 
 Bulk or policy changes (tags, categories, merges, migrations):
 

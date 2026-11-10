@@ -15,6 +15,7 @@ Stack: Next.js App Router, React, Tailwind, Supabase (no Prisma), Vercel. Repo `
 7. **AI creative policy.** Never write art, images, creative names, item names, feat renames, plot, lore, flavor text, or visual/style choices (colors, fonts). You may fix grammar (unless deliberate style), write technical docs, and flag inconsistencies. Full policy: the ClickUp wiki [Using AI at Realms](https://app.clickup.com/9017636492/docs/8cqwdmc-3357/8cqwdmc-517).
 8. **Game rules are not yours.** Never invent or pick a formula or value. A missing or conflicting written rule is a hold: list the sources and their values and ask Kadin.
 9. **Guide Kadin; do not just satisfy him.** Kadin is not a developer. Your job is to guide him through what he does not know: explain the options and their tradeoffs in plain English, and challenge inaccuracies in his plans, in the task and in existing code before building. A request that rests on a wrong assumption gets a correction and a better option, not a faithful implementation of the mistake.
+10. **Push back when a request breaks a written rule.** Quote the rule, say in plain English what following the request would break, and wait. Do this even when he does not know the request breaks a rule. A workflow rule is waived only by his explicit words on that task, recorded there. "Just do it" does not waive a rule that protects official game data. A game value he states is a ruling: record it, and if it conflicts with an older ruling, show him both before changing the older one.
 
 ## Workflow
 
@@ -52,22 +53,25 @@ Stack: Next.js App Router, React, Tailwind, Supabase (no Prisma), Vercel. Repo `
 For high-risk work that cannot wait for Collin. **Only Kadin invokes it**, in his own comment on the ClickUp task or PR, saying why it cannot wait. An agent never invokes it or suggests that it applies. Every step below is required; none is waived.
 
 1. **Brief for Kadin before any code.** Plain English, no jargon: what exists now, what is wrong, two or more options with tradeoffs and risks (including "do nothing yet"), and a recommendation. Kadin picks the option; that is his product decision, recorded on the task.
-2. **Independent senior review, adversarial, twice.** A separate session and prompt from the writer, on the strongest available non-fast model (`grok-4.7-xhigh` is allowed here without a prior High miss, or a Claude/GPT model Kadin starts); a different model from the writer when possible.
+2. **Independent senior review, adversarial, twice.** A separate session and prompt from the writer, on `grok-4.7-high` (never `-fast`). It does not see the writer's justification. If that review finds the task crosses systems, stop and split the task. Do not jump to a bigger model to finish a wide task.
    - **Plan pass (before Kadin decides):** gets the task, Kadin's intent and the brief's options, and surveys the code itself. It challenges the plan: is the root cause real, are the assumptions accurate, is an option over-engineered or over-simplified, what forks, duplicates or dead code would it create or leave? Its challenge is appended to the brief unedited.
    - **Implementation pass:** gets Kadin's intent and decision, the diff, CI results and the preview URL, **not** the writer's PR description, survey or reasoning. It traces the root cause itself before reading the diff, then grades the checklist in `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` and labels the result REAL FIX or PATCH. The PATCH veto applies.
 3. **Stricter proof**, all linked in the PR:
    - a test that fails before and passes after (no "not feasible" exemption);
    - the repro run on the Vercel preview deploy, with steps and the observed result;
    - a written rollback plan (what to revert, how to restore data, how we would notice it failed);
-   - for any change that touches the database, a backup taken immediately before apply, named in the PR. If the rollback plan cannot restore the prior state (irreversible data loss), the fallback is not available: wait for Collin.
-4. **Merge and post-review.** Kadin merges (see [Merge](#merge)). The PR carries the `collin-post-review` label, and a ClickUp task "Collin post-review: PR #N" is assigned to Collin. Collin works that queue when he is back; his findings are filed as **urgent** and go ahead of all other work. He swaps the label for `collin-reviewed` when done.
+   - for a change to schema or official codex / `core_rules` rows, a backup taken immediately before apply, named in the PR (see [Database safety](#database-safety)). If the rollback cannot restore those rows, wait for Collin.
+4. **Merge and post-review.** Who presses the button is [Merge](#merge). The PR carries the `collin-post-review` label, and a ClickUp task "Collin post-review: PR #N" is assigned to Collin. Collin works that queue when he is back; his findings are filed as **urgent** and go ahead of all other work. He swaps the label for `collin-reviewed` when done. A label an agent applies is not Kadin's signature. GitHub cannot tell his comment from an agent's while agents post as his account.
 
 ### Merge
 
-- **Agents do not merge.** A human merges after the approvals GitHub requires (CODEOWNERS on high-risk paths) and green CI.
-- **Fallback merges:** Kadin, as repository admin, merges with the logged code-owner override only after every fallback step is linked in the PR and the `collin-post-review` label is on. The override never skips required CI checks.
-- An agent quoting "Kadin approved" is not an approval. Approvals are recorded in GitHub reviews.
-- Required checks are never skipped unless Kadin's own words to skip a specific check are recorded on the PR or task.
+The merge button is not a code review. Kadin does not read code, so his click is not a quality check. The reviewer and CI are the check.
+
+- **Standard-risk** (no path in the table below), reviewer verdict APPROVE, CI green, and not an unaccepted PATCH: the Bug and Audit Fixes bot may merge. Kadin does not have to look.
+- **High-risk, Collin available:** Collin merges.
+- **High-risk, Collin unavailable, and the PR does not change schema or official codex / `core_rules` rows:** the same bot may merge after every fallback step is linked in the PR and the `collin-post-review` label is on. Breaking play for alpha testers is acceptable. The bot still may not merge an unaccepted PATCH.
+- **Schema or official data:** Kadin presses merge. That click means he accepts the data change described in plain English (what changes, which backup, how to undo). It is not a code review. Required CI checks are never skipped.
+- An agent quoting "Kadin approved" is not an approval. A workflow waiver or a PATCH acceptance counts only as his own comment on the PR or task.
 
 ### ClickUp
 
@@ -76,6 +80,8 @@ ClickUp is the only work queue. Statuses: **to do** → **in progress** (one com
 ## Risk by path
 
 A PR is **high-risk** if it touches any of these. High-risk needs Collin's approval (CODEOWNERS), or the full [fallback path](#fallback-when-collin-is-unavailable), plus Kadin's product OK where a product or rule decision is involved.
+
+There are no public players. A change that breaks play for alpha testers on the team is acceptable. The harm that matters is corrupting official codex, `core_rules`, or schema, because the team builds the game in that database. Review effort follows that harm.
 
 | Area | Paths (examples) |
 |---|---|
@@ -91,9 +97,10 @@ The paths a PR touches decide its risk. A checkbox does not.
 
 ## Database safety
 
-- `RealmsRPG-Test` **is production**. There is no separate test database yet.
-- No production write (DDL, DML, `apply_migration`, `execute_sql` that mutates, seeds, resets) without Kadin's explicit OK, Collin's approval of the SQL (or the full fallback path), and a fresh backup. SELECT-only reads are allowed.
-- Codex / `core_rules` data: audit → propose SQL in `sql/` → approval → apply once → report rows affected. Details: `.cursor/rules/realms-codex-data.mdc`.
+- There is one database and the team builds the game in it. A separate test database does not exist yet. Cloud agents would use one if its keys were in their environment; Kadin would not run it himself. Until that exists, agents use this database under the limits below.
+- **QA rows.** Records prefixed `QA` or `QA Test` may be created and edited by agents without extra approval. They are never published as official library or Codex (`DECISIONS.md`, QA / accounts).
+- **Official codex, `core_rules`, and schema.** Kadin's explicit OK, the SQL shown in the PR, and a named backup before apply. Collin approves the SQL when he is available. Agents draft the SQL and apply it after that OK. A CSV export in Drive is a content snapshot: name the file and its date. It can restore rows. It cannot restore table structure, so a schema change needs a Supabase backup, not only a CSV.
+- SELECT-only reads are allowed. Details for codex edits: `.cursor/rules/realms-codex-data.mdc`.
 - Every `CREATE TABLE` in `public` enables RLS, adds policies and grants explicitly in the same file. Copy `sql/_TEMPLATE_new_table.sql`.
 
 ## Definition of done
@@ -113,8 +120,8 @@ One fact, one place. Other docs link; they do not restate.
 |---|---|
 | Workflow (this) | `AGENTS.md` |
 | Engineering standards and review checklist | `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` |
-| Settled product rulings, open rule conflicts | `src/docs/ai/DECISIONS.md` (mirror of the Drive doc Realms Web Decisions; Drive wins on conflict, so report conflicts) |
-| Game terms and formulas | `src/docs/GAME_RULES.md`; live values in the `core_rules` table. Drive core rulebook text wins on conflict: ask Kadin. |
+| Settled product rulings, open rule conflicts | `src/docs/ai/DECISIONS.md`. Coding agents follow the repo. The Editor copies new rulings to Drive. |
+| Game terms and formulas | `src/docs/GAME_RULES.md`; live values in the `core_rules` table. A newer ruling in `DECISIONS.md` wins. Drive rulebook text that still disagrees is flagged for the Editor, not followed over the repo. |
 | Schema | `src/docs/SUPABASE_SCHEMA.md` |
 | Does it already exist? | `src/docs/ai/FEATURE_INDEX.md` and the barrels |
 | Areas not to copy from | `DEFERRED.md` |
@@ -131,4 +138,4 @@ One fact, one place. Other docs link; they do not restate.
 
 ## Models
 
-Never use a slug ending in `-fast`. Default `composer-2.5`, including small UI, copy and local fixes whose behavior is written. Bugs that cross systems: `grok-4.7-medium`. Rules math, a missing rule, Supabase, RLS, schema, migrations, architecture: `grok-4.7-high`. `grok-4.7-xhigh` only after High failed on that problem (note it on the task), or as the fallback senior reviewer. Do not start Claude, GPT or other models: recommend one on the ClickUp task and leave it for Kadin. After a miss, step up one level; do not redo the same bug on the same model.
+Never use a slug ending in `-fast`. Writer: `composer-2.5`, one system, scope tight enough to survey. Reviewer and fallback senior review: `grok-4.7-high`, a separate session, without the writer's justification. If the reviewer finds the task crosses systems, stop and split it. Do not finish a wide task by stepping up a model. Do not start Claude, GPT, or other models. After a miss inside the same scope, say so; do not redo that bug on the same model.

@@ -265,9 +265,10 @@ Every Character, creature, and monster has six Abilities:
 | Rule | Value | Notes |
 |------|-------|------|
 | Typical range | -3 to 5 | Default for player Characters |
-| Absolute min | -2 | Ability **scores** never go below −2 (characters and creatures). Temp modifiers can push past this in play. Creatures may break other hard rules; they still use this score floor. |
+| Absolute min (characters) | -2 | Character ability scores never go below −2 (Kadin, Nov 10, 2026). Temp modifiers can push past this in play. |
+| Absolute min (creatures) | -4 | Creature ability scores never go below −4 (Kadin, Nov 9 and Nov 10, 2026). |
 | Hard cap (characters) | 10 | Absolute maximum for player Characters |
-| Hard cap (creatures) | 20 | Absolute maximum for creatures |
+| Hard cap (creatures) | 10 | Absolute maximum for creatures (Kadin, Nov 9 and Nov 10, 2026). |
 | Max at creation | 3 | From point allocation alone |
 | Level cap | None | No level-based ability cap; cost increase provides soft cap |
 
