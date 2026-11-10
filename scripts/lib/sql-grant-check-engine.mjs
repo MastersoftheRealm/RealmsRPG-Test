@@ -4,6 +4,8 @@
  */
 
 export const REQUIRED_PRIVILEGES = ['select', 'insert', 'update', 'delete'];
+export const AUTHENTICATED_REQUIRED_PRIVILEGES = ['select'];
+export const SERVICE_ROLE_REQUIRED_PRIVILEGES = ['select', 'insert', 'update', 'delete'];
 export const REQUIRED_ROLES = ['authenticated', 'service_role'];
 export const CLIENT_EXPOSED_ROLES = ['anon', 'authenticated', 'public'];
 
@@ -14,17 +16,6 @@ export const ALLOWED_PRIVATE_AUTH_HELPERS = new Set([
 ]);
 
 const IGNORED_REL = new Set(['sql/_TEMPLATE_new_table.sql', 'sql/_template_new_table.sql']);
-
-/** Pre–grant-gate maintenance scripts (no CREATE TABLE); skip EXECUTE-in-function audit only. */
-const LEGACY_DYNAMIC_SQL_MAINTENANCE = new Set([
-  'sql/codex-rename-source.sql',
-  'sql/role-quota-atomic.sql',
-]);
-
-/** @param {string} relPath */
-export function isLegacyDynamicSqlMaintenancePath(relPath) {
-  return LEGACY_DYNAMIC_SQL_MAINTENANCE.has(relPath.replace(/\\/g, '/'));
-}
 
 /** @param {string} relPath posix-style path under repo root */
 export function isIgnoredSqlGrantCheckPath(relPath) {
@@ -719,6 +710,219 @@ export function findUnexpandableDynamicSqlViolations(
 }
 
 /**
+ * @param {string} sql
+ * @returns {string[]}
+ */
+function extractRawDollarBodyAfterKeyword(sql, keywordIndex) {
+  const slice = sql.slice(keywordIndex);
+  const tagMatch = /^\s*(\$[A-Za-z0-9_]*\$)/.exec(slice);
+  if (!tagMatch) return null;
+  const tag = tagMatch[1];
+  const bodyStart = keywordIndex + tagMatch[0].length;
+  const closeIdx = sql.indexOf(tag, bodyStart);
+  if (closeIdx === -1) return null;
+  return { body: sql.slice(bodyStart, closeIdx), end: closeIdx + tag.length };
+}
+
+/**
+ * @param {string} sql
+ * @returns {string[]}
+ */
+function extractRawFunctionBodies(sql) {
+  /** @type {string[]} */
+  const bodies = [];
+  const re = /\bCREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\b/gi;
+  let match;
+  while ((match = re.exec(sql))) {
+    const asIdx = sql.indexOf('AS', match.index);
+    if (asIdx === -1) continue;
+    const extracted = extractRawDollarBodyAfterKeyword(sql, asIdx + 2);
+    if (!extracted) continue;
+    bodies.push(extracted.body);
+    re.lastIndex = extracted.end;
+  }
+  return bodies;
+}
+
+/**
+ * @param {string} sql
+ * @returns {string[]}
+ */
+function extractRawTopLevelDoBodies(sql) {
+  /** @type {string[]} */
+  const bodies = [];
+  const re = /\bDO\b/gi;
+  let match;
+  while ((match = re.exec(sql))) {
+    const extracted = extractRawDollarBodyAfterKeyword(sql, match.index + match[0].length);
+    if (!extracted) continue;
+    bodies.push(extracted.body);
+    re.lastIndex = extracted.end;
+  }
+  return bodies;
+}
+
+/**
+ * @param {string} rawBody
+ * @param {string} varName
+ * @returns {string[]}
+ */
+function parseDeclareTextArrayNames(rawBody, varName) {
+  const re = new RegExp(
+    String.raw`\b${varName}\s+text\s*\[\]\s*:=\s*ARRAY\s*\[([\s\S]*?)\]\s*;`,
+    'i',
+  );
+  const match = re.exec(rawBody);
+  if (!match) return [];
+  /** @type {string[]} */
+  const names = [];
+  for (const sm of match[1].matchAll(/'((?:''|[^'])*)'/g)) {
+    const decoded = sm[1].replace(/''/g, "'");
+    if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(decoded)) names.push(decoded);
+  }
+  return names;
+}
+
+/**
+ * @param {string} rawBody
+ * @param {string} sanitizedRegion
+ * @returns {string[]}
+ */
+function resolveForeachIterationNames(rawBody, sanitizedRegion) {
+  const inline = parseForeachArrayNames(sanitizedRegion);
+  if (inline.length) return inline;
+  const foreachMatch =
+    /FOREACH\s+[a-zA-Z_][a-zA-Z0-9_]*\s+IN\s+ARRAY\s+([a-zA-Z_][a-zA-Z0-9_]*)/i.exec(
+      sanitizedRegion,
+    );
+  if (!foreachMatch) return [];
+  return parseDeclareTextArrayNames(rawBody, foreachMatch[1]);
+}
+
+/**
+ * @param {string} body
+ * @param {string} rawBody
+ * @returns {{ statements: string[], executeExpandSpans: string[] }}
+ */
+function expandPlainLiteralExecutes(body, rawBody) {
+  /** @type {string[]} */
+  const statements = [];
+  /** @type {string[]} */
+  const executeExpandSpans = [];
+  const sanRe = /\bEXECUTE\s+«S([0-9a-f]+)»\s*;/gi;
+  let sanMatch;
+  while ((sanMatch = sanRe.exec(body))) {
+    const literalSql = Buffer.from(sanMatch[1], 'hex').toString('utf8').trim();
+    if (/[%]/.test(literalSql) && /\bformat\s*\(/i.test(literalSql)) continue;
+    statements.push(literalSql);
+    executeExpandSpans.push(sanMatch[0]);
+  }
+  const rawRe = /\bEXECUTE\s+((?:'(?:''|[^'])*'|\$[a-zA-Z0-9_]*\$[\s\S]*?\$[a-zA-Z0-9_]*\$))\s*;/gi;
+  let rawMatch;
+  while ((rawMatch = rawRe.exec(rawBody))) {
+    const frag = rawMatch[1].trim();
+    if (/^\s*format\s*\(/i.test(frag) || /^\s*[a-z_][a-z0-9_]*\s*$/i.test(frag)) continue;
+    let literal = '';
+    if (frag.startsWith("'")) {
+      literal = frag.slice(1, -1).replace(/''/g, "'").trim();
+    } else {
+      const delim = frag.match(/^\$([a-zA-Z0-9_]*)\$/);
+      if (!delim) continue;
+      const close = `$${delim[1]}$`;
+      const end = frag.lastIndexOf(close);
+      if (end <= delim[0].length) continue;
+      literal = frag.slice(delim[0].length, end).trim();
+    }
+    if (!literal || /\bformat\s*\(/i.test(literal)) continue;
+    statements.push(literal);
+  }
+  return { statements, executeExpandSpans };
+}
+
+/**
+ * @param {string} body
+ * @param {string} rawBody
+ * @returns {{ statements: string[], executeExpandSpans: string[] }}
+ */
+function expandForeachExecuteFormatInBody(body, rawBody, { parseFormatFromRaw = false } = {}) {
+  /** @type {string[]} */
+  const statements = [];
+  /** @type {string[]} */
+  const executeExpandSpans = [];
+  /** @type {string[]} */
+  const rawRemovedSpans = [];
+  const parseBody = parseFormatFromRaw ? rawBody : body;
+  const nameSourceBody = rawBody || body;
+  for (const { start, end } of foreachRegionsOutsideIf(parseBody)) {
+    const region = parseBody.slice(start, end);
+    const loopVarMatch = /FOREACH\s+([a-zA-Z_][a-zA-Z0-9_]*)\s+IN/i.exec(region);
+    if (!loopVarMatch) continue;
+    const loopVar = loopVarMatch[1];
+    const names = resolveForeachIterationNames(nameSourceBody, region);
+    if (!names.length) continue;
+
+    if (parseFormatFromRaw) {
+      const execRe = new RegExp(
+        String.raw`EXECUTE\s+format\s*\(\s*(\$[a-zA-Z0-9_]*\$)([\s\S]*)\1(?:\s*,\s*${loopVar})+\s*\)\s*INTO[\s\S]*?;`,
+        'gi',
+      );
+      let execMatch;
+      while ((execMatch = execRe.exec(region))) {
+        const formatSql = execMatch[2];
+        if (/%[sSL]/i.test(formatSql)) continue;
+        if (!/%I/.test(formatSql)) continue;
+        rawRemovedSpans.push(execMatch[0]);
+        for (const name of names) {
+          statements.push(formatSql.replace(/%I/g, name));
+        }
+      }
+      continue;
+    }
+
+    const execRe = new RegExp(
+      String.raw`EXECUTE\s+format\s*\(\s*[\s\r\n]*«S([0-9a-f]+)»(?:\s*,\s*${loopVar})+\s*\)`,
+      'gis',
+    );
+    let execMatch;
+    while ((execMatch = execRe.exec(region))) {
+      const formatSql = Buffer.from(execMatch[1], 'hex').toString('utf8');
+      if (/%[sSL]/i.test(formatSql)) continue;
+      if (!/%I/.test(formatSql)) continue;
+      executeExpandSpans.push(execMatch[0]);
+      for (const name of names) {
+        statements.push(formatSql.replace(/%I/g, name));
+      }
+    }
+  }
+  return { statements, executeExpandSpans, rawRemovedSpans };
+}
+
+/**
+ * @param {string[]} functionBodies
+ * @param {string[]} rawFunctionBodies
+ * @param {string[][]} rawRemovedSpansByFunction
+ * @returns {string[]}
+ */
+function findUnexpandedExecuteInFunctionBodies(
+  functionBodies,
+  rawFunctionBodies,
+  rawRemovedSpansByFunction,
+) {
+  for (let i = 0; i < functionBodies.length; i++) {
+    const raw = rawFunctionBodies[i] ?? '';
+    let remainder = raw;
+    for (const span of rawRemovedSpansByFunction[i] ?? []) {
+      remainder = remainder.replace(span, '');
+    }
+    remainder = remainder.replace(/\bEXECUTE\s+FUNCTION\b/gi, '');
+    if (/\bexecute\b/i.test(remainder)) {
+      return ['unexpandable dynamic SQL (EXECUTE in function body)'];
+    }
+  }
+  return [];
+}
+
+/**
  * @param {string} body
  * @returns {{ start: number, end: number }[]}
  */
@@ -741,8 +945,23 @@ function foreachRegionsOutsideIf(body) {
       i += elsif[0].length;
       continue;
     }
+    const fe = /^foreach\s+[a-z_][a-z0-9_]*\s+in\s+array\s+(?:array\s*\[|[a-z_][a-z0-9_]*)\b/i.exec(
+      slice,
+    );
+    if (fe) {
+      const start = i;
+      const endLoop = /\bend\s+loop\s*;/i.exec(slice);
+      if (!endLoop) break;
+      i += endLoop.index + endLoop[0].length;
+      regions.push({ start, end: i });
+      continue;
+    }
     const ifKw = /(?:^|[\s;(])if\b/i.exec(slice);
     if (ifKw) {
+      if (ifKw.index > 0) {
+        i += 1;
+        continue;
+      }
       const after = slice.slice(ifKw.index + ifKw[0].length);
       if (/^\s+not\s+exists\b/i.test(after) || /^\s+exists\b/i.test(after)) {
         i += ifKw.index + ifKw[0].length;
@@ -750,15 +969,6 @@ function foreachRegionsOutsideIf(body) {
       }
       ifDepth += 1;
       i += ifKw.index + ifKw[0].length;
-      continue;
-    }
-    const fe = /^foreach\s+[a-z_][a-z0-9_]*\s+in\s+array\s+array\s*\[/i.exec(slice);
-    if (fe) {
-      const start = i;
-      const endLoop = /\bend\s+loop\s*;/i.exec(slice);
-      if (!endLoop) break;
-      i += endLoop.index + endLoop[0].length;
-      regions.push({ start, end: i });
       continue;
     }
     i += 1;
@@ -791,50 +1001,45 @@ export function expandForeachExecuteFormatSql(
   sanitizedCode,
   topLevelDoBodies = [],
   functionBodies = [],
+  { rawSql = '', rawDoBodies = [], rawFunctionBodies = [] } = {},
 ) {
   /** @type {string[]} */
   const statements = [];
   /** @type {string[]} */
-  const violations = findUnexpandableDynamicSqlViolations(
-    sanitizedCode,
-    topLevelDoBodies,
-    functionBodies,
-  );
+  const violations = [];
+  /** @type {string[]} */
+  const executeExpandSpans = [];
+  /** @type {string[][]} */
+  const rawRemovedSpansByFunction = functionBodies.map(() => []);
 
-  for (const body of topLevelDoBodies) {
-    for (const { start, end } of foreachRegionsOutsideIf(body)) {
-      const region = body.slice(start, end);
-      const loopVarMatch = /FOREACH\s+([a-zA-Z_][a-zA-Z0-9_]*)\s+IN/i.exec(region);
-      if (!loopVarMatch) continue;
-      const loopVar = loopVarMatch[1];
-      const names = parseForeachArrayNames(region);
-      if (!names.length) continue;
-
-      const execRe = new RegExp(
-        String.raw`EXECUTE\s+FORMAT\s*\(\s*[\s\r\n]*«S([0-9a-f]+)»\s*,\s*${loopVar}\s*\)`,
-        'gis',
-      );
-      let execMatch;
-      while ((execMatch = execRe.exec(region))) {
-        const formatSql = Buffer.from(execMatch[1], 'hex').toString('utf8');
-        if (/%[sSL]/i.test(formatSql)) {
-          violations.push('unexpandable dynamic SQL (EXECUTE format with %s or %L)');
-          continue;
-        }
-        if (!/%I/.test(formatSql)) {
-          violations.push('unexpandable dynamic SQL (EXECUTE format without %I)');
-          continue;
-        }
-        for (const name of names) {
-          statements.push(formatSql.replace(/%I/g, name));
-        }
-      }
+  const absorb = (result, fnIndex = -1) => {
+    statements.push(...result.statements);
+    executeExpandSpans.push(...result.executeExpandSpans);
+    if (fnIndex >= 0) {
+      rawRemovedSpansByFunction[fnIndex].push(...(result.rawRemovedSpans ?? []));
     }
+  };
+
+  for (let i = 0; i < topLevelDoBodies.length; i++) {
+    const body = topLevelDoBodies[i];
+    const rawBody = rawDoBodies[i] ?? rawSql;
+    absorb(expandForeachExecuteFormatInBody(body, rawBody));
+    absorb(expandPlainLiteralExecutes(body, rawBody));
+  }
+
+  for (let i = 0; i < functionBodies.length; i++) {
+    const body = functionBodies[i];
+    const rawBody = rawFunctionBodies[i] ?? '';
+    absorb(expandForeachExecuteFormatInBody(body, rawBody, { parseFormatFromRaw: true }), i);
+    absorb(expandPlainLiteralExecutes(body, rawBody), i);
   }
 
   return {
     expanded: statements.length ? statements.join(';\n') : '',
     violations,
+    executeExpandSpans,
+    rawRemovedSpansByFunction,
+    rawFunctionBodies,
   };
 }
 
@@ -1156,11 +1361,7 @@ function isAllPrivilegesGrant(privilegeList) {
 function isAllowedClientRoleTableGrant(privs, privilegeListRaw) {
   if (isAllPrivilegesGrant(privilegeListRaw)) return false;
   if (privs.has('truncate')) return false;
-  const nonSelect = [...privs].filter((p) => p !== 'select');
-  if (!nonSelect.length) return true;
-  if (!privs.has('select')) return false;
-  const allowed = new Set(['select', 'insert', 'update', 'delete']);
-  return [...privs].every((p) => allowed.has(p));
+  return [...privs].every((p) => p === 'select');
 }
 
 function findClientRoleGrantViolations(code) {
@@ -1188,6 +1389,7 @@ function findClientRoleGrantViolations(code) {
         .map((t) => `${t.schema}.${t.name}`)
         .join(', ') || onClause;
     const schemaWide = /^all\s+tables\s+in\s+schema\b/i.test(onClause);
+    const tableRefs = parseGrantOnTables(onClause);
     const nonSelect = [...privs].filter((p) => p !== 'select');
 
     for (const role of roles) {
@@ -1200,14 +1402,7 @@ function findClientRoleGrantViolations(code) {
         }
         continue;
       }
-      if (role === 'anon' || role === 'public') {
-        if (nonSelect.length || isAllPrivilegesGrant(privilegeListRaw)) {
-          out.push(
-            `${target}: GRANT ${nonSelect.join(', ').toUpperCase() || 'ALL'} TO ${role} is not allowed (SELECT only for ${role})`,
-          );
-        }
-        continue;
-      }
+      if (tableRefs.length > 1) continue;
       const key = `${target}|${role}`;
       const bucket = aggregated.get(key) ?? {
         privs: new Set(),
@@ -1229,9 +1424,7 @@ function findClientRoleGrantViolations(code) {
       const label = anyAll
         ? 'ALL'
         : nonSelect.join(', ').toUpperCase() || privilegeListRaw.toUpperCase();
-      out.push(
-        `${target}: GRANT ${label} TO ${role} is not allowed (client roles: SELECT only or SELECT with explicit INSERT/UPDATE/DELETE, never ALL)`,
-      );
+      out.push(`${target}: GRANT ${label} TO ${role} is not allowed (SELECT only for ${role})`);
     }
   }
 
@@ -1239,21 +1432,46 @@ function findClientRoleGrantViolations(code) {
 }
 
 export function buildEffectiveSanitizedCode(sql) {
+  const rawDoBodies = extractRawTopLevelDoBodies(sql);
+  const rawFunctionBodies = extractRawFunctionBodies(sql);
   const { code: sanitized, topLevelDoBodies, functionBodies } = sanitizeSql(sql);
-  const { expanded, violations: expandViolations } = expandForeachExecuteFormatSql(
-    sanitized,
-    topLevelDoBodies,
-    functionBodies,
-  );
+  const {
+    expanded,
+    violations: expandViolations,
+    executeExpandSpans,
+    rawRemovedSpansByFunction,
+  } = expandForeachExecuteFormatSql(sanitized, topLevelDoBodies, functionBodies, {
+    rawSql: sql,
+    rawDoBodies,
+    rawFunctionBodies,
+  });
   if (expandViolations.length) {
-    return { code: sanitized, violations: expandViolations, functionBodies, topLevelDoBodies };
+    return {
+      code: sanitized,
+      violations: expandViolations,
+      functionBodies,
+      topLevelDoBodies,
+      executeExpandSpans,
+      rawRemovedSpansByFunction,
+      rawFunctionBodies,
+    };
   }
   let code = sanitized;
   if (expanded) {
     const reSanitized = sqlCodeWithoutCommentsAndLiterals(expanded);
     code = mergeExpandedAfterForeachDoBodies(sanitized, topLevelDoBodies, reSanitized);
+    code = `${code}\n${reSanitized}`;
   }
-  return { code, violations: [], functionBodies, topLevelDoBodies, expandedStatements: expanded };
+  return {
+    code,
+    violations: [],
+    functionBodies,
+    topLevelDoBodies,
+    expandedStatements: expanded,
+    executeExpandSpans,
+    rawRemovedSpansByFunction,
+    rawFunctionBodies,
+  };
 }
 
 /**
@@ -1265,24 +1483,23 @@ export function buildEffectiveSanitizedCode(sql) {
  * @param {{ relPath?: string }} [options]
  */
 export function findSqlFileViolations(sql, options = {}) {
-  const { relPath } = options;
-  const skipFunctionExecuteAudit = relPath != null && isLegacyDynamicSqlMaintenancePath(relPath);
-
+  void options;
   const {
     code,
     violations: pre,
     functionBodies = [],
     topLevelDoBodies = [],
+    rawRemovedSpansByFunction = [],
+    rawFunctionBodies = [],
   } = buildEffectiveSanitizedCode(sql);
   if (pre.length) return pre;
 
-  if (!skipFunctionExecuteAudit) {
-    for (const fnBody of functionBodies) {
-      if (/\bexecute\b/i.test(fnBody)) {
-        return ['unexpandable dynamic SQL (EXECUTE in function body)'];
-      }
-    }
-  }
+  const executeBodyViolations = findUnexpandedExecuteInFunctionBodies(
+    functionBodies,
+    rawFunctionBodies,
+    rawRemovedSpansByFunction,
+  );
+  if (executeBodyViolations.length) return executeBodyViolations;
 
   const targets = extractCreateTableTargets(code);
   const auditDynamicSql =
@@ -1319,7 +1536,11 @@ export function findSqlFileViolations(sql, options = {}) {
     for (const role of REQUIRED_ROLES) {
       const grants = grantsByRoleForTable(code, schema, name);
       const held = grants.get(role) ?? new Set();
-      const missing = REQUIRED_PRIVILEGES.filter((p) => !held.has(p));
+      const required =
+        role === 'authenticated'
+          ? AUTHENTICATED_REQUIRED_PRIVILEGES
+          : SERVICE_ROLE_REQUIRED_PRIVILEGES;
+      const missing = required.filter((p) => !held.has(p));
       if (missing.length) {
         violations.push(
           `${key}: GRANT missing ${missing.join(', ').toUpperCase()} TO ${role} in the same file`,

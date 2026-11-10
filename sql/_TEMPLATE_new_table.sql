@@ -48,7 +48,7 @@ CREATE POLICY "Users can delete own example items"
 -- ---------------------------------------------------------------------------
 -- Grants (required for PostgREST / Data API)
 -- ---------------------------------------------------------------------------
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.example_items TO authenticated;
+GRANT SELECT ON public.example_items TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.example_items TO service_role;
 
 -- Public-read tables only (codex-style guest SELECT): uncomment and document why.

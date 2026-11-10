@@ -117,9 +117,9 @@ ALTER TABLE public.vtt_scenes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.vtt_tokens ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.vtt_actions ENABLE ROW LEVEL SECURITY;
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.vtt_scenes TO authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.vtt_tokens TO authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.vtt_actions TO authenticated;
+GRANT SELECT ON public.vtt_scenes TO authenticated;
+GRANT SELECT ON public.vtt_tokens TO authenticated;
+GRANT SELECT ON public.vtt_actions TO authenticated;
 GRANT ALL ON public.vtt_scenes TO service_role;
 GRANT ALL ON public.vtt_tokens TO service_role;
 GRANT ALL ON public.vtt_actions TO service_role;

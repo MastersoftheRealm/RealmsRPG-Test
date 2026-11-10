@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
  * Fail when a changed sql/ file defines CREATE TABLE without the repo template:
- * ENABLE ROW LEVEL SECURITY, CREATE POLICY, and GRANT SELECT, INSERT, UPDATE, DELETE
- * to authenticated and service_role (public tables). Only files in the diff are scanned.
+ * ENABLE ROW LEVEL SECURITY, CREATE POLICY, and GRANT SELECT to authenticated plus full
+ * CRUD to service_role on new public tables. Only files in the diff are scanned unless
+ * SQL_GRANTS_CHECK_TREE=1.
  *
  * Analysis lives in scripts/lib/sql-grant-check-engine.mjs (loop expansion, broad-policy
  * heuristics, anon write grants, and files without CREATE TABLE).
