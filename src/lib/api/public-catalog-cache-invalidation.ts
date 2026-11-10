@@ -57,7 +57,7 @@ function codexCollectionCdnTags(keys: readonly CodexPayloadKey[]): string[] {
   return keys.map((key) => codexPublicCollectionCdnCacheTag(key));
 }
 
-/** Tags expired after a codex collection write (strict superset of listed GET CDN tags). */
+/** Tags expired after a codex collection write (listed GET CDN tags ⊆ write tags; equal for eight collections). */
 export function codexWritePurgeCacheTags(collection: CodexCollection, table: string): string[] {
   const payloadKey = codexCollectionToPayloadKey(collection);
   const tags = [
