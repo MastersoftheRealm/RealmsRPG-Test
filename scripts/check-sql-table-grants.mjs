@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url';
 import {
   applySqlGrantCheckBaseline,
   validateSqlGrantCheckBaseline,
+  validateSqlGrantCheckBaselineStructure,
 } from './lib/sql-grant-check-baseline.mjs';
 import {
   expandForeachExecuteFormatSql,
@@ -177,7 +178,10 @@ function listChangedSqlFiles(baseRef) {
 function main() {
   if (process.env.SQL_GRANTS_CHECK_TREE === '1') {
     const rawViolations = findViolationsInSqlTree();
-    const baselineErrors = validateSqlGrantCheckBaseline(rawViolations);
+    const baselineErrors = [
+      ...validateSqlGrantCheckBaselineStructure(),
+      ...validateSqlGrantCheckBaseline(rawViolations),
+    ];
     if (baselineErrors.length) {
       console.error('SQL grant check baseline is stale or unmatched:\n');
       for (const err of baselineErrors) {

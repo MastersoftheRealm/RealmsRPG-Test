@@ -49,10 +49,31 @@ export function loadSqlGrantCheckBaseline(baselinePath = BASELINE_PATH) {
  * @param {string} [root]
  * @returns {string[]}
  */
-export function validateSqlGrantCheckBaseline(violations, root = repoRoot) {
+/**
+ * @returns {string[]}
+ */
+export function validateSqlGrantCheckBaselineStructure() {
   const { exceptions } = loadSqlGrantCheckBaseline();
   /** @type {string[]} */
   const errors = [];
+  const seen = new Set();
+  for (const entry of exceptions) {
+    const statement = normalizeSqlStatement(entry.statement ?? '');
+    const reason = (entry.reason ?? '').trim();
+    if (!entry.file?.trim()) errors.push('baseline invalid: entry missing file');
+    if (!statement) errors.push(`baseline invalid: empty statement in ${entry.file}`);
+    if (!reason) errors.push(`baseline invalid: empty reason in ${entry.file}`);
+    const key = `${entry.file}\0${statement}\0${reason}`;
+    if (seen.has(key)) errors.push(`baseline invalid: duplicate entry for ${entry.file}`);
+    seen.add(key);
+  }
+  return errors;
+}
+
+export function validateSqlGrantCheckBaseline(violations, root = repoRoot) {
+  const { exceptions } = loadSqlGrantCheckBaseline();
+  /** @type {string[]} */
+  const errors = [...validateSqlGrantCheckBaselineStructure()];
 
   for (const entry of exceptions) {
     const abs = path.join(root, entry.file);

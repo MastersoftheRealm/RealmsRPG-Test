@@ -44,6 +44,19 @@ export const SERVICE_ROLE_REQUIRED_PRIVILEGES = ['select', 'insert', 'update', '
 export const REQUIRED_ROLES = ['authenticated', 'service_role'];
 export const CLIENT_EXPOSED_ROLES = ['anon', 'authenticated', 'public'];
 
+/** Postgres roles that are not treated as client-exposed when granted membership. */
+const NON_CLIENT_DATABASE_ROLES = new Set([
+  'service_role',
+  'postgres',
+  'authenticator',
+  'supabase_admin',
+  'supabase_auth_admin',
+  'dashboard_user',
+  'pg_database_owner',
+  'pg_read_all_data',
+  'pg_write_all_data',
+]);
+
 /** Explicit private helpers allowed in client write policy predicates (full names). */
 export const ALLOWED_PRIVATE_AUTH_HELPERS = new Set([
   'private.auth_is_vtt_campaign_owner',
@@ -447,8 +460,10 @@ function splitTopLevelOr(expr) {
   let start = 0;
   for (let i = 0; i < expr.length; i += 1) {
     if (expr[i] === '(') depth += 1;
-    else if (expr[i] === ')') depth = Math.max(0, depth - 1);
-    else if (depth === 0) {
+    else if (expr[i] === ')') {
+      depth -= 1;
+      if (depth < 0) return [expr];
+    } else if (depth === 0) {
       const orMatch = /^\s+or\b/i.exec(expr.slice(i));
       if (orMatch) {
         parts.push(expr.slice(start, i).trim());
@@ -567,9 +582,15 @@ function isAllowedExistsSubquery(expr) {
   const open = e.toLowerCase().indexOf('(');
   const inner = readBalancedParenContent(e, open);
   if (!inner) return false;
+  const innerLower = inner.toLowerCase();
+  if (/\bunion\b/i.test(innerLower)) return false;
+  if (/\bcount\s*\(\s*\*\s*\)/i.test(inner)) return false;
   const whereMatch = /\bwhere\b/i.exec(inner);
   if (!whereMatch) return false;
+  const beforeWhere = inner.slice(0, whereMatch.index).trim();
+  if (!/\bfrom\b/i.test(beforeWhere)) return false;
   const whereExpr = inner.slice(whereMatch.index + whereMatch[0].length).trim();
+  if (!whereExpr || /^true\b/i.test(whereExpr)) return false;
   return isAllowlistedWhereExpression(whereExpr);
 }
 
@@ -577,11 +598,14 @@ function isAllowedExistsSubquery(expr) {
  * Allowlisted client write predicate (fail closed).
  * @param {string} expr
  */
-export function isAllowlistedWritePolicyPredicate(expr) {
+function isAllowlistedWritePolicyPredicate(expr, orDepth = 0) {
   if (!expr?.trim()) return false;
+  if (orDepth > 24) return false;
   const e = normalizePredicateExpr(expr);
   if (/\bor\b/i.test(e)) {
-    return splitTopLevelOr(e).every((part) => isAllowlistedWritePolicyPredicate(part));
+    const parts = splitTopLevelOr(e);
+    if (parts.length > 48) return false;
+    return parts.every((part) => isAllowlistedWritePolicyPredicate(part, orDepth + 1));
   }
   if (isAllowedUidColumnEquality(e) || isAllowedPrivateHelperCall(e)) return true;
   if (isAllowedExistsSubquery(e)) return true;
@@ -600,6 +624,8 @@ export function isAllowlistedWritePolicyPredicate(expr) {
       isBenignAndConjunct(c),
   );
 }
+
+export { isAllowlistedWritePolicyPredicate };
 
 /**
  * @param {string} body
@@ -763,20 +789,68 @@ function extractRawDollarBodyAfterKeyword(sql, keywordIndex) {
  * @param {string} sql
  * @returns {string[]}
  */
-function extractRawFunctionBodies(sql) {
+/**
+ * @param {string} sql
+ * @param {number} fromIndex
+ */
+function findRoutineAsKeywordIndex(sql, fromIndex) {
+  const re = /\bas\b/gi;
+  re.lastIndex = fromIndex;
+  const match = re.exec(sql);
+  return match ? match.index + match[0].length : -1;
+}
+
+/**
+ * @param {string} sql
+ * @param {number} openQuoteIndex
+ */
+function readSingleQuotedString(sql, openQuoteIndex) {
+  if (sql[openQuoteIndex] !== "'") return null;
+  let i = openQuoteIndex + 1;
+  let out = '';
+  while (i < sql.length) {
+    const ch = sql[i];
+    if (ch === "'") {
+      if (sql[i + 1] === "'") {
+        out += "'";
+        i += 2;
+        continue;
+      }
+      return { text: out, end: i + 1 };
+    }
+    out += ch;
+    i += 1;
+  }
+  return null;
+}
+
+function extractRawRoutineBodies(sql) {
   /** @type {string[]} */
   const bodies = [];
-  const re = /\bCREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\b/gi;
+  const re = /\bcreate\s+(?:or\s+replace\s+)?(?:function|procedure)\b/gi;
   let match;
   while ((match = re.exec(sql))) {
-    const asIdx = sql.indexOf('AS', match.index);
-    if (asIdx === -1) continue;
-    const extracted = extractRawDollarBodyAfterKeyword(sql, asIdx + 2);
+    const afterAs = findRoutineAsKeywordIndex(sql, match.index);
+    if (afterAs === -1) continue;
+    let cursor = afterAs;
+    while (cursor < sql.length && /\s/.test(sql[cursor])) cursor += 1;
+    if (sql[cursor] === "'") {
+      const quoted = readSingleQuotedString(sql, cursor);
+      if (!quoted) continue;
+      bodies.push(quoted.text);
+      re.lastIndex = quoted.end;
+      continue;
+    }
+    const extracted = extractRawDollarBodyAfterKeyword(sql, afterAs);
     if (!extracted) continue;
     bodies.push(extracted.body);
     re.lastIndex = extracted.end;
   }
   return bodies;
+}
+
+function extractRawFunctionBodies(sql) {
+  return extractRawRoutineBodies(sql);
 }
 
 /**
@@ -879,6 +953,24 @@ function expandPlainLiteralExecutes(body, rawBody) {
  * @param {string} rawBody
  * @returns {{ statements: string[], executeExpandSpans: string[] }}
  */
+/**
+ * @param {string} region
+ * @param {string} loopVar
+ */
+function findForeachExecuteFormatArgViolations(region, loopVar) {
+  /** @type {string[]} */
+  const violations = [];
+  const execRe = /\bexecute\s+format\s*\([^;]+/gi;
+  let match;
+  while ((match = execRe.exec(region))) {
+    const call = match[0];
+    if (!new RegExp(`\\b${loopVar}\\b`, 'i').test(call)) {
+      violations.push('unexpandable dynamic SQL (FOREACH EXECUTE format must use loop variable)');
+    }
+  }
+  return violations;
+}
+
 function expandForeachExecuteFormatInBody(body, rawBody, { parseFormatFromRaw = false } = {}) {
   /** @type {string[]} */
   const statements = [];
@@ -886,6 +978,8 @@ function expandForeachExecuteFormatInBody(body, rawBody, { parseFormatFromRaw = 
   const executeExpandSpans = [];
   /** @type {string[]} */
   const rawRemovedSpans = [];
+  /** @type {string[]} */
+  const violations = [];
   const parseBody = parseFormatFromRaw ? rawBody : body;
   const nameSourceBody = rawBody || body;
   for (const { start, end } of foreachRegionsOutsideIf(parseBody)) {
@@ -893,6 +987,7 @@ function expandForeachExecuteFormatInBody(body, rawBody, { parseFormatFromRaw = 
     const loopVarMatch = /FOREACH\s+([a-zA-Z_][a-zA-Z0-9_]*)\s+IN/i.exec(region);
     if (!loopVarMatch) continue;
     const loopVar = loopVarMatch[1];
+    violations.push(...findForeachExecuteFormatArgViolations(region, loopVar));
     const names = resolveForeachIterationNames(nameSourceBody, region);
     if (!names.length) continue;
 
@@ -929,15 +1024,9 @@ function expandForeachExecuteFormatInBody(body, rawBody, { parseFormatFromRaw = 
       }
     }
   }
-  return { statements, executeExpandSpans, rawRemovedSpans };
+  return { statements, executeExpandSpans, rawRemovedSpans, violations };
 }
 
-/**
- * @param {string[]} functionBodies
- * @param {string[]} rawFunctionBodies
- * @param {string[][]} rawRemovedSpansByFunction
- * @returns {string[]}
- */
 /**
  * @param {string} remainder
  * @returns {string[]}
@@ -1072,6 +1161,7 @@ export function expandForeachExecuteFormatSql(
   const absorb = (result, fnIndex = -1) => {
     statements.push(...result.statements);
     executeExpandSpans.push(...result.executeExpandSpans);
+    violations.push(...(result.violations ?? []));
     if (fnIndex >= 0) {
       rawRemovedSpansByFunction[fnIndex].push(...(result.rawRemovedSpans ?? []));
     }
@@ -1259,7 +1349,6 @@ function grantsByRoleForTable(code, schema, tableName) {
 function policyWriteActionIsOverlyBroad(clause) {
   const clientRoles = parseClientRolesFromClause(clause);
   if (!clientRoles.size) return false;
-  const isAlter = /\balter\s+policy\b/.test(clause);
   const forMatch = /\bfor\s+(all|insert|update|delete|select)\b/.exec(clause);
   if (forMatch?.[1] === 'select' && !/\bfor\s+(insert|update|delete|all)\b/.test(clause)) {
     return false;
@@ -1270,8 +1359,6 @@ function policyWriteActionIsOverlyBroad(clause) {
 
   const usingExpr = extractPolicyPredicateExpression(clause, 'using');
   const checkExpr = extractPolicyPredicateExpression(clause, 'with check');
-
-  if (isAlter && !usingExpr && !checkExpr) return false;
 
   if (action === 'insert') {
     if (!checkExpr) return true;
@@ -1351,7 +1438,7 @@ function collectReferencedTables(code) {
   while ((m = alterRe.exec(code))) add(parseQualifiedTableRef(m[1]));
 
   const policyRe =
-    /\bcreate\s+policy\s+(?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*)\s+on\s+((?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*)(?:\s*\.\s*(?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*))?)/gi;
+    /\b(?:create|alter)\s+policy\s+(?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*)\s+on\s+((?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*)(?:\s*\.\s*(?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*))?)/gi;
   while ((m = policyRe.exec(code))) add(parseQualifiedTableRef(m[1]));
 
   const grantRe = /\bgrant\s+[^;]+\s+on\s+([^;]+?)\s+to\s+/gi;
@@ -1419,6 +1506,142 @@ function isAllowedClientRoleTableGrant(privs, privilegeListRaw) {
   if (isAllPrivilegesGrant(privilegeListRaw)) return false;
   if (privs.has('truncate')) return false;
   return [...privs].every((p) => p === 'select');
+}
+
+/**
+ * @param {string} sanitizedBodies
+ * @param {string[]} rawBodies
+ */
+function findRoutineBodyCountViolations(sanitizedBodies, rawBodies) {
+  if (sanitizedBodies.length === rawBodies.length) return [];
+  return [
+    {
+      reason: 'unparseable routine body (sanitized and raw body count mismatch)',
+      statement: '',
+    },
+  ];
+}
+
+/**
+ * @param {string} roleToken
+ */
+function normalizeRoleToken(roleToken) {
+  const t = roleToken.replace(/\s+/g, ' ').trim();
+  const q = /^"([^"]+)"$/.exec(t);
+  if (q) return q[1].toLowerCase();
+  const hex = /^«Q([0-9a-f]+)»$/i.exec(t);
+  if (hex) return Buffer.from(hex[1], 'hex').toString('utf8').toLowerCase();
+  return t.toLowerCase();
+}
+
+function findRoleToRoleGrantViolations(code) {
+  const re = /\bgrant\s+([^;]+)\s+to\s+([^;]+)/gi;
+  /** @type {SqlGrantCheckViolation[]} */
+  const out = [];
+  let match;
+  while ((match = re.exec(code))) {
+    const left = match[1].trim();
+    const full = match[0];
+    if (/\bon\s+/i.test(full)) continue;
+    if (
+      /^(?:select|insert|update|delete|truncate|references|trigger|all|usage|execute)\b/i.test(left)
+    ) {
+      continue;
+    }
+    const grantedRole = normalizeRoleToken(left.split(',')[0].trim());
+    if (NON_CLIENT_DATABASE_ROLES.has(grantedRole)) continue;
+    const grantees = [...parseGrantRoleSet(match[2])].filter((r) =>
+      CLIENT_EXPOSED_ROLES.includes(r),
+    );
+    if (!grantees.length) continue;
+    const statement = normalizeSqlStatement(full.replace(/;+\s*$/, ''));
+    for (const target of grantees) {
+      out.push({
+        reason: `${grantedRole}: GRANT ROLE membership TO ${target} is not allowed (client-exposed role grant)`,
+        statement,
+      });
+    }
+  }
+  return finalizeSqlGrantViolations(out);
+}
+
+function findCreateAlterRoleViolations(sql) {
+  /** @type {SqlGrantCheckViolation[]} */
+  const out = [];
+  const re = /\b(?:create|alter)\s+role\s+([^;\s]+)([^;]*)/gi;
+  let match;
+  while ((match = re.exec(sql))) {
+    const roleName = normalizeRoleToken(match[1]);
+    const attrs = (match[2] ?? '').toLowerCase();
+    if (!/\blogin\b/.test(attrs)) continue;
+    if (NON_CLIENT_DATABASE_ROLES.has(roleName)) continue;
+    out.push({
+      reason: `${roleName}: CREATE/ALTER ROLE LOGIN is not allowed without explicit approval (client-exposed role)`,
+      statement: normalizeSqlStatement(match[0]),
+    });
+  }
+  return finalizeSqlGrantViolations(out);
+}
+
+function findTrivialPrivateAuthHelperRedefinitions(sql) {
+  /** @type {SqlGrantCheckViolation[]} */
+  const out = [];
+  for (const helper of ALLOWED_PRIVATE_AUTH_HELPERS) {
+    const re = new RegExp(
+      `\\bcreate\\s+(?:or\\s+replace\\s+)?function\\s+${helper.replace(/\./g, '\\.')}\\b[\\s\\S]*?\\bas\\b[\\s\\S]*?(\\$[a-z0-9_]*\\$)([\\s\\S]*?)\\1`,
+      'gi',
+    );
+    const match = re.exec(sql);
+    if (!match) continue;
+    const body = match[2].replace(/\s+/g, ' ').trim().toLowerCase();
+    if (
+      /\breturn\s+true\b/.test(body) ||
+      /^\s*select\s+true\s*;?\s*$/i.test(body) ||
+      /^\s*select\s+1\s*;?\s*$/i.test(body)
+    ) {
+      out.push({
+        reason: `${helper}: trivial allow-all redefinition is not allowed (private auth helper)`,
+        statement: normalizeSqlStatement(`create or replace function ${helper}`),
+      });
+    }
+  }
+  return finalizeSqlGrantViolations(out);
+}
+
+function findUnauditedObjectCreationViolations(code, bodiesToStrip = []) {
+  let scan = code;
+  for (const body of bodiesToStrip) {
+    if (!body) continue;
+    const idx = scan.indexOf(body);
+    if (idx !== -1) {
+      scan = `${scan.slice(0, idx)}${' '.repeat(body.length)}${scan.slice(idx + body.length)}`;
+    }
+  }
+  /** @type {SqlGrantCheckViolation[]} */
+  const out = [];
+  const viewRe = /\bcreate\s+(?:or\s+replace\s+)?(?:materialized\s+)?view\b[^;]*/gi;
+  let match;
+  while ((match = viewRe.exec(scan))) {
+    out.push({
+      reason: 'unaudited object creation (VIEW or MATERIALIZED VIEW)',
+      statement: normalizeSqlStatement(match[0]),
+    });
+  }
+  for (const stmt of scan.split(';')) {
+    const trimmed = stmt.trim();
+    if (!/^select\b/i.test(trimmed)) continue;
+    if (/\binsert\s+into\b/i.test(trimmed)) continue;
+    const intoMatch =
+      /^select\b[\s\S]*?\binto\s+(?:strict\s+)?(?:table\s+)?(public\s*\.\s*(?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*))/i.exec(
+        trimmed,
+      );
+    if (!intoMatch) continue;
+    out.push({
+      reason: `unaudited object creation (SELECT INTO ${intoMatch[1].replace(/\s+/g, ' ').trim()})`,
+      statement: normalizeSqlStatement(trimmed.slice(0, 240)),
+    });
+  }
+  return finalizeSqlGrantViolations(out);
 }
 
 function findClientRoleGrantViolations(code) {
@@ -1539,29 +1762,38 @@ export function findSqlFileViolations(sql, options = {}) {
     rawRemovedSpansByFunction = [],
     rawFunctionBodies = [],
   } = buildEffectiveSanitizedCode(sql);
-  if (pre.length) return finalizeSqlGrantViolations(pre);
-
-  const executeBodyViolations = findUnexpandedExecuteInFunctionBodies(
-    functionBodies,
-    rawFunctionBodies,
-    rawRemovedSpansByFunction,
-  );
-  if (executeBodyViolations.length) return executeBodyViolations;
-
-  const targets = extractCreateTableTargets(code);
-  const auditDynamicSql =
-    targets.length > 0 || topLevelDoBodies.some((body) => /\bexecute\b/i.test(body));
-  if (auditDynamicSql) {
-    const unexpandable = findUnexpandableDynamicSqlViolations(
-      code,
-      topLevelDoBodies,
-      functionBodies,
-    );
-    if (unexpandable.length) return finalizeSqlGrantViolations(unexpandable);
-  }
 
   /** @type {(string | SqlGrantCheckViolation)[]} */
   const violations = [];
+  violations.push(...pre);
+  violations.push(...findRoutineBodyCountViolations(functionBodies, rawFunctionBodies));
+  violations.push(
+    ...findUnexpandedExecuteInFunctionBodies(
+      functionBodies,
+      rawFunctionBodies,
+      rawRemovedSpansByFunction,
+    ),
+  );
+
+  const targets = extractCreateTableTargets(code);
+  const auditDynamicSql =
+    targets.length > 0 ||
+    topLevelDoBodies.some((body) => /\bexecute\b/i.test(body)) ||
+    functionBodies.length > 0;
+  if (auditDynamicSql) {
+    violations.push(
+      ...finalizeSqlGrantViolations(
+        findUnexpandableDynamicSqlViolations(code, topLevelDoBodies, functionBodies),
+      ),
+    );
+  }
+
+  violations.push(
+    ...findUnauditedObjectCreationViolations(code, [...functionBodies, ...topLevelDoBodies]),
+  );
+  violations.push(...findRoleToRoleGrantViolations(code));
+  violations.push(...findCreateAlterRoleViolations(sql));
+  violations.push(...findTrivialPrivateAuthHelperRedefinitions(sql));
   const seen = new Set();
 
   for (const { schema, name } of targets) {

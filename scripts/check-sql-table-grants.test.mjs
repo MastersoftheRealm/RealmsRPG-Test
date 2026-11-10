@@ -15,6 +15,7 @@ import {
 import {
   applySqlGrantCheckBaseline,
   validateSqlGrantCheckBaseline,
+  validateSqlGrantCheckBaselineStructure,
 } from './lib/sql-grant-check-baseline.mjs';
 import {
   findSqlFileViolations,
@@ -941,6 +942,127 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.g TO service_role;`;
   });
 });
 
+describe('PR 564 round 4 reviewer blockers', () => {
+  it('B1: catches EXECUTE when routine uses lowercase as', () => {
+    const sql = `CREATE FUNCTION public.low_as() RETURNS void LANGUAGE plpgsql as $fn$
+BEGIN EXECUTE 'SELECT 1';
+END;
+$fn$;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/EXECUTE in function body/i)]),
+    );
+  });
+
+  it('B2: flags GRANT custom role TO authenticated', () => {
+    const sql = `GRANT custom_writer TO authenticated;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/GRANT ROLE membership TO authenticated/i)]),
+    );
+  });
+
+  it('B3: flags standalone ALTER POLICY WITH CHECK (true)', () => {
+    const sql = `ALTER POLICY wide ON public.items USING (owner_id = auth.uid()) WITH CHECK (true);`;
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/overly broad write policy/i)]),
+    );
+  });
+
+  it('B4a: rejects EXISTS (SELECT count(*) ...)', () => {
+    const base = `CREATE TABLE public.t (id int);
+ALTER TABLE public.t ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON public.t FOR SELECT TO authenticated USING (true);
+GRANT SELECT ON public.t TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.t TO service_role;
+CREATE POLICY bad ON public.t FOR UPDATE TO authenticated
+  USING (EXISTS (SELECT count(*) FROM public.t c WHERE c.id = public.t.id));`;
+    expect(findCreateTableSetupViolations(base)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/overly broad write policy/i)]),
+    );
+  });
+
+  it('B4b: rejects trivial private auth helper redefinition', () => {
+    const sql = `CREATE OR REPLACE FUNCTION private.auth_is_vtt_campaign_owner(p_id text)
+RETURNS boolean LANGUAGE plpgsql AS $fn$
+BEGIN
+  RETURN true;
+END;
+$fn$;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/trivial allow-all redefinition/i)]),
+    );
+  });
+
+  it('B4c: fails FOREACH EXECUTE format that omits loop variable', () => {
+    const sql = `DO $p$
+DECLARE names text[] := ARRAY['public.a'];
+BEGIN
+  FOREACH n IN ARRAY names LOOP
+    EXECUTE format('SELECT 1 FROM %I', wrong_var);
+  END LOOP;
+END;
+$p$;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/FOREACH EXECUTE format must use loop variable/i),
+      ]),
+    );
+  });
+
+  it('B5: flags CREATE VIEW over public tables', () => {
+    const sql = `CREATE VIEW public.leaky AS SELECT * FROM public.secrets;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/VIEW or MATERIALIZED VIEW/i)]),
+    );
+  });
+
+  it('P1-2: baselined EXECUTE does not exempt other violations in the same SQL', () => {
+    const sql = `CREATE OR REPLACE FUNCTION public.insert_table_row_from_jsonb_keys() RETURNS void LANGUAGE plpgsql AS $b$
+BEGIN
+  EXECUTE v_sql USING p_row;
+END;
+$b$;
+GRANT INSERT ON public.foo TO authenticated;`;
+    const issues = findSqlFileViolations(sql);
+    expect(issues.filter((v) => v.reason.includes('EXECUTE in function body'))).toHaveLength(1);
+    expect(issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          reason: expect.stringMatching(/GRANT INSERT TO authenticated/i),
+        }),
+      ]),
+    );
+    const pinned = applySqlGrantCheckBaseline(
+      issues.map((v) => ({
+        file: 'sql/role-quota-atomic.sql',
+        reason: v.reason,
+        statement: v.statement,
+      })),
+    );
+    expect(pinned).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ reason: expect.stringMatching(/GRANT INSERT/i) }),
+      ]),
+    );
+  });
+
+  it('fails closed on )OR( policy predicates without stack overflow', () => {
+    const sql = `CREATE TABLE public.t (id int);
+ALTER TABLE public.t ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON public.t FOR SELECT TO authenticated USING (true);
+GRANT SELECT ON public.t TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.t TO service_role;
+CREATE POLICY bad ON public.t FOR UPDATE TO authenticated USING ((owner_id = auth.uid())OR(true));`;
+    expect(() => findCreateTableSetupViolations(sql)).not.toThrow();
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/overly broad write policy/i)]),
+    );
+  });
+
+  it('baseline structure rejects empty statements and duplicates', () => {
+    expect(validateSqlGrantCheckBaselineStructure()).toEqual([]);
+  });
+});
+
 describe('PR 564 round 3 reviewer holes', () => {
   it('rejects USING/WITH CHECK disjunctions that include constant true', () => {
     const base = `CREATE TABLE public.t (id int, owner_id uuid);
@@ -1086,14 +1208,14 @@ $b$;`;
   });
 });
 
-describe('character SQL files are scanned', () => {
+describe('baseline does not swallow new grant statements', () => {
   const bulkRelationalGrantBundle = `GRANT SELECT ON TABLE public.character_species, public.character_feats TO anon;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
   public.character_species,
   public.character_feats
 TO authenticated, service_role;`;
 
-  it('surfaces a new statement in characters-relational-cutover.sql instead of skipping the file', () => {
+  it('keeps a new grant violation after applying cutover-style baseline entries', () => {
     const extra = `${bulkRelationalGrantBundle}\nGRANT INSERT ON public.character_species TO authenticated;`;
     const issues = findSqlFileViolations(extra);
     expect(issues).toEqual(
