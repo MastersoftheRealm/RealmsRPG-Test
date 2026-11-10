@@ -83,6 +83,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
 
   return (
     <div
+      data-toast-type={toast.type}
       className={cn(
         'duration-slow flex items-center gap-3 rounded-lg px-4 py-3 shadow-lg transition-all ease-standard',
         'max-w-[min(400px,calc(100vw-2.5rem))] min-w-0 sm:min-w-[300px]',

@@ -936,8 +936,11 @@
     z-index: 0;
   }
 
-  /* Creator load/save toasts must not cover modal chrome (86e3jyh5p). */
-  body:has([aria-modal='true']) [aria-label='Notifications'] {
+  /* Creator load/save toasts must not cover modal chrome (86e3jyh5p).
+     Error toasts stay visible above dialogs (1dfe8wf3pa3). */
+  body:has([aria-modal='true'])
+    [aria-label='Notifications']
+    [data-toast-type]:not([data-toast-type='error']) {
     visibility: hidden;
     pointer-events: none;
   }

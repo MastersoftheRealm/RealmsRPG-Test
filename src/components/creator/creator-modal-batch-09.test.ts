@@ -37,6 +37,16 @@ describe('creator modal batch 9 (86e3jym93 / 86e3jyh5p)', () => {
   });
 });
 
+describe('error toasts above open dialogs (1dfe8wf3pa3)', () => {
+  it('hides only non-error toasts while aria-modal is open', () => {
+    expect(toast).toContain('data-toast-type={toast.type}');
+    expect(globals).toContain("[data-toast-type]:not([data-toast-type='error'])");
+    expect(globals).not.toContain(
+      "body:has([aria-modal='true']) [aria-label='Notifications'] {\n    visibility: hidden;",
+    );
+  });
+});
+
 describe('power creator help popover (86e3jwt6b)', () => {
   it('blurs the trigger when the popover closes so it can reopen after Escape', () => {
     expect(infoTippy).toContain('referenceElRef.current?.blur()');
