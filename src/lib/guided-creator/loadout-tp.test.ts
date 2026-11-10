@@ -3,6 +3,7 @@ import {
   combineGuidedTpBudgets,
   guidedLoadoutTrainingPointsOverspendMessage,
   guidedTrainingPointsOverspendAmount,
+  guidedTrainingPointsPointStatusInputs,
   wouldExceedSharedTp,
 } from '@/lib/guided-creator/loadout-tp';
 
@@ -24,11 +25,21 @@ describe('loadout-tp shared budgets', () => {
   it('warns when Training Points spent exceed the guided pool without changing math', () => {
     expect(guidedTrainingPointsOverspendAmount(25, 25)).toBe(0);
     expect(guidedTrainingPointsOverspendAmount(24, 25)).toBe(0);
+    expect(guidedTrainingPointsOverspendAmount(27, 25)).toBe(2);
     expect(guidedTrainingPointsOverspendAmount(35, 25)).toBe(10);
 
     expect(guidedLoadoutTrainingPointsOverspendMessage(25, 25)).toBeNull();
+    expect(guidedLoadoutTrainingPointsOverspendMessage(27, 25)).toBe(
+      'You are 2 Training Points over budget. You can still continue.',
+    );
     expect(guidedLoadoutTrainingPointsOverspendMessage(35, 25)).toBe(
       'You are 10 Training Points over budget. You can still continue.',
     );
+
+    expect(guidedTrainingPointsPointStatusInputs(27, 25)).toEqual({
+      total: 25,
+      spent: 27,
+      remaining: -2,
+    });
   });
 });

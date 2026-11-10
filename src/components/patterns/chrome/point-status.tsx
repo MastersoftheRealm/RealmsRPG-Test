@@ -72,6 +72,8 @@ export interface PointStatusProps extends Omit<VariantProps<typeof pointStatusVa
   showCalculation?: boolean | undefined;
   /** Additional className */
   className?: string | undefined;
+  /** Inline/compact: floor remaining at 0 instead of showing negatives (off by default). */
+  clampRemainingAtZero?: boolean | undefined;
 }
 
 /**
@@ -96,10 +98,12 @@ export function PointStatus({
   variant = 'inline',
   showCalculation = false,
   className,
+  clampRemainingAtZero = false,
 }: PointStatusProps) {
   const remaining = total - spent;
   const status = getStatus(remaining);
-  const displayValue = metric === 'spent' ? spent : remaining;
+  const remainingForDisplay = clampRemainingAtZero ? Math.max(0, remaining) : remaining;
+  const displayValue = metric === 'spent' ? spent : remainingForDisplay;
 
   const labelNode = label ? (
     <span className="mr-1 inline-flex items-center gap-0.5">
@@ -142,7 +146,7 @@ export function PointStatus({
         ) : (
           <span>
             {labelNode}
-            <span className="font-bold">{remaining}</span> / {total}
+            <span className="font-bold">{remainingForDisplay}</span> / {total}
           </span>
         )}
       </div>
