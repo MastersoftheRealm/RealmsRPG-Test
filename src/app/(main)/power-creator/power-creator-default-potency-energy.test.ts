@@ -75,4 +75,32 @@ describe('default Add Part energy floor', () => {
     expect(display.energy).toBe(1);
     expect(display.tp).toBe(2);
   });
+
+  it('other non-mechanic percentage parts alone still publish a dash', () => {
+    const partsDb = signedOutPowerPartsDb();
+    const loneMultipliers = [
+      'Personal Power Attack',
+      'Permanent Damage',
+      'Illusioned Power',
+      'Compelling Sight',
+    ] as const;
+    for (const name of loneMultipliers) {
+      const part = partsDb.find((p) => p.name === name);
+      expect(part).toBeDefined();
+      const costs = calculatePowerCosts(
+        [
+          {
+            id: part!.id,
+            name: part!.name,
+            op_1_lvl: 0,
+            op_2_lvl: 0,
+            op_3_lvl: 0,
+          },
+        ],
+        partsDb,
+      );
+      expect(costs.totalEnergy, name).toBe(0);
+      expect(formatEnergyStat(costs.totalEnergy), name).toBe('—');
+    }
+  });
 });
