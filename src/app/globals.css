@@ -938,11 +938,18 @@
 
   /* Creator load/save toasts must not cover modal chrome (86e3jyh5p).
      Error toasts stay visible above dialogs (1dfe8wf3pa3). */
+  body:has([aria-modal='true']) [aria-label='Notifications'] {
+    pointer-events: none;
+  }
+
+  body:has([aria-modal='true']) [aria-label='Notifications'] [data-toast-type='error'] {
+    pointer-events: auto;
+  }
+
   body:has([aria-modal='true'])
     [aria-label='Notifications']
     [data-toast-type]:not([data-toast-type='error']) {
     visibility: hidden;
-    pointer-events: none;
   }
 
   /* C1: the sheet frame is viewport-bounded. Hide the site footer below md so

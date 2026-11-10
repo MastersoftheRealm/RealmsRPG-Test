@@ -45,6 +45,15 @@ describe('error toasts above open dialogs (1dfe8wf3pa3)', () => {
       "body:has([aria-modal='true']) [aria-label='Notifications'] {\n    visibility: hidden;",
     );
   });
+
+  it('lets clicks reach the dialog through a hidden non-error toast stack', () => {
+    expect(globals).toContain(
+      "body:has([aria-modal='true']) [aria-label='Notifications'] {\n    pointer-events: none;",
+    );
+    expect(globals).toContain(
+      "body:has([aria-modal='true']) [aria-label='Notifications'] [data-toast-type='error'] {\n    pointer-events: auto;",
+    );
+  });
 });
 
 describe('power creator help popover (86e3jwt6b)', () => {
