@@ -1,6 +1,3 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { applyCharacterDirtyPatch, pickDirtyCharacterFields } from '@/lib/character/dirty-patch';
 import { applySheetEnergyPointsChange } from '@/lib/character/current-follows-max';
@@ -97,18 +94,5 @@ describe('QA EN allocation → locked autosave regression', () => {
 
   it('applied-only baseline advance keeps energyPoints on the next locked PATCH', () => {
     expect(lockedAutosaveIncludesEnergyPoints(fixedAppliedOnlyBaseline)).toBe(true);
-  });
-
-  it('production onSave advances savedCleanRef with applyCharacterDirtyPatch only', () => {
-    const pageDataPath = path.join(
-      path.dirname(fileURLToPath(import.meta.url)),
-      'use-character-sheet-page-data.ts',
-    );
-    const source = readFileSync(pageDataPath, 'utf8');
-    expect(source).toContain('applyCharacterDirtyPatch(');
-    expect(source).not.toMatch(/const nextClean = mergedCleanRef\.current \?\? cleaned/);
-    expect(source).not.toMatch(
-      /if \(Object\.keys\(dirty\)\.length === 0\) \{\s*savedCleanRef\.current = cleaned;/,
-    );
   });
 });

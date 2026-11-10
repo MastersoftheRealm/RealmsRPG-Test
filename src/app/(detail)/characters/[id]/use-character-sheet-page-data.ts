@@ -43,13 +43,13 @@ import {
   characterSaveWithoutOverlongName,
 } from '@/lib/character/character-name-limit';
 import {
+  applyCharacterDirtyPatch,
   applySheetAutosaveConflictFields,
   characterLockToken,
   mergeRemotePreservingDirty,
   pickDirtyCharacterFields,
   withDirtyClears,
 } from '@/lib/character/dirty-patch';
-import { advanceSheetAutosaveBaselineAfterSuccess } from './sheet-autosave-baseline';
 import { characterAutosaveDocumentsEqual } from '@/lib/character/character-autosave-equal';
 import { rememberCharacterLockToken } from '@/lib/character/save-lock';
 import { mergeSheetRealtimePayload } from '@/lib/character/realtime-merge';
@@ -406,11 +406,11 @@ export function useCharacterSheetPageData(id: string) {
           };
         },
       });
-      savedCleanRef.current = advanceSheetAutosaveBaselineAfterSuccess(savedCleanRef.current, {
-        applied: result.applied as Record<string, unknown>,
-        cleaned,
-        updatedAt: result.updatedAt,
-      });
+      savedCleanRef.current = applyCharacterDirtyPatch(
+        savedCleanRef.current ?? {},
+        result.applied as Record<string, unknown>,
+        result.updatedAt ? { documentUpdatedAt: result.updatedAt } : undefined,
+      );
       if (result.updatedAt) {
         setCharacter((prev) => (prev ? { ...prev, updatedAt: result.updatedAt } : prev));
       }
