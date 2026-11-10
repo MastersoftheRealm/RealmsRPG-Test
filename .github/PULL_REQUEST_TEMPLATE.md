@@ -27,6 +27,19 @@
 - Risk:
 - Approvals needed: <!-- Collin (CODEOWNERS) for high-risk paths; Kadin for product or rule decisions -->
 - Sign-off on survey: <!-- link, or "not required" with the reason -->
+- Approval path: Collin | Fallback <!-- keep one; Fallback only when Kadin invoked it himself -->
+
+## Fallback evidence (only for the Fallback path; every line required)
+<!-- AGENTS.md "Fallback when Collin is unavailable". Delete this section on the Collin path. -->
+- Kadin's invocation (his own comment): 
+- Plain-English brief + Kadin's decision: 
+- Senior review, plan pass: 
+- Senior review, implementation pass (verdict REAL FIX, or Kadin's own "I accept this as a PATCH" comment): 
+- Test that fails before / passes after: 
+- Repro on the preview deploy (steps + result): 
+- Rollback plan: 
+- Database backup (name, time), or "no database change": 
+- [ ] `collin-post-review` label applied and ClickUp post-review task filed for Collin
 
 ## For Kadin (plain language)
 <!-- Required on high-risk PRs and whenever Kadin must decide something. -->

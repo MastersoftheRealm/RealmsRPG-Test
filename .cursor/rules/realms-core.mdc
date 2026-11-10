@@ -7,4 +7,4 @@ alwaysApply: true
 
 Root `AGENTS.md` is the only workflow authority: the charter, the survey-then-build workflow, review limits, merge rules, risk by path, database safety and model routing. Read it on every task. Engineering checklist: `src/docs/ai/ARCHITECTURE_CONSTITUTION.md`.
 
-Non-negotiables if you read nothing else: survey before building; label results REAL FIX or PATCH; stop and report rather than hack; never invent game rules, values, names, lore, flavor text or visual choices; no production database writes without the approvals in `AGENTS.md`; agents never merge.
+Non-negotiables if you read nothing else: guide and challenge Kadin rather than just satisfying the request; survey before building; label results REAL FIX or PATCH; stop and report rather than hack; never invent game rules, values, names, lore, flavor text or visual choices; no production database writes without the approvals in `AGENTS.md`; agents never merge.

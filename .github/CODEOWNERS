@@ -1,5 +1,9 @@
 # High-risk paths (AGENTS.md "Risk by path"). Collin approves the engineering "how".
 # Takes effect only when branch protection has "Require review from Code Owners" on.
+# When Collin is unavailable, AGENTS.md "Fallback when Collin is unavailable" applies:
+# Kadin (repository admin) merges with the logged code-owner override, never a CI override,
+# and the PR is labelled collin-post-review. Kadin is not listed here on purpose, so an
+# ordinary approval from his account can never stand in for Collin's.
 
 # Database, SQL, migrations, seeds
 /sql/                              @CollinMorrison

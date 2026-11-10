@@ -63,6 +63,9 @@ Question for human: (HOLD only, one clear decision, addressed to Kadin for what 
 - **APPROVE:** standard risk, all items pass, CI green, repro test run.
 - **REQUEST CHANGES:** a checklist fail the writer can fix. Round 2 is the last.
 - **HOLD FOR HUMAN:** high risk, a missing or conflicting rule, a product decision, or you are not independent of the writer.
+- **PATCH veto:** if your label check says PATCH, the verdict cannot be APPROVE. Use HOLD FOR HUMAN; it merges only if Kadin accepts it as a patch in his own PR comment (`AGENTS.md`, Review).
+
+**Fallback senior review** (`AGENTS.md`, Fallback when Collin is unavailable): same format, headed `## Senior fallback review: plan | implementation`. Add `Own root-cause trace:` (written before reading the diff), `Assumptions challenged:`, and `Over-engineered / over-simplified:`. Do not read the writer's PR description or reasoning.
 
 The reviewer never approves its own writing, merges, pushes, changes settings, or writes to ClickUp, Drive or the database. Green CI is not proof of correctness.
 
