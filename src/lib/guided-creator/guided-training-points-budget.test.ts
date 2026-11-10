@@ -7,7 +7,10 @@ import {
   computeGuidedRequiredTrainingSpent,
   computeGuidedTrainingPointsBudgetSpent,
 } from '@/lib/guided-creator/build-character';
-import { guidedLoadoutTrainingPointsOverspendMessage } from '@/lib/guided-creator/loadout-tp';
+import {
+  guidedLoadoutTrainingPointsOverspendMessage,
+  sumGuidedListedCombatTrainingPoints,
+} from '@/lib/guided-creator/loadout-tp';
 
 function minimalDraft(overrides: Partial<GuidedDraft> = {}): GuidedDraft {
   return {
@@ -93,5 +96,39 @@ describe('computeGuidedTrainingPointsBudgetSpent', () => {
 
     const warning = guidedLoadoutTrainingPointsOverspendMessage(poolSpent, 25);
     expect(warning).toBe('You are 2 Training Points over budget. You can still continue.');
+  });
+
+  it('does not double-count budget display when the same id is on power and innate lists', () => {
+    const range = snapshotParts([PART_IDS.POWER_RANGE])[0]!;
+    const draft = minimalDraft({
+      powerIds: ['dup-power'],
+      innatePowerIds: ['dup-power'],
+      techniqueIds: [],
+    });
+    const officialPowers: LibraryPower[] = [
+      {
+        id: 'dup-power',
+        docId: 'dup-power',
+        name: 'Dup',
+        parts: [{ id: Number(range.id), name: range.name, op_1_lvl: 0 }],
+      },
+    ];
+    const ctx = { officialPowers, powerPartsDb: [range] };
+    const tpCostOf = () => 14;
+
+    expect(
+      sumGuidedListedCombatTrainingPoints(
+        {
+          powerIds: draft.powerIds,
+          techniqueIds: draft.techniqueIds,
+          innatePowerIds: draft.innatePowerIds,
+        },
+        tpCostOf,
+      ),
+    ).toBe(14);
+
+    const poolSpent = computeGuidedTrainingPointsBudgetSpent(draft, ctx, 0, tpCostOf);
+    expect(poolSpent).toBe(14);
+    expect(computeGuidedRequiredTrainingSpent(draft, ctx)).toBeLessThanOrEqual(25);
   });
 });

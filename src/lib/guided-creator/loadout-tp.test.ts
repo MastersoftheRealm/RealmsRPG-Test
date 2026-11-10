@@ -4,6 +4,7 @@ import {
   guidedLoadoutTrainingPointsOverspendMessage,
   guidedTrainingPointsOverspendAmount,
   guidedTrainingPointsPointStatusInputs,
+  sumGuidedListedCombatTrainingPoints,
   wouldExceedSharedTp,
 } from '@/lib/guided-creator/loadout-tp';
 
@@ -41,5 +42,13 @@ describe('loadout-tp shared budgets', () => {
       spent: 27,
       remaining: -2,
     });
+  });
+
+  it('counts each combat id once when it appears on more than one pick list', () => {
+    const listed = sumGuidedListedCombatTrainingPoints(
+      { powerIds: ['shared-power'], techniqueIds: [], innatePowerIds: ['shared-power'] },
+      () => 14,
+    );
+    expect(listed).toBe(14);
   });
 });

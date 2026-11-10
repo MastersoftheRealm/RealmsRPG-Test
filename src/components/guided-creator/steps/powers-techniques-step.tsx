@@ -53,7 +53,10 @@ import {
 } from '@/lib/guided-creator/powers-techniques-step-helpers';
 import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
 import type { GuidedDraft } from '@/stores/guided-creator-store';
-import { computeGuidedTrainingPointsBudgetSpent } from '@/lib/guided-creator/build-character';
+import {
+  computeGuidedRequiredTrainingSpent,
+  computeGuidedTrainingPointsBudgetSpent,
+} from '@/lib/guided-creator/build-character';
 import { guidedTrainingPointsPointStatusInputs } from '@/lib/guided-creator/loadout-tp';
 import { selectedIdsFromL2Items } from '@/lib/guided-creator/powers-techniques-l2';
 import {
@@ -562,8 +565,8 @@ export function PowersTechniquesStep() {
         ? powerTpSpent + innateTpSpent
         : innateTpSpent + techniqueTpSpent);
 
-  const resolveL2TotalTpSpent = useCallback(
-    (selected: SelectableItem[]) => {
+  const resolveL2DraftFromL2Selection = useCallback(
+    (selected: SelectableItem[]): GuidedDraft => {
       const ids = selectedIdsFromL2Items(selected);
       const patch: Partial<GuidedDraft> =
         l2Modal === 'innate'
@@ -571,14 +574,26 @@ export function PowersTechniquesStep() {
           : isTechniques
             ? { techniqueIds: ids }
             : { powerIds: ids };
-      return computeGuidedTrainingPointsBudgetSpent(
-        { ...draft, ...patch },
+      return { ...draft, ...patch };
+    },
+    [draft, isTechniques, l2Modal],
+  );
+
+  const resolveL2TotalTpSpent = useCallback(
+    (selected: SelectableItem[]) =>
+      computeGuidedTrainingPointsBudgetSpent(
+        resolveL2DraftFromL2Selection(selected),
         guidedProfCtx,
         loadoutTp.spent,
         resolveTpCost,
-      );
-    },
-    [draft, guidedProfCtx, isTechniques, l2Modal, loadoutTp.spent, resolveTpCost],
+      ),
+    [guidedProfCtx, loadoutTp.spent, resolveL2DraftFromL2Selection, resolveTpCost],
+  );
+
+  const resolveL2ConfirmTpSpent = useCallback(
+    (selected: SelectableItem[]) =>
+      computeGuidedRequiredTrainingSpent(resolveL2DraftFromL2Selection(selected), guidedProfCtx),
+    [guidedProfCtx, resolveL2DraftFromL2Selection],
   );
 
   const onL2Confirm = useCallback(
@@ -784,6 +799,7 @@ export function PowersTechniquesStep() {
           initialSelectedIds={l2Modal === 'innate' ? selectedInnateIds : selectedIds}
           loadoutTpSpent={l2BaseTpSpent}
           resolveTotalTpSpent={resolveL2TotalTpSpent}
+          resolveConfirmTpSpent={resolveL2ConfirmTpSpent}
           tpLimit={loadoutTp.limit}
           archetypeAbility={archetypeAbility}
           abilities={draft.abilities}

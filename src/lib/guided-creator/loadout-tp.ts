@@ -217,9 +217,14 @@ export function sumGuidedListedCombatTrainingPoints(
   combatIds: { powerIds: string[]; techniqueIds: string[]; innatePowerIds: string[] },
   tpCostOf: (id: string) => number,
 ): number {
-  const sumIds = (ids: string[]) =>
-    ids.reduce((total, id) => total + Math.max(0, Math.floor(tpCostOf(id) || 0)), 0);
-  return (
-    sumIds(combatIds.powerIds) + sumIds(combatIds.techniqueIds) + sumIds(combatIds.innatePowerIds)
-  );
+  const uniqueIds = new Set([
+    ...combatIds.powerIds,
+    ...combatIds.techniqueIds,
+    ...combatIds.innatePowerIds,
+  ]);
+  let total = 0;
+  for (const id of uniqueIds) {
+    total += Math.max(0, Math.floor(tpCostOf(id) || 0));
+  }
+  return total;
 }
