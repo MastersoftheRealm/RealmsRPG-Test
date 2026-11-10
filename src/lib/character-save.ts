@@ -3,6 +3,7 @@
  * `clampSavedCurrency` (TASK-739 / TASK-749).
  */
 
+import { leanCharacterArrayFieldsForRelationalSave } from '@/lib/character/relational-lean-save';
 import { normalizeTempModifiers } from '@/lib/character/temp-modifiers';
 import { normalizeCharacterForSave } from '@/lib/character/schema-normalize';
 import { getErrorMessage, isApiError } from '@/lib/api-client';
@@ -15,6 +16,57 @@ const DEPRECATED_RELATIONAL_SAVE_KEYS = [
   'flawTrait',
   'characteristicTrait',
 ] as const;
+
+export function migrateDeprecatedAncestryTraitFields(cleaned: Record<string, unknown>): void {
+  const ancestryTraits = cleaned.ancestryTraits;
+  const flawTrait = cleaned.flawTrait;
+  const characteristicTrait = cleaned.characteristicTrait;
+
+  const hasLegacy =
+    (Array.isArray(ancestryTraits) && ancestryTraits.length > 0) ||
+    (flawTrait !== undefined && flawTrait !== null && String(flawTrait).length > 0) ||
+    (characteristicTrait !== undefined &&
+      characteristicTrait !== null &&
+      String(characteristicTrait).length > 0);
+
+  if (!hasLegacy) return;
+
+  const existing = cleaned.ancestry;
+  const ancestry =
+    existing && typeof existing === 'object' && !Array.isArray(existing)
+      ? { ...(existing as Record<string, unknown>) }
+      : {};
+  cleaned.ancestry = ancestry;
+
+  if (Array.isArray(ancestryTraits) && ancestryTraits.length > 0) {
+    const current = ancestry.selectedTraits;
+    if (!Array.isArray(current) || current.length === 0) {
+      ancestry.selectedTraits = ancestryTraits;
+    }
+  }
+  if (flawTrait !== undefined && flawTrait !== null && String(flawTrait).length > 0) {
+    if (
+      ancestry.selectedFlaw === undefined ||
+      ancestry.selectedFlaw === null ||
+      String(ancestry.selectedFlaw).length === 0
+    ) {
+      ancestry.selectedFlaw = flawTrait;
+    }
+  }
+  if (
+    characteristicTrait !== undefined &&
+    characteristicTrait !== null &&
+    String(characteristicTrait).length > 0
+  ) {
+    if (
+      ancestry.selectedCharacteristic === undefined ||
+      ancestry.selectedCharacteristic === null ||
+      String(ancestry.selectedCharacteristic).length === 0
+    ) {
+      ancestry.selectedCharacteristic = characteristicTrait;
+    }
+  }
+}
 
 export function stripDeprecatedCharacterSaveKeys(cleaned: Record<string, unknown>): void {
   for (const key of DEPRECATED_RELATIONAL_SAVE_KEYS) {
@@ -100,6 +152,7 @@ export function prepareCharacterForSave(data: Partial<Character>): Record<string
   delete cleaned.allTraits;
   delete cleaned.defenses;
   delete cleaned.defenseBonuses;
+  migrateDeprecatedAncestryTraitFields(cleaned);
   stripDeprecatedCharacterSaveKeys(cleaned);
 
   // Same sparse Temp Modifier contract as cleanForSave (ADR-0006).
@@ -114,6 +167,7 @@ export function prepareCharacterForSave(data: Partial<Character>): Record<string
 
   // Canonical field names + strip legacy aliases (TASK-663)
   normalizeCharacterForSave(cleaned);
+  leanCharacterArrayFieldsForRelationalSave(cleaned);
 
   if (typeof cleaned.currency === 'number' && Number.isFinite(cleaned.currency)) {
     cleaned.currency = clampSavedCurrency(cleaned.currency);

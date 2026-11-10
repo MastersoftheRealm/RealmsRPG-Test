@@ -490,7 +490,7 @@ describe('POST /api/characters', () => {
     expect(body.details?.some((d) => d.includes('name'))).toBe(true);
   });
 
-  it('returns 422 when the relational create RPC rejects an unmapped field', async () => {
+  it('returns 400 when the relational create RPC rejects an unmapped field', async () => {
     mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
     mockCreateClient.mockResolvedValue(
       createMockSupabase({
@@ -503,10 +503,11 @@ describe('POST /api/characters', () => {
 
     const response = await POST(makePostRequest({ name: 'New Hero', level: 2 }));
 
-    expect(response.status).toBe(422);
-    const body = await readJson<{ error: string; field: string }>(response);
-    expect(body.field).toBe('staleField');
-    expect(body.error).toContain('staleField');
+    expect(response.status).toBe(400);
+    const body = await readJson<{ error: string; details: string[] }>(response);
+    expect(body.details[0]).toContain('staleField');
+    expect(body.error).toContain('PLACEHOLDER');
+    expect(body.error).not.toContain('Unmapped character');
   });
 
   it('does not send deprecated trait keys on create', async () => {

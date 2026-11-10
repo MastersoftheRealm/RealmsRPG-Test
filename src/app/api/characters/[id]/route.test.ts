@@ -600,7 +600,7 @@ describe('PATCH /api/characters/[id]', () => {
     expect(body.updatedAt).toBeTruthy();
   });
 
-  it('returns 422 when the relational patch RPC rejects an unmapped field', async () => {
+  it('returns 400 when the relational patch RPC rejects an unmapped field', async () => {
     const row = makeCharacterRow('char-owned', OWNER.uid);
     mockGetSession.mockResolvedValue({ user: OWNER, error: null });
     const supabase = createMockSupabase(row, undefined, {
@@ -613,10 +613,11 @@ describe('PATCH /api/characters/[id]', () => {
       { params: Promise.resolve({ id: 'char-owned' }) },
     );
 
-    expect(response.status).toBe(422);
-    const body = await readJson<{ error: string; field: string }>(response);
-    expect(body.field).toBe('ancestryTraits');
-    expect(body.error).toContain('ancestryTraits');
+    expect(response.status).toBe(400);
+    const body = await readJson<{ error: string; details: string[] }>(response);
+    expect(body.details[0]).toContain('ancestryTraits');
+    expect(body.error).toContain('PLACEHOLDER');
+    expect(body.error).not.toContain('Unmapped character');
   });
 
   it('merges a partial payload and leaves omitted keys intact', async () => {

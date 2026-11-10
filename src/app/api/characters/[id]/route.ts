@@ -17,7 +17,7 @@ import {
   validateRouteParams,
 } from '@/lib/api-validation';
 import { prepareCharacterForSave } from '@/lib/character-save';
-import { parseCharacterUnmappedFieldDbError } from '@/lib/character/character-relational-save-errors';
+import { characterRelationalValidationResponse } from '@/lib/character/character-relational-save-errors';
 import { applyCharacterDirtyPatch } from '@/lib/character/dirty-patch';
 import {
   normalizeCharacterForSave,
@@ -201,15 +201,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         expectedUpdatedAt,
       });
     } catch (patchErr) {
-      const unmapped = parseCharacterUnmappedFieldDbError(
+      const validation = characterRelationalValidationResponse(
+        'PATCH /api/characters/[id]',
         patchErr as { code?: string; message?: string },
       );
-      if (unmapped) {
-        return NextResponse.json(
-          { error: unmapped.message, field: unmapped.field },
-          { status: 422 },
-        );
-      }
+      if (validation) return validation;
       throw patchErr;
     }
     if (result.status === 'not_found') {

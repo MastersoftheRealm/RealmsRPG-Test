@@ -71,7 +71,7 @@ describe('prepareCharacterForSave (ADR-0006 tempModifiers)', () => {
     expect(cleaned.archetype).toEqual({ id: 'a1', type: 'powered-martial' });
   });
 
-  it('strips deprecated top-level trait fields before relational save', () => {
+  it('migrates then strips deprecated top-level trait fields before relational save', () => {
     const cleaned = prepareCharacterForSave({
       name: 'Test',
       level: 1,
@@ -83,6 +83,11 @@ describe('prepareCharacterForSave (ADR-0006 tempModifiers)', () => {
     expect(cleaned).not.toHaveProperty('ancestryTraits');
     expect(cleaned).not.toHaveProperty('flawTrait');
     expect(cleaned).not.toHaveProperty('characteristicTrait');
+    expect(cleaned.ancestry).toEqual({
+      selectedTraits: ['t1'],
+      selectedFlaw: 'flaw',
+      selectedCharacteristic: 'char',
+    });
     expect(cleaned.name).toBe('Test');
   });
 

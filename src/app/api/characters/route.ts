@@ -15,8 +15,13 @@ import {
   parseRoleQuotaExceededDbError,
 } from '@/lib/role-quota-messages';
 import { validateJson, characterCreateSchema } from '@/lib/api-validation';
-import { prepareCharacterForCreate, stripDeprecatedCharacterSaveKeys } from '@/lib/character-save';
-import { parseCharacterUnmappedFieldDbError } from '@/lib/character/character-relational-save-errors';
+import {
+  migrateDeprecatedAncestryTraitFields,
+  prepareCharacterForCreate,
+  stripDeprecatedCharacterSaveKeys,
+} from '@/lib/character-save';
+import { leanCharacterArrayFieldsForRelationalSave } from '@/lib/character/relational-lean-save';
+import { characterRelationalValidationResponse } from '@/lib/character/character-relational-save-errors';
 import {
   normalizeCharacterForSave,
   normalizeCharacterOnLoad,
@@ -224,7 +229,9 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date().toISOString(),
       };
       normalizeCharacterForSave(newData);
+      migrateDeprecatedAncestryTraitFields(newData as Record<string, unknown>);
       stripDeprecatedCharacterSaveKeys(newData as Record<string, unknown>);
+      leanCharacterArrayFieldsForRelationalSave(newData as Record<string, unknown>);
       const newId = crypto.randomUUID();
 
       await ensureUserProfile(supabase, user.uid);
@@ -248,15 +255,11 @@ export async function POST(request: NextRequest) {
           createErr as { code?: string; message?: string; details?: string },
         );
         if (quota) return NextResponse.json(quota, { status: 403 });
-        const unmapped = parseCharacterUnmappedFieldDbError(
+        const validation = characterRelationalValidationResponse(
+          'POST /api/characters (duplicate create)',
           createErr as { code?: string; message?: string },
         );
-        if (unmapped) {
-          return NextResponse.json(
-            { error: unmapped.message, field: unmapped.field },
-            { status: 422 },
-          );
-        }
+        if (validation) return validation;
         throw createErr;
       }
       if (inserted.replayed) {
@@ -288,15 +291,11 @@ export async function POST(request: NextRequest) {
         createErr as { code?: string; message?: string; details?: string },
       );
       if (quota) return NextResponse.json(quota, { status: 403 });
-      const unmapped = parseCharacterUnmappedFieldDbError(
+      const validation = characterRelationalValidationResponse(
+        'POST /api/characters (create)',
         createErr as { code?: string; message?: string },
       );
-      if (unmapped) {
-        return NextResponse.json(
-          { error: unmapped.message, field: unmapped.field },
-          { status: 422 },
-        );
-      }
+      if (validation) return validation;
       throw createErr;
     }
     if (inserted.replayed) {
