@@ -50,13 +50,7 @@ export const ALLOWED_PRIVATE_AUTH_HELPERS = new Set([
   'private.auth_is_vtt_campaign_participant',
 ]);
 
-const IGNORED_REL = new Set([
-  'sql/_TEMPLATE_new_table.sql',
-  'sql/_template_new_table.sql',
-  // Legacy bulk GRANT bundles (no CREATE TABLE edits in PR 564); Collin SQL.
-  'sql/characters-relational-cutover.sql',
-  'sql/characters-relational-expand.sql',
-]);
+const IGNORED_REL = new Set(['sql/_TEMPLATE_new_table.sql', 'sql/_template_new_table.sql']);
 
 /** @param {string} relPath posix-style path under repo root */
 export function isIgnoredSqlGrantCheckPath(relPath) {
@@ -1427,10 +1421,7 @@ function isAllowedClientRoleTableGrant(privs, privilegeListRaw) {
   return [...privs].every((p) => p === 'select');
 }
 
-function findClientRoleGrantViolations(code, createdTableKeys) {
-  const created =
-    createdTableKeys ??
-    new Set(extractCreateTableTargets(code).map((t) => `${t.schema}.${t.name}`));
+function findClientRoleGrantViolations(code) {
   const re = /\bgrant\s+([^;]+?)\s+on\s+([^;]+?)\s+to\s+([^;]+)/gi;
   /** @type {{ privilegeListRaw: string, privs: Set<string>, onClause: string, roles: Set<string>, grantText: string }[]} */
   const statements = [];
@@ -1454,7 +1445,6 @@ function findClientRoleGrantViolations(code, createdTableKeys) {
         .map((t) => `${t.schema}.${t.name}`)
         .join(', ') || onClause;
     const schemaWide = /^all\s+tables\s+in\s+schema\b/i.test(onClause);
-    const tableRefs = parseGrantOnTables(onClause);
     const nonSelect = [...privs].filter((p) => p !== 'select');
     const grantStatement = normalizeSqlStatement(grantText.replace(/;+\s*$/, ''));
     const grantRoles = [...roles];
@@ -1469,10 +1459,6 @@ function findClientRoleGrantViolations(code, createdTableKeys) {
           });
         }
       }
-      continue;
-    }
-
-    if (tableRefs.length > 1 && !tableRefs.some((t) => created.has(`${t.schema}.${t.name}`))) {
       continue;
     }
 
@@ -1610,8 +1596,7 @@ export function findSqlFileViolations(sql, options = {}) {
     }
   }
 
-  const createdTableKeys = new Set(targets.map((t) => `${t.schema}.${t.name}`));
-  violations.push(...findClientRoleGrantViolations(code, createdTableKeys));
+  violations.push(...findClientRoleGrantViolations(code));
 
   for (const { schema, name } of collectReferencedTables(code)) {
     const key = `${schema}.${name}`;

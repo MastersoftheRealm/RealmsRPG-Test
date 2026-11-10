@@ -858,6 +858,19 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.c TO service_role;`;
     ).toEqual([]);
   });
 
+  it('fails grant-only multi-table client writes with no CREATE TABLE in the file', () => {
+    expect(
+      findCreateTableSetupViolations(
+        `GRANT SELECT, INSERT ON TABLE public.a, public.b TO authenticated;`,
+      ),
+    ).toEqual(expect.arrayContaining([expect.stringMatching(/SELECT only for authenticated/i)]));
+    expect(
+      findCreateTableSetupViolations(
+        `GRANT SELECT, INSERT ON TABLE public.a, public.b TO authenticated, service_role;`,
+      ),
+    ).toEqual(expect.arrayContaining([expect.stringMatching(/SELECT only for authenticated/i)]));
+  });
+
   it('fails non-SELECT privileges on comma-separated table lists', () => {
     const mustFail = [
       `${base}\nGRANT SELECT, INSERT ON TABLE public.a, public.b TO authenticated;`,
@@ -1069,6 +1082,43 @@ $b$;`;
     ]);
     expect(baselinedOne).toHaveLength(2);
     expect(pinned.filter((v) => v.statement.includes('select 1'))).toHaveLength(1);
+  });
+});
+
+describe('character SQL files are scanned', () => {
+  it('surfaces a new statement in characters-relational-cutover.sql instead of skipping the file', () => {
+    const cutover = fs.readFileSync(
+      path.join(process.cwd(), 'sql/characters-relational-cutover.sql'),
+      'utf8',
+    );
+    const extra = `${cutover}\nGRANT INSERT ON public.character_species TO authenticated;`;
+    const issues = findSqlFileViolations(extra);
+    expect(issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          reason: expect.stringMatching(
+            /public\.character_species: GRANT INSERT TO authenticated/i,
+          ),
+          statement: 'grant insert on public.character_species to authenticated',
+        }),
+      ]),
+    );
+    const pinned = applySqlGrantCheckBaseline(
+      issues.map((v) => ({
+        file: 'sql/characters-relational-cutover.sql',
+        reason: v.reason,
+        statement: v.statement,
+      })),
+    );
+    expect(pinned).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          statement: 'grant insert on public.character_species to authenticated',
+        }),
+      ]),
+    );
+    expect(isIgnoredSqlGrantCheckPath('sql/characters-relational-cutover.sql')).toBe(false);
+    expect(isIgnoredSqlGrantCheckPath('sql/characters-relational-expand.sql')).toBe(false);
   });
 });
 
