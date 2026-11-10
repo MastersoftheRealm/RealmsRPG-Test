@@ -490,6 +490,47 @@ describe('POST /api/characters', () => {
     expect(body.details?.some((d) => d.includes('name'))).toBe(true);
   });
 
+  it('returns 422 when the relational create RPC rejects an unmapped field', async () => {
+    mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+    mockCreateClient.mockResolvedValue(
+      createMockSupabase({
+        insertError: {
+          code: '22023',
+          message: 'Unmapped character key: staleField',
+        },
+      }) as never,
+    );
+
+    const response = await POST(makePostRequest({ name: 'New Hero', level: 2 }));
+
+    expect(response.status).toBe(422);
+    const body = await readJson<{ error: string; field: string }>(response);
+    expect(body.field).toBe('staleField');
+    expect(body.error).toContain('staleField');
+  });
+
+  it('does not send deprecated trait keys on create', async () => {
+    mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+    const supabase = createMockSupabase({ characterCount: 1, insertId: 'legacy-trait-strip' });
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await POST(
+      makePostRequest({
+        name: 'Legacy Trait',
+        level: 1,
+        ancestryTraits: ['t1'],
+        flawTrait: 'flaw',
+        characteristicTrait: 'char',
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    const saved = defined(supabase.insertedRows[0]).document as Record<string, unknown>;
+    expect(saved).not.toHaveProperty('ancestryTraits');
+    expect(saved).not.toHaveProperty('flawTrait');
+    expect(saved).not.toHaveProperty('characteristicTrait');
+  });
+
   it('creates a character and returns the new id', async () => {
     mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
     const supabase = createMockSupabase({ characterCount: 1, insertId: 'created-char-id' });

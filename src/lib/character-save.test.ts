@@ -71,6 +71,21 @@ describe('prepareCharacterForSave (ADR-0006 tempModifiers)', () => {
     expect(cleaned.archetype).toEqual({ id: 'a1', type: 'powered-martial' });
   });
 
+  it('strips deprecated top-level trait fields before relational save', () => {
+    const cleaned = prepareCharacterForSave({
+      name: 'Test',
+      level: 1,
+      ancestryTraits: ['t1'],
+      flawTrait: 'flaw',
+      characteristicTrait: 'char',
+    } as Parameters<typeof prepareCharacterForSave>[0]);
+
+    expect(cleaned).not.toHaveProperty('ancestryTraits');
+    expect(cleaned).not.toHaveProperty('flawTrait');
+    expect(cleaned).not.toHaveProperty('characteristicTrait');
+    expect(cleaned.name).toBe('Test');
+  });
+
   it('floors currency when the key is present and does not invent it (TASK-749)', () => {
     const withDebt = prepareCharacterForSave({
       name: 'Test',

@@ -17,6 +17,7 @@ import {
   validateRouteParams,
 } from '@/lib/api-validation';
 import { prepareCharacterForSave } from '@/lib/character-save';
+import { parseCharacterUnmappedFieldDbError } from '@/lib/character/character-relational-save-errors';
 import { applyCharacterDirtyPatch } from '@/lib/character/dirty-patch';
 import {
   normalizeCharacterForSave,
@@ -192,11 +193,25 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       loadFeatCatalog: patchDirtyKeysNeedFeatCatalog(cleanedData),
     });
 
-    const result = await patchRelationalCharacter(supabase, {
-      characterId: id,
-      patch: cleanedData as Record<string, unknown>,
-      expectedUpdatedAt,
-    });
+    let result;
+    try {
+      result = await patchRelationalCharacter(supabase, {
+        characterId: id,
+        patch: cleanedData as Record<string, unknown>,
+        expectedUpdatedAt,
+      });
+    } catch (patchErr) {
+      const unmapped = parseCharacterUnmappedFieldDbError(
+        patchErr as { code?: string; message?: string },
+      );
+      if (unmapped) {
+        return NextResponse.json(
+          { error: unmapped.message, field: unmapped.field },
+          { status: 422 },
+        );
+      }
+      throw patchErr;
+    }
     if (result.status === 'not_found') {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });
     }

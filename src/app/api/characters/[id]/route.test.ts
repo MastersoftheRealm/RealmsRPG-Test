@@ -105,6 +105,7 @@ type CampaignVisibilityMock = {
 
 type MockSupabaseOptions = {
   deleteError?: { message: string } | null;
+  patchRpcError?: { code?: string | undefined; message?: string | undefined } | null;
 };
 
 function createMockSupabase(
@@ -175,6 +176,9 @@ function createMockSupabase(
       return { data: characterRow?.document ?? null, error: null };
     }
     if (name === 'patch_character_relational') {
+      if (options?.patchRpcError) {
+        return { data: null, error: options.patchRpcError };
+      }
       if (!characterRow || args.p_character_id !== characterRow.id) {
         return { data: { status: 'not_found' }, error: null };
       }
@@ -594,6 +598,25 @@ describe('PATCH /api/characters/[id]', () => {
     const body = await readJson<{ ok: boolean; updatedAt: string }>(response);
     expect(body.ok).toBe(true);
     expect(body.updatedAt).toBeTruthy();
+  });
+
+  it('returns 422 when the relational patch RPC rejects an unmapped field', async () => {
+    const row = makeCharacterRow('char-owned', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createMockSupabase(row, undefined, {
+      patchRpcError: { code: '22023', message: 'Unmapped character key: ancestryTraits' },
+    });
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await PATCH(
+      makePatchRequest('char-owned', { notes: 'still bad if RPC rejects' }),
+      { params: Promise.resolve({ id: 'char-owned' }) },
+    );
+
+    expect(response.status).toBe(422);
+    const body = await readJson<{ error: string; field: string }>(response);
+    expect(body.field).toBe('ancestryTraits');
+    expect(body.error).toContain('ancestryTraits');
   });
 
   it('merges a partial payload and leaves omitted keys intact', async () => {

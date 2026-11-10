@@ -9,6 +9,19 @@ import { getErrorMessage, isApiError } from '@/lib/api-client';
 import { removeUndefined } from '@/lib/utils/object';
 import type { Character, CharacterTempModifiers } from '@/types';
 
+/** Top-level keys rejected by `assert_character_document_mapped` — not sent to relational RPCs. */
+const DEPRECATED_RELATIONAL_SAVE_KEYS = [
+  'ancestryTraits',
+  'flawTrait',
+  'characteristicTrait',
+] as const;
+
+export function stripDeprecatedCharacterSaveKeys(cleaned: Record<string, unknown>): void {
+  for (const key of DEPRECATED_RELATIONAL_SAVE_KEYS) {
+    delete cleaned[key];
+  }
+}
+
 /** Matches `characterCreateSchema.clientRequestId` (uuid). */
 const CLIENT_REQUEST_ID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -87,6 +100,7 @@ export function prepareCharacterForSave(data: Partial<Character>): Record<string
   delete cleaned.allTraits;
   delete cleaned.defenses;
   delete cleaned.defenseBonuses;
+  stripDeprecatedCharacterSaveKeys(cleaned);
 
   // Same sparse Temp Modifier contract as cleanForSave (ADR-0006).
   // JSON null is a dirty-key clear (86e3juw04) and must survive this normalize.
