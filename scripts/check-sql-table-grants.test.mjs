@@ -2,6 +2,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
   changedFilesDiffArgs,
@@ -20,7 +21,7 @@ import {
   isAllowlistedWritePolicyPredicate,
 } from './lib/sql-grant-check-engine.mjs';
 
-const scriptPath = path.join(process.cwd(), 'scripts/check-sql-table-grants.mjs');
+const scriptPath = fileURLToPath(new URL('./check-sql-table-grants.mjs', import.meta.url));
 
 function compliantPublicTableSql(table = 'public.foo') {
   return `CREATE TABLE ${table} (id int);
@@ -1086,12 +1087,14 @@ $b$;`;
 });
 
 describe('character SQL files are scanned', () => {
+  const bulkRelationalGrantBundle = `GRANT SELECT ON TABLE public.character_species, public.character_feats TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
+  public.character_species,
+  public.character_feats
+TO authenticated, service_role;`;
+
   it('surfaces a new statement in characters-relational-cutover.sql instead of skipping the file', () => {
-    const cutover = fs.readFileSync(
-      path.join(process.cwd(), 'sql/characters-relational-cutover.sql'),
-      'utf8',
-    );
-    const extra = `${cutover}\nGRANT INSERT ON public.character_species TO authenticated;`;
+    const extra = `${bulkRelationalGrantBundle}\nGRANT INSERT ON public.character_species TO authenticated;`;
     const issues = findSqlFileViolations(extra);
     expect(issues).toEqual(
       expect.arrayContaining([
