@@ -242,7 +242,7 @@ export function useAutoSave<T>({
       clearTimeout(timeoutRef.current);
     }
     timeoutRef.current = setTimeout(() => {
-      performSave(currentDataRef.current);
+      performSave(data);
     }, delay);
 
     return () => {
