@@ -50,7 +50,7 @@ export function findGrantViolations(changedRelPaths) {
     if (!fs.existsSync(abs)) continue;
 
     const sql = fs.readFileSync(abs, 'utf8');
-    const issues = findSqlFileViolations(sql);
+    const issues = findSqlFileViolations(sql, { relPath: normalized });
     for (const issue of issues) {
       violations.push({ file: normalized, reason: issue });
     }
@@ -73,7 +73,7 @@ export function findViolationsInSqlTree(root = repoRoot) {
     const rel = `sql/${name}`;
     if (isIgnoredSqlGrantCheckPath(rel)) continue;
     const sql = fs.readFileSync(path.join(sqlDir, name), 'utf8');
-    for (const issue of findSqlFileViolations(sql)) {
+    for (const issue of findSqlFileViolations(sql, { relPath: rel })) {
       violations.push({ file: rel, reason: issue });
     }
   }

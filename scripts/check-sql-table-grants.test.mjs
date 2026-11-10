@@ -518,7 +518,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.t TO authenticated, service_role;
     );
     const trunc = `GRANT SELECT, TRUNCATE ON public.leak TO authenticated;`;
     expect(findCreateTableSetupViolations(trunc)).toEqual(
-      expect.arrayContaining([expect.stringMatching(/TRUNCATE TO authenticated/)]),
+      expect.arrayContaining([expect.stringMatching(/GRANT TRUNCATE TO authenticated/i)]),
     );
   });
 
@@ -697,16 +697,83 @@ $p$;`;
     );
   });
 
-  it('rejects EXECUTE inside a called function when the file creates a table', () => {
-    const sql = `${okTable}
-CREATE FUNCTION public.bad() RETURNS void LANGUAGE plpgsql AS $fn$
+  it('rejects EXECUTE inside a function even without CREATE TABLE in the file', () => {
+    const sql = `CREATE FUNCTION public.bad() RETURNS void LANGUAGE plpgsql AS $fn$
 BEGIN
   EXECUTE 'select 1';
 END;
-$fn$;`;
+$fn$;
+SELECT public.bad();`;
     expect(findCreateTableSetupViolations(sql)).toEqual(
-      expect.arrayContaining([expect.stringMatching(/unexpandable dynamic sql/i)]),
+      expect.arrayContaining([expect.stringMatching(/EXECUTE in function body/i)]),
     );
+  });
+});
+
+describe('PR 564 bypass audit holes', () => {
+  it('rejects auth.uid()::text in column equality (not exact auth.uid() form)', () => {
+    const sql = `CREATE TABLE public.h (id int, owner_id text);
+ALTER TABLE public.h ENABLE ROW LEVEL SECURITY;
+CREATE POLICY read ON public.h FOR SELECT TO authenticated USING (true);
+CREATE POLICY bad ON public.h FOR UPDATE TO authenticated USING (owner_id = auth.uid()::text);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.h TO authenticated, service_role;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining([
+        'public.h: overly broad write policy for anon/authenticated (PostgREST direct-write risk)',
+      ]),
+    );
+  });
+
+  it('allows owner_id = auth.uid() AND true (top-level AND does not widen)', () => {
+    const sql = `CREATE TABLE public.h (id int, owner_id uuid);
+ALTER TABLE public.h ENABLE ROW LEVEL SECURITY;
+CREATE POLICY read ON public.h FOR SELECT TO authenticated USING (true);
+CREATE POLICY ok ON public.h FOR UPDATE TO authenticated USING (owner_id = auth.uid() AND true);
+CREATE POLICY ok2 ON public.h FOR INSERT TO authenticated WITH CHECK (owner_id = auth.uid() AND 1 = 1);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.h TO authenticated, service_role;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual([]);
+  });
+
+  it('flags EXECUTE in a function without CREATE TABLE in the same file', () => {
+    const sql = `CREATE FUNCTION public.bad_fn() RETURNS void LANGUAGE plpgsql AS $fn$
+BEGIN
+  EXECUTE 'SELECT 1';
+END;
+$fn$;
+SELECT public.bad_fn();`;
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/EXECUTE in function body/i)]),
+    );
+  });
+
+  it('flags client-role write grants including ALL and single-privilege authenticated', () => {
+    const base = `CREATE TABLE public.h (id int);
+ALTER TABLE public.h ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON public.h FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.h TO service_role;`;
+    expect(
+      findCreateTableSetupViolations(`${base}\nGRANT INSERT ON public.h TO authenticated;`),
+    ).toEqual(expect.arrayContaining([expect.stringMatching(/GRANT INSERT TO authenticated/i)]));
+    expect(
+      findCreateTableSetupViolations(`${base}\nGRANT ALL ON public.h TO authenticated;`),
+    ).toEqual(expect.arrayContaining([expect.stringMatching(/GRANT ALL TO authenticated/i)]));
+    expect(
+      findCreateTableSetupViolations(`${base}\nGRANT UPDATE ON myschema.foo TO authenticated;`),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/myschema\.foo.*GRANT UPDATE TO authenticated/i),
+      ]),
+    );
+    expect(
+      findCreateTableSetupViolations(
+        `${base}\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.h TO "authenticated";`,
+      ),
+    ).toEqual([]);
+    expect(
+      findCreateTableSetupViolations(
+        `${base}\nGRANT UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO anon;`,
+      ),
+    ).toEqual(expect.arrayContaining([expect.stringMatching(/ALL TABLES IN SCHEMA/i)]));
   });
 });
 
@@ -728,7 +795,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.g TO service_role;`;
     ).toEqual(expect.arrayContaining([expect.stringMatching(/ALL TABLES IN SCHEMA/i)]));
   });
 
-  it('allows authenticated table write grants with RLS', () => {
+  it('allows explicit SELECT+writes (not ALL) for authenticated with RLS', () => {
     expect(
       findCreateTableSetupViolations(
         `${base}\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.g TO authenticated;`,
@@ -736,12 +803,15 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.g TO service_role;`;
     ).toEqual([]);
   });
 
-  it('parses quoted roles in GRANT', () => {
+  it('parses quoted roles in GRANT and rejects ALL', () => {
     expect(
       findCreateTableSetupViolations(
         `${base}\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.g TO "authenticated";`,
       ),
     ).toEqual([]);
+    expect(
+      findCreateTableSetupViolations(`${base}\nGRANT ALL ON public.g TO authenticated;`),
+    ).toEqual(expect.arrayContaining([expect.stringMatching(/GRANT ALL TO authenticated/i)]));
     expect(findCreateTableSetupViolations(`${base}\nGRANT INSERT ON public.g TO anon;`)).toEqual(
       expect.arrayContaining([expect.stringMatching(/GRANT INSERT TO anon/i)]),
     );
