@@ -5,7 +5,6 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   changedFilesDiffArgs,
-  expandForeachExecuteFormatSql,
   findCreateTableSetupViolations,
   findGrantViolations,
   isIgnoredSqlGrantCheckPath,
@@ -347,12 +346,133 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.foo TO service_role;`;
 
 describe('expandForeachExecuteFormatSql', () => {
   it('substitutes each name from the FOREACH array into format SQL', () => {
-    const raw = `FOREACH child IN ARRAY ARRAY['foo','bar'] LOOP
-  EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', child);
-END LOOP;`;
-    const expanded = expandForeachExecuteFormatSql(raw);
-    expect(expanded).toContain('ALTER TABLE public.foo ENABLE ROW LEVEL SECURITY');
-    expect(expanded).toContain('ALTER TABLE public.bar ENABLE ROW LEVEL SECURITY');
+    const sql = `DO $p$
+BEGIN
+  FOREACH child IN ARRAY ARRAY['foo','bar'] LOOP
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', child);
+  END LOOP;
+END;
+$p$;`;
+    const violations = findCreateTableSetupViolations(sql);
+    expect(violations).not.toEqual(
+      expect.arrayContaining([expect.stringMatching(/unexpandable dynamic sql/i)]),
+    );
+    expect(
+      findCreateTableSetupViolations(
+        `${sql}
+CREATE TABLE public.foo (id int);
+ALTER TABLE public.foo ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON public.foo FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.foo TO authenticated, service_role;`,
+      ),
+    ).toEqual([]);
+  });
+});
+
+describe('review hardening regressions', () => {
+  it('does not expand a commented-out loop in raw text', () => {
+    const sql = `CREATE TABLE public.trap (id int);
+-- DO $p$
+-- BEGIN
+--   FOREACH child IN ARRAY ARRAY['trap'] LOOP
+--     EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', child);
+--   END LOOP;
+-- END;
+-- $p$;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.trap TO authenticated, service_role;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining(['public.trap: missing ENABLE ROW LEVEL SECURITY in the same file']),
+    );
+  });
+
+  it('fails unexpandable EXECUTE literal dynamic SQL', () => {
+    const sql = `CREATE TABLE public.trap (id int);
+DO $p$
+BEGIN
+  EXECUTE 'ALTER TABLE public.trap ENABLE ROW LEVEL SECURITY';
+END;
+$p$;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/unexpandable dynamic sql/i)]),
+    );
+  });
+
+  it('flags broad write policy generated in a loop', () => {
+    const sql = `CREATE TABLE public.child_rows (id int);
+DO $p$
+BEGIN
+  FOREACH child IN ARRAY ARRAY['child_rows'] LOOP
+    EXECUTE format(
+      'CREATE POLICY bad ON public.%I FOR INSERT TO authenticated WITH CHECK (true)',
+      child
+    );
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', child);
+  END LOOP;
+END;
+$p$;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.child_rows TO authenticated, service_role;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining([
+        'public.child_rows: overly broad write policy for anon/authenticated (PostgREST direct-write risk)',
+      ]),
+    );
+  });
+
+  it('flags CREATE TABLE without leading space before quoted name', () => {
+    const bare = `CREATE TABLE"secret"(id int);
+GRANT SELECT, INSERT, UPDATE, DELETE ON "secret" TO authenticated, service_role;`;
+    expect(findCreateTableSetupViolations(bare)).toEqual(
+      expect.arrayContaining(['public.secret: missing ENABLE ROW LEVEL SECURITY in the same file']),
+    );
+  });
+
+  it('parses U& unicode quoted table names', () => {
+    const sql = `CREATE TABLE U&"secret" (id int);
+ALTER TABLE U&"secret" ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON U&"secret" FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON U&"secret" TO authenticated, service_role;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual([]);
+  });
+
+  it('treats missing FOR as ALL and missing TO as client-exposed', () => {
+    const sql = `CREATE TABLE public.wide (id int);
+ALTER TABLE public.wide ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON public.wide USING (true) WITH CHECK (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.wide TO authenticated, service_role;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining([
+        'public.wide: overly broad write policy for anon/authenticated (PostgREST direct-write risk)',
+      ]),
+    );
+  });
+
+  it('flags anon INSERT grants without CREATE TABLE in the file', () => {
+    const sql = `GRANT INSERT ON public.leak TO anon;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/GRANT INSERT TO anon is not allowed/)]),
+    );
+  });
+
+  it('detects distinct quoted identifiers with embedded quotes', () => {
+    const ok = `CREATE TABLE "foo-bar" (id int);
+ALTER TABLE "foo-bar" ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON "foo-bar" FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON "foo-bar" TO authenticated, service_role;
+CREATE TABLE "baz-qux" (id int);`;
+    expect(sqlDefinesCreateTableWithoutGrant(ok)).toBe(true);
+    expect(findCreateTableSetupViolations(ok)).toEqual(
+      expect.arrayContaining([
+        'public.baz-qux: missing ENABLE ROW LEVEL SECURITY in the same file',
+      ]),
+    );
+  });
+});
+
+describe('sql tree gate', () => {
+  it('passes SQL_GRANTS_CHECK_TREE against the repository', () => {
+    const result = runScript({ SQL_GRANTS_CHECK_TREE: '1', SQL_GRANTS_CHECK_BASE: '' });
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('tree OK');
   });
 });
 

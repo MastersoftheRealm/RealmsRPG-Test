@@ -68,3 +68,6 @@ jobs:
 
       - name: SQL CREATE TABLE requires RLS, policies, and GRANTs (changed files)
         run: node scripts/check-sql-table-grants.mjs
+
+      - name: SQL grant check full sql/ tree
+        run: SQL_GRANTS_CHECK_TREE=1 node scripts/check-sql-table-grants.mjs
