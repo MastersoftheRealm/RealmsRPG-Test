@@ -14,7 +14,7 @@ Stack: Next.js App Router, React, Tailwind, Supabase (no Prisma), Vercel. Repo `
 6. **Who decides what.** Kadin decides the **what**: product intent, game rules and values, copy. Collin (or the reviewer, for standard-risk work) decides the **how**: engineering approach and code approval. Kadin's OK is a product decision, never an engineering approval. Do not ask him to judge code. When Collin is unavailable, the [fallback path](#fallback-when-collin-is-unavailable) replaces his approval; it does not lower the bar.
 7. **AI creative policy.** Never write art, images, creative names, item names, feat renames, plot, lore, flavor text, or visual/style choices (colors, fonts). You may fix grammar (unless deliberate style), write technical docs, and flag inconsistencies. Full policy: the ClickUp wiki [Using AI at Realms](https://app.clickup.com/9017636492/docs/8cqwdmc-3357/8cqwdmc-517).
 8. **Game rules are not yours.** Never invent or pick a formula or value. A missing or conflicting written rule is a hold: list the sources and their values and ask Kadin.
-9. **Guide Kadin; do not just satisfy him.** Kadin is not a developer. Your job is to guide him through what he does not know: explain the options and their tradeoffs in plain English, and challenge inaccuracies in his plans, in the task and in existing code before building. A request that rests on a wrong assumption gets a correction and a better option, not a faithful implementation of the mistake.
+9. **Guide Kadin; do not just satisfy him.** Kadin is not a developer. Explain the options and their tradeoffs in plain English, and challenge inaccuracies in his plans, in the task, and in existing code before building. A request that rests on a wrong assumption gets a correction and a better option, not a faithful implementation of the mistake. Anything that asks for his approval is a few short sentences: what it is, what can go wrong, and what he is agreeing to. No code and no file lists unless he asks.
 10. **Push back when a request breaks a written rule.** Quote the rule, say in plain English what following the request would break, and wait. Do this even when he does not know the request breaks a rule. A workflow rule is waived only by his explicit words on that task, recorded there. "Just do it" does not waive a rule that protects official game data. A game value he states is a ruling: record it, and if it conflicts with an older ruling, show him both before changing the older one.
 
 ## Workflow
@@ -61,7 +61,7 @@ For high-risk work that cannot wait for Collin. **Only Kadin invokes it**, in hi
    - the repro run on the Vercel preview deploy, with steps and the observed result;
    - a written rollback plan (what to revert, how to restore data, how we would notice it failed);
    - for a change to schema or official codex / `core_rules` rows, a backup taken immediately before apply, named in the PR (see [Database safety](#database-safety)). If the rollback cannot restore those rows, wait for Collin.
-4. **Merge and post-review.** Who presses the button is [Merge](#merge). The PR carries the `collin-post-review` label, and a ClickUp task "Collin post-review: PR #N" is assigned to Collin. Collin works that queue when he is back; his findings are filed as **urgent** and go ahead of all other work. He swaps the label for `collin-reviewed` when done. A label an agent applies is not Kadin's signature. GitHub cannot tell his comment from an agent's while agents post as his account.
+4. **Merge and post-review.** Who presses the button is [Merge](#merge). The PR carries the `collin-post-review` label, and a ClickUp task "Collin post-review: PR #N" is assigned to Collin. Collin works that queue when he is back; his findings are filed as **urgent** and go ahead of all other work. He swaps the label for `collin-reviewed` when done. There is one GitHub account for now. Agents post as Kadin and must not type his approvals: invoking this fallback, accepting a PATCH, or approving a data change. He types those himself. GitHub cannot tell the comments apart.
 
 ### Merge
 
@@ -98,7 +98,7 @@ The paths a PR touches decide its risk. A checkbox does not.
 ## Database safety
 
 - There is one database and the team builds the game in it. A separate test database does not exist yet. Cloud agents would use one if its keys were in their environment; Kadin would not run it himself. Until that exists, agents use this database under the limits below.
-- **QA rows.** Records prefixed `QA` or `QA Test` may be created and edited by agents without extra approval. They are never published as official library or Codex (`DECISIONS.md`, QA / accounts).
+- **QA rows.** Records prefixed `QA` or `QA Test` may be created, edited, and, during alpha, published on official pages for a test. Delete them from those pages when the test is done. They stay QA content (`DECISIONS.md`, QA / accounts).
 - **Official codex, `core_rules`, and schema.** Kadin's explicit OK, the SQL shown in the PR, and a named backup before apply. Collin approves the SQL when he is available. Agents draft the SQL and apply it after that OK. A CSV export in Drive is a content snapshot: name the file and its date. It can restore rows. It cannot restore table structure, so a schema change needs a Supabase backup, not only a CSV.
 - SELECT-only reads are allowed. Details for codex edits: `.cursor/rules/realms-codex-data.mdc`.
 - Every `CREATE TABLE` in `public` enables RLS, adds policies and grants explicitly in the same file. Copy `sql/_TEMPLATE_new_table.sql`.
@@ -138,4 +138,4 @@ One fact, one place. Other docs link; they do not restate.
 
 ## Models
 
-Never use a slug ending in `-fast`. Writer: `composer-2.5`, one system, scope tight enough to survey. Reviewer and fallback senior review: `grok-4.7-high`, a separate session, without the writer's justification. If the reviewer finds the task crosses systems, stop and split it. Do not finish a wide task by stepping up a model. Do not start Claude, GPT, or other models. After a miss inside the same scope, say so; do not redo that bug on the same model.
+Never use a slug ending in `-fast`. Writer: `composer-2.5`, one system, scope tight enough to survey. Reviewer and fallback senior review: `grok-4.7-high`, a separate session, without the writer's justification. If the task crosses systems, stop and split it. If High misses inside that same scope, use `grok-4.7-xhigh` or a larger context on the same model, and note it on the task. Do not start Claude or GPT. Do not redo the same bug on the same model.

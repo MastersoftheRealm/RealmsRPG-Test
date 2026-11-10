@@ -11,7 +11,7 @@ Applies to `codex_*`, `core_rules`, and bulk edits to official library content. 
 | Allowed without extra approval | Needs Kadin's explicit OK and a named backup (Collin approves the SQL when available) |
 |---|---|
 | `SELECT`, audits, counts, previews | `UPDATE`, `INSERT`, `DELETE` on official codex or `core_rules` |
-| Create or edit records prefixed `QA` or `QA Test`. Never publish them as official Codex | `execute_sql` / `apply_migration` that changes schema or official rows |
+| Create, edit, or, during alpha, publish records prefixed `QA` or `QA Test` for a test. Delete them from official pages when the test is done | `execute_sql` / `apply_migration` that changes schema or permanent official rows |
 | Draft SQL in `sql/*.sql` | A schema change backed only by a Drive CSV. A CSV restores rows, not table structure |
 
 Bulk or policy changes (tags, categories, merges, migrations):
