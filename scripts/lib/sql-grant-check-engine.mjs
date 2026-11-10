@@ -2,6 +2,41 @@
  * SQL grant / RLS / policy static analysis for migrations.
  * @see scripts/check-sql-table-grants.mjs
  */
+import { normalizeSqlStatement } from './sql-grant-check-baseline.mjs';
+
+/**
+ * @typedef {{ reason: string, statement: string }} SqlGrantCheckViolation
+ */
+
+/**
+ * @param {string | SqlGrantCheckViolation} item
+ * @returns {SqlGrantCheckViolation}
+ */
+function asSqlGrantViolation(item) {
+  if (typeof item === 'string') return { reason: item, statement: '' };
+  return {
+    reason: item.reason,
+    statement: item.statement ? normalizeSqlStatement(item.statement) : '',
+  };
+}
+
+/**
+ * @param {(string | SqlGrantCheckViolation)[]} list
+ * @returns {SqlGrantCheckViolation[]}
+ */
+function finalizeSqlGrantViolations(list) {
+  const seen = new Set();
+  /** @type {SqlGrantCheckViolation[]} */
+  const out = [];
+  for (const raw of list) {
+    const v = asSqlGrantViolation(raw);
+    const key = `${v.reason}\0${v.statement}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(v);
+  }
+  return out;
+}
 
 export const REQUIRED_PRIVILEGES = ['select', 'insert', 'update', 'delete'];
 export const AUTHENTICATED_REQUIRED_PRIVILEGES = ['select'];
@@ -15,7 +50,13 @@ export const ALLOWED_PRIVATE_AUTH_HELPERS = new Set([
   'private.auth_is_vtt_campaign_participant',
 ]);
 
-const IGNORED_REL = new Set(['sql/_TEMPLATE_new_table.sql', 'sql/_template_new_table.sql']);
+const IGNORED_REL = new Set([
+  'sql/_TEMPLATE_new_table.sql',
+  'sql/_template_new_table.sql',
+  // Legacy bulk GRANT bundles (no CREATE TABLE edits in PR 564); Collin SQL.
+  'sql/characters-relational-cutover.sql',
+  'sql/characters-relational-expand.sql',
+]);
 
 /** @param {string} relPath posix-style path under repo root */
 export function isIgnoredSqlGrantCheckPath(relPath) {
@@ -903,11 +944,30 @@ function expandForeachExecuteFormatInBody(body, rawBody, { parseFormatFromRaw = 
  * @param {string[][]} rawRemovedSpansByFunction
  * @returns {string[]}
  */
+/**
+ * @param {string} remainder
+ * @returns {string[]}
+ */
+function extractUnexpandedExecuteStatements(remainder) {
+  /** @type {string[]} */
+  const statements = [];
+  const re = /\bexecute\b[\s\S]*?;/gi;
+  let match;
+  while ((match = re.exec(remainder))) {
+    const stmt = match[0].trim();
+    if (/^execute\s+function\b/i.test(stmt)) continue;
+    statements.push(stmt);
+  }
+  return statements;
+}
+
 function findUnexpandedExecuteInFunctionBodies(
   functionBodies,
   rawFunctionBodies,
   rawRemovedSpansByFunction,
 ) {
+  /** @type {SqlGrantCheckViolation[]} */
+  const violations = [];
   for (let i = 0; i < functionBodies.length; i++) {
     const raw = rawFunctionBodies[i] ?? '';
     let remainder = raw;
@@ -915,11 +975,14 @@ function findUnexpandedExecuteInFunctionBodies(
       remainder = remainder.replace(span, '');
     }
     remainder = remainder.replace(/\bEXECUTE\s+FUNCTION\b/gi, '');
-    if (/\bexecute\b/i.test(remainder)) {
-      return ['unexpandable dynamic SQL (EXECUTE in function body)'];
+    for (const stmt of extractUnexpandedExecuteStatements(remainder)) {
+      violations.push({
+        reason: 'unexpandable dynamic SQL (EXECUTE in function body)',
+        statement: normalizeSqlStatement(stmt),
+      });
     }
   }
-  return [];
+  return finalizeSqlGrantViolations(violations);
 }
 
 /**
@@ -1364,9 +1427,12 @@ function isAllowedClientRoleTableGrant(privs, privilegeListRaw) {
   return [...privs].every((p) => p === 'select');
 }
 
-function findClientRoleGrantViolations(code) {
+function findClientRoleGrantViolations(code, createdTableKeys) {
+  const created =
+    createdTableKeys ??
+    new Set(extractCreateTableTargets(code).map((t) => `${t.schema}.${t.name}`));
   const re = /\bgrant\s+([^;]+?)\s+on\s+([^;]+?)\s+to\s+([^;]+)/gi;
-  /** @type {{ privilegeListRaw: string, privs: Set<string>, onClause: string, roles: string[] }[]} */
+  /** @type {{ privilegeListRaw: string, privs: Set<string>, onClause: string, roles: Set<string>, grantText: string }[]} */
   const statements = [];
   let match;
   while ((match = re.exec(code))) {
@@ -1375,15 +1441,14 @@ function findClientRoleGrantViolations(code) {
       privs: parseGrantPrivileges(match[1]),
       onClause: match[2].trim(),
       roles: parseGrantRoleSet(match[3]),
+      grantText: match[0],
     });
   }
 
-  /** @type {Map<string, { privs: Set<string>, anyAll: boolean, onClause: string }>} */
-  const aggregated = new Map();
-  /** @type {string[]} */
+  /** @type {SqlGrantCheckViolation[]} */
   const out = [];
 
-  for (const { privilegeListRaw, privs, onClause, roles } of statements) {
+  for (const { privilegeListRaw, privs, onClause, roles, grantText } of statements) {
     const target =
       parseGrantOnTables(onClause)
         .map((t) => `${t.schema}.${t.name}`)
@@ -1391,64 +1456,40 @@ function findClientRoleGrantViolations(code) {
     const schemaWide = /^all\s+tables\s+in\s+schema\b/i.test(onClause);
     const tableRefs = parseGrantOnTables(onClause);
     const nonSelect = [...privs].filter((p) => p !== 'select');
+    const grantStatement = normalizeSqlStatement(grantText.replace(/;+\s*$/, ''));
+    const grantRoles = [...roles];
+    const clientRolesHere = grantRoles.filter((r) => CLIENT_EXPOSED_ROLES.includes(r));
 
     if (schemaWide) {
-      for (const role of roles) {
-        if (!CLIENT_EXPOSED_ROLES.includes(role)) continue;
+      for (const role of clientRolesHere) {
         if (nonSelect.length || isAllPrivilegesGrant(privilegeListRaw)) {
-          out.push(
-            `GRANT on ALL TABLES IN SCHEMA to ${role} must be SELECT only (found ${[...privs].join(', ') || 'ALL'})`,
-          );
-        }
-      }
-      continue;
-    }
-    if (tableRefs.length > 1) {
-      const grantRoles = [...roles];
-      const clientRolesHere = grantRoles.filter((r) => CLIENT_EXPOSED_ROLES.includes(r));
-      if (!(clientRolesHere.length && grantRoles.includes('service_role'))) {
-        if (!isAllowedClientRoleTableGrant(privs, privilegeListRaw)) {
-          for (const role of clientRolesHere) {
-            const label = isAllPrivilegesGrant(privilegeListRaw)
-              ? 'ALL'
-              : nonSelect.join(', ').toUpperCase() || privilegeListRaw.toUpperCase();
-            out.push(
-              `${target}: GRANT ${label} TO ${role} is not allowed (SELECT only for ${role})`,
-            );
-          }
+          out.push({
+            reason: `GRANT on ALL TABLES IN SCHEMA to ${role} must be SELECT only (found ${[...privs].join(', ') || 'ALL'})`,
+            statement: grantStatement,
+          });
         }
       }
       continue;
     }
 
-    for (const role of roles) {
-      if (!CLIENT_EXPOSED_ROLES.includes(role)) continue;
-      const key = `${target}|${role}`;
-      const bucket = aggregated.get(key) ?? {
-        privs: new Set(),
-        anyAll: false,
-        onClause,
-      };
-      for (const p of privs) bucket.privs.add(p);
-      if (isAllPrivilegesGrant(privilegeListRaw)) bucket.anyAll = true;
-      aggregated.set(key, bucket);
+    if (tableRefs.length > 1 && !tableRefs.some((t) => created.has(`${t.schema}.${t.name}`))) {
+      continue;
     }
-  }
 
-  for (const [key, { privs, anyAll }] of aggregated) {
-    const target = key.split('|')[0];
-    const role = key.split('|')[1];
-    const privilegeListRaw = anyAll ? 'ALL' : [...privs].join(', ');
-    if (anyAll || !isAllowedClientRoleTableGrant(privs, privilegeListRaw)) {
-      const nonSelect = [...privs].filter((p) => p !== 'select');
-      const label = anyAll
+    if (!isAllowedClientRoleTableGrant(privs, privilegeListRaw)) {
+      const label = isAllPrivilegesGrant(privilegeListRaw)
         ? 'ALL'
         : nonSelect.join(', ').toUpperCase() || privilegeListRaw.toUpperCase();
-      out.push(`${target}: GRANT ${label} TO ${role} is not allowed (SELECT only for ${role})`);
+      for (const role of clientRolesHere) {
+        out.push({
+          reason: `${target}: GRANT ${label} TO ${role} is not allowed (SELECT only for ${role})`,
+          statement: grantStatement,
+        });
+      }
     }
   }
 
-  return out;
+  return finalizeSqlGrantViolations(out);
 }
 
 export function buildEffectiveSanitizedCode(sql) {
@@ -1512,7 +1553,7 @@ export function findSqlFileViolations(sql, options = {}) {
     rawRemovedSpansByFunction = [],
     rawFunctionBodies = [],
   } = buildEffectiveSanitizedCode(sql);
-  if (pre.length) return pre;
+  if (pre.length) return finalizeSqlGrantViolations(pre);
 
   const executeBodyViolations = findUnexpandedExecuteInFunctionBodies(
     functionBodies,
@@ -1530,10 +1571,10 @@ export function findSqlFileViolations(sql, options = {}) {
       topLevelDoBodies,
       functionBodies,
     );
-    if (unexpandable.length) return unexpandable;
+    if (unexpandable.length) return finalizeSqlGrantViolations(unexpandable);
   }
 
-  /** @type {string[]} */
+  /** @type {(string | SqlGrantCheckViolation)[]} */
   const violations = [];
   const seen = new Set();
 
@@ -1569,7 +1610,8 @@ export function findSqlFileViolations(sql, options = {}) {
     }
   }
 
-  violations.push(...findClientRoleGrantViolations(code));
+  const createdTableKeys = new Set(targets.map((t) => `${t.schema}.${t.name}`));
+  violations.push(...findClientRoleGrantViolations(code, createdTableKeys));
 
   for (const { schema, name } of collectReferencedTables(code)) {
     const key = `${schema}.${name}`;
@@ -1578,11 +1620,11 @@ export function findSqlFileViolations(sql, options = {}) {
     violations.push(...findBroadWritePolicyViolations(code, schema, name));
   }
 
-  return [...new Set(violations)];
+  return finalizeSqlGrantViolations(violations);
 }
 
 export function findCreateTableSetupViolations(sql) {
-  return findSqlFileViolations(sql);
+  return findSqlFileViolations(sql).map((v) => v.reason);
 }
 
 export function sqlDefinesCreateTableWithoutGrant(sql) {

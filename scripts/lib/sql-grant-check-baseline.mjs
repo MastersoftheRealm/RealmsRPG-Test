@@ -13,7 +13,11 @@ const BASELINE_PATH = path.join(repoRoot, 'scripts/sql-grant-check-baseline.json
  * @param {string} text
  */
 export function normalizeSqlStatement(text) {
-  return text.replace(/\s+/g, ' ').trim().toLowerCase();
+  return text
+    .replace(/;+\s*$/, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
 }
 
 /**
@@ -41,7 +45,7 @@ export function loadSqlGrantCheckBaseline(baselinePath = BASELINE_PATH) {
 }
 
 /**
- * @param {{ file: string, reason: string }[]} violations
+ * @param {{ file: string, reason: string, statement?: string }[]} violations
  * @param {string} [root]
  * @returns {string[]}
  */
@@ -49,12 +53,6 @@ export function validateSqlGrantCheckBaseline(violations, root = repoRoot) {
   const { exceptions } = loadSqlGrantCheckBaseline();
   /** @type {string[]} */
   const errors = [];
-  const byFile = new Map();
-  for (const v of violations) {
-    const bucket = byFile.get(v.file) ?? [];
-    bucket.push(v.reason);
-    byFile.set(v.file, bucket);
-  }
 
   for (const entry of exceptions) {
     const abs = path.join(root, entry.file);
@@ -68,16 +66,23 @@ export function validateSqlGrantCheckBaseline(violations, root = repoRoot) {
       errors.push(`baseline stale: statement not in ${entry.file}: ${entry.statement}`);
       continue;
     }
-    const reasons = byFile.get(entry.file) ?? [];
-    if (!reasons.includes(entry.reason)) {
-      errors.push(`baseline stale: ${entry.file} no longer produces reason: ${entry.reason}`);
+    const matched = violations.some(
+      (v) =>
+        v.file === entry.file &&
+        v.reason === entry.reason &&
+        normalizeSqlStatement(v.statement ?? '') === needle,
+    );
+    if (!matched) {
+      errors.push(
+        `baseline stale: ${entry.file} no matching violation for statement: ${entry.statement}`,
+      );
     }
   }
   return errors;
 }
 
 /**
- * @param {{ file: string, reason: string }[]} violations
+ * @param {{ file: string, reason: string, statement?: string }[]} violations
  * @param {string} [root]
  */
 export function applySqlGrantCheckBaseline(violations, root = repoRoot) {
@@ -89,7 +94,12 @@ export function applySqlGrantCheckBaseline(violations, root = repoRoot) {
     const normalizedFile = normalizeSqlFileForStatementMatch(fs.readFileSync(abs, 'utf8'));
     const needle = normalizeSqlStatement(entry.statement);
     if (!normalizedFile.includes(needle)) continue;
-    const idx = remaining.findIndex((v) => v.file === entry.file && v.reason === entry.reason);
+    const idx = remaining.findIndex(
+      (v) =>
+        v.file === entry.file &&
+        v.reason === entry.reason &&
+        normalizeSqlStatement(v.statement ?? '') === needle,
+    );
     if (idx !== -1) remaining.splice(idx, 1);
   }
   return remaining;

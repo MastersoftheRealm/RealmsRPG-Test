@@ -15,7 +15,10 @@ import {
   applySqlGrantCheckBaseline,
   validateSqlGrantCheckBaseline,
 } from './lib/sql-grant-check-baseline.mjs';
-import { isAllowlistedWritePolicyPredicate } from './lib/sql-grant-check-engine.mjs';
+import {
+  findSqlFileViolations,
+  isAllowlistedWritePolicyPredicate,
+} from './lib/sql-grant-check-engine.mjs';
 
 const scriptPath = path.join(process.cwd(), 'scripts/check-sql-table-grants.mjs');
 
@@ -833,10 +836,24 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.a TO service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.b TO service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.c TO service_role;`;
 
-  it('does not flag multi-table grants paired with service_role', () => {
+  it('fails client write on multi-table grants even when service_role is listed', () => {
+    const sql = `${base}\nGRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.a, public.b TO authenticated, service_role;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/GRANT .+ is not allowed \(SELECT only for authenticated\)/i),
+      ]),
+    );
     expect(
       findCreateTableSetupViolations(
-        `${base}\nGRANT SELECT ON public.c TO authenticated;\nGRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.a, public.b TO authenticated, service_role;`,
+        `${base}\nGRANT SELECT, INSERT ON TABLE public.a, public.b TO authenticated;`,
+      ),
+    ).toEqual(expect.arrayContaining([expect.stringMatching(/SELECT only for authenticated/i)]));
+  });
+
+  it('allows SELECT-only multi-table grants with authenticated and service_role', () => {
+    expect(
+      findCreateTableSetupViolations(
+        `${base}\nGRANT SELECT ON TABLE public.a, public.b, public.c TO authenticated, service_role;`,
       ),
     ).toEqual([]);
   });
@@ -990,17 +1007,68 @@ describe('sql grant check baseline', () => {
     );
   });
 
-  it('clears only matching file+reason violations', () => {
+  it('clears only matching file+reason+statement violations', () => {
     const raw = [
       {
         file: 'sql/supabase-campaigns-owner-rls-hotfix-2026-07.sql',
         reason:
           'public.campaigns: GRANT INSERT, UPDATE, DELETE TO authenticated is not allowed (SELECT only for authenticated)',
+        statement: 'grant select, insert, update, delete on public.campaigns to authenticated',
       },
-      { file: 'sql/other.sql', reason: 'leftover' },
+      {
+        file: 'sql/role-quota-atomic.sql',
+        reason: 'unexpandable dynamic SQL (EXECUTE in function body)',
+        statement: 'execute v_sql using p_row',
+      },
+      {
+        file: 'sql/role-quota-atomic.sql',
+        reason: 'unexpandable dynamic SQL (EXECUTE in function body)',
+        statement: "execute 'select 1'",
+      },
+      { file: 'sql/other.sql', reason: 'leftover', statement: '' },
     ];
     const next = applySqlGrantCheckBaseline(raw);
-    expect(next).toEqual([{ file: 'sql/other.sql', reason: 'leftover' }]);
+    expect(next).toEqual([
+      {
+        file: 'sql/role-quota-atomic.sql',
+        reason: 'unexpandable dynamic SQL (EXECUTE in function body)',
+        statement: "execute 'select 1'",
+      },
+      { file: 'sql/other.sql', reason: 'leftover', statement: '' },
+    ]);
+  });
+
+  it('per-statement baseline does not hide a second EXECUTE in the same file', () => {
+    const sql = `CREATE OR REPLACE FUNCTION public.toy() RETURNS void LANGUAGE plpgsql AS $b$
+BEGIN
+  EXECUTE v_sql USING p_row;
+  EXECUTE 'SELECT 1';
+END;
+$b$;`;
+    const issues = findSqlFileViolations(sql);
+    const execute = issues.filter((v) => v.reason.includes('EXECUTE in function body'));
+    expect(execute).toHaveLength(2);
+    const pinned = applySqlGrantCheckBaseline(
+      execute.map((v, i) => ({
+        file: i === 0 ? 'sql/role-quota-atomic.sql' : 'sql/toy.sql',
+        reason: v.reason,
+        statement: v.statement,
+      })),
+    );
+    const baselinedOne = applySqlGrantCheckBaseline([
+      {
+        file: 'sql/role-quota-atomic.sql',
+        reason: execute[0].reason,
+        statement: 'execute v_sql using p_row',
+      },
+      ...execute.map((v) => ({
+        file: 'sql/toy.sql',
+        reason: v.reason,
+        statement: v.statement,
+      })),
+    ]);
+    expect(baselinedOne).toHaveLength(2);
+    expect(pinned.filter((v) => v.statement.includes('select 1'))).toHaveLength(1);
   });
 });
 
@@ -1032,6 +1100,7 @@ describe('findGrantViolations', () => {
             file: fixtureRel,
             reason:
               'public.vitest_grant_fixture: missing ENABLE ROW LEVEL SECURITY in the same file',
+            statement: '',
           },
         ]),
       );
