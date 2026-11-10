@@ -332,9 +332,90 @@ export function parseQualifiedTableRef(ref) {
   }
   if (parts.length === 1) {
     const name = resolveNameToken(parts[0]);
-    if (name) return { schema: 'public', name };
+    if (name && name !== 'if') return { schema: 'public', name };
   }
   return null;
+}
+
+const CREATE_TABLE_PREFIX_RE =
+  /\bcreate\s+(?:unlogged\s+)?table(?=\s|"|«)(?!\s+as\b)\s*(?:if\s+not\s+exists\s*)?/gi;
+
+const QUALIFIED_TABLE_REF_RE =
+  /^((?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*)(?:\s*\.\s*(?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*))?)/i;
+
+/**
+ * @param {string} code
+ * @param {(parsed: { schema: string, name: string }) => void} onRef
+ */
+function forEachCreateTableRef(code, onRef) {
+  const re = new RegExp(CREATE_TABLE_PREFIX_RE.source, 'gi');
+  let match;
+  while ((match = re.exec(code))) {
+    let i = match.index + match[0].length;
+    while (i < code.length && /\s/.test(code[i])) i += 1;
+    const refMatch = QUALIFIED_TABLE_REF_RE.exec(code.slice(i));
+    if (!refMatch) continue;
+    const parsed = parseQualifiedTableRef(refMatch[1]);
+    if (!parsed) continue;
+    onRef(parsed);
+    re.lastIndex = i + refMatch[0].length;
+  }
+}
+
+/**
+ * @param {string} text
+ * @param {number} openParenIndex index of `(`
+ * @returns {string | null} inner text when balanced `)` found
+ */
+function readBalancedParenContent(text, openParenIndex) {
+  if (text[openParenIndex] !== '(') return null;
+  let depth = 0;
+  for (let i = openParenIndex; i < text.length; i += 1) {
+    const ch = text[i];
+    if (ch === '(') depth += 1;
+    else if (ch === ')') {
+      depth -= 1;
+      if (depth === 0) return text.slice(openParenIndex + 1, i);
+    }
+  }
+  return null;
+}
+
+/**
+ * @param {string} clause
+ * @param {'using' | 'with check'} keyword
+ */
+function extractPolicyPredicateExpression(clause, keyword) {
+  const re = new RegExp(`\\b${keyword.replace(' ', '\\s+')}\\s*\\(`, 'i');
+  const match = re.exec(clause);
+  if (!match) return null;
+  const openIdx = match.index + match[0].length - 1;
+  return readBalancedParenContent(clause, openIdx);
+}
+
+/**
+ * @param {string} expr
+ * @returns {string[]}
+ */
+function splitTopLevelOr(expr) {
+  /** @type {string[]} */
+  const parts = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < expr.length; i += 1) {
+    if (expr[i] === '(') depth += 1;
+    else if (expr[i] === ')') depth = Math.max(0, depth - 1);
+    else if (depth === 0) {
+      const orMatch = /^\s+or\b/i.exec(expr.slice(i));
+      if (orMatch) {
+        parts.push(expr.slice(start, i).trim());
+        i += orMatch[0].length - 1;
+        start = i + 1;
+      }
+    }
+  }
+  parts.push(expr.slice(start).trim());
+  return parts.filter(Boolean);
 }
 
 /** @param {string} name */
@@ -364,15 +445,9 @@ export function tableReferencePattern(schema, tableName) {
  * @returns {{ schema: string, name: string }[]}
  */
 export function extractCreateTableTargets(code) {
-  const re =
-    /\bcreate\s+(?:unlogged\s+)?table(?=\s|"|«)(?!\s+as\b)\s*(?:if\s+not\s+exists\s+)?((?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*)(?:\s*\.\s*(?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*))?)/gi;
   /** @type {{ schema: string, name: string }[]} */
   const targets = [];
-  let match;
-  while ((match = re.exec(code))) {
-    const parsed = parseQualifiedTableRef(match[1]);
-    if (parsed) targets.push(parsed);
-  }
+  forEachCreateTableRef(code, (parsed) => targets.push(parsed));
   return targets;
 }
 
@@ -396,6 +471,48 @@ function stripPlpgsqlBodies(code, bodies) {
  * @param {string} body
  * @returns {string[]}
  */
+/**
+ * @param {string} body
+ * @param {number} index
+ */
+function isInsideExpandableForeachRegion(body, index) {
+  for (const { start, end } of foreachRegionsOutsideIf(body)) {
+    if (index >= start && index < end) return true;
+  }
+  return false;
+}
+
+/**
+ * @param {string} body
+ * @returns {string[]}
+ */
+function auditExecuteFormatCalls(body) {
+  /** @type {string[]} */
+  const violations = [];
+  const re = /\bexecute\s+format\s*\(\s*«S([0-9a-f]+)»([^;]*)/gi;
+  let match;
+  while ((match = re.exec(body))) {
+    const formatSql = Buffer.from(match[1], 'hex').toString('utf8');
+    const after = match[2].trim();
+    if (!after.startsWith(',')) {
+      violations.push('unexpandable dynamic SQL (EXECUTE format without arguments)');
+      continue;
+    }
+    if (/%[sSL]/i.test(formatSql)) {
+      violations.push('unexpandable dynamic SQL (EXECUTE format with %s or %L)');
+      continue;
+    }
+    if (!/%I/.test(formatSql)) {
+      violations.push('unexpandable dynamic SQL (EXECUTE format without %I)');
+      continue;
+    }
+    if (!isInsideExpandableForeachRegion(body, match.index)) {
+      violations.push('unexpandable dynamic SQL (EXECUTE format outside expandable FOREACH)');
+    }
+  }
+  return violations;
+}
+
 function auditTopLevelDoBody(body) {
   /** @type {string[]} */
   const violations = [];
@@ -417,15 +534,11 @@ function auditTopLevelDoBody(body) {
     violations.push('unexpandable dynamic SQL (LOOP without expandable FOREACH)');
   }
   if (!hasExecute) return violations;
+  violations.push(...auditExecuteFormatCalls(body));
   const executes = body.match(/\bexecute\b[^;]*/gi) ?? [];
   for (const ex of executes) {
-    if (/execute\s+format\s*\(\s*«S[0-9a-f]+»\s*\)/i.test(ex)) {
-      violations.push('unexpandable dynamic SQL (EXECUTE format without arguments)');
-    } else if (!/execute\s+format\s*\(\s*«S[0-9a-f]+»\s*,/i.test(ex)) {
-      violations.push('unexpandable dynamic SQL (EXECUTE)');
-    } else if (/%[sSL]/i.test(ex)) {
-      violations.push('unexpandable dynamic SQL (EXECUTE format with %s or %L)');
-    }
+    if (/execute\s+format\b/i.test(ex)) continue;
+    violations.push('unexpandable dynamic SQL (EXECUTE)');
   }
   if (/\bexecute\b[^;]*\|\|/i.test(body)) {
     violations.push('unexpandable dynamic SQL (EXECUTE with concatenation)');
@@ -562,7 +675,10 @@ export function expandForeachExecuteFormatSql(
           violations.push('unexpandable dynamic SQL (EXECUTE format with %s or %L)');
           continue;
         }
-        if (!/%I/.test(formatSql)) continue;
+        if (!/%I/.test(formatSql)) {
+          violations.push('unexpandable dynamic SQL (EXECUTE format without %I)');
+          continue;
+        }
         for (const name of names) {
           statements.push(formatSql.replace(/%I/g, name));
         }
@@ -747,10 +863,16 @@ function isAlwaysTrueExpression(expr) {
 /**
  * @param {string} expr
  */
+function isOrDisjunctionWithConstantTrue(expr) {
+  const parts = splitTopLevelOr(expr.replace(/\s+/g, ' ').trim());
+  return parts.some((part) => isAlwaysTrueExpression(part) || /^true$/i.test(part.trim()));
+}
+
 function isTrivialClientWriteExpression(expr) {
   const e = expr.replace(/\s+/g, ' ').trim();
   const lower = e.toLowerCase();
   if (isAlwaysTrueExpression(e)) return true;
+  if (isOrDisjunctionWithConstantTrue(e)) return true;
   if (/\btrue\b/.test(lower) && /\bor\b/.test(lower)) return true;
   if (/\bauth\.uid\s*\(\s*\)\s+is\s+not\s+null/i.test(e)) return true;
   if (/\bauth\.role\s*\(/i.test(e)) return true;
@@ -773,7 +895,8 @@ function isStrictAuthScopeExpression(expr) {
     return true;
   }
   if (/\bor\b/i.test(e)) {
-    const parts = e.split(/\bor\b/i).map((p) => p.trim());
+    if (isOrDisjunctionWithConstantTrue(e)) return false;
+    const parts = splitTopLevelOr(e);
     return parts.length > 0 && parts.every((part) => isStrictAuthScopeExpression(part));
   }
   return false;
@@ -793,20 +916,20 @@ function policyWriteActionIsOverlyBroad(clause) {
   let action = forMatch?.[1] ?? 'all';
   if (action === 'select') return false;
 
-  const usingMatch = /\busing\s*\(([^)]*)\)/.exec(clause);
-  const checkMatch = /\bwith\s+check\s*\(([^)]*)\)/.exec(clause);
+  const usingExpr = extractPolicyPredicateExpression(clause, 'using');
+  const checkExpr = extractPolicyPredicateExpression(clause, 'with check');
 
   if (action === 'insert') {
-    if (!checkMatch) return true;
-    return !isStrictAuthScopeExpression(checkMatch[1]);
+    if (!checkExpr) return true;
+    return !isStrictAuthScopeExpression(checkExpr);
   }
 
-  const usingOk = usingMatch ? isStrictAuthScopeExpression(usingMatch[1]) : false;
-  const checkOk = checkMatch ? isStrictAuthScopeExpression(checkMatch[1]) : false;
+  const usingOk = usingExpr ? isStrictAuthScopeExpression(usingExpr) : false;
+  const checkOk = checkExpr ? isStrictAuthScopeExpression(checkExpr) : false;
   if (action === 'all' || action === 'update' || action === 'delete') {
-    if (usingMatch && !usingOk) return true;
-    if (checkMatch && !checkOk) return true;
-    if (!usingMatch && !checkMatch) return true;
+    if (usingExpr && !usingOk) return true;
+    if (checkExpr && !checkOk) return true;
+    if (!usingExpr && !checkExpr) return true;
     return false;
   }
   return true;
@@ -866,10 +989,8 @@ function collectReferencedPublicTables(code) {
     tables.set(`${parsed.schema}.${parsed.name}`, parsed);
   };
 
-  const createRe =
-    /\bcreate\s+(?:unlogged\s+)?table(?=\s|"|«)(?!\s+as\b)\s*(?:if\s+not\s+exists\s+)?((?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*)(?:\s*\.\s*(?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*))?)/gi;
+  forEachCreateTableRef(code, (parsed) => add(parsed));
   let m;
-  while ((m = createRe.exec(code))) add(parseQualifiedTableRef(m[1]));
 
   const alterRe =
     /\balter\s+table\s+(?:only\s+)?(?:if\s+exists\s+)?((?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*)(?:\s*\.\s*(?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*))?)/gi;

@@ -632,6 +632,66 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.child_rows TO authenticated, serv
   });
 });
 
+describe('PR 564 round 3 reviewer holes', () => {
+  it('rejects USING/WITH CHECK disjunctions that include constant true', () => {
+    const base = `CREATE TABLE public.t (id int, owner_id uuid);
+ALTER TABLE public.t ENABLE ROW LEVEL SECURITY;
+CREATE POLICY read ON public.t FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.t TO authenticated, service_role;`;
+    const variants = [
+      `CREATE POLICY bad ON public.t FOR UPDATE TO authenticated USING (owner_id = auth.uid() OR true)`,
+      `CREATE POLICY bad ON public.t FOR INSERT TO authenticated WITH CHECK (owner_id = auth.uid() OR (true))`,
+      `CREATE POLICY bad ON public.t FOR UPDATE TO authenticated USING (true OR owner_id = auth.uid())`,
+    ];
+    for (const policy of variants) {
+      expect(findCreateTableSetupViolations(`${base}\n${policy};`)).toEqual(
+        expect.arrayContaining([
+          'public.t: overly broad write policy for anon/authenticated (PostgREST direct-write risk)',
+        ]),
+      );
+    }
+  });
+
+  it('fails closed on EXECUTE format literals that cannot be expanded', () => {
+    const createViaFormat = `DO $p$
+BEGIN
+  EXECUTE format('CREATE TABLE public.trap (id int)');
+END;
+$p$;`;
+    expect(findCreateTableSetupViolations(createViaFormat)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/unexpandable dynamic sql/i)]),
+    );
+    const policyViaFormat = `CREATE TABLE public.trap (id int);
+DO $p$
+BEGIN
+  EXECUTE format(
+    'CREATE POLICY bad ON public.trap FOR INSERT TO authenticated WITH CHECK (true)'
+  );
+END;
+$p$;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.trap TO authenticated, service_role;`;
+    expect(findCreateTableSetupViolations(policyViaFormat)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/unexpandable dynamic sql/i)]),
+    );
+  });
+
+  it('parses CREATE TABLE IF NOT EXISTS glued to a quoted name as that table, not public.if', () => {
+    const glued = `CREATE TABLE IF NOT EXISTS"secret" (id int);
+ALTER TABLE "secret" ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON "secret" FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON "secret" TO authenticated, service_role;`;
+    expect(findCreateTableSetupViolations(glued)).toEqual([]);
+    const hidden = `CREATE TABLE IF NOT EXISTS"secret" (id int);
+GRANT SELECT, INSERT, UPDATE, DELETE ON "secret" TO authenticated, service_role;`;
+    expect(findCreateTableSetupViolations(hidden)).toEqual(
+      expect.arrayContaining(['public.secret: missing ENABLE ROW LEVEL SECURITY in the same file']),
+    );
+    expect(findCreateTableSetupViolations(hidden)).not.toEqual(
+      expect.arrayContaining(['public.if: missing ENABLE ROW LEVEL SECURITY in the same file']),
+    );
+  });
+});
+
 describe('sql tree gate', () => {
   it('passes SQL_GRANTS_CHECK_TREE against the repository', () => {
     const result = runScript({ SQL_GRANTS_CHECK_TREE: '1', SQL_GRANTS_CHECK_BASE: '' });
