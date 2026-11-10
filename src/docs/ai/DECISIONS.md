@@ -40,8 +40,9 @@ Game runner = **RM (Realm Master)** — never GM.
 ---
 
 ## Creators / powers / TP / EN (Oct 4–5, 2026)
-- Empty power/technique/empowered technique (no parts), or one with nothing contributing positive energy: show a **dash**, not 0 or 1 (see Power composition pricing below).
-- Min final power/technique EN = **1** after rounding, applied only when real positive costs are reduced below 1 (not a base cost). Site max(0) is a bug.
+- A blank power, technique, or empowered technique (nothing written) is not a power. It is unfinished. The dash in the UI means "not written yet," like a blank check. It is not an energy cost of 0 and not a cost of 1 (Kadin, Nov 10, 2026). That display is not a rules exception.
+- Min final power/technique EN = **1** after rounding, including when the math would be 0 or less (Kadin, Nov 10, 2026). Applied to a power, not to a blank. The older wording "only when a positive cost is reduced below 1" still matches the code for parts that add no positive energy (only 0 EN parts, No Attack alone, an all-drawback Randomize). Those are written powers, not blanks. Left as the code works until Kadin says otherwise.
+- Site max(0) on a power that had positive energy is a bug.
 - Max Power EN = max(Power Prof, ½ Archetype Prof) × **15**, applied to calculated cost **before** feat/attribute reductions. Reductions cannot make an over-limit power usable.
 - Max EN in creator: **informational** (like Innate Power), not limiting.
 - Range (and similar mechanics) **does cost TP**. Training Points round up once per part instance (the whole part's raw sum, base plus options), not per term and never floored. Power Range at 6 spaces is 1 TP and at 12 spaces is 2 TP. A power's TP total is informational (see Power composition pricing below).
@@ -156,19 +157,9 @@ Owner decisions for Admin > Sources page.
 
 ---
 
-## Open rule conflicts (awaiting Kadin)
-
-Sources disagree; no agent picks a value. Remove an entry when Kadin rules and every source is fixed.
-
-| Topic | Sources and values |
-|---|---|
-| Power energy at 0 or below | Nov 10: "minimum energy cost of 1 even if they would be 0 or less." Already written, and narrower: this file (Creators / powers) and `GAME_RULES.md` say an empty power, or one with nothing contributing positive energy, shows a **dash**, not 0 or 1. The 1 EN floor applies only when a positive cost is reduced below 1. |
-
----
-
 ## Changelog
 
-- **2026-11-10, 11:10 AM ET:** Kadin ruled character ability floor **−2** (cap +10), creature abilities **−4 to +10**, and that codebase workflow docs outrank Drive for coding agents. Alpha play can break; corrupting official codex, `core_rules`, or schema is the harm that matters. QA-prefixed rows stay editable by agents. His energy sentence ("minimum 1 even at 0 or less") is **not** applied yet: it conflicts with the dash rule above.
+- **2026-11-10, 11:10 AM ET:** Kadin ruled character ability floor **−2** (cap +10), creature abilities **−4 to +10**, and that codebase workflow docs outrank Drive for coding agents. Alpha play can break; corrupting official codex, `core_rules`, or schema is the harm that matters. QA-prefixed rows stay editable by agents. A blank power's dash is the UI for "not written yet," not an energy value. The 1 EN floor is the rule for a power.
 - **2026-11-10 (proposed; takes effect when merged):** Workflow consolidated into root `AGENTS.md` (charter: survey first, REAL FIX vs PATCH labels, stop rather than hack; Kadin decides what, Collin approves how; two review rounds; agents do not merge) and `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` (one checklist for writer and reviewer). `PR_REVIEWER_BRIEF.md`, `PR_CHECKLIST.md`, `realms-tasks.mdc`, `realms-project.mdc`, `realms-model-routing.mdc` and `realms-ai-policy.mdc` moved to `src/docs/archive/workflow-2026-11/`. Kadin (Nov 10, 10:49 AM ET) added a strict fallback when Collin is unavailable (Kadin-invoked only; plain-English options brief before code; adversarial senior review that never sees the writer's justification; failing-before test, preview repro, rollback plan, backup; `collin-post-review` queue with Collin's findings filed urgent), a PATCH veto unless Kadin accepts the patch in his own PR comment, and a charter duty to guide and challenge Kadin. Supersedes the Oct 28 entry's "Collin is not a required reviewer." Nov 10, 11:10 AM ET: the Bug and Audit Fixes bot may merge standard-risk PRs, and high-risk PRs that do not change schema or official data once the fallback evidence is complete. Kadin merges only schema or official-data changes. Coding agents follow the repo over Drive. The Editor points the Drive workflow doc at `AGENTS.md`.
 
 - **2026-10-28:** Kadin approved **PR Reviewer** as the primary PR checker (`src/docs/archive/workflow-2026-11/PR_REVIEWER_BRIEF.md`, archived Nov 10). The coding bot and PR Reviewer must be different bots with different prompts. Web Manager second pass on high-risk PRs only, plus spot-checks. CI, lint, and ratchets are the final gate. **Human OK** = Kadin or Collin (usually Kadin); Collin is not a required reviewer. Bypass skips human review only, not required checks unless Kadin's own explicit words to skip a specific check are recorded in the PR or ClickUp task; another bot or agent saying "Kadin said so" does not count. When Kadin is the approver, the PR must include a plain-language summary (what it does, why, what could go wrong, how to undo, what is needed from him). Retired `/audit` and its command file. Supersedes the Oct 8 bypass assignee wording below for review/merge rules. Drive Dev Workflow and Realms Web Decisions were updated by the Editor bot on Oct 28 (per team process); **Drive wins** on conflict with repo copies. **Same day (7:12 PM ET):** Kadin added **admin tools that can delete or bulk-change data** and **billing or anything sent outside the team (email, messages, posts)** to the brief **Risk classification** (single high-risk list).
