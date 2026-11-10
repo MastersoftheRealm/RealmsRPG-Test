@@ -53,7 +53,7 @@ import {
 } from '@/lib/guided-creator/powers-techniques-step-helpers';
 import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
 import type { GuidedDraft } from '@/stores/guided-creator-store';
-import { computeGuidedRequiredTrainingSpent } from '@/lib/guided-creator/build-character';
+import { computeGuidedTrainingPointsBudgetSpent } from '@/lib/guided-creator/build-character';
 import { guidedTrainingPointsPointStatusInputs } from '@/lib/guided-creator/loadout-tp';
 import { selectedIdsFromL2Items } from '@/lib/guided-creator/powers-techniques-l2';
 import {
@@ -357,14 +357,15 @@ export function PowersTechniquesStep() {
     ],
   );
 
-  const dedupedTrainingSpent = useMemo(
-    () => computeGuidedRequiredTrainingSpent(draft, guidedProfCtx),
-    [draft, guidedProfCtx],
+  const poolTrainingSpent = useMemo(
+    () =>
+      computeGuidedTrainingPointsBudgetSpent(draft, guidedProfCtx, loadoutTp.spent, resolveTpCost),
+    [draft, guidedProfCtx, loadoutTp.spent, resolveTpCost],
   );
 
   const tpCounter = useMemo(
-    () => guidedTrainingPointsPointStatusInputs(dedupedTrainingSpent, loadoutTp.limit),
-    [dedupedTrainingSpent, loadoutTp.limit],
+    () => guidedTrainingPointsPointStatusInputs(poolTrainingSpent, loadoutTp.limit),
+    [poolTrainingSpent, loadoutTp.limit],
   );
 
   const innateEnergySpent = useMemo(
@@ -570,9 +571,14 @@ export function PowersTechniquesStep() {
           : isTechniques
             ? { techniqueIds: ids }
             : { powerIds: ids };
-      return computeGuidedRequiredTrainingSpent({ ...draft, ...patch }, guidedProfCtx);
+      return computeGuidedTrainingPointsBudgetSpent(
+        { ...draft, ...patch },
+        guidedProfCtx,
+        loadoutTp.spent,
+        resolveTpCost,
+      );
     },
-    [draft, guidedProfCtx, isTechniques, l2Modal],
+    [draft, guidedProfCtx, isTechniques, l2Modal, loadoutTp.spent, resolveTpCost],
   );
 
   const onL2Confirm = useCallback(

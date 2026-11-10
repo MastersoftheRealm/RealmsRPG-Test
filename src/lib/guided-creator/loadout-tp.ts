@@ -211,3 +211,15 @@ export function guidedTrainingPointsPointStatusInputs(
   const spentN = Math.max(0, Math.floor(Number(spent)) || 0);
   return { total, spent: spentN, remaining: total - spentN };
 }
+
+/** Listed Training Points on power/technique/innate picks (guided catalog chips). */
+export function sumGuidedListedCombatTrainingPoints(
+  combatIds: { powerIds: string[]; techniqueIds: string[]; innatePowerIds: string[] },
+  tpCostOf: (id: string) => number,
+): number {
+  const sumIds = (ids: string[]) =>
+    ids.reduce((total, id) => total + Math.max(0, Math.floor(tpCostOf(id) || 0)), 0);
+  return (
+    sumIds(combatIds.powerIds) + sumIds(combatIds.techniqueIds) + sumIds(combatIds.innatePowerIds)
+  );
+}
