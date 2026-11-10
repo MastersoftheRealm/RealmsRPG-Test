@@ -1019,15 +1019,69 @@ $p$;`;
     );
     expect(
       findCreateTableSetupViolations(`ALTER VIEW public.bad SET (security_invoker = false);`),
-    ).toEqual(expect.arrayContaining([expect.stringMatching(/security_invoker = false/i)]));
+    ).toEqual(
+      expect.arrayContaining([expect.stringMatching(/security_invoker disabled or reset/i)]),
+    );
+  });
+});
+
+describe('PR 564 R6 blockers', () => {
+  it('R6-B1: flags quoted and CTE SELECT INTO targets but not TEMP', () => {
+    const cases = [
+      `SELECT * INTO "public".cc FROM public.t;`,
+      `SELECT * INTO UNLOGGED "public".cc FROM public.t;`,
+      `SELECT * INTO "cc" FROM public.t;`,
+      `WITH cte AS (SELECT 1 AS x) SELECT * INTO "cc" FROM cte;`,
+    ];
+    for (const sql of cases) {
+      expect(findCreateTableSetupViolations(sql)).toEqual(
+        expect.arrayContaining([expect.stringMatching(/SELECT INTO/i)]),
+      );
+    }
+    expect(findCreateTableSetupViolations(`SELECT * INTO TEMP staging FROM public.t;`)).toEqual([]);
+    expect(
+      findCreateTableSetupViolations(`SELECT * INTO TEMPORARY staging FROM public.t;`),
+    ).toEqual([]);
   });
 
-  it('flags top-level SELECT INTO UNLOGGED and unqualified targets', () => {
-    expect(findCreateTableSetupViolations(`SELECT * INTO UNLOGGED scratch FROM public.t;`)).toEqual(
-      expect.arrayContaining([expect.stringMatching(/SELECT INTO UNLOGGED/i)]),
+  it('R6: ALTER ROLE on cleaned SQL ignores comment false positives', () => {
+    const sql = `-- ALTER ROLE authenticated BYPASSRLS
+CREATE TABLE public.t (id int);
+ALTER TABLE public.t ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON public.t FOR SELECT TO authenticated USING (true);
+GRANT SELECT ON public.t TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.t TO service_role;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual([]);
+    expect(findCreateTableSetupViolations(`${sql}\nALTER ROLE authenticated BYPASSRLS;`)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/ALTER ROLE elevated privileges/i)]),
     );
-    expect(findCreateTableSetupViolations(`SELECT * INTO scratch FROM public.t;`)).toEqual(
-      expect.arrayContaining([expect.stringMatching(/SELECT INTO unqualified/i)]),
+  });
+
+  it('R6: role admin one-liners for USER/GROUP/ADMIN', () => {
+    expect(findCreateTableSetupViolations(`ALTER USER authenticated BYPASSRLS;`)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/ALTER USER elevated privileges/i)]),
+    );
+    expect(findCreateTableSetupViolations(`CREATE USER app_user ROLE authenticated;`)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/CREATE USER grants client membership/i)]),
+    );
+    expect(findCreateTableSetupViolations(`CREATE GROUP readers USER authenticated;`)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/CREATE GROUP grants client membership/i)]),
+    );
+    expect(findCreateTableSetupViolations(`CREATE ROLE mgr ADMIN authenticated;`)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/CREATE ROLE grants client membership/i)]),
+    );
+  });
+
+  it('R6: ALTER VIEW security_invoker off, 0, and RESET', () => {
+    const violations = (sql) => findCreateTableSetupViolations(sql);
+    expect(violations(`ALTER VIEW public.v SET (security_invoker = off);`)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/security_invoker disabled or reset/i)]),
+    );
+    expect(violations(`ALTER VIEW public.v SET (security_invoker = 0);`)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/security_invoker disabled or reset/i)]),
+    );
+    expect(violations(`ALTER VIEW public.v RESET (security_invoker);`)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/security_invoker disabled or reset/i)]),
     );
   });
 });

@@ -1571,17 +1571,28 @@ function findRoleToRoleGrantViolations(code) {
   return finalizeSqlGrantViolations(out);
 }
 
-function findClientRoleAdminViolations(sql) {
+function roleHasElevatedAttrs(attrsLower) {
+  return (
+    /\bbypassrls\b/.test(attrsLower) ||
+    /\bsuperuser\b/.test(attrsLower) ||
+    /\bcreaterole\b/.test(attrsLower) ||
+    /\breplication\b/.test(attrsLower)
+  );
+}
+
+function findClientRoleAdminViolations(code) {
   /** @type {SqlGrantCheckViolation[]} */
   const out = [];
+  const scan = code;
 
-  const createRe = /\bcreate\s+role\s+([^;\s]+)([^;]*)/gi;
+  const createRoleRe = /\bcreate\s+role\s+([^;\s]+)([^;]*)/gi;
   let match;
-  while ((match = createRe.exec(sql))) {
+  while ((match = createRoleRe.exec(scan))) {
     const attrs = match[2] ?? '';
     const roleClause = attrs.match(/\b(?:in\s+role|role)\s+([^;]+)/i);
-    if (roleClause) {
-      const grantees = [...parseGrantRoleSet(roleClause[1])].filter((r) =>
+    const adminClause = attrs.match(/\badmin\s+([^;]+)/i);
+    for (const clause of [roleClause?.[1], adminClause?.[1]].filter(Boolean)) {
+      const grantees = [...parseGrantRoleSet(clause)].filter((r) =>
         CLIENT_EXPOSED_ROLES.includes(r),
       );
       if (grantees.length) {
@@ -1593,8 +1604,38 @@ function findClientRoleAdminViolations(sql) {
     }
   }
 
+  const createUserRe = /\bcreate\s+user\s+([^;\s]+)([^;]*)/gi;
+  while ((match = createUserRe.exec(scan))) {
+    const roleClause = (match[2] ?? '').match(/\b(?:in\s+role|role)\s+([^;]+)/i);
+    if (!roleClause) continue;
+    const grantees = [...parseGrantRoleSet(roleClause[1])].filter((r) =>
+      CLIENT_EXPOSED_ROLES.includes(r),
+    );
+    if (grantees.length) {
+      out.push({
+        reason: `${normalizeRoleToken(match[1])}: CREATE USER grants client membership (client-exposed role grant)`,
+        statement: normalizeSqlStatement(match[0]),
+      });
+    }
+  }
+
+  const createGroupRe = /\bcreate\s+group\s+([^;\s]+)([^;]*)/gi;
+  while ((match = createGroupRe.exec(scan))) {
+    const userClause = (match[2] ?? '').match(/\buser\s+([^;]+)/i);
+    if (!userClause) continue;
+    const grantees = [...parseGrantRoleSet(userClause[1])].filter((r) =>
+      CLIENT_EXPOSED_ROLES.includes(r),
+    );
+    if (grantees.length) {
+      out.push({
+        reason: `${normalizeRoleToken(match[1])}: CREATE GROUP grants client membership (client-exposed role grant)`,
+        statement: normalizeSqlStatement(match[0]),
+      });
+    }
+  }
+
   const groupRe = /\balter\s+group\s+[^;]+\badd\s+user\s+([^;]+)/gi;
-  while ((match = groupRe.exec(sql))) {
+  while ((match = groupRe.exec(scan))) {
     const grantees = [...parseGrantRoleSet(match[1])].filter((r) =>
       CLIENT_EXPOSED_ROLES.includes(r),
     );
@@ -1605,26 +1646,32 @@ function findClientRoleAdminViolations(sql) {
     });
   }
 
-  const alterRe = /\balter\s+role\s+([^;\s]+)([^;]*)/gi;
-  while ((match = alterRe.exec(sql))) {
+  const alterRoleRe = /\balter\s+role\s+([^;\s]+)([^;]*)/gi;
+  while ((match = alterRoleRe.exec(scan))) {
     const roleName = normalizeRoleToken(match[1]);
     const attrs = (match[2] ?? '').toLowerCase();
     const isClient = CLIENT_EXPOSED_ROLES.includes(roleName);
-    const dangerous =
-      /\bbypassrls\b/.test(attrs) ||
-      /\bsuperuser\b/.test(attrs) ||
-      /\bcreaterole\b/.test(attrs) ||
-      /\breplication\b/.test(attrs);
-    if (isClient && dangerous) {
+    if (isClient && roleHasElevatedAttrs(attrs)) {
       out.push({
         reason: `${roleName}: ALTER ROLE elevated privileges on client role are not allowed`,
         statement: normalizeSqlStatement(match[0]),
       });
     }
-    if (!isClient) continue;
-    if (/\blogin\b/.test(attrs)) {
+    if (isClient && /\blogin\b/.test(attrs)) {
       out.push({
         reason: `${roleName}: CREATE/ALTER ROLE LOGIN is not allowed without explicit approval (client-exposed role)`,
+        statement: normalizeSqlStatement(match[0]),
+      });
+    }
+  }
+
+  const alterUserRe = /\balter\s+user\s+([^;\s]+)([^;]*)/gi;
+  while ((match = alterUserRe.exec(scan))) {
+    const roleName = normalizeRoleToken(match[1]);
+    if (!CLIENT_EXPOSED_ROLES.includes(roleName)) continue;
+    if (roleHasElevatedAttrs((match[2] ?? '').toLowerCase())) {
+      out.push({
+        reason: `${roleName}: ALTER USER elevated privileges on client role are not allowed`,
         statement: normalizeSqlStatement(match[0]),
       });
     }
@@ -1678,49 +1725,35 @@ function findUnauditedObjectCreationViolations(code, bodiesToStrip = []) {
       statement: normalizeSqlStatement(match[0]),
     });
   }
-  const alterViewRe = /\balter\s+view\b[^;]*\bsecurity_invoker\s*=\s*false\b[^;]*/gi;
+  const alterViewRe =
+    /\balter\s+view\b[^;]*(?:\bsecurity_invoker\s*=\s*(?:false|off|0|'false'|«S[0-9a-f]+»)|\breset\s*\(\s*security_invoker\s*\))[^;]*/gi;
   while ((match = alterViewRe.exec(scan))) {
     out.push({
-      reason: 'unaudited object change (ALTER VIEW security_invoker = false)',
+      reason: 'unaudited object change (ALTER VIEW security_invoker disabled or reset)',
       statement: normalizeSqlStatement(match[0]),
     });
   }
+  const selectIntoTargetRe =
+    /\binto\s+(?:strict\s+)?(?:unlogged\s+)?(?:table\s+)?((?:«Q[0-9a-f]+»|"(?:[^"]|"")*"|[a-z_][a-z0-9_]*)(?:\s*\.\s*(?:«Q[0-9a-f]+»|"(?:[^"]|"")*"|[a-z_][a-z0-9_]*))?)/gi;
   for (const stmt of scan.split(';')) {
     const trimmed = stmt.trim();
-    if (!/^select\b/i.test(trimmed)) continue;
+    if (!/\bselect\b/i.test(trimmed) || !/\binto\b/i.test(trimmed)) continue;
     if (/\binsert\s+into\b/i.test(trimmed)) continue;
-    const intoMatch =
-      /^select\b[\s\S]*?\binto\s+(?:strict\s+)?(?:table\s+)?(public\s*\.\s*(?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*))/i.exec(
-        trimmed,
-      );
-    if (intoMatch) {
+    if (/\binto\s+(?:strict\s+)?(?:temporary|temp)\b/i.test(trimmed)) continue;
+    selectIntoTargetRe.lastIndex = 0;
+    const intoMatch = selectIntoTargetRe.exec(trimmed);
+    if (!intoMatch) {
       out.push({
-        reason: `unaudited object creation (SELECT INTO ${intoMatch[1].replace(/\s+/g, ' ').trim()})`,
+        reason: 'unaudited object creation (SELECT INTO unparseable target)',
         statement: normalizeSqlStatement(trimmed.slice(0, 240)),
       });
       continue;
     }
-    const unloggedInto =
-      /^select\b[\s\S]*?\binto\s+(?:strict\s+)?unlogged\s+(?:table\s+)?([a-z_][a-z0-9_]*)/i.exec(
-        trimmed,
-      );
-    if (unloggedInto) {
-      out.push({
-        reason: `unaudited object creation (SELECT INTO UNLOGGED ${unloggedInto[1]})`,
-        statement: normalizeSqlStatement(trimmed.slice(0, 240)),
-      });
-      continue;
-    }
-    const bareInto =
-      /^select\b[\s\S]*?\binto\s+(?:strict\s+)?(?!public\s*\.|unlogged\b|table\s+public\s*\.)([a-z_][a-z0-9_]*)/i.exec(
-        trimmed,
-      );
-    if (bareInto) {
-      out.push({
-        reason: `unaudited object creation (SELECT INTO unqualified ${bareInto[1]})`,
-        statement: normalizeSqlStatement(trimmed.slice(0, 240)),
-      });
-    }
+    const target = intoMatch[1].replace(/\s+/g, ' ').trim();
+    out.push({
+      reason: `unaudited object creation (SELECT INTO ${target})`,
+      statement: normalizeSqlStatement(trimmed.slice(0, 240)),
+    });
   }
   return finalizeSqlGrantViolations(out);
 }
@@ -1873,7 +1906,7 @@ export function findSqlFileViolations(sql, options = {}) {
     ...findUnauditedObjectCreationViolations(code, [...functionBodies, ...topLevelDoBodies]),
   );
   violations.push(...findRoleToRoleGrantViolations(code));
-  violations.push(...findClientRoleAdminViolations(sql));
+  violations.push(...findClientRoleAdminViolations(code));
   violations.push(...findTrivialPrivateAuthHelperRedefinitions(sql));
   const seen = new Set();
 
