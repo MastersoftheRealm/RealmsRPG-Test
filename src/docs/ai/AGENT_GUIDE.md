@@ -1,6 +1,6 @@
 # Agent Guide — Deep Reference (on demand)
 
-**Not a session-start read.** Work queue: **ClickUp**. The status order is `.cursor/rules/realms-tasks.mdc`. Open this hub for a component, list, or creator question. Do not update `ACTIVE_TASKS.md` from here.
+**Not a session-start read.** Work queue: **ClickUp**. The workflow and status order are root `AGENTS.md`. Open this hub for a component, list, or creator question. Do not update `ACTIVE_TASKS.md` from here.
 
 Verified against codebase (Jun 2026+). Use this hub when you need component locations, list/selection patterns, art pipeline, or creator load rules — then open the matching appendix under [`guide/`](guide/).
 

@@ -13,7 +13,7 @@ Start here: **[human/ENGINEERING_ONBOARDING.md](./human/ENGINEERING_ONBOARDING.m
 
 ## For AI Agents (Cursor)
 
-**Start at root [`AGENTS.md`](../../AGENTS.md)** — Source-of-Truth Map and session workflow.
+**Start at root [`AGENTS.md`](../../AGENTS.md)** — charter, workflow and sources of truth.
 
 Then, as needed:
 
@@ -36,4 +36,4 @@ Then, as needed:
 
 **Human deep-dives:** [`human/README.md`](./human/README.md) — onboarding, UI catalog, admin setup, codex fields, UX goals.
 
-Root `.cursor/rules/` provide session-level instructions.
+Root `.cursor/rules/` hold one always-on pointer to `AGENTS.md` plus path-scoped UI and data rules.

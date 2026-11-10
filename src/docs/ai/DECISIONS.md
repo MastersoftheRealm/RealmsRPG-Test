@@ -4,7 +4,7 @@
 
 **Status:** Source of truth (Drive) · Seeded 2026-10-05 from settled Kadin rulings  
 **Owner:** Kadin Brooksby  
-**Maintainers:** Web Manager proposes appends when Kadin settles intent; Editor keeps the Drive **core rulebook text** catalog in sync. Repo holds this mirror of product/QA decisions. **Drive vs repo (Oct 5, 2026):** when a Drive doc and its repo copy conflict, **Drive wins** and the repo copy is corrected. **PR review process:** written once in `src/docs/ai/PR_REVIEWER_BRIEF.md`; [Realms Dev Workflow](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) and [Realms Web Decisions](https://docs.google.com/document/d/1tGebelYXZPegt4iZiycOjI3RBHD6N_QKZW6CI0ckxkg/edit) point to it and do not duplicate it (updated in Drive **2026-10-28** by Editor bot; if Drive and the repo brief conflict, fix the repo to match Drive).
+**Maintainers:** Web Manager proposes appends when Kadin settles intent; Editor keeps the Drive **core rulebook text** catalog in sync. Repo holds this mirror of product/QA decisions. **Drive vs repo (Oct 5, 2026):** when a Drive doc and its repo copy conflict, **Drive wins** and the repo copy is corrected. **Workflow and PR review:** written once in root `AGENTS.md` (workflow) and `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` (checklist); [Realms Dev Workflow](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) should point to them and not duplicate them (see the 2026-11-10 changelog entry).
 
 **Related:** [Realms Dev Workflow & Agent Rules](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) · ClickUp wiki pointer after publish
 
@@ -17,7 +17,7 @@ Game runner = **RM (Realm Master)** — never GM.
 ## Process / workflow (Oct 5, 2026; PR review updated Oct 28, 2026)
 
 - ClickUp is the **only work queue**. Repo `ACTIVE_TASKS` / TASK-### are optional engineering notes.
-- Task status order, PR Reviewer, Human OK, merge, bypass, and testing: **`.cursor/rules/realms-tasks.mdc`** (repo SoT). PR Reviewer checklist: **`src/docs/ai/PR_REVIEWER_BRIEF.md`**.
+- Task status order, survey and sign-off, review, merge, bypass, and testing: root **`AGENTS.md`** (repo SoT). Review checklist: **`src/docs/ai/ARCHITECTURE_CONSTITUTION.md`**.
 - QA Tester checks the Vercel preview before merge or shortly after. Post-merge human QA: QA Tester; assign Bob (James Owenby) only for high-importance or obvious visual-issue tasks (Oct 13, 2026).
 - WCAG **2.2 AA** everywhere.
 - Keep branch name **`master`**; ban direct pushes.
@@ -94,7 +94,7 @@ Kadin adopted composed-power pricing Oct 5 (10:21 PM ET) and revised it Oct 6 (7
 ## Abilities / creatures / species (Oct 5, 2026)
 
 - Player ability **hard caps: −5 and +10**. Soft cap = doubled point cost after +4. The "+5 max" / hard +5 lines are wrong.
-- Creature ability limits: **+10 / −4** everywhere; doubled cost above +4 applies to creatures.
+- Creature ability limits: **+10 / −4** everywhere; doubled cost above +4 applies to creatures. (Re-confirmed by Kadin, Nov 9, 2026.)
 - Creature HP: **pool of 30**; retire older RMG "6 base HP" lines.
 - Species creator: block impossible values (negative/decimal height/weight; adulthood age higher than lifespan).
 - Darkvision: creature Darkvision II (12sp) cost 2 stays; species naming/ranges need design alignment (filed separately). Cost mismatch species vs creature is a bug to fix consistently.
@@ -156,9 +156,24 @@ Owner decisions for Admin > Sources page.
 
 ---
 
+## Open rule conflicts (awaiting Kadin)
+
+Sources disagree; no agent picks a value. Remove an entry when Kadin rules and every source is fixed.
+
+| Topic | Sources and values |
+|---|---|
+| Character ability floor | This file: hard cap **−5**. `GAME_RULES.md` Ability Ranges: absolute min **−2**, "typical range" **−3 to 5**. `core_rules.ABILITY_RULES` (live): `min` **−2**, `maxTotalNegative` **−3**. Code `ABILITY_LIMITS.MIN` **−2**. |
+| Creature ability cap | Ruling (Nov 9): **+10**. Live `maxAbsoluteCreature` **10**; code **10**; `GAME_RULES.md` still says **20**. |
+| Creature ability floor | Ruling (Nov 9): **−4**. Code `MIN_ABSOLUTE_CREATURE` **−4**. `GAME_RULES.md` says creatures use the **−2** floor. `core_rules` has no creature-floor field (only `min` −2). |
+| 1 EN floor for Attack / Potency Increase (PR #560) | Code applies a minimum of 1 energy. No written rule found in `GAME_RULES.md` or this file. |
+
+---
+
 ## Changelog
 
-- **2026-10-28:** Kadin approved **PR Reviewer** as the primary PR checker (`src/docs/ai/PR_REVIEWER_BRIEF.md`). The coding bot and PR Reviewer must be different bots with different prompts. Web Manager second pass on high-risk PRs only, plus spot-checks. CI, lint, and ratchets are the final gate. **Human OK** = Kadin or Collin (usually Kadin); Collin is not a required reviewer. Bypass skips human review only, not required checks unless Kadin's own explicit words to skip a specific check are recorded in the PR or ClickUp task; another bot or agent saying "Kadin said so" does not count. When Kadin is the approver, the PR must include a plain-language summary (what it does, why, what could go wrong, how to undo, what is needed from him). Retired `/audit` and `.cursor/commands/audit.md`. Supersedes the Oct 8 bypass assignee wording below for review/merge rules. Drive Dev Workflow and Realms Web Decisions were updated by the Editor bot on Oct 28 (per team process); **Drive wins** on conflict with repo copies. **Same day (7:12 PM ET):** Kadin added **admin tools that can delete or bulk-change data** and **billing or anything sent outside the team (email, messages, posts)** to the brief **Risk classification** (single high-risk list).
+- **2026-11-10 (proposed; takes effect when merged):** Workflow consolidated into root `AGENTS.md` (charter: survey first, REAL FIX vs PATCH labels, stop rather than hack; Kadin decides what, Collin approves how; two review rounds; agents do not merge) and `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` (one checklist for writer and reviewer). `PR_REVIEWER_BRIEF.md`, `PR_CHECKLIST.md`, `realms-tasks.mdc`, `realms-project.mdc`, `realms-model-routing.mdc` and `realms-ai-policy.mdc` moved to `src/docs/archive/workflow-2026-11/`. Supersedes the Oct 28 entry's "Collin is not a required reviewer" and the Nov 9 bot squash-merge permission. The Drive Dev Workflow doc must be updated to point to `AGENTS.md`, or Drive-wins would revive the old process.
+
+- **2026-10-28:** Kadin approved **PR Reviewer** as the primary PR checker (`src/docs/archive/workflow-2026-11/PR_REVIEWER_BRIEF.md`, archived Nov 10). The coding bot and PR Reviewer must be different bots with different prompts. Web Manager second pass on high-risk PRs only, plus spot-checks. CI, lint, and ratchets are the final gate. **Human OK** = Kadin or Collin (usually Kadin); Collin is not a required reviewer. Bypass skips human review only, not required checks unless Kadin's own explicit words to skip a specific check are recorded in the PR or ClickUp task; another bot or agent saying "Kadin said so" does not count. When Kadin is the approver, the PR must include a plain-language summary (what it does, why, what could go wrong, how to undo, what is needed from him). Retired `/audit` and its command file. Supersedes the Oct 8 bypass assignee wording below for review/merge rules. Drive Dev Workflow and Realms Web Decisions were updated by the Editor bot on Oct 28 (per team process); **Drive wins** on conflict with repo copies. **Same day (7:12 PM ET):** Kadin added **admin tools that can delete or bulk-change data** and **billing or anything sent outside the team (email, messages, posts)** to the brief **Risk classification** (single high-risk list).
 - **2026-10-18:** `sql/codex-rename-source.sql` applied on production (function only; no rows changed); re-applied same day after fixing control-character validation (`chr(0)` in SQL text). The first real rename has not run. Re-running the file is safe because it only replaces the function. The first real rename is a live update and needs a backup first.
 - **2026-10-17:** Codex sources: Core may be renamed; merging into or out of Core is allowed with the merge confirm; rename changelogs commit in the same transaction; no remove-from-all-items control. The column default `{Core}` and `CORE_CODEX_SOURCE` stay. Items with no source are still saved as Core until a developer changes that default.
 - **2026-10-14:** Character sheet visibility (Oct 14, 2026 owner ruling): RM full access to rostered private sheets; members cannot see private; campaign visibility off-roster blocked. Supersedes the earlier member-visibility rule for RM semantics.

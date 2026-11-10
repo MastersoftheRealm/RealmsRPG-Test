@@ -11,13 +11,15 @@ const targets = [
   'AGENTS.md',
   'src/docs/ai/ARCHITECTURE_CONSTITUTION.md',
   'src/docs/ai/DESIGN_INTENT.md',
-  'src/docs/ai/PR_CHECKLIST.md',
+  'src/docs/ai/DECISIONS.md',
   'src/docs/ai/FEATURE_INDEX.md',
   'src/docs/ai/FEATURE_INDEX_BARRELS.generated.md',
   'src/docs/ai/BUILD_VALIDATION.md',
   'src/docs/ai/ADR/README.md',
-  '.cursor/rules/realms-tasks.mdc',
-  '.cursor/rules/realms-project.mdc',
+  '.cursor/rules/realms-core.mdc',
+  '.cursor/rules/realms-codex-data.mdc',
+  '.github/PULL_REQUEST_TEMPLATE.md',
+  'DEFERRED.md',
   '.cursor/rules/realms-accessibility.mdc',
 ];
 

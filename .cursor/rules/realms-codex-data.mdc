@@ -1,43 +1,30 @@
 ---
-description: Codex / reference-data edits — Kadin explicit OK before database writes. Apply when editing codex_*, core_rules, sql/, or official library reference data.
+description: Codex / core_rules / SQL data edits — read freely, write only after approval. Workflow authority is AGENTS.md (Database safety).
+globs: sql/**,supabase/**,data/core-rules/**,scripts/*seed*,src/app/(main)/admin/**,src/app/api/admin/**
 alwaysApply: false
 ---
 
-# Codex & Reference Data (Supabase)
+# Codex and reference data (Supabase)
 
-Applies to **`codex_*`**, **`core_rules`**, and any bulk edits to official library reference content. Broader agent workflow and Drive-vs-repo rules: `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` (**Source of truth**).
+Applies to `codex_*`, `core_rules`, and bulk edits to official library content. Approvals and the "Test is production" rule: root `AGENTS.md` **Database safety**.
 
-## Read freely; write only after review
+| Allowed without approval | Needs Kadin's explicit OK + Collin's approval + fresh backup |
+|---|---|
+| `SELECT`, audits, counts, previews | `UPDATE`, `INSERT`, `DELETE` on codex or `core_rules` |
+| Draft SQL in `sql/*.sql` | `execute_sql` / `apply_migration` that mutates |
+| Repo-only seed or CSV edits | Any MCP write that changes live data |
 
-| Allowed without prior approval | Requires Kadin explicit OK before apply |
-|-------------------------------|----------------------------------------|
-| `SELECT` / audits / counts / previews | `UPDATE`, `INSERT`, `DELETE` on codex tables |
-| Draft SQL in `sql/*.sql` | `execute_sql` / `apply_migration` that mutates codex data |
-| Repo-only seed/CSV edits (not live DB) | Supabase MCP writes that change live reference data |
+Bulk or policy changes (tags, categories, merges, migrations):
 
-## High-risk sign-off
+1. **Audit:** query current state; cite counts and examples.
+2. **Propose:** mapping plan, sample before/after rows, SQL file in `sql/`.
+3. **Wait** for the approvals above. Do not chain audit → apply in one turn.
+4. **Apply** the approved SQL once; report rows affected and post-change counts.
 
-Categories that need **Kadin explicit OK before merge/apply** (plus a fresh backup before any production write) are listed under **Risk classification** in `src/docs/ai/PR_REVIEWER_BRIEF.md` (single list). Rules-math / rules-value changes: PR Reviewer routes to **Rules Balance Analyst** before Kadin signs off (Kadin, Oct 13, 2026). Editor handles Drive **core rulebook text** only (not rules-math routing).
+When the owner gives a specific correction in the current message ("use Skill Roll not Skill Check"), implement that scope only; still preview bulk updates.
 
-## Workflow for bulk or policy changes (tags, categories, merges, migrations)
+If live data looks wrong, **report it**; never work around it in code (no hardcoded override of a `core_rules` value).
 
-1. **Audit** — query or export current state; cite counts and examples.
-2. **Propose** — mapping plan, sample before/after rows, SQL file in `sql/` (no trailing `UPDATE` until approved).
-3. **Wait** — Kadin reviews and approves, corrects mappings, or says "apply".
-4. **Apply** — run approved SQL once; report rows affected and post-migration counts.
+Terms match `src/docs/GAME_RULES.md` (e.g. **Skill Roll**). Game runner = RM.
 
-Do **not** chain Phase 1 → Phase 2 → live DB in one turn without an explicit apply step from Kadin.
-
-## Explicit owner direction
-
-When the owner gives a **specific correction in the current message** (e.g. "use Skill Roll not Skill Check", "apply phase 2"), implement that scope only — still prefer a preview for bulk updates when practical.
-
-## Terminology
-
-Match **`src/docs/GAME_RULES.md`** for game terms in codex fields (e.g. **Skill Roll**, not Skill Check). Game runner = **RM** (Realm Master), not "GM".
-
-## After approved codex data changes
-
-- The live Supabase database is the source of truth; one-off migration SQL is not kept in the repo after apply (see git history). Update `SUPABASE_SCHEMA.md` and, when Kadin runs it, regenerate `sql/schema/0000_baseline_*` via `npm run db:baseline:update`. Owner OK and a fresh backup are required before any database change.
-- Note the data change on the PR and the ClickUp task. Do not append `AI_CHANGELOG.md`.
-- Live Supabase is the codex source of truth; export from the database if a CSV backup is needed (Nov 2026 backup on file).
+After an approved change: the live database is the source of truth; update `src/docs/SUPABASE_SCHEMA.md` and, when Kadin runs it, `npm run db:baseline:update`. Note the change on the PR and the ClickUp task. Rules-math or rules-value changes go to the Rules Balance Analyst before Kadin signs off; Editor handles Drive rulebook text only.
