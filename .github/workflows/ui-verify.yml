@@ -19,7 +19,7 @@ name: UI Verify (design system)
 # settings** — Settings → Branches → rule for `master`: require a pull request before
 # merging, and require these status checks: `Lint, contrast & static gates`,
 # `Visual regression & accessibility`, and `verify` (ai-task-verifier.yml). That is not
-# configurable from the repository. Local backstop: `.husky/pre-push`.
+# configurable from the repository. There is no local backstop: `.husky/pre-push` does nothing.
 #
 # One `next build` per PR: only the visual-a11y job builds, because Playwright has to serve
 # that build anyway. Collapsing it further (sharing `.next` with another job) would need

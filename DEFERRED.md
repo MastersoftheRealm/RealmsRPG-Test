@@ -22,4 +22,14 @@ These trees are out of scope as **pattern sources** for new work elsewhere in th
 
 ## VTT
 
-Planned renderer: **PixiJS v8** (not Konva). There is no VTT App Router tree in this repo today. Supabase `vtt_*` tables are documented in `src/docs/SUPABASE_SCHEMA.md` only. When a VTT UI tree lands, add its folder paths here before copying from it.
+A first tabletop slice is in the repo, rendered with **Konva** (`konva`, `react-konva`). The renderer choice (Konva as built vs. PixiJS v8 as earlier planned) is an open decision for Collin; do not copy tabletop patterns until it is settled. Supabase `vtt_*` tables: `src/docs/SUPABASE_SCHEMA.md`.
+
+- `src/app/(main)/campaigns/[id]/tabletop/`
+- `src/components/tabletop/`
+- `src/lib/tabletop/`
+- `src/app/api/tabletop/`
+- `src/app/api/encounters/[id]/tabletop/`
+- `src/app/api/upload/vtt-map/`
+- `src/hooks/use-tabletop.ts`
+- `src/services/tabletop-service.ts`
+- `src/types/tabletop.ts`
