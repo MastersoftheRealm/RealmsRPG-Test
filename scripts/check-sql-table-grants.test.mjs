@@ -15,6 +15,8 @@ import {
 import {
   applySqlGrantCheckBaseline,
   validateSqlGrantCheckBaseline,
+  diffSqlGrantCheckBaselineShrink,
+  validateSqlGrantCheckBaselineShrinkOnly,
   validateSqlGrantCheckBaselineStructure,
 } from './lib/sql-grant-check-baseline.mjs';
 import {
@@ -938,6 +940,94 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.g TO service_role;`;
     ).toEqual(expect.arrayContaining([expect.stringMatching(/GRANT ALL TO authenticated/i)]));
     expect(findCreateTableSetupViolations(`${base}\nGRANT INSERT ON public.g TO anon;`)).toEqual(
       expect.arrayContaining([expect.stringMatching(/GRANT INSERT TO anon/i)]),
+    );
+  });
+});
+
+describe('PR 564 R5 scoped fixes (Kadin)', () => {
+  it('R5-B1: flags every granted role in GRANT role1, role2 TO authenticated', () => {
+    const sql = `GRANT role_one, role_two TO authenticated;`;
+    const issues = findCreateTableSetupViolations(sql);
+    expect(issues).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/role_one: GRANT ROLE membership TO authenticated/i),
+        expect.stringMatching(/role_two: GRANT ROLE membership TO authenticated/i),
+      ]),
+    );
+  });
+
+  it('R5-B1: flags GRANT service_role TO authenticated (fail closed)', () => {
+    expect(findCreateTableSetupViolations(`GRANT service_role TO authenticated;`)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/service_role: GRANT ROLE membership/i)]),
+    );
+  });
+
+  it('R5-B1: flags CREATE ROLE IN ROLE authenticated and ALTER ROLE BYPASSRLS', () => {
+    expect(findCreateTableSetupViolations(`CREATE ROLE app_shadow IN ROLE authenticated;`)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/CREATE ROLE grants client membership/i)]),
+    );
+    expect(findCreateTableSetupViolations(`ALTER ROLE authenticated BYPASSRLS;`)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/elevated privileges on client role/i)]),
+    );
+  });
+
+  it('R5-B4: reports FOREACH EXECUTE format when table names do not resolve', () => {
+    const sql = `DO $p$
+BEGIN
+  FOREACH n IN ARRAY some_missing_var LOOP
+    EXECUTE format('GRANT SELECT ON %I TO authenticated', n);
+  END LOOP;
+END;
+$p$;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/FOREACH EXECUTE format could not resolve table names/i),
+      ]),
+    );
+  });
+
+  it('R5 baseline shrink allows removals but not additions or reason edits', () => {
+    const base = [
+      {
+        file: 'sql/a.sql',
+        statement: 'grant bad',
+        reason: 'one',
+      },
+      {
+        file: 'sql/b.sql',
+        statement: 'execute x',
+        reason: 'two',
+      },
+    ];
+    expect(diffSqlGrantCheckBaselineShrink(base, base)).toEqual([]);
+    expect(diffSqlGrantCheckBaselineShrink(base, [base[0]])).toEqual([]);
+    expect(
+      diffSqlGrantCheckBaselineShrink(base, [
+        ...base,
+        { file: 'sql/c.sql', statement: 'new', reason: 'three' },
+      ]),
+    ).toEqual(expect.arrayContaining([expect.stringMatching(/new entry/i)]));
+    expect(
+      diffSqlGrantCheckBaselineShrink(base, [{ ...base[0], reason: 'changed' }, base[1]]),
+    ).toEqual(expect.arrayContaining([expect.stringMatching(/reason changed/i)]));
+    expect(validateSqlGrantCheckBaselineShrinkOnly('origin/master')).toEqual([]);
+  });
+
+  it('flags CREATE RECURSIVE VIEW and ALTER VIEW security_invoker false', () => {
+    expect(findCreateTableSetupViolations(`CREATE RECURSIVE VIEW public.bad AS SELECT 1;`)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/VIEW or MATERIALIZED VIEW/i)]),
+    );
+    expect(
+      findCreateTableSetupViolations(`ALTER VIEW public.bad SET (security_invoker = false);`),
+    ).toEqual(expect.arrayContaining([expect.stringMatching(/security_invoker = false/i)]));
+  });
+
+  it('flags top-level SELECT INTO UNLOGGED and unqualified targets', () => {
+    expect(findCreateTableSetupViolations(`SELECT * INTO UNLOGGED scratch FROM public.t;`)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/SELECT INTO UNLOGGED/i)]),
+    );
+    expect(findCreateTableSetupViolations(`SELECT * INTO scratch FROM public.t;`)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/SELECT INTO unqualified/i)]),
     );
   });
 });

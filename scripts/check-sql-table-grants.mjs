@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url';
 import {
   applySqlGrantCheckBaseline,
   validateSqlGrantCheckBaseline,
+  validateSqlGrantCheckBaselineShrinkOnly,
   validateSqlGrantCheckBaselineStructure,
 } from './lib/sql-grant-check-baseline.mjs';
 import {
@@ -180,6 +181,7 @@ function main() {
     const rawViolations = findViolationsInSqlTree();
     const baselineErrors = [
       ...validateSqlGrantCheckBaselineStructure(),
+      ...validateSqlGrantCheckBaselineShrinkOnly('origin/master'),
       ...validateSqlGrantCheckBaseline(rawViolations),
     ];
     if (baselineErrors.length) {

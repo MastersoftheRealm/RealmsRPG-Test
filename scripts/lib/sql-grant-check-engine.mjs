@@ -44,19 +44,6 @@ export const SERVICE_ROLE_REQUIRED_PRIVILEGES = ['select', 'insert', 'update', '
 export const REQUIRED_ROLES = ['authenticated', 'service_role'];
 export const CLIENT_EXPOSED_ROLES = ['anon', 'authenticated', 'public'];
 
-/** Postgres roles that are not treated as client-exposed when granted membership. */
-const NON_CLIENT_DATABASE_ROLES = new Set([
-  'service_role',
-  'postgres',
-  'authenticator',
-  'supabase_admin',
-  'supabase_auth_admin',
-  'dashboard_user',
-  'pg_database_owner',
-  'pg_read_all_data',
-  'pg_write_all_data',
-]);
-
 /** Explicit private helpers allowed in client write policy predicates (full names). */
 export const ALLOWED_PRIVATE_AUTH_HELPERS = new Set([
   'private.auth_is_vtt_campaign_owner',
@@ -989,7 +976,14 @@ function expandForeachExecuteFormatInBody(body, rawBody, { parseFormatFromRaw = 
     const loopVar = loopVarMatch[1];
     violations.push(...findForeachExecuteFormatArgViolations(region, loopVar));
     const names = resolveForeachIterationNames(nameSourceBody, region);
-    if (!names.length) continue;
+    if (!names.length) {
+      if (/\bexecute\s+format\b/i.test(region)) {
+        violations.push(
+          'unexpandable dynamic SQL (FOREACH EXECUTE format could not resolve table names)',
+        );
+      }
+      continue;
+    }
 
     if (parseFormatFromRaw) {
       const execRe = new RegExp(
@@ -1534,6 +1528,21 @@ function normalizeRoleToken(roleToken) {
   return t.toLowerCase();
 }
 
+const ROLE_GRANT_PRIVILEGE_WORDS =
+  /^(?:select|insert|update|delete|truncate|references|trigger|all|usage|execute|maintain)$/i;
+
+/**
+ * @param {string} leftClause
+ * @returns {string[]}
+ */
+function parseGrantedRoleNames(leftClause) {
+  return leftClause
+    .split(',')
+    .map((part) => part.trim())
+    .filter((part) => part && !ROLE_GRANT_PRIVILEGE_WORDS.test(part))
+    .map((part) => normalizeRoleToken(part));
+}
+
 function findRoleToRoleGrantViolations(code) {
   const re = /\bgrant\s+([^;]+)\s+to\s+([^;]+)/gi;
   /** @type {SqlGrantCheckViolation[]} */
@@ -1543,43 +1552,84 @@ function findRoleToRoleGrantViolations(code) {
     const left = match[1].trim();
     const full = match[0];
     if (/\bon\s+/i.test(full)) continue;
-    if (
-      /^(?:select|insert|update|delete|truncate|references|trigger|all|usage|execute)\b/i.test(left)
-    ) {
-      continue;
-    }
-    const grantedRole = normalizeRoleToken(left.split(',')[0].trim());
-    if (NON_CLIENT_DATABASE_ROLES.has(grantedRole)) continue;
+    const grantedRoles = parseGrantedRoleNames(left);
+    if (!grantedRoles.length) continue;
     const grantees = [...parseGrantRoleSet(match[2])].filter((r) =>
       CLIENT_EXPOSED_ROLES.includes(r),
     );
     if (!grantees.length) continue;
     const statement = normalizeSqlStatement(full.replace(/;+\s*$/, ''));
-    for (const target of grantees) {
-      out.push({
-        reason: `${grantedRole}: GRANT ROLE membership TO ${target} is not allowed (client-exposed role grant)`,
-        statement,
-      });
+    for (const grantedRole of grantedRoles) {
+      for (const target of grantees) {
+        out.push({
+          reason: `${grantedRole}: GRANT ROLE membership TO ${target} is not allowed (client-exposed role grant)`,
+          statement,
+        });
+      }
     }
   }
   return finalizeSqlGrantViolations(out);
 }
 
-function findCreateAlterRoleViolations(sql) {
+function findClientRoleAdminViolations(sql) {
   /** @type {SqlGrantCheckViolation[]} */
   const out = [];
-  const re = /\b(?:create|alter)\s+role\s+([^;\s]+)([^;]*)/gi;
+
+  const createRe = /\bcreate\s+role\s+([^;\s]+)([^;]*)/gi;
   let match;
-  while ((match = re.exec(sql))) {
-    const roleName = normalizeRoleToken(match[1]);
-    const attrs = (match[2] ?? '').toLowerCase();
-    if (!/\blogin\b/.test(attrs)) continue;
-    if (NON_CLIENT_DATABASE_ROLES.has(roleName)) continue;
+  while ((match = createRe.exec(sql))) {
+    const attrs = match[2] ?? '';
+    const roleClause = attrs.match(/\b(?:in\s+role|role)\s+([^;]+)/i);
+    if (roleClause) {
+      const grantees = [...parseGrantRoleSet(roleClause[1])].filter((r) =>
+        CLIENT_EXPOSED_ROLES.includes(r),
+      );
+      if (grantees.length) {
+        out.push({
+          reason: `${normalizeRoleToken(match[1])}: CREATE ROLE grants client membership (client-exposed role grant)`,
+          statement: normalizeSqlStatement(match[0]),
+        });
+      }
+    }
+  }
+
+  const groupRe = /\balter\s+group\s+[^;]+\badd\s+user\s+([^;]+)/gi;
+  while ((match = groupRe.exec(sql))) {
+    const grantees = [...parseGrantRoleSet(match[1])].filter((r) =>
+      CLIENT_EXPOSED_ROLES.includes(r),
+    );
+    if (!grantees.length) continue;
     out.push({
-      reason: `${roleName}: CREATE/ALTER ROLE LOGIN is not allowed without explicit approval (client-exposed role)`,
+      reason: `ALTER GROUP ADD USER ${grantees.join(', ')} is not allowed (client-exposed role grant)`,
       statement: normalizeSqlStatement(match[0]),
     });
   }
+
+  const alterRe = /\balter\s+role\s+([^;\s]+)([^;]*)/gi;
+  while ((match = alterRe.exec(sql))) {
+    const roleName = normalizeRoleToken(match[1]);
+    const attrs = (match[2] ?? '').toLowerCase();
+    const isClient = CLIENT_EXPOSED_ROLES.includes(roleName);
+    const dangerous =
+      /\bbypassrls\b/.test(attrs) ||
+      /\bsuperuser\b/.test(attrs) ||
+      /\bcreaterole\b/.test(attrs) ||
+      /\breplication\b/.test(attrs);
+    if (isClient && dangerous) {
+      out.push({
+        reason: `${roleName}: ALTER ROLE elevated privileges on client role are not allowed`,
+        statement: normalizeSqlStatement(match[0]),
+      });
+    }
+    if (!isClient) continue;
+    if (/\blogin\b/.test(attrs)) {
+      out.push({
+        reason: `${roleName}: CREATE/ALTER ROLE LOGIN is not allowed without explicit approval (client-exposed role)`,
+        statement: normalizeSqlStatement(match[0]),
+      });
+    }
+  }
+
   return finalizeSqlGrantViolations(out);
 }
 
@@ -1619,11 +1669,19 @@ function findUnauditedObjectCreationViolations(code, bodiesToStrip = []) {
   }
   /** @type {SqlGrantCheckViolation[]} */
   const out = [];
-  const viewRe = /\bcreate\s+(?:or\s+replace\s+)?(?:materialized\s+)?view\b[^;]*/gi;
+  const viewRe =
+    /\bcreate\s+(?:or\s+replace\s+)?(?:recursive\s+)?(?:materialized\s+)?view\b[^;]*/gi;
   let match;
   while ((match = viewRe.exec(scan))) {
     out.push({
       reason: 'unaudited object creation (VIEW or MATERIALIZED VIEW)',
+      statement: normalizeSqlStatement(match[0]),
+    });
+  }
+  const alterViewRe = /\balter\s+view\b[^;]*\bsecurity_invoker\s*=\s*false\b[^;]*/gi;
+  while ((match = alterViewRe.exec(scan))) {
+    out.push({
+      reason: 'unaudited object change (ALTER VIEW security_invoker = false)',
       statement: normalizeSqlStatement(match[0]),
     });
   }
@@ -1635,11 +1693,34 @@ function findUnauditedObjectCreationViolations(code, bodiesToStrip = []) {
       /^select\b[\s\S]*?\binto\s+(?:strict\s+)?(?:table\s+)?(public\s*\.\s*(?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*))/i.exec(
         trimmed,
       );
-    if (!intoMatch) continue;
-    out.push({
-      reason: `unaudited object creation (SELECT INTO ${intoMatch[1].replace(/\s+/g, ' ').trim()})`,
-      statement: normalizeSqlStatement(trimmed.slice(0, 240)),
-    });
+    if (intoMatch) {
+      out.push({
+        reason: `unaudited object creation (SELECT INTO ${intoMatch[1].replace(/\s+/g, ' ').trim()})`,
+        statement: normalizeSqlStatement(trimmed.slice(0, 240)),
+      });
+      continue;
+    }
+    const unloggedInto =
+      /^select\b[\s\S]*?\binto\s+(?:strict\s+)?unlogged\s+(?:table\s+)?([a-z_][a-z0-9_]*)/i.exec(
+        trimmed,
+      );
+    if (unloggedInto) {
+      out.push({
+        reason: `unaudited object creation (SELECT INTO UNLOGGED ${unloggedInto[1]})`,
+        statement: normalizeSqlStatement(trimmed.slice(0, 240)),
+      });
+      continue;
+    }
+    const bareInto =
+      /^select\b[\s\S]*?\binto\s+(?:strict\s+)?(?!public\s*\.|unlogged\b|table\s+public\s*\.)([a-z_][a-z0-9_]*)/i.exec(
+        trimmed,
+      );
+    if (bareInto) {
+      out.push({
+        reason: `unaudited object creation (SELECT INTO unqualified ${bareInto[1]})`,
+        statement: normalizeSqlStatement(trimmed.slice(0, 240)),
+      });
+    }
   }
   return finalizeSqlGrantViolations(out);
 }
@@ -1792,7 +1873,7 @@ export function findSqlFileViolations(sql, options = {}) {
     ...findUnauditedObjectCreationViolations(code, [...functionBodies, ...topLevelDoBodies]),
   );
   violations.push(...findRoleToRoleGrantViolations(code));
-  violations.push(...findCreateAlterRoleViolations(sql));
+  violations.push(...findClientRoleAdminViolations(sql));
   violations.push(...findTrivialPrivateAuthHelperRedefinitions(sql));
   const seen = new Set();
 

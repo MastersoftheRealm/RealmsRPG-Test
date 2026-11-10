@@ -2,6 +2,7 @@
  * Known sql/ grant-check violations pinned until SQL is fixed.
  * Each entry must match a live violation (file + reason + statement in file); orphan entries fail CI.
  */
+import { execFileSync } from 'node:child_process';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'node:url';
@@ -52,6 +53,80 @@ export function loadSqlGrantCheckBaseline(baselinePath = BASELINE_PATH) {
 /**
  * @returns {string[]}
  */
+/**
+ * @param {string} gitRef e.g. `origin/master`
+ * @param {string} [root]
+ */
+function baselineExistsAtRef(gitRef, root) {
+  try {
+    execFileSync('git', ['cat-file', '-e', `${gitRef}:scripts/sql-grant-check-baseline.json`], {
+      cwd: root,
+      stdio: 'ignore',
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function loadSqlGrantCheckBaselineAtRef(gitRef, root = repoRoot) {
+  if (!baselineExistsAtRef(gitRef, root)) {
+    return { exceptions: [], missingAtRef: true };
+  }
+  try {
+    const raw = execFileSync('git', ['show', `${gitRef}:scripts/sql-grant-check-baseline.json`], {
+      cwd: root,
+      encoding: 'utf8',
+    });
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed.exceptions)) {
+      throw new Error('baseline at ref must have exceptions array');
+    }
+    return parsed;
+  } catch {
+    return { exceptions: [], missingAtRef: true };
+  }
+}
+
+/**
+ * @param {string} [gitRef]
+ * @param {string} [root]
+ * @returns {string[]}
+ */
+/**
+ * @param {{ file: string, statement: string, reason: string }[]} baseExceptions
+ * @param {{ file: string, statement: string, reason: string }[]} currentExceptions
+ */
+export function diffSqlGrantCheckBaselineShrink(baseExceptions, currentExceptions) {
+  /** @type {Map<string, string>} */
+  const baseByFileStmt = new Map();
+  for (const entry of baseExceptions) {
+    const key = `${entry.file}\0${normalizeSqlStatement(entry.statement)}`;
+    baseByFileStmt.set(key, entry.reason);
+  }
+  /** @type {string[]} */
+  const errors = [];
+  for (const entry of currentExceptions) {
+    const key = `${entry.file}\0${normalizeSqlStatement(entry.statement)}`;
+    const baseReason = baseByFileStmt.get(key);
+    if (baseReason === undefined) {
+      errors.push(`baseline shrink violation: new entry in ${entry.file} (${entry.statement})`);
+    } else if (baseReason !== entry.reason) {
+      errors.push(
+        `baseline shrink violation: reason changed for ${entry.file} (${entry.statement})`,
+      );
+    }
+  }
+  return errors;
+}
+
+export function validateSqlGrantCheckBaselineShrinkOnly(gitRef = 'origin/master', root = repoRoot) {
+  const base = loadSqlGrantCheckBaselineAtRef(gitRef, root);
+  if (base.missingAtRef) return [];
+  const { exceptions } = loadSqlGrantCheckBaseline();
+  return diffSqlGrantCheckBaselineShrink(base.exceptions, exceptions);
+}
+
 export function validateSqlGrantCheckBaselineStructure() {
   const { exceptions } = loadSqlGrantCheckBaseline();
   /** @type {string[]} */
