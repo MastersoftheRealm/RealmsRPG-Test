@@ -21,6 +21,10 @@ BEGIN
 END;
 $parity_guard$;
 
+-- Same parent-row write boundary as characters-direct-write-deny.sql (idempotent).
+DROP POLICY IF EXISTS "Users can insert own characters" ON public.characters;
+DROP POLICY IF EXISTS "Users can update own characters" ON public.characters;
+
 DROP TRIGGER IF EXISTS sync_character_data_compat ON public.characters;
 DROP FUNCTION IF EXISTS public.sync_character_data_compat_trigger();
 
