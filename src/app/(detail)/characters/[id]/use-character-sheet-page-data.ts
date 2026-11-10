@@ -60,7 +60,10 @@ import {
 import { useCharacterSheetDerived } from '@/components/character-sheet';
 import { useToast } from '@/components/ui';
 import { createClient } from '@/lib/supabase/client';
-import { shouldSuppressRemoteResourceMerge } from '@/lib/encounter/character-resource-sync';
+import {
+  changedPoolAllocation,
+  shouldSuppressRemoteResourceMerge,
+} from '@/lib/encounter/character-resource-sync';
 import { isGuestCharacterId } from '@/lib/guest-character-storage';
 import type { Character } from '@/types';
 
@@ -325,7 +328,7 @@ export function useCharacterSheetPageData(id: string) {
 
   const isOwner = Boolean(character && (isGuestSheet || (user && character.userId === user.uid)));
 
-  useCharacterResourceSync(character, isOwner && !isGuestSheet);
+  useCharacterResourceSync(character, isOwner && !isGuestSheet, savedCleanRef);
 
   const pathProfAppliedKeyRef = useRef<string | null>(null);
   useEffect(() => {
@@ -373,7 +376,10 @@ export function useCharacterSheetPageData(id: string) {
         }
       }
       const cleaned = prepared.cleaned;
-      const dirty = prepared.dirty;
+      const dirty: Record<string, unknown> = {
+        ...prepared.dirty,
+        ...changedPoolAllocation(cleaned, savedCleanRef.current),
+      };
       if (Object.keys(dirty).length === 0) {
         return;
       }

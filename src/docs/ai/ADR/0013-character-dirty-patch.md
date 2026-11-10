@@ -46,7 +46,8 @@ separate `version int` column.
   `updated_at`; resource sync still omits `updatedAt` by design (HP LWW)
   via `saveCharacter(..., { skipLock: true })`. Same-tab races (autosave + resource sync +
   pending resave) are serialized by `lib/character/save-lock.ts` (TASK-786): per-id PATCH
-  queue, in-memory newest `updatedAt`, and resource sync only when HP/EN/AP change.
+  queue, in-memory newest `updatedAt`, and resource sync when current HP/EN/AP change.
+  The sheet sync also sends `healthPoints` and `energyPoints` when those differ from the saved snapshot.
   Library add-to-character lock/retry is TASK-746 (done). Sheet realtime merge for
   non-resource keys is TASK-747 (done): remote wins for untouched keys; HP/EN/AP still
   use `mergeResourceUpdatesIntoCharacter` and the echo suppress window.
