@@ -229,7 +229,7 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date().toISOString(),
       };
       normalizeCharacterForSave(newData);
-      migrateDeprecatedAncestryTraitFields(newData as Record<string, unknown>);
+      migrateDeprecatedAncestryTraitFields(newData as Record<string, unknown>, relational);
       stripDeprecatedCharacterSaveKeys(newData as Record<string, unknown>);
       leanCharacterArrayFieldsForRelationalSave(newData as Record<string, unknown>);
       const newId = crypto.randomUUID();
@@ -258,6 +258,7 @@ export async function POST(request: NextRequest) {
         const validation = characterRelationalValidationResponse(
           'POST /api/characters (duplicate create)',
           createErr as { code?: string; message?: string },
+          { userId: user.uid },
         );
         if (validation) return validation;
         throw createErr;
@@ -294,6 +295,7 @@ export async function POST(request: NextRequest) {
       const validation = characterRelationalValidationResponse(
         'POST /api/characters (create)',
         createErr as { code?: string; message?: string },
+        { userId: user.uid },
       );
       if (validation) return validation;
       throw createErr;

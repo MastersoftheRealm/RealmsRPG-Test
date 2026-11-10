@@ -7,7 +7,13 @@ import {
   appendLibraryItemToCharacter,
 } from '@/hooks/add-library-item/map-library-to-character';
 import type { LibraryPower, LibraryItem } from '@/types/library';
-import { RELATIONAL_SAVE_ENTRY_ALLOWLIST } from './relational-lean-save';
+import { prepareCharacterForCreate } from '@/lib/character-save';
+import {
+  leanEquipmentForRelationalSave,
+  leanPowersForRelationalSave,
+  leanTechniquesForRelationalSave,
+  RELATIONAL_SAVE_ENTRY_ALLOWLIST,
+} from './relational-lean-save';
 
 const baseCharacter = {
   id: 'char-1',
@@ -51,6 +57,20 @@ function expectAllowlisted(
 }
 
 describe('relational lean save client paths', () => {
+  it('preserves empty list keys for relational patch semantics', () => {
+    expect(leanPowersForRelationalSave([])).toEqual([]);
+    expect(leanTechniquesForRelationalSave([])).toEqual([]);
+    expect(leanEquipmentForRelationalSave({ weapons: [], shields: [], armor: [] })).toEqual({
+      weapons: [],
+      shields: [],
+      armor: [],
+    });
+    const cleaned = prepareCharacterForSave({
+      equipment: { weapons: [] },
+    } as Parameters<typeof prepareCharacterForSave>[0]);
+    expect(cleaned.equipment).toEqual({ weapons: [] });
+  });
+
   it('libraryAddDirtyFields trims power, technique, and armament payloads', () => {
     const emptyDbs = { powerPartsDb: [], techniquePartsDb: [], itemPropertiesDb: [] };
     const withPower = appendLibraryItemToCharacter(baseCharacter, 'power', fatPower, emptyDbs);
@@ -99,6 +119,55 @@ describe('relational lean save client paths', () => {
     for (const weapon of weapons) {
       expect(weapon).not.toHaveProperty('properties');
     }
+  });
+
+  it('guest create and duplicate paths stay allow-listed', () => {
+    const guestPayload = prepareCharacterForCreate({
+      name: 'Guest',
+      level: 1,
+      techniques: [],
+      ancestryTraits: ['legacy-trait'],
+    } as unknown as Parameters<typeof prepareCharacterForCreate>[0]);
+    expect(guestPayload.techniques).toEqual([]);
+    expect(guestPayload).not.toHaveProperty('ancestryTraits');
+    expect((guestPayload.ancestry as { selectedTraits?: string[] })?.selectedTraits).toEqual([
+      'legacy-trait',
+    ]);
+
+    const duplicated = prepareCharacterForSave(
+      {
+        ancestryTraits: ['t1'],
+        flawTrait: 'f1',
+      } as Parameters<typeof prepareCharacterForSave>[0],
+      { storedDocument: { ancestry: { id: 'sp-1', name: 'Elf' } } },
+    );
+    expect(duplicated.ancestry).toMatchObject({
+      id: 'sp-1',
+      name: 'Elf',
+      selectedTraits: ['t1'],
+      selectedFlaw: 'f1',
+    });
+  });
+
+  it('encounter resource sync and level-up cleanForSave stay allow-listed', () => {
+    const encounterPatch = prepareCharacterForSave({
+      currentHealth: 3,
+      currentEnergy: 2,
+      actionPoints: 1,
+    } as Parameters<typeof prepareCharacterForSave>[0]);
+    expect(encounterPatch).toEqual(
+      expect.objectContaining({ currentHealth: 3, currentEnergy: 2, actionPoints: 1 }),
+    );
+    expect(encounterPatch).not.toHaveProperty('equipment');
+
+    const levelUpSave = cleanForSave({
+      ...baseCharacter,
+      level: 2,
+      powers: [{ id: 'p-new', name: 'Level Power', cost: 4, innate: true }],
+      techniques: [{ id: 't-new', name: 'Level Tech', cost: 2 }],
+    } as Character);
+    expectAllowlisted('powers', levelUpSave.powers);
+    expectAllowlisted('techniques', levelUpSave.techniques);
   });
 
   it('cleanForSave powers and equipment stay on the relational allow-list', () => {

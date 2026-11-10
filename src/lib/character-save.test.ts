@@ -91,6 +91,25 @@ describe('prepareCharacterForSave (ADR-0006 tempModifiers)', () => {
     expect(cleaned.name).toBe('Test');
   });
 
+  it('merges legacy traits into stored ancestry when the patch omits ancestry', () => {
+    const cleaned = prepareCharacterForSave(
+      {
+        flawTrait: 'flaw-b',
+      } as Parameters<typeof prepareCharacterForSave>[0],
+      {
+        storedDocument: {
+          ancestry: { id: 'species-1', selectedFlaw: null, selectedTraits: ['t0'] },
+        },
+      },
+    );
+    expect(cleaned).not.toHaveProperty('flawTrait');
+    expect(cleaned.ancestry).toEqual({
+      id: 'species-1',
+      selectedFlaw: 'flaw-b',
+      selectedTraits: ['t0'],
+    });
+  });
+
   it('floors currency when the key is present and does not invent it (TASK-749)', () => {
     const withDebt = prepareCharacterForSave({
       name: 'Test',

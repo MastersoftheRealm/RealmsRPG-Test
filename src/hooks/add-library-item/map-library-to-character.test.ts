@@ -81,6 +81,8 @@ describe('map-library-to-character', () => {
     expect(libraryAddDirtyFields('weapon', baseCharacter)).toEqual({
       equipment: {
         weapons: [{ id: 'existing-weapon', name: 'Sword' }],
+        armor: [],
+        shields: [],
       },
     });
     expect(libraryAddDirtyFields('power', baseCharacter)).toEqual({

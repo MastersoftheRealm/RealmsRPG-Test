@@ -177,13 +177,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (!validation.success) return validation.error;
     const data = validation.data as Partial<Character>;
     const expectedUpdatedAt = typeof data.updatedAt === 'string' ? data.updatedAt : undefined;
-    const cleanedData = prepareCharacterForSave(data);
-
     const supabase = await createClient();
     const currentDocument = await getRelationalCharacterDocument(supabase, id);
     if (!currentDocument) {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });
     }
+
+    const cleanedData = prepareCharacterForSave(data, { storedDocument: currentDocument });
 
     const mergedData = applyCharacterDirtyPatch(currentDocument, cleanedData, {
       documentUpdatedAt: new Date().toISOString(),
@@ -204,6 +204,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       const validation = characterRelationalValidationResponse(
         'PATCH /api/characters/[id]',
         patchErr as { code?: string; message?: string },
+        { userId: user.uid, characterId: id },
       );
       if (validation) return validation;
       throw patchErr;

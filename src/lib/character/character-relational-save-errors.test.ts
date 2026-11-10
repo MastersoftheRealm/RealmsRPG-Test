@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  CHARACTER_SAVE_VALIDATION_ERROR,
+  CHARACTER_SAVE_FAILED_MESSAGE,
   parseCharacterRelationalValidationError,
 } from './character-relational-save-errors';
 
@@ -11,7 +11,7 @@ describe('parseCharacterRelationalValidationError', () => {
       message: 'Unmapped character key: ancestryTraits',
     });
     expect(parsed).toEqual({
-      error: CHARACTER_SAVE_VALIDATION_ERROR,
+      error: CHARACTER_SAVE_FAILED_MESSAGE,
       details: ['Rejected field: ancestryTraits.'],
     });
   });
@@ -32,6 +32,15 @@ describe('parseCharacterRelationalValidationError', () => {
     expect(parsed?.details[0]).toBe('Rejected field: equipment.properties.');
   });
 
+  it('maps ownership violations on SQLSTATE 23514', () => {
+    const parsed = parseCharacterRelationalValidationError({
+      code: '23514',
+      message: 'Power belongs to another user',
+    });
+    expect(parsed?.error).toBe(CHARACTER_SAVE_FAILED_MESSAGE);
+    expect(parsed?.details[0]).toMatch(/another user/i);
+  });
+
   it('caps very long echoed field paths', () => {
     const longKey = 'x'.repeat(200);
     const parsed = parseCharacterRelationalValidationError({
@@ -50,7 +59,7 @@ describe('parseCharacterRelationalValidationError', () => {
         message: 'Owner id is required',
       }),
     ).toEqual({
-      error: CHARACTER_SAVE_VALIDATION_ERROR,
+      error: CHARACTER_SAVE_FAILED_MESSAGE,
       details: ['Character data failed relational validation.'],
     });
   });
@@ -64,7 +73,7 @@ describe('parseCharacterRelationalValidationError', () => {
     ).toBe('Rejected field: patch.');
   });
 
-  it('ignores non-22023 SQL codes', () => {
+  it('ignores non-validation SQL codes', () => {
     expect(
       parseCharacterRelationalValidationError({
         code: '42501',

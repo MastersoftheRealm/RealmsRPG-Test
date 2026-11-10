@@ -17,7 +17,16 @@ const DEPRECATED_RELATIONAL_SAVE_KEYS = [
   'characteristicTrait',
 ] as const;
 
-export function migrateDeprecatedAncestryTraitFields(cleaned: Record<string, unknown>): void {
+function readAncestryRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const record = value as Record<string, unknown>;
+  return Object.keys(record).length > 0 ? { ...record } : null;
+}
+
+export function migrateDeprecatedAncestryTraitFields(
+  cleaned: Record<string, unknown>,
+  storedDocument?: Record<string, unknown> | null,
+): void {
   const ancestryTraits = cleaned.ancestryTraits;
   const flawTrait = cleaned.flawTrait;
   const characteristicTrait = cleaned.characteristicTrait;
@@ -31,12 +40,31 @@ export function migrateDeprecatedAncestryTraitFields(cleaned: Record<string, unk
 
   if (!hasLegacy) return;
 
-  const existing = cleaned.ancestry;
+  const hasAncestryKey = Object.prototype.hasOwnProperty.call(cleaned, 'ancestry');
   const ancestry =
-    existing && typeof existing === 'object' && !Array.isArray(existing)
-      ? { ...(existing as Record<string, unknown>) }
-      : {};
-  cleaned.ancestry = ancestry;
+    (hasAncestryKey ? readAncestryRecord(cleaned.ancestry) : null) ??
+    readAncestryRecord(storedDocument?.ancestry);
+
+  if (!ancestry) {
+    const promoted: Record<string, unknown> = {};
+    if (Array.isArray(ancestryTraits) && ancestryTraits.length > 0) {
+      promoted.selectedTraits = ancestryTraits;
+    }
+    if (flawTrait !== undefined && flawTrait !== null && String(flawTrait).length > 0) {
+      promoted.selectedFlaw = flawTrait;
+    }
+    if (
+      characteristicTrait !== undefined &&
+      characteristicTrait !== null &&
+      String(characteristicTrait).length > 0
+    ) {
+      promoted.selectedCharacteristic = characteristicTrait;
+    }
+    if (Object.keys(promoted).length > 0) {
+      cleaned.ancestry = promoted;
+    }
+    return;
+  }
 
   if (Array.isArray(ancestryTraits) && ancestryTraits.length > 0) {
     const current = ancestry.selectedTraits;
@@ -66,6 +94,7 @@ export function migrateDeprecatedAncestryTraitFields(cleaned: Record<string, unk
       ancestry.selectedCharacteristic = characteristicTrait;
     }
   }
+  cleaned.ancestry = ancestry;
 }
 
 export function stripDeprecatedCharacterSaveKeys(cleaned: Record<string, unknown>): void {
@@ -143,7 +172,10 @@ export function formatCharacterCreateFailureMessage(
   return message || copy.saveFailed;
 }
 
-export function prepareCharacterForSave(data: Partial<Character>): Record<string, unknown> {
+export function prepareCharacterForSave(
+  data: Partial<Character>,
+  options?: { storedDocument?: Record<string, unknown> | null },
+): Record<string, unknown> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { id, createdAt, updatedAt, ...dataToSave } = data;
 
@@ -152,7 +184,7 @@ export function prepareCharacterForSave(data: Partial<Character>): Record<string
   delete cleaned.allTraits;
   delete cleaned.defenses;
   delete cleaned.defenseBonuses;
-  migrateDeprecatedAncestryTraitFields(cleaned);
+  migrateDeprecatedAncestryTraitFields(cleaned, options?.storedDocument);
   stripDeprecatedCharacterSaveKeys(cleaned);
 
   // Same sparse Temp Modifier contract as cleanForSave (ADR-0006).

@@ -506,7 +506,7 @@ describe('POST /api/characters', () => {
     expect(response.status).toBe(400);
     const body = await readJson<{ error: string; details: string[] }>(response);
     expect(body.details[0]).toContain('staleField');
-    expect(body.error).toContain('PLACEHOLDER');
+    expect(body.error).toBe('Failed to save character');
     expect(body.error).not.toContain('Unmapped character');
   });
 

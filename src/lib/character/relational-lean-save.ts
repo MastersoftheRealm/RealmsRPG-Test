@@ -4,6 +4,7 @@ import type { Character } from '@/types';
 export const RELATIONAL_SAVE_ENTRY_ALLOWLIST = {
   powers: ['id', 'name', 'innate', 'selectedVariantId'],
   techniques: ['id', 'name'],
+  traits: ['id', 'name'],
   feats: ['id', 'name', 'description', 'currentUses', 'customName', 'note'],
   archetypeFeats: ['id', 'name', 'description', 'currentUses', 'customName', 'note'],
   proficiencies: [
@@ -25,7 +26,10 @@ export const RELATIONAL_SAVE_ENTRY_ALLOWLIST = {
 
 const POWER_KEYS = new Set<string>(RELATIONAL_SAVE_ENTRY_ALLOWLIST.powers);
 const TECHNIQUE_KEYS = new Set<string>(RELATIONAL_SAVE_ENTRY_ALLOWLIST.techniques);
+const TRAIT_KEYS = new Set<string>(RELATIONAL_SAVE_ENTRY_ALLOWLIST.traits);
 const PROFICIENCY_KEYS = new Set<string>(RELATIONAL_SAVE_ENTRY_ALLOWLIST.proficiencies);
+
+const EQUIPMENT_LIST_KEYS = ['weapons', 'shields', 'items', 'accessories'] as const;
 
 function pickAllowlisted(
   entry: Record<string, unknown>,
@@ -55,6 +59,9 @@ function leanInventoryItemForRelationalSave(item: unknown): Record<string, unkno
       clean.description = i.description.trim();
     }
   }
+  if (typeof i.cost === 'number' && Number.isFinite(i.cost)) {
+    clean.cost = i.cost;
+  }
   return Object.keys(clean).length > 0 ? clean : null;
 }
 
@@ -76,6 +83,14 @@ function leanTechniqueEntryForRelationalSave(entry: unknown): Record<string, unk
   return Object.keys(clean).length > 0 ? clean : null;
 }
 
+function leanTraitEntryForRelationalSave(entry: unknown): string | Record<string, unknown> | null {
+  if (typeof entry === 'string') return entry;
+  if (!entry || typeof entry !== 'object') return null;
+  const clean = pickAllowlisted(entry as Record<string, unknown>, TRAIT_KEYS);
+  if (clean.name || clean.id) return clean;
+  return null;
+}
+
 function leanProficiencyEntryForRelationalSave(entry: unknown): Record<string, unknown> | null {
   if (!entry || typeof entry !== 'object') return null;
   const clean = pickAllowlisted(entry as Record<string, unknown>, PROFICIENCY_KEYS);
@@ -85,6 +100,7 @@ function leanProficiencyEntryForRelationalSave(entry: unknown): Record<string, u
 export function leanPowersForRelationalSave(
   powers: Character['powers'] | undefined,
 ): Character['powers'] | undefined {
+  if (powers === undefined) return undefined;
   if (!Array.isArray(powers)) return powers;
   return powers
     .map(leanPowerEntryForRelationalSave)
@@ -94,15 +110,25 @@ export function leanPowersForRelationalSave(
 export function leanTechniquesForRelationalSave(
   techniques: Character['techniques'] | undefined,
 ): Character['techniques'] | undefined {
+  if (techniques === undefined) return undefined;
   if (!Array.isArray(techniques)) return techniques;
   return techniques
     .map(leanTechniqueEntryForRelationalSave)
     .filter((row): row is Record<string, unknown> => row !== null) as Character['techniques'];
 }
 
+function leanTraitsForRelationalSave(traits: unknown): unknown {
+  if (traits === undefined) return undefined;
+  if (!Array.isArray(traits)) return traits;
+  return traits
+    .map(leanTraitEntryForRelationalSave)
+    .filter((row): row is string | Record<string, unknown> => row !== null);
+}
+
 export function leanProficienciesForRelationalSave(
   proficiencies: Character['proficiencies'] | undefined,
 ): Character['proficiencies'] | undefined {
+  if (proficiencies === undefined) return undefined;
   if (!Array.isArray(proficiencies)) return proficiencies;
   return proficiencies
     .map(leanProficiencyEntryForRelationalSave)
@@ -112,23 +138,26 @@ export function leanProficienciesForRelationalSave(
 export function leanEquipmentForRelationalSave(
   equipment: Character['equipment'] | undefined,
 ): Character['equipment'] | undefined {
-  if (!equipment || typeof equipment !== 'object') return equipment;
+  if (equipment === undefined) return undefined;
+  if (equipment === null || typeof equipment !== 'object') return equipment;
   const equip = equipment as Record<string, unknown>;
   const out: Record<string, unknown> = {};
 
-  for (const key of ['weapons', 'shields', 'items', 'accessories'] as const) {
+  for (const key of EQUIPMENT_LIST_KEYS) {
+    if (!Object.prototype.hasOwnProperty.call(equip, key)) continue;
     const list = equip[key];
     if (Array.isArray(list)) {
-      const cleaned = list.map(leanInventoryItemForRelationalSave).filter(Boolean);
-      if (cleaned.length) out[key] = cleaned;
+      out[key] = list.map(leanInventoryItemForRelationalSave).filter(Boolean);
     }
   }
-  if (Array.isArray(equip.armor)) {
-    const cleaned = equip.armor.map(leanInventoryItemForRelationalSave).filter(Boolean);
-    if (cleaned.length) out.armor = cleaned;
-  } else if (equip.armor && typeof equip.armor === 'object') {
-    const lean = leanInventoryItemForRelationalSave(equip.armor);
-    if (lean) out.armor = lean;
+  if (Object.prototype.hasOwnProperty.call(equip, 'armor')) {
+    const armor = equip.armor;
+    if (Array.isArray(armor)) {
+      out.armor = armor.map(leanInventoryItemForRelationalSave).filter(Boolean);
+    } else if (armor && typeof armor === 'object') {
+      const lean = leanInventoryItemForRelationalSave(armor);
+      if (lean) out.armor = lean;
+    }
   }
   for (const slot of ['mainHand', 'offHand'] as const) {
     if (equip[slot] !== undefined) {
@@ -137,25 +166,27 @@ export function leanEquipmentForRelationalSave(
     }
   }
 
-  return Object.keys(out).length > 0 ? (out as Character['equipment']) : undefined;
+  return out as Character['equipment'];
 }
 
 /** Trim array fields on a save patch/document before relational RPCs. */
 export function leanCharacterArrayFieldsForRelationalSave(cleaned: Record<string, unknown>): void {
   if (cleaned.powers !== undefined) {
-    cleaned.powers = leanPowersForRelationalSave(cleaned.powers as Character['powers']);
+    cleaned.powers = leanPowersForRelationalSave(cleaned.powers as Character['powers']) ?? [];
   }
   if (cleaned.techniques !== undefined) {
-    cleaned.techniques = leanTechniquesForRelationalSave(
-      cleaned.techniques as Character['techniques'],
-    );
+    cleaned.techniques =
+      leanTechniquesForRelationalSave(cleaned.techniques as Character['techniques']) ?? [];
+  }
+  if (cleaned.traits !== undefined) {
+    cleaned.traits = leanTraitsForRelationalSave(cleaned.traits) ?? [];
   }
   if (cleaned.proficiencies !== undefined) {
-    cleaned.proficiencies = leanProficienciesForRelationalSave(
-      cleaned.proficiencies as Character['proficiencies'],
-    );
+    cleaned.proficiencies =
+      leanProficienciesForRelationalSave(cleaned.proficiencies as Character['proficiencies']) ?? [];
   }
   if (cleaned.equipment !== undefined) {
-    cleaned.equipment = leanEquipmentForRelationalSave(cleaned.equipment as Character['equipment']);
+    cleaned.equipment =
+      leanEquipmentForRelationalSave(cleaned.equipment as Character['equipment']) ?? {};
   }
 }
