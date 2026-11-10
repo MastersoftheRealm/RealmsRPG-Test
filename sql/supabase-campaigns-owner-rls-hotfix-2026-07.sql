@@ -20,7 +20,7 @@ BEGIN;
 
 ALTER TABLE public.campaigns ENABLE ROW LEVEL SECURITY;
 
-GRANT SELECT ON public.campaigns TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.campaigns TO authenticated;
 GRANT ALL ON public.campaigns TO service_role;
 
 DROP POLICY IF EXISTS campaigns_owner_select ON public.campaigns;

@@ -1392,17 +1392,37 @@ function findClientRoleGrantViolations(code) {
     const tableRefs = parseGrantOnTables(onClause);
     const nonSelect = [...privs].filter((p) => p !== 'select');
 
-    for (const role of roles) {
-      if (!CLIENT_EXPOSED_ROLES.includes(role)) continue;
-      if (schemaWide) {
+    if (schemaWide) {
+      for (const role of roles) {
+        if (!CLIENT_EXPOSED_ROLES.includes(role)) continue;
         if (nonSelect.length || isAllPrivilegesGrant(privilegeListRaw)) {
           out.push(
             `GRANT on ALL TABLES IN SCHEMA to ${role} must be SELECT only (found ${[...privs].join(', ') || 'ALL'})`,
           );
         }
-        continue;
       }
-      if (tableRefs.length > 1) continue;
+      continue;
+    }
+    if (tableRefs.length > 1) {
+      const grantRoles = [...roles];
+      const clientRolesHere = grantRoles.filter((r) => CLIENT_EXPOSED_ROLES.includes(r));
+      if (!(clientRolesHere.length && grantRoles.includes('service_role'))) {
+        if (!isAllowedClientRoleTableGrant(privs, privilegeListRaw)) {
+          for (const role of clientRolesHere) {
+            const label = isAllPrivilegesGrant(privilegeListRaw)
+              ? 'ALL'
+              : nonSelect.join(', ').toUpperCase() || privilegeListRaw.toUpperCase();
+            out.push(
+              `${target}: GRANT ${label} TO ${role} is not allowed (SELECT only for ${role})`,
+            );
+          }
+        }
+      }
+      continue;
+    }
+
+    for (const role of roles) {
+      if (!CLIENT_EXPOSED_ROLES.includes(role)) continue;
       const key = `${target}|${role}`;
       const bucket = aggregated.get(key) ?? {
         privs: new Set(),

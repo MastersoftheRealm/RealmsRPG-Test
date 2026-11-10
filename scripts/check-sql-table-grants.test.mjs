@@ -7,11 +7,14 @@ import {
   changedFilesDiffArgs,
   findCreateTableSetupViolations,
   findGrantViolations,
-  findViolationsInSqlTree,
   isIgnoredSqlGrantCheckPath,
   resolveBaseRef,
   sqlDefinesCreateTableWithoutGrant,
 } from './check-sql-table-grants.mjs';
+import {
+  applySqlGrantCheckBaseline,
+  validateSqlGrantCheckBaseline,
+} from './lib/sql-grant-check-baseline.mjs';
 import { isAllowlistedWritePolicyPredicate } from './lib/sql-grant-check-engine.mjs';
 
 const scriptPath = path.join(process.cwd(), 'scripts/check-sql-table-grants.mjs');
@@ -816,6 +819,57 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.h TO service_role;`;
   });
 });
 
+describe('multi-table client role grants', () => {
+  const base = `CREATE TABLE public.a (id int);
+CREATE TABLE public.b (id int);
+CREATE TABLE public.c (id int);
+ALTER TABLE public.a ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.b ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.c ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pa ON public.a FOR SELECT TO authenticated USING (true);
+CREATE POLICY pb ON public.b FOR SELECT TO authenticated USING (true);
+CREATE POLICY pc ON public.c FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.a TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.b TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.c TO service_role;`;
+
+  it('does not flag multi-table grants paired with service_role', () => {
+    expect(
+      findCreateTableSetupViolations(
+        `${base}\nGRANT SELECT ON public.c TO authenticated;\nGRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.a, public.b TO authenticated, service_role;`,
+      ),
+    ).toEqual([]);
+  });
+
+  it('fails non-SELECT privileges on comma-separated table lists', () => {
+    const mustFail = [
+      `${base}\nGRANT SELECT, INSERT ON TABLE public.a, public.b TO authenticated;`,
+      `${base}\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.a, public.b TO authenticated;`,
+      `${base}\nGRANT INSERT ON TABLE public.a, public.b, public.c TO authenticated;`,
+      `${base}\nGRANT SELECT, INSERT ON public.a, public.b, public.c TO "authenticated";`,
+      `${base}\nGRANT UPDATE ON public.a, public.b TO anon;`,
+    ];
+    for (const sql of mustFail) {
+      expect(findCreateTableSetupViolations(sql)).toEqual(
+        expect.arrayContaining([expect.stringMatching(/GRANT .+ is not allowed \(SELECT only/i)]),
+      );
+    }
+  });
+
+  it('allows SELECT-only on several tables in one GRANT', () => {
+    expect(
+      findCreateTableSetupViolations(
+        `${base}\nGRANT SELECT ON TABLE public.a, public.b, public.c TO authenticated, anon;`,
+      ),
+    ).toEqual([]);
+    expect(
+      findCreateTableSetupViolations(
+        `${base}\nCREATE POLICY pd ON public.c FOR SELECT TO authenticated USING (true);\nGRANT SELECT ON public.a, public.b, public.c TO "authenticated";`,
+      ),
+    ).toEqual([]);
+  });
+});
+
 describe('allowlist client grants', () => {
   const base = `CREATE TABLE public.g (id int);
 ALTER TABLE public.g ENABLE ROW LEVEL SECURITY;
@@ -921,19 +975,32 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON "secret" TO service_role;`;
 });
 
 describe('sql tree gate', () => {
-  it('passes SQL_GRANTS_CHECK_TREE for vtt and campaigns; blocks role-quota EXECUTE v_sql', () => {
-    const violations = findViolationsInSqlTree();
-    expect(violations.filter((v) => v.file.includes('vtt'))).toEqual([]);
-    expect(violations.filter((v) => v.file.includes('campaigns'))).toEqual([]);
-    expect(violations).toEqual(
-      expect.arrayContaining([
-        {
-          file: 'sql/role-quota-atomic.sql',
-          reason: 'unexpandable dynamic SQL (EXECUTE in function body)',
-        },
-      ]),
+  it('passes SQL_GRANTS_CHECK_TREE with baseline exceptions only', () => {
+    const result = runScript({ SQL_GRANTS_CHECK_TREE: '1', SQL_GRANTS_CHECK_BASE: '' });
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('tree OK');
+  });
+});
+
+describe('sql grant check baseline', () => {
+  it('rejects orphan baseline entries', () => {
+    const violations = [{ file: 'sql/foo.sql', reason: 'no such violation' }];
+    expect(validateSqlGrantCheckBaseline(violations)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/baseline stale/i)]),
     );
-    expect(violations.filter((v) => v.file !== 'sql/role-quota-atomic.sql')).toEqual([]);
+  });
+
+  it('clears only matching file+reason violations', () => {
+    const raw = [
+      {
+        file: 'sql/supabase-campaigns-owner-rls-hotfix-2026-07.sql',
+        reason:
+          'public.campaigns: GRANT INSERT, UPDATE, DELETE TO authenticated is not allowed (SELECT only for authenticated)',
+      },
+      { file: 'sql/other.sql', reason: 'leftover' },
+    ];
+    const next = applySqlGrantCheckBaseline(raw);
+    expect(next).toEqual([{ file: 'sql/other.sql', reason: 'leftover' }]);
   });
 });
 

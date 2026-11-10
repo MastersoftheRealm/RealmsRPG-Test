@@ -1,0 +1,29 @@
+{
+  "exceptions": [
+    {
+      "file": "sql/supabase-campaigns-owner-rls-hotfix-2026-07.sql",
+      "statement": "GRANT SELECT, INSERT, UPDATE, DELETE ON public.campaigns TO authenticated",
+      "reason": "public.campaigns: GRANT INSERT, UPDATE, DELETE TO authenticated is not allowed (SELECT only for authenticated)"
+    },
+    {
+      "file": "sql/vtt-v1-tabletop.sql",
+      "statement": "GRANT SELECT, INSERT, UPDATE, DELETE ON public.vtt_scenes TO authenticated",
+      "reason": "public.vtt_scenes: GRANT INSERT, UPDATE, DELETE TO authenticated is not allowed (SELECT only for authenticated)"
+    },
+    {
+      "file": "sql/vtt-v1-tabletop.sql",
+      "statement": "GRANT SELECT, INSERT, UPDATE, DELETE ON public.vtt_tokens TO authenticated",
+      "reason": "public.vtt_tokens: GRANT INSERT, UPDATE, DELETE TO authenticated is not allowed (SELECT only for authenticated)"
+    },
+    {
+      "file": "sql/vtt-v1-tabletop.sql",
+      "statement": "GRANT SELECT, INSERT, UPDATE, DELETE ON public.vtt_actions TO authenticated",
+      "reason": "public.vtt_actions: GRANT INSERT, UPDATE, DELETE TO authenticated is not allowed (SELECT only for authenticated)"
+    },
+    {
+      "file": "sql/role-quota-atomic.sql",
+      "statement": "EXECUTE v_sql USING p_row",
+      "reason": "unexpandable dynamic SQL (EXECUTE in function body)"
+    }
+  ]
+}

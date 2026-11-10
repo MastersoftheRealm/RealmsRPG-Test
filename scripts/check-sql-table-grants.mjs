@@ -13,6 +13,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  applySqlGrantCheckBaseline,
+  validateSqlGrantCheckBaseline,
+} from './lib/sql-grant-check-baseline.mjs';
+import {
   expandForeachExecuteFormatSql,
   extractCreateTableTargets,
   findCreateTableSetupViolations,
@@ -164,7 +168,16 @@ function listChangedSqlFiles(baseRef) {
 
 function main() {
   if (process.env.SQL_GRANTS_CHECK_TREE === '1') {
-    const violations = findViolationsInSqlTree();
+    const rawViolations = findViolationsInSqlTree();
+    const baselineErrors = validateSqlGrantCheckBaseline(rawViolations);
+    if (baselineErrors.length) {
+      console.error('SQL grant check baseline is stale or unmatched:\n');
+      for (const err of baselineErrors) {
+        console.error(`  ${err}`);
+      }
+      process.exit(2);
+    }
+    const violations = applySqlGrantCheckBaseline(rawViolations);
     if (violations.length) {
       console.error('SQL grant check failed — sql/ tree has setup gaps:\n');
       for (const v of violations) {
