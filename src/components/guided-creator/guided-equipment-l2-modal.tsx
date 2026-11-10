@@ -141,6 +141,7 @@ export function GuidedEquipmentL2Modal({
           tpSpent={tpSpent}
           currencyLabel={l2Copy.currencyLabel}
           trainingPointsLabel={l2Copy.tpLabel}
+          showTrainingPointsOverspendAlert={false}
         >
           {tpOverspendMessage ? (
             <p className="text-center font-nunito text-sm text-warning-fg" role="alert">

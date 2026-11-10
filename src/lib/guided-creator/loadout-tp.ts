@@ -201,3 +201,30 @@ export function guidedLoadoutTrainingPointsOverspendMessage(
   if (over === 0) return null;
   return loadoutStepCopy.trainingPointsOverspent(over);
 }
+
+/** Guided Training Points counter — never cap spent at the pool for display or warnings. */
+export function guidedTrainingPointsPointStatusInputs(
+  spent: number,
+  limit: number,
+): { total: number; spent: number; remaining: number } {
+  const total = Math.max(0, Math.floor(Number(limit)) || 0);
+  const spentN = Math.max(0, Math.floor(Number(spent)) || 0);
+  return { total, spent: spentN, remaining: total - spentN };
+}
+
+/** Listed Training Points on power/technique/innate picks (guided catalog chips). */
+export function sumGuidedListedCombatTrainingPoints(
+  combatIds: { powerIds: string[]; techniqueIds: string[]; innatePowerIds: string[] },
+  tpCostOf: (id: string) => number,
+): number {
+  const uniqueIds = new Set([
+    ...combatIds.powerIds,
+    ...combatIds.techniqueIds,
+    ...combatIds.innatePowerIds,
+  ]);
+  let total = 0;
+  for (const id of uniqueIds) {
+    total += Math.max(0, Math.floor(tpCostOf(id) || 0));
+  }
+  return total;
+}
