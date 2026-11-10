@@ -21,7 +21,7 @@ export function isIgnoredSqlGrantCheckPath(relPath) {
  * @param {string} decoded
  */
 export function quotedIdTokenForName(decoded) {
-  return `«Q${Buffer.from(decoded.toLowerCase(), 'utf8').toString('hex')}»`;
+  return `«Q${Buffer.from(decoded, 'utf8').toString('hex')}»`;
 }
 
 /**
@@ -40,9 +40,6 @@ export function decodePreservedStringToken(token) {
   return Buffer.from(match[1], 'hex').toString('utf8');
 }
 
-/**
- * @param {string} out
- */
 /**
  * @param {string} sql
  * @param {number} start index of opening quote
@@ -111,12 +108,17 @@ function sanitizeSql(sql) {
   const dollarStack = [];
   /** @type {string[]} */
   const topLevelDoBodies = [];
+  /** @type {string[]} */
+  const functionBodies = [];
   /** @type {string | null} */
   let captureTopLevelDo = null;
+  /** @type {string | null} */
+  let captureFunctionBody = null;
 
   const emit = (text) => {
     out += text;
     if (captureTopLevelDo !== null) captureTopLevelDo += text;
+    if (captureFunctionBody !== null) captureFunctionBody += text;
   };
 
   const blankUntil = (end) => {
@@ -161,7 +163,11 @@ function sanitizeSql(sql) {
       continue;
     }
 
-    if ((c === 'e' || c === 'E') && next === "'") {
+    if (
+      (c === 'e' || c === 'E') &&
+      next === "'" &&
+      (i === 0 || !/[a-zA-Z0-9_]/i.test(sql[i - 1]))
+    ) {
       emit(' ');
       i += 2;
       while (i < n) {
@@ -247,19 +253,26 @@ function sanitizeSql(sql) {
       if (match) {
         const tag = match[0];
         if (dollarStack.length && dollarStack[dollarStack.length - 1].tag === tag) {
-          dollarStack.pop();
-          if (captureTopLevelDo !== null && dollarStack.length === 0) {
+          const closing = dollarStack.pop();
+          if (captureTopLevelDo !== null && closing?.kind === 'do' && dollarStack.length === 0) {
             topLevelDoBodies.push(captureTopLevelDo);
             captureTopLevelDo = null;
+          }
+          if (captureFunctionBody !== null && closing?.kind === 'fn' && dollarStack.length === 0) {
+            functionBodies.push(captureFunctionBody);
+            captureFunctionBody = null;
           }
         } else {
           const before = out.replace(/\s+/g, ' ').trim().toLowerCase();
           let kind = 'block';
-          if (/\bdo\s*$/.test(before.slice(-16))) kind = 'do';
+          if (/\bdo(\s+language\s+plpgsql)?\s*$/.test(before.slice(-28))) kind = 'do';
           else if (/\bas\s*$/.test(before.slice(-12))) kind = 'fn';
           dollarStack.push({ tag, kind });
-          if (kind === 'do' && dollarStack.length === 1 && !captureTopLevelDo) {
+          if (kind === 'do' && dollarStack.length === 1 && captureTopLevelDo === null) {
             captureTopLevelDo = '';
+          }
+          if (kind === 'fn' && dollarStack.length === 1 && captureFunctionBody === null) {
+            captureFunctionBody = '';
           }
         }
         emit(' '.repeat(tag.length));
@@ -272,7 +285,7 @@ function sanitizeSql(sql) {
     i += 1;
   }
 
-  return { code: out, topLevelDoBodies };
+  return { code: out, topLevelDoBodies, functionBodies };
 }
 
 /** @param {string} sql */
@@ -335,16 +348,15 @@ function escapeRegExp(name) {
  */
 export function tableReferencePattern(schema, tableName) {
   const schemaLower = schema.toLowerCase();
-  const nameLower = tableName.toLowerCase();
-  const nameAlternates = [
-    escapeRegExp(quotedIdTokenForName(nameLower)),
-    escapeRegExp(nameLower),
-  ].join('|');
+  const nameAlternates = [escapeRegExp(quotedIdTokenForName(tableName))];
+  if (tableName === tableName.toLowerCase()) {
+    nameAlternates.push(escapeRegExp(tableName));
+  }
   const schemaPart =
     schemaLower === 'public'
       ? `(?:(?:public|${escapeRegExp(quotedIdTokenForName('public'))})\\s*\\.\\s*)?`
       : `(?:${escapeRegExp(quotedIdTokenForName(schemaLower))}|${escapeRegExp(schemaLower)})\\s*\\.\\s*`;
-  return `${schemaPart}(?:${nameAlternates})`;
+  return `${schemaPart}(?:${nameAlternates.join('|')})`;
 }
 
 /**
@@ -366,29 +378,85 @@ export function extractCreateTableTargets(code) {
 
 /**
  * @param {string} code
- * @returns {string[]}
+ * @param {string[]} functionBodies
  */
-export function findUnexpandableDynamicSqlViolations(code) {
-  /** @type {string[]} */
-  const violations = [];
-  const patterns = [
-    [/\bexecute\s+(?!format\s*\(\s*«S)«S/i, 'EXECUTE literal string'],
-    [/\bexecute\s+'/i, 'EXECUTE literal string'],
-    [/\bexecute\s+format\s*\([^)]*%[sL]/i, 'EXECUTE format with %s or %L'],
-    [
-      /\bexecute\s+format\s*\([^)]*,\s*[^,)]+,\s*[^)]+\)/i,
-      'EXECUTE format with multiple substitution arguments',
-    ],
-    [/\bforeach\s+\w+\s+in\s+select\b/i, 'FOREACH … IN SELECT'],
-    [/\bexecute\b[^;]*\|\|/i, 'EXECUTE with string concatenation'],
-  ];
-  for (const [re, label] of patterns) {
-    if (re.test(code)) {
-      violations.push(`unexpandable dynamic SQL (${label})`);
-      break;
+function stripPlpgsqlBodies(code, bodies) {
+  let result = code;
+  for (const body of bodies) {
+    if (!body) continue;
+    const idx = result.indexOf(body);
+    if (idx !== -1) {
+      result = result.slice(0, idx) + ' '.repeat(body.length) + result.slice(idx + body.length);
     }
   }
+  return result;
+}
+
+/**
+ * @param {string} body
+ * @returns {string[]}
+ */
+function auditTopLevelDoBody(body) {
+  /** @type {string[]} */
+  const violations = [];
+  const hasExecute = /\bexecute\b/i.test(body);
+  if (/\bdo\s+language\s+plpgsql\b/i.test(body)) {
+    violations.push('unexpandable dynamic SQL (DO LANGUAGE plpgsql)');
+  }
+  if (hasExecute && /\bfor\s+[a-z_][a-z0-9_]*\s+in\s+select\b/i.test(body)) {
+    violations.push('unexpandable dynamic SQL (FOR … IN SELECT)');
+  }
+  if (
+    hasExecute &&
+    /\bforeach\b/i.test(body) &&
+    !/\bforeach\s+[a-z_][a-z0-9_]*\s+in\s+array\s+array\b/i.test(body)
+  ) {
+    violations.push('unexpandable dynamic SQL (FOREACH not IN ARRAY ARRAY)');
+  }
+  if (hasExecute && /\bloop\b/i.test(body) && !/\bforeach\b/i.test(body)) {
+    violations.push('unexpandable dynamic SQL (LOOP without expandable FOREACH)');
+  }
+  if (!hasExecute) return violations;
+  const executes = body.match(/\bexecute\b[^;]*/gi) ?? [];
+  for (const ex of executes) {
+    if (/execute\s+format\s*\(\s*«S[0-9a-f]+»\s*\)/i.test(ex)) {
+      violations.push('unexpandable dynamic SQL (EXECUTE format without arguments)');
+    } else if (!/execute\s+format\s*\(\s*«S[0-9a-f]+»\s*,/i.test(ex)) {
+      violations.push('unexpandable dynamic SQL (EXECUTE)');
+    } else if (/%[sSL]/i.test(ex)) {
+      violations.push('unexpandable dynamic SQL (EXECUTE format with %s or %L)');
+    }
+  }
+  if (/\bexecute\b[^;]*\|\|/i.test(body)) {
+    violations.push('unexpandable dynamic SQL (EXECUTE with concatenation)');
+  }
   return violations;
+}
+
+/**
+ * @param {string} code
+ * @param {string[]} topLevelDoBodies
+ * @param {string[]} functionBodies
+ * @returns {string[]}
+ */
+export function findUnexpandableDynamicSqlViolations(
+  code,
+  topLevelDoBodies = [],
+  functionBodies = [],
+) {
+  /** @type {string[]} */
+  const violations = [];
+  for (const body of topLevelDoBodies) {
+    violations.push(...auditTopLevelDoBody(body));
+  }
+  const stripped = stripPlpgsqlBodies(code, [...functionBodies, ...topLevelDoBodies]);
+  if (/\bdo\s+\$\$/i.test(stripped) || /\bdo\s+language\s+plpgsql\s+\$\$/i.test(stripped)) {
+    violations.push('unexpandable dynamic SQL (DO $$ anonymous block)');
+  }
+  if (/\bexecute\s+[a-z_][a-z0-9_]*\s*;/i.test(stripped)) {
+    violations.push('unexpandable dynamic SQL (EXECUTE variable)');
+  }
+  return [...new Set(violations)];
 }
 
 /**
@@ -402,24 +470,36 @@ function foreachRegionsOutsideIf(body) {
   let i = 0;
   const lower = body.toLowerCase();
   while (i < body.length) {
-    const rest = lower.slice(i);
-    if (rest.startsWith('if') && !/^if\s*not\s/.test(rest)) {
-      ifDepth += 1;
-      i += 2;
-      continue;
-    }
-    if (rest.startsWith('end if')) {
+    const slice = lower.slice(i);
+    const endIf = /^end\s+if\b/.exec(slice);
+    if (endIf) {
       ifDepth = Math.max(0, ifDepth - 1);
-      i += 6;
+      i += endIf[0].length;
       continue;
     }
-    const fe = /^foreach\s+\w+\s+in\s+array\s+array\s*\[/i.exec(body.slice(i));
+    const elsif = /^elsif\b/.exec(slice);
+    if (elsif) {
+      i += elsif[0].length;
+      continue;
+    }
+    const ifKw = /^if\b/.exec(slice);
+    if (ifKw) {
+      const after = slice.slice(ifKw[0].length);
+      if (/^\s+exists\b/.test(after) || /^\s+not\s+exists\b/.test(after)) {
+        i += ifKw[0].length;
+        continue;
+      }
+      ifDepth += 1;
+      i += ifKw[0].length;
+      continue;
+    }
+    const fe = /^foreach\s+[a-z_][a-z0-9_]*\s+in\s+array\s+array\s*\[/i.exec(slice);
     if (fe && ifDepth === 0) {
       const start = i;
-      const endLoop = /\bend\s+loop\s*;/i.exec(body.slice(i));
+      const endLoop = /\bend\s+loop\s*;/i.exec(slice);
       if (!endLoop) break;
-      regions.push({ start, end: i + endLoop.index + endLoop[0].length });
       i += endLoop.index + endLoop[0].length;
+      regions.push({ start, end: i });
       continue;
     }
     i += 1;
@@ -448,11 +528,19 @@ function parseForeachArrayNames(region) {
  * @param {string[]} [topLevelDoBodies]
  * @returns {{ expanded: string, violations: string[] }}
  */
-export function expandForeachExecuteFormatSql(sanitizedCode, topLevelDoBodies = []) {
+export function expandForeachExecuteFormatSql(
+  sanitizedCode,
+  topLevelDoBodies = [],
+  functionBodies = [],
+) {
   /** @type {string[]} */
   const statements = [];
   /** @type {string[]} */
-  const violations = findUnexpandableDynamicSqlViolations(sanitizedCode);
+  const violations = findUnexpandableDynamicSqlViolations(
+    sanitizedCode,
+    topLevelDoBodies,
+    functionBodies,
+  );
 
   for (const body of topLevelDoBodies) {
     for (const { start, end } of foreachRegionsOutsideIf(body)) {
@@ -552,6 +640,7 @@ function parseGrantPrivileges(privilegeList) {
   const privs = new Set();
   const lower = privilegeList.replace(/\s+/g, ' ').trim().toLowerCase();
   if (/^(all privileges|all)$/.test(lower)) {
+    privs.add('truncate');
     for (const p of REQUIRED_PRIVILEGES) privs.add(p);
     return privs;
   }
@@ -561,7 +650,7 @@ function parseGrantPrivileges(privilegeList) {
     const paren = part.indexOf('(');
     if (paren !== -1) part = part.slice(0, paren).trim();
     if (!part) continue;
-    for (const p of REQUIRED_PRIVILEGES) {
+    for (const p of [...REQUIRED_PRIVILEGES, 'truncate']) {
       if (new RegExp(`\\b${p}\\b`).test(part)) privs.add(p);
     }
   }
@@ -569,13 +658,49 @@ function parseGrantPrivileges(privilegeList) {
 }
 
 /**
+ * @param {string} clause
+ */
+function parseClientRolesFromClause(clause) {
+  const roles = new Set();
+  const lower = clause.replace(/\s+/g, ' ').trim().toLowerCase();
+  if (!/\bto\s+/.test(lower)) {
+    for (const role of CLIENT_EXPOSED_ROLES) roles.add(role);
+    return roles;
+  }
+  if (/\bto\s+public\b/.test(lower)) roles.add('public');
+  for (const role of CLIENT_EXPOSED_ROLES) {
+    if (new RegExp(`\\bto\\s+[^;]*\\b${role}\\b`).test(lower)) roles.add(role);
+  }
+  for (const tokenMatch of clause.matchAll(/«Q([0-9a-f]+)»/gi)) {
+    const decoded = Buffer.from(tokenMatch[1], 'hex').toString('utf8').toLowerCase();
+    if (CLIENT_EXPOSED_ROLES.includes(decoded)) roles.add(decoded);
+  }
+  for (const tokenMatch of clause.matchAll(/"([^"]+)"/g)) {
+    const decoded = tokenMatch[1].replace(/""/g, '"').toLowerCase();
+    if (CLIENT_EXPOSED_ROLES.includes(decoded)) roles.add(decoded);
+  }
+  return roles;
+}
+
+/**
  * @param {string} toClause
  */
 function parseGrantRoleSet(toClause) {
+  /** @type {Set<string>} */
   const roles = new Set();
-  const lower = toClause.replace(/\s+/g, ' ').trim().toLowerCase();
-  for (const role of [...REQUIRED_ROLES, 'anon', 'public']) {
-    if (new RegExp(`\\b${role}\\b`).test(lower)) roles.add(role);
+  const clause = toClause.replace(/\s+/g, ' ').trim();
+  const grantRoles = [...REQUIRED_ROLES, ...CLIENT_EXPOSED_ROLES];
+  const lower = clause.toLowerCase();
+  for (const role of grantRoles) {
+    if (new RegExp(`(?:^|[,\\s])${role}(?:[,\\s]|$)`).test(lower)) roles.add(role);
+  }
+  for (const tokenMatch of clause.matchAll(/«Q([0-9a-f]+)»/gi)) {
+    const decoded = Buffer.from(tokenMatch[1], 'hex').toString('utf8').toLowerCase();
+    if (grantRoles.includes(decoded)) roles.add(decoded);
+  }
+  for (const tokenMatch of clause.matchAll(/"([^"]+)"/g)) {
+    const decoded = tokenMatch[1].replace(/""/g, '"').toLowerCase();
+    if (grantRoles.includes(decoded)) roles.add(decoded);
   }
   return roles;
 }
@@ -605,16 +730,6 @@ function grantsByRoleForTable(code, schema, tableName) {
 }
 
 /**
- * @param {string} clause
- */
-function policyClauseTargetsClients(clause) {
-  const lower = clause.replace(/\s+/g, ' ').trim().toLowerCase();
-  if (!/\bto\s+/.test(lower)) return true;
-  if (/\bto\s+public\b/.test(lower)) return true;
-  return CLIENT_EXPOSED_ROLES.some((role) => new RegExp(`\\bto\\s+[^;]*\\b${role}\\b`).test(lower));
-}
-
-/**
  * @param {string} expr
  */
 function isAlwaysTrueExpression(expr) {
@@ -630,28 +745,48 @@ function isAlwaysTrueExpression(expr) {
 }
 
 /**
- * @param {string} clause
+ * @param {string} expr
  */
-function hasAuthScopePredicate(clause) {
-  return (
-    /\bauth\.uid\s*\(/.test(clause) ||
-    /\bauth\.jwt\b/.test(clause) ||
-    /\bcurrent_user\b/.test(clause) ||
-    /\bauth\.role\s*\(/.test(clause) ||
-    /\bprivate\.auth_is_/.test(clause) ||
-    /\bexists\s*\(/.test(clause)
-  );
+function isTrivialClientWriteExpression(expr) {
+  const e = expr.replace(/\s+/g, ' ').trim();
+  const lower = e.toLowerCase();
+  if (isAlwaysTrueExpression(e)) return true;
+  if (/\btrue\b/.test(lower) && /\bor\b/.test(lower)) return true;
+  if (/\bauth\.uid\s*\(\s*\)\s+is\s+not\s+null/i.test(e)) return true;
+  if (/\bauth\.role\s*\(/i.test(e)) return true;
+  if (/^\(?\s*exists\s*\(\s*select\s+1\s*\)\s*\)?$/i.test(e)) return true;
+  return false;
+}
+
+/**
+ * @param {string} expr
+ */
+function isStrictAuthScopeExpression(expr) {
+  const e = expr.replace(/\s+/g, ' ').trim();
+  if (!e || isTrivialClientWriteExpression(e)) return false;
+  if (/\bprivate\.auth_is_[a-z0-9_]+\s*\(/i.test(e)) return true;
+  if (/\bexists\s*\(\s*select\s+1\s+from\b/i.test(e)) return true;
+  if (
+    /[a-z_][a-z0-9_]*\s*=\s*(\(\s*select\s+)?auth\.uid\s*\(/i.test(e) &&
+    !/\bauth\.role\s*\(/i.test(e)
+  ) {
+    return true;
+  }
+  if (/\bor\b/i.test(e)) {
+    const parts = e.split(/\bor\b/i).map((p) => p.trim());
+    return parts.length > 0 && parts.every((part) => isStrictAuthScopeExpression(part));
+  }
+  return false;
 }
 
 /**
  * @param {string} clause lowercased policy text
  */
 function policyWriteActionIsOverlyBroad(clause) {
-  if (!policyClauseTargetsClients(clause)) return false;
+  const clientRoles = parseClientRolesFromClause(clause);
+  if (!clientRoles.size) return false;
   const forMatch = /\bfor\s+(all|insert|update|delete|select)\b/.exec(clause);
-  if (!forMatch) {
-    // PostgreSQL default FOR ALL when omitted on a permissive write-shaped policy
-  } else if (forMatch[1] === 'select' && !/\bfor\s+(insert|update|delete|all)\b/.test(clause)) {
+  if (forMatch?.[1] === 'select' && !/\bfor\s+(insert|update|delete|all)\b/.test(clause)) {
     return false;
   }
 
@@ -660,18 +795,21 @@ function policyWriteActionIsOverlyBroad(clause) {
 
   const usingMatch = /\busing\s*\(([^)]*)\)/.exec(clause);
   const checkMatch = /\bwith\s+check\s*\(([^)]*)\)/.exec(clause);
-  const usingBroad = usingMatch ? isAlwaysTrueExpression(usingMatch[1]) : false;
-  const checkBroad = checkMatch ? isAlwaysTrueExpression(checkMatch[1]) : false;
 
   if (action === 'insert') {
-    if (checkBroad || (usingBroad && !checkMatch)) return true;
-    if (!checkBroad && !usingBroad && !hasAuthScopePredicate(clause)) return true;
-    return false;
+    if (!checkMatch) return true;
+    return !isStrictAuthScopeExpression(checkMatch[1]);
   }
 
-  if (usingBroad || checkBroad) return true;
-  if (!hasAuthScopePredicate(clause)) return true;
-  return false;
+  const usingOk = usingMatch ? isStrictAuthScopeExpression(usingMatch[1]) : false;
+  const checkOk = checkMatch ? isStrictAuthScopeExpression(checkMatch[1]) : false;
+  if (action === 'all' || action === 'update' || action === 'delete') {
+    if (usingMatch && !usingOk) return true;
+    if (checkMatch && !checkOk) return true;
+    if (!usingMatch && !checkMatch) return true;
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -683,7 +821,7 @@ function findBroadWritePolicyViolations(code, schema, tableName) {
   const ref = tableReferencePattern(schema, tableName);
   const policyName = `(?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*)`;
   const re = new RegExp(
-    `\\bcreate\\s+policy\\s+${policyName}\\s+on\\s+${ref}(?=\\s|;|$)([^;]*)`,
+    `\\b(?:create|alter)\\s+policy\\s+${policyName}\\s+on\\s+${ref}(?=\\s|;|$)([^;]*)`,
     'gi',
   );
   /** @type {string[]} */
@@ -704,7 +842,7 @@ function findBroadWritePolicyViolations(code, schema, tableName) {
 function hasEnableRls(code, schema, tableName) {
   const ref = tableReferencePattern(schema, tableName);
   return new RegExp(
-    `\\balter\\s+table\\s+${ref}(?=\\s|;|$)\\s+enable\\s+row\\s+level\\s+security\\b`,
+    `\\balter\\s+table\\s+(?:only\\s+)?(?:if\\s+exists\\s+)?${ref}(?=\\s|;|$)\\s+enable\\s+row\\s+level\\s+security\\b`,
     'i',
   ).test(code);
 }
@@ -734,7 +872,7 @@ function collectReferencedPublicTables(code) {
   while ((m = createRe.exec(code))) add(parseQualifiedTableRef(m[1]));
 
   const alterRe =
-    /\balter\s+table\s+((?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*)(?:\s*\.\s*(?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*))?)/gi;
+    /\balter\s+table\s+(?:only\s+)?(?:if\s+exists\s+)?((?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*)(?:\s*\.\s*(?:«Q[0-9a-f]+»|[a-z_][a-z0-9_]*))?)/gi;
   while ((m = alterRe.exec(code))) add(parseQualifiedTableRef(m[1]));
 
   const policyRe =
@@ -756,20 +894,22 @@ function collectReferencedPublicTables(code) {
  */
 function findRlsStateViolations(code, schema, tableName) {
   const ref = tableReferencePattern(schema, tableName);
-  const enabled = new RegExp(
-    `\\balter\\s+table\\s+${ref}(?=\\s|;|$)\\s+enable\\s+row\\s+level\\s+security\\b`,
-    'i',
-  ).test(code);
-  const disabled = new RegExp(
-    `\\balter\\s+table\\s+${ref}(?=\\s|;|$)\\s+disable\\s+row\\s+level\\s+security\\b`,
-    'i',
-  ).test(code);
+  const enableRe = new RegExp(
+    `\\balter\\s+table\\s+(?:only\\s+)?(?:if\\s+exists\\s+)?${ref}(?=\\s|;|$)\\s+enable\\s+row\\s+level\\s+security\\b`,
+    'gi',
+  );
+  const disableRe = new RegExp(
+    `\\balter\\s+table\\s+(?:only\\s+)?(?:if\\s+exists\\s+)?${ref}(?=\\s|;|$)\\s+disable\\s+row\\s+level\\s+security\\b`,
+    'gi',
+  );
+  let lastEnable = -1;
+  let lastDisable = -1;
+  for (const m of code.matchAll(enableRe)) lastEnable = Math.max(lastEnable, m.index ?? 0);
+  for (const m of code.matchAll(disableRe)) lastDisable = Math.max(lastDisable, m.index ?? 0);
   /** @type {string[]} */
   const out = [];
   const key = `${schema}.${tableName}`;
-  if (enabled && disabled) {
-    out.push(`${key}: ENABLE then DISABLE ROW LEVEL SECURITY in the same file`);
-  } else if (disabled) {
+  if (lastDisable >= 0 && lastDisable > lastEnable) {
     out.push(`${key}: DISABLE ROW LEVEL SECURITY in the same file`);
   }
   return out;
@@ -785,13 +925,20 @@ function findClientWriteGrantViolations(code, schema, tableName) {
   const key = `${schema}.${tableName}`;
   /** @type {string[]} */
   const out = [];
-  for (const role of ['anon', 'public']) {
+  for (const role of CLIENT_EXPOSED_ROLES) {
     const held = grants.get(role) ?? new Set();
-    const writes = ['insert', 'update', 'delete'].filter((p) => held.has(p));
-    if (writes.length) {
-      out.push(
-        `${key}: GRANT ${writes.join(', ').toUpperCase()} TO ${role} is not allowed (SELECT only for ${role})`,
-      );
+    if (role === 'authenticated' || role === 'public') {
+      if (held.has('truncate')) {
+        out.push(`${key}: GRANT TRUNCATE TO ${role} is not allowed (TRUNCATE bypasses RLS)`);
+      }
+    }
+    if (role === 'anon' || role === 'public') {
+      const writes = ['insert', 'update', 'delete', 'truncate'].filter((p) => held.has(p));
+      if (writes.length) {
+        out.push(
+          `${key}: GRANT ${writes.join(', ').toUpperCase()} TO ${role} is not allowed (SELECT only for ${role})`,
+        );
+      }
     }
   }
   return out;
@@ -801,15 +948,47 @@ function findClientWriteGrantViolations(code, schema, tableName) {
  * @param {string} sql
  * @returns {string[]}
  */
+/**
+ * @param {string} code
+ */
+function findSchemaWideGrantViolations(code) {
+  const re = /\bgrant\s+([^;]+?)\s+on\s+all\s+tables\s+in\s+schema\s+([^;\s]+)\s+to\s+([^;]+)/gi;
+  /** @type {string[]} */
+  const out = [];
+  let match;
+  while ((match = re.exec(code))) {
+    const privs = parseGrantPrivileges(match[1]);
+    const roles = parseGrantRoleSet(match[3]);
+    const writes = ['insert', 'update', 'delete', 'truncate'].filter((p) => privs.has(p));
+    for (const role of roles) {
+      if (role === 'anon' || role === 'public') {
+        if (writes.length || privs.has('all')) {
+          out.push(
+            `schema ${match[2].trim()}: GRANT on ALL TABLES IN SCHEMA to ${role} must not include writes (found ${writes.join(', ') || 'ALL'})`,
+          );
+        }
+      }
+    }
+  }
+  return out;
+}
+
 export function buildEffectiveSanitizedCode(sql) {
-  const { code: sanitized, topLevelDoBodies } = sanitizeSql(sql);
+  const { code: sanitized, topLevelDoBodies, functionBodies } = sanitizeSql(sql);
   const { expanded, violations: expandViolations } = expandForeachExecuteFormatSql(
     sanitized,
     topLevelDoBodies,
+    functionBodies,
   );
-  if (expandViolations.length) return { code: sanitized, violations: expandViolations };
-  const code = expanded ? `${sanitized};\n${expanded}` : sanitized;
-  return { code, violations: [] };
+  if (expandViolations.length) {
+    return { code: sanitized, violations: expandViolations, functionBodies, topLevelDoBodies };
+  }
+  let code = sanitized;
+  if (expanded) {
+    const reSanitized = sqlCodeWithoutCommentsAndLiterals(expanded);
+    code = `${sanitized};\n${reSanitized}`;
+  }
+  return { code, violations: [], functionBodies, topLevelDoBodies };
 }
 
 /**
@@ -817,11 +996,16 @@ export function buildEffectiveSanitizedCode(sql) {
  * @returns {string[]}
  */
 export function findSqlFileViolations(sql) {
-  const { code, violations: pre } = buildEffectiveSanitizedCode(sql);
+  const {
+    code,
+    violations: pre,
+    functionBodies = [],
+    topLevelDoBodies = [],
+  } = buildEffectiveSanitizedCode(sql);
   if (pre.length) return pre;
 
   /** @type {string[]} */
-  const unexpandable = findUnexpandableDynamicSqlViolations(code);
+  const unexpandable = findUnexpandableDynamicSqlViolations(code, topLevelDoBodies, functionBodies);
   if (unexpandable.length) return unexpandable;
 
   /** @type {string[]} */
@@ -835,6 +1019,7 @@ export function findSqlFileViolations(sql) {
     seen.add(key);
 
     if (schema === 'public') {
+      violations.push(...findRlsStateViolations(code, schema, name));
       if (!hasEnableRls(code, schema, name)) {
         violations.push(`${key}: missing ENABLE ROW LEVEL SECURITY in the same file`);
       }
@@ -855,6 +1040,8 @@ export function findSqlFileViolations(sql) {
       }
     }
   }
+
+  violations.push(...findSchemaWideGrantViolations(code));
 
   for (const { schema, name } of collectReferencedPublicTables(code)) {
     if (seen.has(`${schema}.${name}`)) continue;

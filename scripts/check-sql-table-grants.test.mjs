@@ -266,7 +266,7 @@ CREATE POLICY p ON "Other Table" FOR SELECT TO authenticated USING (true);
 GRANT SELECT, INSERT, UPDATE, DELETE ON "Foo Bar" TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON "Foo Bar" TO service_role;`;
     expect(findCreateTableSetupViolations(sql)).toEqual(
-      expect.arrayContaining(['public.foo bar: missing CREATE POLICY in the same file']),
+      expect.arrayContaining(['public.Foo Bar: missing CREATE POLICY in the same file']),
     );
   });
 
@@ -465,6 +465,170 @@ CREATE TABLE "baz-qux" (id int);`;
         'public.baz-qux: missing ENABLE ROW LEVEL SECURITY in the same file',
       ]),
     );
+  });
+
+  it('rejects the four trivial authenticated write policy predicates (R2-B1)', () => {
+    const base = `CREATE TABLE public.t (id int);
+ALTER TABLE public.t ENABLE ROW LEVEL SECURITY;
+CREATE POLICY read ON public.t FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.t TO authenticated, service_role;`;
+    const cases = [
+      `CREATE POLICY bad ON public.t FOR INSERT TO authenticated WITH CHECK (auth.uid() IS NOT NULL)`,
+      `CREATE POLICY bad ON public.t FOR INSERT TO authenticated WITH CHECK (true OR auth.uid() IS NULL)`,
+      `CREATE POLICY bad ON public.t FOR INSERT TO authenticated WITH CHECK (EXISTS (SELECT 1))`,
+      `CREATE POLICY bad ON public.t FOR INSERT TO authenticated WITH CHECK (auth.role() = 'authenticated')`,
+    ];
+    for (const policy of cases) {
+      expect(findCreateTableSetupViolations(`${base}\n${policy};`)).toEqual(
+        expect.arrayContaining([
+          'public.t: overly broad write policy for anon/authenticated (PostgREST direct-write risk)',
+        ]),
+      );
+    }
+  });
+
+  it('accepts owner_id = auth.uid() and private.auth_is_* write scopes', () => {
+    const sql = `CREATE TABLE public.t (id int, owner_id uuid);
+ALTER TABLE public.t ENABLE ROW LEVEL SECURITY;
+CREATE POLICY read ON public.t FOR SELECT TO authenticated USING (true);
+CREATE POLICY ins ON public.t FOR INSERT TO authenticated WITH CHECK (owner_id = auth.uid());
+CREATE POLICY upd ON public.t FOR UPDATE TO authenticated USING (private.auth_is_owner(owner_id));
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.t TO authenticated, service_role;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual([]);
+  });
+
+  it('flags quoted role names in policy TO clauses', () => {
+    const sql = `CREATE TABLE public.t (id int);
+ALTER TABLE public.t ENABLE ROW LEVEL SECURITY;
+CREATE POLICY read ON public.t FOR SELECT TO "authenticated" USING (true);
+CREATE POLICY bad ON public.t FOR INSERT TO "authenticated" WITH CHECK (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.t TO authenticated, service_role;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining([
+        'public.t: overly broad write policy for anon/authenticated (PostgREST direct-write risk)',
+      ]),
+    );
+  });
+
+  it('flags schema-wide write grants to anon and TRUNCATE to authenticated', () => {
+    const schema = `GRANT INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO anon;`;
+    expect(findCreateTableSetupViolations(schema)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/ALL TABLES IN SCHEMA.*anon/)]),
+    );
+    const trunc = `GRANT SELECT, TRUNCATE ON public.leak TO authenticated;`;
+    expect(findCreateTableSetupViolations(trunc)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/TRUNCATE TO authenticated/)]),
+    );
+  });
+
+  it('handles ALTER TABLE ONLY / IF EXISTS for RLS disable and alter policy', () => {
+    const disabled = `CREATE TABLE public.t (id int);
+ALTER TABLE IF EXISTS public.t ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON public.t FOR SELECT TO authenticated USING (true);
+ALTER TABLE ONLY public.t DISABLE ROW LEVEL SECURITY;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.t TO authenticated, service_role;`;
+    expect(findCreateTableSetupViolations(disabled)).toEqual(
+      expect.arrayContaining(['public.t: DISABLE ROW LEVEL SECURITY in the same file']),
+    );
+    const toggled = disabled.replace(
+      'ALTER TABLE ONLY public.t DISABLE ROW LEVEL SECURITY;',
+      'ALTER TABLE ONLY public.t DISABLE ROW LEVEL SECURITY;\nALTER TABLE ONLY public.t ENABLE ROW LEVEL SECURITY;',
+    );
+    expect(findCreateTableSetupViolations(toggled)).toEqual([]);
+    const alterBroad = `CREATE TABLE public.t (id int);
+ALTER TABLE public.t ENABLE ROW LEVEL SECURITY;
+CREATE POLICY read ON public.t FOR SELECT TO authenticated USING (true);
+ALTER POLICY read ON public.t USING (true) WITH CHECK (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.t TO authenticated, service_role;`;
+    expect(findCreateTableSetupViolations(alterBroad)).toEqual(
+      expect.arrayContaining([
+        'public.t: overly broad write policy for anon/authenticated (PostgREST direct-write risk)',
+      ]),
+    );
+  });
+
+  it('keeps case-distinct quoted table names (Secret vs secret)', () => {
+    const sql = `CREATE TABLE "Secret" (id int);
+ALTER TABLE "Secret" ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON "Secret" FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON "Secret" TO authenticated, service_role;
+CREATE TABLE "secret" (id int);`;
+    expect(findCreateTableSetupViolations(sql)).toEqual(
+      expect.arrayContaining(['public.secret: missing ENABLE ROW LEVEL SECURITY in the same file']),
+    );
+    expect(findCreateTableSetupViolations(sql)).not.toEqual(
+      expect.arrayContaining(['public.Secret: missing ENABLE ROW LEVEL SECURITY in the same file']),
+    );
+  });
+
+  it('recognizes empty quoted identifiers and ignores ELSE-prefixed string literals', () => {
+    const empty = `CREATE TABLE "" (id int);
+ALTER TABLE "" ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON "" FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON "" TO authenticated, service_role;`;
+    expect(findCreateTableSetupViolations(empty)).toEqual([]);
+    const elseDefault = `CREATE TABLE public.t (
+  id int,
+  note text default ELSE'not an e-string'
+);
+ALTER TABLE public.t ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON public.t FOR SELECT TO authenticated USING (true);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.t TO authenticated, service_role;`;
+    expect(findCreateTableSetupViolations(elseDefault)).toEqual([]);
+  });
+
+  it('allows migration DO loops without EXECUTE and fails risky dynamic SQL', () => {
+    const backfill = `CREATE TABLE public.t (id int);
+ALTER TABLE public.t ENABLE ROW LEVEL SECURITY;
+CREATE POLICY p ON public.t FOR SELECT TO authenticated USING (true);
+DO $b$
+BEGIN
+  FOR r IN SELECT id FROM public.t LOOP
+    PERFORM 1;
+  END LOOP;
+END;
+$b$;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.t TO authenticated, service_role;`;
+    expect(findCreateTableSetupViolations(backfill)).toEqual([]);
+    const risky = `CREATE TABLE public.t (id int);
+DO $p$
+BEGIN
+  FOR r IN SELECT id FROM public.t LOOP
+    EXECUTE format('ALTER TABLE public.t ENABLE ROW LEVEL SECURITY');
+  END LOOP;
+END;
+$p$;`;
+    expect(findCreateTableSetupViolations(risky)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/unexpandable dynamic sql/i)]),
+    );
+    const noArgs = `DO $p$
+BEGIN
+  EXECUTE format('SELECT 1');
+END;
+$p$;`;
+    expect(findCreateTableSetupViolations(noArgs)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/EXECUTE format without arguments/i)]),
+    );
+  });
+
+  it('still expands FOREACH when IF NOT EXISTS and gift appear in the DO body', () => {
+    const sql = `CREATE TABLE public.child_rows (id int);
+DO $p$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_class) THEN
+    RAISE NOTICE 'gift shop';
+  END IF;
+  FOREACH child IN ARRAY ARRAY['child_rows'] LOOP
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', child);
+    EXECUTE format(
+      'CREATE POLICY c ON public.%I FOR SELECT TO authenticated USING (owner_id = auth.uid())',
+      child
+    );
+  END LOOP;
+END;
+$p$;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.child_rows TO authenticated, service_role;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual([]);
   });
 });
 
