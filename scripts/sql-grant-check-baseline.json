@@ -1,0 +1,39 @@
+{
+  "exceptions": [
+    {
+      "file": "sql/supabase-campaigns-owner-rls-hotfix-2026-07.sql",
+      "statement": "GRANT SELECT, INSERT, UPDATE, DELETE ON public.campaigns TO authenticated",
+      "reason": "public.campaigns: GRANT INSERT, UPDATE, DELETE TO authenticated is not allowed (SELECT only for authenticated)"
+    },
+    {
+      "file": "sql/vtt-v1-tabletop.sql",
+      "statement": "GRANT SELECT, INSERT, UPDATE, DELETE ON public.vtt_scenes TO authenticated",
+      "reason": "public.vtt_scenes: GRANT INSERT, UPDATE, DELETE TO authenticated is not allowed (SELECT only for authenticated)"
+    },
+    {
+      "file": "sql/vtt-v1-tabletop.sql",
+      "statement": "GRANT SELECT, INSERT, UPDATE, DELETE ON public.vtt_tokens TO authenticated",
+      "reason": "public.vtt_tokens: GRANT INSERT, UPDATE, DELETE TO authenticated is not allowed (SELECT only for authenticated)"
+    },
+    {
+      "file": "sql/vtt-v1-tabletop.sql",
+      "statement": "GRANT SELECT, INSERT, UPDATE, DELETE ON public.vtt_actions TO authenticated",
+      "reason": "public.vtt_actions: GRANT INSERT, UPDATE, DELETE TO authenticated is not allowed (SELECT only for authenticated)"
+    },
+    {
+      "file": "sql/role-quota-atomic.sql",
+      "statement": "EXECUTE v_sql USING p_row",
+      "reason": "unexpandable dynamic SQL (EXECUTE in function body)"
+    },
+    {
+      "file": "sql/characters-relational-cutover.sql",
+      "statement": "GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.character_species, public.character_feats, public.character_skills, public.character_traits, public.character_powers, public.character_techniques, public.character_inventory, public.character_conditions, public.character_named_notes, public.character_library_section_preferences, public.character_note_section_preferences, public.character_archetype_choices, public.character_proficiencies, public.character_temp_modifiers, public.character_affiliations, public.character_ability_components TO authenticated, service_role",
+      "reason": "public.character_species, public.character_feats, public.character_skills, public.character_traits, public.character_powers, public.character_techniques, public.character_inventory, public.character_conditions, public.character_named_notes, public.character_library_section_preferences, public.character_note_section_preferences, public.character_archetype_choices, public.character_proficiencies, public.character_temp_modifiers, public.character_affiliations, public.character_ability_components: GRANT INSERT, UPDATE, DELETE TO authenticated is not allowed (SELECT only for authenticated)"
+    },
+    {
+      "file": "sql/characters-relational-expand.sql",
+      "statement": "GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.character_species, public.character_feats, public.character_skills, public.character_traits, public.character_powers, public.character_techniques, public.character_inventory, public.character_conditions, public.character_named_notes, public.character_library_section_preferences, public.character_note_section_preferences, public.character_archetype_choices, public.character_proficiencies, public.character_temp_modifiers, public.character_affiliations, public.character_ability_components TO authenticated, service_role",
+      "reason": "public.character_species, public.character_feats, public.character_skills, public.character_traits, public.character_powers, public.character_techniques, public.character_inventory, public.character_conditions, public.character_named_notes, public.character_library_section_preferences, public.character_note_section_preferences, public.character_archetype_choices, public.character_proficiencies, public.character_temp_modifiers, public.character_affiliations, public.character_ability_components: GRANT INSERT, UPDATE, DELETE TO authenticated is not allowed (SELECT only for authenticated)"
+    }
+  ]
+}
