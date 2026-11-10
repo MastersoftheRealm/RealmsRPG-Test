@@ -15,7 +15,13 @@ import {
   parseRoleQuotaExceededDbError,
 } from '@/lib/role-quota-messages';
 import { validateJson, characterCreateSchema } from '@/lib/api-validation';
-import { prepareCharacterForCreate } from '@/lib/character-save';
+import {
+  migrateDeprecatedAncestryTraitFields,
+  prepareCharacterForCreate,
+  stripDeprecatedCharacterSaveKeys,
+} from '@/lib/character-save';
+import { leanCharacterArrayFieldsForRelationalSave } from '@/lib/character/relational-lean-save';
+import { characterRelationalValidationResponse } from '@/lib/character/character-relational-save-errors';
 import {
   normalizeCharacterForSave,
   normalizeCharacterOnLoad,
@@ -223,6 +229,9 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date().toISOString(),
       };
       normalizeCharacterForSave(newData);
+      migrateDeprecatedAncestryTraitFields(newData as Record<string, unknown>, relational);
+      stripDeprecatedCharacterSaveKeys(newData as Record<string, unknown>);
+      leanCharacterArrayFieldsForRelationalSave(newData as Record<string, unknown>);
       const newId = crypto.randomUUID();
 
       await ensureUserProfile(supabase, user.uid);
@@ -246,6 +255,12 @@ export async function POST(request: NextRequest) {
           createErr as { code?: string; message?: string; details?: string },
         );
         if (quota) return NextResponse.json(quota, { status: 403 });
+        const validation = characterRelationalValidationResponse(
+          'POST /api/characters (duplicate create)',
+          createErr as { code?: string; message?: string },
+          { userId: user.uid },
+        );
+        if (validation) return validation;
         throw createErr;
       }
       if (inserted.replayed) {
@@ -277,6 +292,12 @@ export async function POST(request: NextRequest) {
         createErr as { code?: string; message?: string; details?: string },
       );
       if (quota) return NextResponse.json(quota, { status: 403 });
+      const validation = characterRelationalValidationResponse(
+        'POST /api/characters (create)',
+        createErr as { code?: string; message?: string },
+        { userId: user.uid },
+      );
+      if (validation) return validation;
       throw createErr;
     }
     if (inserted.replayed) {
