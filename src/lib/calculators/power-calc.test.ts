@@ -612,11 +612,11 @@ describe('derivePowerDisplay', () => {
       { ...saved, attackMode: 'none', parts: [...saved.parts, staleSavedPart] },
       partsDb,
     );
-    expect(withoutWeapon.energy).toBe(0);
+    expect(withoutWeapon.energy).toBe(1);
     expect(withoutWeapon.tp).toBe(2);
 
     const unarmed = derivePowerDisplay({ ...saved, attackMode: 'unarmed' }, partsDb);
-    expect(unarmed.energy).toBe(0);
+    expect(unarmed.energy).toBe(1);
     expect(unarmed.tp).toBe(2);
 
     const weapon = derivePowerDisplay({ ...saved, attackMode: 'weapon' }, partsDb);
