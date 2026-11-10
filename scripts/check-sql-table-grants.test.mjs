@@ -1086,6 +1086,28 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.t TO service_role;`;
   });
 });
 
+describe('PR 564 R7 blockers', () => {
+  it('R7-B1: flags quoted security_invoker off/false on raw SQL', () => {
+    const violations = (sql) => findCreateTableSetupViolations(sql);
+    expect(violations(`ALTER VIEW public.v SET (security_invoker = 'false');`)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/security_invoker disabled or reset/i)]),
+    );
+    expect(violations(`ALTER VIEW public.v SET (security_invoker = 'off');`)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/security_invoker disabled or reset/i)]),
+    );
+    expect(violations(`ALTER VIEW public.v RESET (check_option, security_invoker);`)).toEqual(
+      expect.arrayContaining([expect.stringMatching(/security_invoker disabled or reset/i)]),
+    );
+    expect(violations(`ALTER VIEW public.v SET (security_invoker = on);`)).toEqual([]);
+  });
+
+  it('R7: skips MERGE statements in SELECT INTO tripwire', () => {
+    const sql = `MERGE INTO public.dst d USING public.src s ON true
+WHEN NOT MATCHED THEN INSERT DEFAULT VALUES;`;
+    expect(findCreateTableSetupViolations(sql)).toEqual([]);
+  });
+});
+
 describe('PR 564 round 4 reviewer blockers', () => {
   it('B1: catches EXECUTE when routine uses lowercase as', () => {
     const sql = `CREATE FUNCTION public.low_as() RETURNS void LANGUAGE plpgsql as $fn$

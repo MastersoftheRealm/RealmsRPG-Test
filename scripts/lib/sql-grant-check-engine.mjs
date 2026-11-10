@@ -1705,6 +1705,56 @@ function findTrivialPrivateAuthHelperRedefinitions(sql) {
   return finalizeSqlGrantViolations(out);
 }
 
+const SECURITY_INVOKER_ALLOWED = new Set(['true', 'on', 'yes', '1']);
+
+/**
+ * @param {string} raw assignment RHS (may be quoted)
+ */
+function parseSecurityInvokerAssignRhs(raw) {
+  let v = raw.trim();
+  const sq = /^'((?:[^']|'')*)'$/s.exec(v);
+  if (sq) return sq[1].replace(/''/g, "'").toLowerCase();
+  return v.replace(/^["']|["']$/g, '').toLowerCase();
+}
+
+/**
+ * ALTER VIEW security_invoker must run on raw SQL (top-level literals are blanked in sanitize).
+ * @param {string} rawSql
+ */
+function findAlterViewSecurityInvokerViolations(rawSql) {
+  /** @type {SqlGrantCheckViolation[]} */
+  const out = [];
+  const stmtRe = /\balter\s+view\b[^;]*/gi;
+  let match;
+  while ((match = stmtRe.exec(rawSql))) {
+    const stmt = match[0];
+    const resetMatch = /\breset\s*\(\s*([^)]+)\)/i.exec(stmt);
+    if (resetMatch) {
+      const opts = resetMatch[1].split(',').map((part) => part.trim().toLowerCase());
+      if (opts.includes('security_invoker')) {
+        out.push({
+          reason: 'unaudited object change (ALTER VIEW security_invoker disabled or reset)',
+          statement: normalizeSqlStatement(stmt),
+        });
+        continue;
+      }
+    }
+    const assignRe = /\bsecurity_invoker\s*=\s*([^),]+)/gi;
+    let assign;
+    while ((assign = assignRe.exec(stmt))) {
+      const val = parseSecurityInvokerAssignRhs(assign[1]);
+      if (!SECURITY_INVOKER_ALLOWED.has(val)) {
+        out.push({
+          reason: 'unaudited object change (ALTER VIEW security_invoker disabled or reset)',
+          statement: normalizeSqlStatement(stmt),
+        });
+        break;
+      }
+    }
+  }
+  return finalizeSqlGrantViolations(out);
+}
+
 function findUnauditedObjectCreationViolations(code, bodiesToStrip = []) {
   let scan = code;
   for (const body of bodiesToStrip) {
@@ -1725,18 +1775,11 @@ function findUnauditedObjectCreationViolations(code, bodiesToStrip = []) {
       statement: normalizeSqlStatement(match[0]),
     });
   }
-  const alterViewRe =
-    /\balter\s+view\b[^;]*(?:\bsecurity_invoker\s*=\s*(?:false|off|0|'false'|«S[0-9a-f]+»)|\breset\s*\(\s*security_invoker\s*\))[^;]*/gi;
-  while ((match = alterViewRe.exec(scan))) {
-    out.push({
-      reason: 'unaudited object change (ALTER VIEW security_invoker disabled or reset)',
-      statement: normalizeSqlStatement(match[0]),
-    });
-  }
   const selectIntoTargetRe =
     /\binto\s+(?:strict\s+)?(?:unlogged\s+)?(?:table\s+)?((?:«Q[0-9a-f]+»|"(?:[^"]|"")*"|[a-z_][a-z0-9_]*)(?:\s*\.\s*(?:«Q[0-9a-f]+»|"(?:[^"]|"")*"|[a-z_][a-z0-9_]*))?)/gi;
   for (const stmt of scan.split(';')) {
     const trimmed = stmt.trim();
+    if (/^\s*merge\b/i.test(trimmed)) continue;
     if (!/\bselect\b/i.test(trimmed) || !/\binto\b/i.test(trimmed)) continue;
     if (/\binsert\s+into\b/i.test(trimmed)) continue;
     if (/\binto\s+(?:strict\s+)?(?:temporary|temp)\b/i.test(trimmed)) continue;
@@ -1902,6 +1945,7 @@ export function findSqlFileViolations(sql, options = {}) {
     );
   }
 
+  violations.push(...findAlterViewSecurityInvokerViolations(sql));
   violations.push(
     ...findUnauditedObjectCreationViolations(code, [...functionBodies, ...topLevelDoBodies]),
   );
