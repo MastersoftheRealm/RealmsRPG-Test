@@ -1,0 +1,42 @@
+# High-risk paths (AGENTS.md "Risk by path"). Collin approves the engineering "how".
+# Takes effect only when branch protection has "Require review from Code Owners" on.
+# When Collin is unavailable, AGENTS.md "Fallback when Collin is unavailable" applies:
+# Kadin (repository admin) merges with the logged code-owner override, never a CI override,
+# and the PR is labelled collin-post-review. Kadin is not listed here on purpose, so an
+# ordinary approval from his account can never stand in for Collin's.
+
+# Database, SQL, migrations, seeds
+/sql/                              @CollinMorrison
+/supabase/                         @CollinMorrison
+/src/types/database.types.ts       @CollinMorrison
+
+# Auth, session, CSRF, roles, input validation
+/src/proxy.ts                      @CollinMorrison
+/src/lib/supabase/                 @CollinMorrison
+/src/app/(auth)/                   @CollinMorrison
+/src/lib/api-mutation-guard.ts     @CollinMorrison
+/src/lib/api-validation.ts         @CollinMorrison
+
+# Game rules and legality
+/src/lib/game/                     @CollinMorrison
+/src/lib/calculators/              @CollinMorrison
+/data/core-rules/                  @CollinMorrison
+
+# Admin tools that write or delete data
+/src/app/(main)/admin/             @CollinMorrison
+/src/app/api/admin/                @CollinMorrison
+
+# CI, tooling, settings, deploy
+/.github/                          @CollinMorrison
+/scripts/                          @CollinMorrison
+/.husky/                           @CollinMorrison
+/package.json                      @CollinMorrison
+/package-lock.json                 @CollinMorrison
+/next.config.ts                    @CollinMorrison
+/vercel.json                       @CollinMorrison
+/.env.example                      @CollinMorrison
+
+# The workflow itself
+/AGENTS.md                         @CollinMorrison
+/.cursor/rules/                    @CollinMorrison
+/src/docs/ai/ARCHITECTURE_CONSTITUTION.md @CollinMorrison

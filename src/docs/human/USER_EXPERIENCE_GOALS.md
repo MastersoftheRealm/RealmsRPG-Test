@@ -134,7 +134,7 @@ When implementing or reviewing **any** UI, copy, or flow that touches onboarding
 
 ### 5.3 Where to record UX feedback and work
 
-- **Raw owner feedback:** File in ClickUp. See `.cursor/rules/realms-tasks.mdc` Feedback Processing Protocol.
+- **Raw owner feedback:** File in ClickUp. See root `AGENTS.md` (ClickUp).
 - **New tasks:** File in **ClickUp** via Clickup Manager (or directly on Kadin's orders). Reference this doc in the task description if the work is UX/onboarding/retention.
 - **Done work:** Update task status; add notes and PR link. If a backlog item in this doc is completed, update Section 4 and Section 3 accordingly.
 
