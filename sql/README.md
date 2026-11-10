@@ -10,7 +10,7 @@
 |------|---------|
 | [`_TEMPLATE_new_table.sql`](_TEMPLATE_new_table.sql) | Required pattern for any **new** `public` table: RLS, policies, and explicit `GRANT` in the same file. CI scans changed `sql/**/*.sql` (except this template and `schema/` baselines). |
 | [`characters-relational-*.sql`](characters-relational-audit.sql) | ADR-0031 relational character expansion, compatibility and contract migrations, RPCs, verification, and rollback-safe smoke tests. The compatibility stage was applied to production on 2026-11-08; the contract/drop stage remains pending and requires a fresh backup. |
-| [`characters-direct-write-deny.sql`](characters-direct-write-deny.sql) | Removes owner INSERT/UPDATE RLS on `public.characters` so saves must use the relational RPCs. Keep SELECT and DELETE. Apply with [`characters-direct-write-deny-test.sql`](characters-direct-write-deny-test.sql) after explicit OK and backup; independent of the contract/drop stage. |
+| [`characters-direct-write-deny.sql`](characters-direct-write-deny.sql) | Removes owner INSERT/UPDATE RLS on `public.characters` so saves must use the relational RPCs. Keep SELECT and DELETE. **Rollback:** commented block at the bottom of that file (not a second migration). **Lock:** policy DDL only — no `ACCESS EXCLUSIVE` table lock (unlike the contract stage). After apply, update [`src/docs/SUPABASE_SCHEMA.md`](../src/docs/SUPABASE_SCHEMA.md) character RLS prose and refresh types/baseline when credentials are available. Smoke test: [`characters-direct-write-deny-test.sql`](characters-direct-write-deny-test.sql). |
 | [`vtt-v1-tabletop.sql`](vtt-v1-tabletop.sql) | Virtual tabletop schema for branch-local development. Verify target state and obtain approval before applying outside the branch's local database. |
 | [`codex-rename-source.sql`](codex-rename-source.sql) | Admin utility: replaces `public.rename_codex_source` only. Safe to re-run on non-prod when Kadin approves; first real rename is a live data change and needs a backup. |
 | [`role-quota-atomic.sql`](role-quota-atomic.sql) | `user_profiles` row lock + `assert_account_create_quota`, quota-aware `create_character_relational` and `insert_user_library_row_with_quota`. Apply after explicit OK and backup. |
@@ -32,7 +32,11 @@ After the compatibility stage is live and application saves use the relational R
 [`characters-direct-write-deny.sql`](characters-direct-write-deny.sql) and
 [`characters-direct-write-deny-test.sql`](characters-direct-write-deny-test.sql) to close the
 parent-row PostgREST bypass without waiting for the contract/drop stage. The contract migration
-repeats the same policy drops idempotently.
+repeats the same policy drops idempotently. Undo uses the commented rollback at the bottom of
+`characters-direct-write-deny.sql`. The deny migration holds only brief catalog locks on policy
+objects; it does not take the contract stage’s exclusive lock on `public.characters`. After a
+successful apply, update `src/docs/SUPABASE_SCHEMA.md` so the documented character RLS policies
+match live (owner INSERT/UPDATE removed; SELECT and DELETE unchanged).
 
 The compatibility smoke test rolls back its fixtures and covers mirror/lock parity, direct
 child-write denial, and atomic campaign character join/add/remove/read paths.
