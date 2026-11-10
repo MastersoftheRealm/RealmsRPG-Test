@@ -6,7 +6,7 @@ import { featTagsToNormalizeInput, parseFeatTagsFromDb } from '@/lib/codex/feat-
 import { fromPublicTable, type PublicTableName, type TablesInsert } from '@/lib/supabase/database';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
-import { invalidateCodexCollectionPublicCachesFromServerAction } from '@/lib/api/public-catalog-cache-invalidation';
+import { purgeCodexCollectionPublicCachesBestEffort } from '@/lib/api/public-catalog-cache-purge';
 import {
   assertCodexCollection,
   isColumnarCollection,
@@ -36,7 +36,7 @@ function revalidatePublicCodexCaches(collection: CodexCollection, table: string)
   revalidatePath('/admin/codex');
   revalidatePath('/admin/sources');
   revalidatePath('/codex');
-  invalidateCodexCollectionPublicCachesFromServerAction(collection, table);
+  purgeCodexCollectionPublicCachesBestEffort(collection, table, 'codex admin cache purge');
 }
 
 const CONFLICT_MESSAGE =

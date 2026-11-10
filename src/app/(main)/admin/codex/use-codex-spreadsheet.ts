@@ -20,6 +20,7 @@ import {
   HIDDEN_COLUMNS,
   READONLY_COLUMNS,
   searchableColumns as filterSearchableColumns,
+  spreadsheetPersistPayload,
   spreadsheetSourceRow,
   TAB_CONFIG,
   type CodexSpreadsheetTabId,
@@ -29,7 +30,6 @@ import {
   cellValueToString,
   changedColumns,
   generateNextNumericId,
-  rowDataWithoutId,
   stringToCellValue,
 } from './codex-spreadsheet-helpers';
 
@@ -288,7 +288,7 @@ export function useCodexSpreadsheet({ activeTab }: UseCodexSpreadsheetArgs) {
   const saveDirtyRow = useCallback(
     async (row: CodexSpreadsheetRow, usedIds: Set<string>): Promise<string | null> => {
       if (!collection) return 'No collection';
-      const data = rowDataWithoutId(row.data);
+      const data = spreadsheetPersistPayload(activeTab, row.data);
       if (!row.originalId) {
         const newId = generateNextNumericId(usedIds);
         usedIds.add(newId);
@@ -300,7 +300,7 @@ export function useCodexSpreadsheet({ activeTab }: UseCodexSpreadsheetArgs) {
       const result = await updateCodexDoc(collection, row.originalId, data, { expectedUpdatedAt });
       return result.success ? null : `Update ${row.originalId}: ${result.error}`;
     },
-    [collection],
+    [activeTab, collection],
   );
 
   const clearDirtyKey = useCallback((rowKey: string) => {

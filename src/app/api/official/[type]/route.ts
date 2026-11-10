@@ -8,7 +8,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import type { z } from 'zod';
-import { invalidateOfficialLibraryPublicCachesFromRouteHandler } from '@/lib/api/public-catalog-cache-invalidation';
+import { officialListedPublicCdnTags } from '@/lib/api/public-catalog-list-cache-tags';
+import { purgeOfficialLibraryPublicCachesBestEffort } from '@/lib/api/public-catalog-cache-purge';
 import {
   officialListMayUsePublicCdn,
   PRIVATE_MUST_REVALIDATE_CACHE_CONTROL,
@@ -16,11 +17,6 @@ import {
   PUBLIC_CDN_CACHE_CONTROL,
   withVercelCacheTags,
 } from '@/lib/api/public-cdn-cache';
-import {
-  OFFICIAL_LIBRARY_CACHE_TAG,
-  officialLibraryCacheTag,
-  officialPublicRouteCdnCacheTag,
-} from '@/lib/codex/cache-tags';
 import { createPublicClient } from '@/lib/supabase/public-client';
 import { fromPublicTable, type PublicTableName } from '@/lib/supabase/database';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
@@ -230,14 +226,6 @@ async function createOfficialReadClient(cookieLess: boolean): Promise<{
   return { supabase: await createClient(), usedPublicClient: false };
 }
 
-function officialListedPublicCdnTags(table: string, routeType: string): string[] {
-  return [
-    OFFICIAL_LIBRARY_CACHE_TAG,
-    officialLibraryCacheTag(table, true),
-    officialPublicRouteCdnCacheTag(routeType),
-  ];
-}
-
 function jsonOfficialListResponse(
   items: unknown[],
   cacheControl: string,
@@ -402,9 +390,7 @@ export async function POST(
         }
         if (updatedRows && updatedRows.length > 0) {
           const afterRow = updatedRows[0] as Record<string, unknown>;
-          let committed = false;
           try {
-            committed = true;
             await recordOfficialChangeBestEffort({
               entityType: 'codex_species',
               entityId: existingId,
@@ -415,9 +401,10 @@ export async function POST(
             });
             return NextResponse.json({ id: existingId });
           } finally {
-            if (committed) {
-              invalidateOfficialLibraryPublicCachesFromRouteHandler(SPECIES_TABLE);
-            }
+            purgeOfficialLibraryPublicCachesBestEffort(
+              SPECIES_TABLE,
+              'POST /api/official/[type] species update cache purge',
+            );
           }
         }
         return NextResponse.json({ error: 'Official item not found' }, { status: 404 });
@@ -430,9 +417,7 @@ export async function POST(
           .select('*')
           .single();
         if (!insertError) {
-          let committed = false;
           try {
-            committed = true;
             await recordOfficialChangeBestEffort({
               entityType: 'codex_species',
               entityId: id,
@@ -443,9 +428,10 @@ export async function POST(
             });
             return NextResponse.json({ id });
           } finally {
-            if (committed) {
-              invalidateOfficialLibraryPublicCachesFromRouteHandler(SPECIES_TABLE);
-            }
+            purgeOfficialLibraryPublicCachesBestEffort(
+              SPECIES_TABLE,
+              'POST /api/official/[type] species insert cache purge',
+            );
           }
         }
         if (insertError.code !== '23505') {
@@ -493,9 +479,7 @@ export async function POST(
         );
       }
       if (updatedRows && updatedRows.length > 0) {
-        let committed = false;
         try {
-          committed = true;
           await recordOfficialChangeBestEffort({
             entityType: table,
             entityId: existingId,
@@ -506,9 +490,10 @@ export async function POST(
           });
           return NextResponse.json({ id: existingId });
         } finally {
-          if (committed) {
-            invalidateOfficialLibraryPublicCachesFromRouteHandler(table);
-          }
+          purgeOfficialLibraryPublicCachesBestEffort(
+            table,
+            'POST /api/official/[type] update cache purge',
+          );
         }
       }
       return NextResponse.json({ error: 'Official item not found' }, { status: 404 });
@@ -533,9 +518,7 @@ export async function POST(
         insertError,
       );
     }
-    let committed = false;
     try {
-      committed = true;
       await recordOfficialChangeBestEffort({
         entityType: table,
         entityId: id,
@@ -546,9 +529,10 @@ export async function POST(
       });
       return NextResponse.json({ id });
     } finally {
-      if (committed) {
-        invalidateOfficialLibraryPublicCachesFromRouteHandler(table);
-      }
+      purgeOfficialLibraryPublicCachesBestEffort(
+        table,
+        'POST /api/official/[type] insert cache purge',
+      );
     }
   } catch (err) {
     logApiError('POST /api/official/[type]', err);
@@ -602,9 +586,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Item not found' }, { status: 404 });
     }
     const entityType = type === 'species' ? 'codex_species' : table;
-    let committed = false;
     try {
-      committed = true;
       await recordOfficialChangeBestEffort({
         entityType,
         entityId: validation.data.id,
@@ -618,9 +600,7 @@ export async function PATCH(
         catalogListing: validation.data.catalogListing,
       });
     } finally {
-      if (committed) {
-        invalidateOfficialLibraryPublicCachesFromRouteHandler(table);
-      }
+      purgeOfficialLibraryPublicCachesBestEffort(table, 'PATCH /api/official/[type] cache purge');
     }
   } catch (err) {
     logApiError('PATCH /api/official/[type]', err);
@@ -689,7 +669,10 @@ export async function DELETE(
       return NextResponse.json({ ok: true });
     } finally {
       if (committed) {
-        invalidateOfficialLibraryPublicCachesFromRouteHandler(table);
+        purgeOfficialLibraryPublicCachesBestEffort(
+          table,
+          'DELETE /api/official/[type] cache purge',
+        );
       }
     }
   } catch (err) {

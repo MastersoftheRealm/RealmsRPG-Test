@@ -4,8 +4,8 @@
  * Server Actions: `updateTag` (immediate data-cache miss; propagates to tagged CDN responses).
  * Route Handlers: `revalidateTag(tag, { expire: 0 })` (same, no stale body on the next GET).
  *
- * Purge only tags tied to the written slice (not the full codex CDN key) to stay under Vercel
- * per-request purge limits — full + all collections run only on source rename.
+ * Purge only tags tied to the written slice (not the full codex CDN key) to stay under Vercel's
+ * per-team per-second purge limit — full + all collections run only on source rename.
  */
 
 import { revalidateTag, updateTag } from 'next/cache';
@@ -23,6 +23,10 @@ import type { CodexCollection } from '@/lib/codex/collections';
 import { codexCollectionToPayloadKey } from '@/lib/codex/collection-to-payload-key';
 import type { CodexPayloadKey } from '@/types/codex';
 import { CODEX_PAYLOAD_KEYS } from '@/types/codex';
+import {
+  codexListedPublicCdnTags,
+  officialListedPublicCdnTags,
+} from '@/lib/api/public-catalog-list-cache-tags';
 
 const OFFICIAL_TABLE_TO_ROUTE_TYPE: Record<string, string> = {
   official_powers: 'powers',
@@ -53,7 +57,8 @@ function codexCollectionCdnTags(keys: readonly CodexPayloadKey[]): string[] {
   return keys.map((key) => codexPublicCollectionCdnCacheTag(key));
 }
 
-function codexSliceExpireTags(collection: CodexCollection, table: string): string[] {
+/** Tags expired after a codex collection write (strict superset of listed GET CDN tags). */
+export function codexWritePurgeCacheTags(collection: CodexCollection, table: string): string[] {
   const payloadKey = codexCollectionToPayloadKey(collection);
   const tags = [
     ...codexTableWriteCacheTags(table),
@@ -68,7 +73,11 @@ function codexSliceExpireTags(collection: CodexCollection, table: string): strin
     tags.push(officialPublicRouteCdnCacheTag('species'));
     tags.push(codexPublicCollectionCdnCacheTag('species'));
   }
-  return tags;
+  return uniqueTags(tags);
+}
+
+function codexSliceExpireTags(collection: CodexCollection, table: string): string[] {
+  return codexWritePurgeCacheTags(collection, table);
 }
 
 /** After an admin codex table or core_rules write — listed public GETs must refresh on next request. */
@@ -91,7 +100,8 @@ export function invalidateCodexApiAfterSourceRenameFromServerAction(
   expireTagsFromServerAction(tags);
 }
 
-function officialWriteTags(table: string): string[] {
+/** Tags expired after an official-library write (strict superset of listed GET CDN tags). */
+export function officialWritePurgeCacheTags(table: string): string[] {
   const tags = [...officialLibraryWriteCacheTags(table)];
   if (table === 'codex_species') {
     tags.push(...codexTableWriteCacheTags(table));
@@ -101,7 +111,11 @@ function officialWriteTags(table: string): string[] {
   if (routeType) {
     tags.push(officialPublicRouteCdnCacheTag(routeType));
   }
-  return tags;
+  return uniqueTags(tags);
+}
+
+function officialWriteTags(table: string): string[] {
+  return officialWritePurgeCacheTags(table);
 }
 
 /** After official library write inside a route handler. */
@@ -111,10 +125,13 @@ export function invalidateOfficialLibraryPublicCachesFromRouteHandler(table: str
 
 /** Tags attached to listed GET responses for this official table (for route-level freshness tests). */
 export function officialListedGetCacheTags(table: string): string[] {
-  return uniqueTags(officialWriteTags(table));
+  const routeType = OFFICIAL_TABLE_TO_ROUTE_TYPE[table];
+  if (!routeType) return [];
+  return uniqueTags(officialListedPublicCdnTags(table, routeType));
 }
 
 /** Tags attached to listed GET responses for a codex collection (for route-level freshness tests). */
 export function codexListedGetCacheTags(collection: CodexCollection): string[] {
-  return uniqueTags(codexSliceExpireTags(collection, collection));
+  const payloadKey = codexCollectionToPayloadKey(collection);
+  return uniqueTags(codexListedPublicCdnTags(new Set([payloadKey])));
 }

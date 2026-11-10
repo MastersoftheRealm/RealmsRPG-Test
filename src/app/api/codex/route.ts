@@ -41,12 +41,10 @@ import { CODEX_PAYLOAD_KEYS, type CodexPayload, type CodexPayloadKey } from '@/t
 import { CODEX_DATA_TABLES, type CodexDataTable } from '@/lib/codex/codex-tables';
 import { CODEX_API_TABLE_SELECT, omitCodexSourcesColumn } from '@/lib/codex/public-table-select';
 import {
-  codexApiTableCacheTag,
-  codexPublicCollectionCdnCacheTag,
-  codexPublicFullCdnCacheTag,
-  CODEX_API_CACHE_TAG,
-  CORE_RULES_CACHE_TAG,
-} from '@/lib/codex/cache-tags';
+  codexListedPublicCdnTags,
+  codexPayloadCacheTags,
+  CODEX_PAYLOAD_KEY_TABLES,
+} from '@/lib/api/public-catalog-list-cache-tags';
 import {
   CODEX_PUBLIC_ISR_SECONDS,
   readCachedPublicDataWhenValid,
@@ -57,20 +55,10 @@ import type { ArchetypeCategory } from '@/types/archetype';
 const CODEX_TABLES = CODEX_DATA_TABLES;
 type CodexTable = CodexDataTable;
 
-const COLLECTION_TABLES: Record<CodexPayloadKey, readonly CodexTable[]> = {
-  feats: ['codex_feats'],
-  skills: ['codex_skills'],
-  species: ['codex_species'],
-  traits: ['codex_traits'],
-  powerParts: ['codex_parts'],
-  techniqueParts: ['codex_parts'],
-  parts: ['codex_parts'],
-  itemProperties: ['codex_properties'],
-  equipment: ['codex_equipment'],
-  archetypes: ['codex_archetypes', 'codex_archetype_levels'],
-  creatureFeats: ['codex_creature_feats'],
-  coreRules: [],
-};
+const COLLECTION_TABLES = CODEX_PAYLOAD_KEY_TABLES satisfies Record<
+  CodexPayloadKey,
+  readonly CodexTable[]
+>;
 
 /** Normalize DB archetype type to a known category (defaults to martial when missing/unknown). */
 function toArchetypeCategory(raw: unknown): ArchetypeCategory {
@@ -148,19 +136,6 @@ async function selectTable(
   }
   throwUnlessCodexTableMissing(result.error);
   return result;
-}
-
-function codexPayloadCacheTags(keys: ReadonlySet<CodexPayloadKey>): string[] {
-  const tags = new Set<string>([CODEX_API_CACHE_TAG]);
-  for (const key of keys) {
-    for (const table of COLLECTION_TABLES[key]) {
-      tags.add(codexApiTableCacheTag(table));
-    }
-    if (key === 'coreRules') {
-      tags.add(CORE_RULES_CACHE_TAG);
-    }
-  }
-  return [...tags];
 }
 
 function isCacheableCodexApiPayload(
@@ -449,18 +424,6 @@ async function createCodexReadClient(cookieLess: boolean): Promise<{
     if (publicClient) return { supabase: publicClient, usedPublicClient: true };
   }
   return { supabase: await createClient(), usedPublicClient: false };
-}
-
-function codexListedPublicCdnTags(keys: ReadonlySet<CodexPayloadKey>): string[] {
-  const tags = [...codexPayloadCacheTags(keys)];
-  if (keys.size === CODEX_PAYLOAD_KEYS.length) {
-    tags.push(codexPublicFullCdnCacheTag());
-  } else {
-    for (const key of keys) {
-      tags.push(codexPublicCollectionCdnCacheTag(key));
-    }
-  }
-  return tags;
 }
 
 function jsonCodexPayloadResponse(

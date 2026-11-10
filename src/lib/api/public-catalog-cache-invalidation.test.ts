@@ -15,10 +15,12 @@ import {
 } from '@/lib/codex/cache-tags';
 import {
   codexListedGetCacheTags,
+  codexWritePurgeCacheTags,
   invalidateCodexApiAfterSourceRenameFromServerAction,
   invalidateCodexCollectionPublicCachesFromServerAction,
   invalidateOfficialLibraryPublicCachesFromRouteHandler,
   officialListedGetCacheTags,
+  officialWritePurgeCacheTags,
 } from './public-catalog-cache-invalidation';
 
 describe('public-catalog-cache-invalidation', () => {
@@ -51,16 +53,25 @@ describe('public-catalog-cache-invalidation', () => {
 
   it('listed GET cache tags are a subset of official route handler purge tags', () => {
     const listedTags = officialListedGetCacheTags('official_powers');
-    invalidateOfficialLibraryPublicCachesFromRouteHandler('official_powers');
+    const writeTags = officialWritePurgeCacheTags('official_powers');
+    expect(writeTags.length).toBeGreaterThan(listedTags.length);
     for (const tag of listedTags) {
+      expect(writeTags).toContain(tag);
+    }
+    invalidateOfficialLibraryPublicCachesFromRouteHandler('official_powers');
+    for (const tag of writeTags) {
       expect(revalidateTag).toHaveBeenCalledWith(tag, { expire: 0 });
     }
   });
 
-  it('listed codex GET cache tags match server-action purge tags for a collection', () => {
+  it('listed codex GET cache tags are a subset of server-action purge tags for a collection', () => {
     const listedTags = codexListedGetCacheTags('core_rules');
-    invalidateCodexCollectionPublicCachesFromServerAction('core_rules', 'core_rules');
+    const writeTags = codexWritePurgeCacheTags('core_rules', 'core_rules');
     for (const tag of listedTags) {
+      expect(writeTags).toContain(tag);
+    }
+    invalidateCodexCollectionPublicCachesFromServerAction('core_rules', 'core_rules');
+    for (const tag of writeTags) {
       expect(updateTag).toHaveBeenCalledWith(tag);
     }
     expect(listedTags).toContain(CORE_RULES_CACHE_TAG);

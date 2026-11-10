@@ -207,6 +207,19 @@ export function searchableColumns(columns: string[]): string[] {
   return columns.filter((col) => !READONLY_COLUMNS.has(col));
 }
 
+/** Row payload for spreadsheet Save all — omits id, hidden, and derived display columns. */
+export function spreadsheetPersistPayload(
+  tab: CodexSpreadsheetTabId,
+  row: Record<string, unknown>,
+): Record<string, unknown> {
+  const derived = DERIVED_COLUMNS[tab];
+  return Object.fromEntries(
+    Object.entries(row)
+      .filter(([key]) => key !== 'id' && !HIDDEN_COLUMNS.has(key) && !derived.has(key))
+      .map(([key, value]) => [key, value === undefined ? null : value]),
+  );
+}
+
 /** Known boolean columns (spreadsheet uses checkbox). */
 export const BOOLEAN_COLUMNS = new Set([
   'flaw',
