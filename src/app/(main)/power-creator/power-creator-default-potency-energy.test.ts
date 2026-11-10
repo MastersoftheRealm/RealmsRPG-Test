@@ -15,7 +15,7 @@ function signedOutPowerPartsDb() {
   return selectPowerParts(loadRepoCodexParts());
 }
 
-describe('default Add Part energy floor (86e3jrfyu)', () => {
+describe('default Add Part energy floor', () => {
   it('signed-out catalog: Attack / Potency Increase alone publishes 1 EN in display and save', () => {
     const partsDb = signedOutPowerPartsDb();
     const nonMechanic = partsDb.filter((p) => !p.mechanic);
