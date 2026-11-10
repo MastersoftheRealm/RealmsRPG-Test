@@ -9,9 +9,10 @@ import { isAdmin } from '@/lib/admin';
 import { fromPublicTable, type TypedSupabaseClient } from '@/lib/supabase/database';
 import {
   codexResponseMayUsePublicCdn,
+  CODEX_PUBLIC_CDN_CACHE_CONTROL,
   PRIVATE_MUST_REVALIDATE_CACHE_CONTROL,
   PRIVATE_NO_STORE_CACHE_CONTROL,
-  PUBLIC_CDN_CACHE_CONTROL,
+  withVercelCacheTags,
 } from '@/lib/api/public-cdn-cache';
 import { createPublicClient } from '@/lib/supabase/public-client';
 import { createClient } from '@/lib/supabase/server';
@@ -19,7 +20,7 @@ import { logApiError } from '@/lib/api-error';
 import { codexGetQuerySchema, validateQuery } from '@/lib/api-validation';
 import { getSession } from '@/lib/supabase/session';
 import { coerceJsonRecord, parseArchetypePathData } from '@/lib/game/archetype-path';
-import { fetchCoreRules } from '@/lib/core-rules-server';
+import { fetchCoreRules, fetchCoreRulesUncached } from '@/lib/core-rules-server';
 import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
 import { selectPowerParts, selectTechniqueParts } from '@/lib/codex/part-type';
 import {
@@ -40,10 +41,10 @@ import { CODEX_PAYLOAD_KEYS, type CodexPayload, type CodexPayloadKey } from '@/t
 import { CODEX_DATA_TABLES, type CodexDataTable } from '@/lib/codex/codex-tables';
 import { CODEX_API_TABLE_SELECT, omitCodexSourcesColumn } from '@/lib/codex/public-table-select';
 import {
-  codexApiTableCacheTag,
-  CODEX_API_CACHE_TAG,
-  CORE_RULES_CACHE_TAG,
-} from '@/lib/codex/cache-tags';
+  codexListedPublicCdnTags,
+  codexPayloadCacheTags,
+  CODEX_PAYLOAD_KEY_TABLES,
+} from '@/lib/api/public-catalog-list-cache-tags';
 import {
   CODEX_PUBLIC_ISR_SECONDS,
   readCachedPublicDataWhenValid,
@@ -54,20 +55,10 @@ import type { ArchetypeCategory } from '@/types/archetype';
 const CODEX_TABLES = CODEX_DATA_TABLES;
 type CodexTable = CodexDataTable;
 
-const COLLECTION_TABLES: Record<CodexPayloadKey, readonly CodexTable[]> = {
-  feats: ['codex_feats'],
-  skills: ['codex_skills'],
-  species: ['codex_species'],
-  traits: ['codex_traits'],
-  powerParts: ['codex_parts'],
-  techniqueParts: ['codex_parts'],
-  parts: ['codex_parts'],
-  itemProperties: ['codex_properties'],
-  equipment: ['codex_equipment'],
-  archetypes: ['codex_archetypes', 'codex_archetype_levels'],
-  creatureFeats: ['codex_creature_feats'],
-  coreRules: [],
-};
+const COLLECTION_TABLES = CODEX_PAYLOAD_KEY_TABLES satisfies Record<
+  CodexPayloadKey,
+  readonly CodexTable[]
+>;
 
 /** Normalize DB archetype type to a known category (defaults to martial when missing/unknown). */
 function toArchetypeCategory(raw: unknown): ArchetypeCategory {
@@ -128,45 +119,23 @@ function throwUnlessCodexTableMissing(error: TableError): void {
 }
 
 /** Skipped tables resolve empty so the mapping below stays one code path. */
-function selectTable(
+async function selectTable(
   supabase: TypedSupabaseClient,
   table: CodexTable,
   needed: ReadonlySet<CodexTable>,
-): PromiseLike<TableResult> {
-  if (!needed.has(table)) return Promise.resolve({ data: [], error: null });
+): Promise<TableResult> {
+  if (!needed.has(table)) return { data: [], error: null };
   const columns = CODEX_API_TABLE_SELECT[table];
-  const tableTag = codexApiTableCacheTag(table);
-  return readCachedPublicDataWhenValid(
-    ['codex-api', table, columns],
-    [CODEX_API_CACHE_TAG, tableTag],
-    CODEX_PUBLIC_ISR_SECONDS,
-    async () => {
-      let result = (await fromPublicTable(supabase, table).select(columns)) as TableResult;
-      // Skills and properties name `sources`. If that column is missing, retry once
-      // without it so mapCodexSources can still read the singular `source` label.
-      // A missing column must not cache as an empty catalog.
-      if (isMissingSourcesColumn(result.error) && columns.includes('sources')) {
-        const fallbackColumns = omitCodexSourcesColumn(columns);
-        result = (await fromPublicTable(supabase, table).select(fallbackColumns)) as TableResult;
-      }
-      throwUnlessCodexTableMissing(result.error);
-      return result;
-    },
-    (result) => !result.error && (result.data?.length ?? 0) > 0,
-  );
-}
-
-function codexPayloadCacheTags(keys: ReadonlySet<CodexPayloadKey>): string[] {
-  const tags = new Set<string>([CODEX_API_CACHE_TAG]);
-  for (const key of keys) {
-    for (const table of COLLECTION_TABLES[key]) {
-      tags.add(codexApiTableCacheTag(table));
-    }
-    if (key === 'coreRules') {
-      tags.add(CORE_RULES_CACHE_TAG);
-    }
+  let result = (await fromPublicTable(supabase, table).select(columns)) as TableResult;
+  // Skills and properties name `sources`. If that column is missing, retry once
+  // without it so mapCodexSources can still read the singular `source` label.
+  // A missing column must not cache as an empty catalog.
+  if (isMissingSourcesColumn(result.error) && columns.includes('sources')) {
+    const fallbackColumns = omitCodexSourcesColumn(columns);
+    result = (await fromPublicTable(supabase, table).select(fallbackColumns)) as TableResult;
   }
-  return [...tags];
+  throwUnlessCodexTableMissing(result.error);
+  return result;
 }
 
 function isCacheableCodexApiPayload(
@@ -235,7 +204,9 @@ async function buildCodexPayloadUncached(
     selectTable(supabase, 'codex_archetype_levels', needed),
     selectTable(supabase, 'codex_creature_feats', needed),
     keys.has('coreRules')
-      ? fetchCoreRules(supabase)
+      ? includeUnlisted
+        ? fetchCoreRulesUncached(supabase)
+        : fetchCoreRules(supabase)
       : Promise.resolve({} as Awaited<ReturnType<typeof fetchCoreRules>>),
   ]);
 
@@ -455,6 +426,18 @@ async function createCodexReadClient(cookieLess: boolean): Promise<{
   return { supabase: await createClient(), usedPublicClient: false };
 }
 
+function jsonCodexPayloadResponse(
+  body: Partial<CodexPayload>,
+  cacheControl: string,
+  keys: ReadonlySet<CodexPayloadKey>,
+): NextResponse {
+  const response = NextResponse.json(body, { headers: { 'Cache-Control': cacheControl } });
+  if (cacheControl === CODEX_PUBLIC_CDN_CACHE_CONTROL) {
+    return withVercelCacheTags(response, codexListedPublicCdnTags(keys));
+  }
+  return response;
+}
+
 function codexCacheControlHeader(
   keys: ReadonlySet<CodexPayloadKey>,
   body: Partial<CodexPayload>,
@@ -474,7 +457,7 @@ function codexCacheControlHeader(
     return PRIVATE_NO_STORE_CACHE_CONTROL;
   }
   if (codexResponseMayUsePublicCdn(keys, body)) {
-    return PUBLIC_CDN_CACHE_CONTROL;
+    return CODEX_PUBLIC_CDN_CACHE_CONTROL;
   }
   return PRIVATE_MUST_REVALIDATE_CACHE_CONTROL;
 }
@@ -508,14 +491,16 @@ export async function GET(request: NextRequest | Request) {
     }
     const cookieLessRead = !debug && !includeUnlistedRequested;
     const { supabase, usedPublicClient } = await createCodexReadClient(cookieLessRead);
-    const body = await fetchCodexFromClient(supabase, keys, includeUnlisted);
+    const body = includeUnlisted
+      ? await buildCodexPayloadUncached(supabase, keys, includeUnlisted)
+      : await fetchCodexFromClient(supabase, keys, includeUnlisted);
     const cacheControl = codexCacheControlHeader(keys, body, {
       debug,
       includeUnlisted,
       includeUnlistedRequested,
       usedPublicClient,
     });
-    return NextResponse.json(body, { headers: { 'Cache-Control': cacheControl } });
+    return jsonCodexPayloadResponse(body, cacheControl, keys);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown database error';
     const code =

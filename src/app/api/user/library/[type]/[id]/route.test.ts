@@ -25,15 +25,21 @@ vi.mock('@/lib/entity-image-enrich-server', () => ({
   enrichRowsWithBankImageUrls: vi.fn(() => Promise.resolve()),
 }));
 
+vi.mock('@/lib/admin', () => ({
+  isAdmin: vi.fn(),
+}));
+
 import { GET, PATCH, DELETE } from './route';
 import { getSession } from '@/lib/supabase/session';
 import { createClient } from '@/lib/supabase/server';
 import { standardLimiter } from '@/lib/rate-limit';
+import { isAdmin } from '@/lib/admin';
 import { USER_LIBRARY_COLUMNAR_TABLES } from '@/lib/library-columnar-keys';
 
 const mockGetSession = vi.mocked(getSession);
 const mockCreateClient = vi.mocked(createClient);
 const mockStandardLimiterCheck = vi.mocked(standardLimiter.check);
+const mockIsAdmin = vi.mocked(isAdmin);
 
 const OWNER = { uid: 'owner-user', email: 'owner@example.com' };
 const OTHER = { uid: 'other-user', email: 'other@example.com' };
@@ -253,6 +259,7 @@ describe('GET /api/user/library/[type]/[id]', () => {
 describe('PATCH /api/user/library/[type]/[id]', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockIsAdmin.mockResolvedValue(false);
     mockStandardLimiterCheck.mockResolvedValue({
       success: true,
       remaining: 29,
@@ -352,6 +359,43 @@ describe('PATCH /api/user/library/[type]/[id]', () => {
 
     expect(response.status).toBe(400);
     expect(supabase.lastUpdate()).toBeNull();
+  });
+
+  it('PAGES4-018: non-admin PATCH strips image fields before update', async () => {
+    const row = makeLibraryRow('pow-owned', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    mockIsAdmin.mockResolvedValue(false);
+    const supabase = createMockSupabase(row);
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await PATCH(
+      makePatchRequest('powers', 'pow-owned', {
+        imageUrl: 'https://evil.example/art.jpg',
+        imageId: '11111111-1111-4111-8111-111111111111',
+      }),
+      params('powers', 'pow-owned'),
+    );
+
+    expect(response.status).toBe(200);
+    expect(supabase.lastUpdate()?.image_id).toBe('11111111-1111-4111-8111-111111111111');
+    expect(supabase.lastUpdate()?.image_url).toBeUndefined();
+  });
+
+  it('PAGES4-018: admin PATCH may persist image_id', async () => {
+    const row = makeLibraryRow('pow-owned', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    mockIsAdmin.mockResolvedValue(true);
+    const supabase = createMockSupabase(row);
+    mockCreateClient.mockResolvedValue(supabase as never);
+    const imageId = '33333333-3333-4333-8333-333333333333';
+
+    const response = await PATCH(
+      makePatchRequest('powers', 'pow-owned', { imageId, imageUrl: 'https://cdn.test/art.jpg' }),
+      params('powers', 'pow-owned'),
+    );
+
+    expect(response.status).toBe(200);
+    expect(supabase.lastUpdate()?.image_id).toBe(imageId);
   });
 });
 

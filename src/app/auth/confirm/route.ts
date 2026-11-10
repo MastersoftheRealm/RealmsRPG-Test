@@ -8,6 +8,7 @@
 
 import type { EmailOtpType, User } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
+import { createSupabaseAuthCookieMethods } from '@/lib/supabase/supabase-auth-cookies';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { createUserProfileAction } from '@/app/(auth)/actions';
@@ -57,17 +58,18 @@ export async function GET(request: Request) {
   const cookieStore = await cookies();
   const successRedirect = NextResponse.redirect(buildAuthRedirectUrl(request, redirectTo));
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
-    cookies: {
-      getAll() {
-        return cookieStore.getAll();
-      },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value, options }) => {
+    cookies: createSupabaseAuthCookieMethods({
+      getAll: () => cookieStore.getAll(),
+      set: (name, value, options) => {
+        if (options === undefined) {
+          cookieStore.set(name, value);
+          successRedirect.cookies.set(name, value);
+        } else {
           cookieStore.set(name, value, options);
           successRedirect.cookies.set(name, value, options);
-        });
+        }
       },
-    },
+    }),
   });
 
   if (code) {

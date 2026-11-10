@@ -21,6 +21,10 @@ BEGIN
 END;
 $parity_guard$;
 
+-- Same parent-row write boundary as characters-direct-write-deny.sql (idempotent).
+DROP POLICY IF EXISTS "Users can insert own characters" ON public.characters;
+DROP POLICY IF EXISTS "Users can update own characters" ON public.characters;
+
 DROP TRIGGER IF EXISTS sync_character_data_compat ON public.characters;
 DROP FUNCTION IF EXISTS public.sync_character_data_compat_trigger();
 
@@ -110,6 +114,8 @@ BEGIN
   END IF;
   PERFORM public.assert_character_document_mapped(p_document);
 
+  PERFORM public.lock_user_profile_for_writes(v_owner_id);
+
   IF p_client_request_id IS NOT NULL THEN
     SELECT id INTO v_existing_id FROM public.characters
     WHERE user_id = v_owner_id AND client_request_id = p_client_request_id;
@@ -117,6 +123,8 @@ BEGIN
       RETURN jsonb_build_object('status','replayed','id',v_existing_id);
     END IF;
   END IF;
+
+  PERFORM public.assert_account_create_quota(v_owner_id, 'characters');
 
   INSERT INTO public.characters (
     id, user_id, created_at, updated_at, client_request_id,

@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { VIEWPORTS, THEMES, SCREENSHOT_PAGES, themeInit } from './targets';
+import {
+  prepareDeterministicScreenshotPage,
+  styleguideMobileScreenshotMasks,
+} from './screenshot-settle';
 
 /**
  * Full-page visual baselines across breakpoints x themes for deterministic routes.
@@ -14,11 +18,12 @@ for (const vp of VIEWPORTS) {
         test(pageDef.name, async ({ page, context }) => {
           await context.addInitScript(themeInit(theme), theme);
           await page.goto(pageDef.path, { waitUntil: 'load' });
-          // Settle webfonts + any first-paint layout before snapping.
-          await page.evaluate(() => (document as Document).fonts?.ready);
-          await page.waitForTimeout(350);
+          await prepareDeterministicScreenshotPage(page, pageDef, vp.name);
+
+          const isMobileStyleguide = pageDef.name === 'styleguide' && vp.name === 'mobile';
           await expect(page).toHaveScreenshot(`${pageDef.name}-${vp.name}-${theme}.png`, {
             fullPage: true,
+            ...(isMobileStyleguide ? { mask: styleguideMobileScreenshotMasks(page) } : {}),
           });
         });
       }

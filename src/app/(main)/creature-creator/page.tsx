@@ -76,6 +76,7 @@ function CreatureCreatorContent() {
     save,
     handleSave,
     handleReset,
+    confirmReset,
     handleLoadCreature,
     showResetConfirm,
     setShowResetConfirm,
@@ -133,7 +134,6 @@ function CreatureCreatorContent() {
     mergeCreatureFeatsOnAdd,
     initialState,
     clearSessionDraftCache,
-    acceptDraft,
   } = ws;
 
   const overBudgetNotification = useMemo(() => buildCreatureOverBudgetNotification(stats), [stats]);
@@ -184,16 +184,17 @@ function CreatureCreatorContent() {
           }) ?? '',
         ...creatorPublishSaveAsCopyActions(save),
       }}
+      emptyOverwrite={{
+        isOpen: save.showEmptyOverwriteConfirm,
+        onClose: () => save.setShowEmptyOverwriteConfirm(false),
+        onConfirm: () => void save.confirmEmptyOverwrite(),
+        title: save.emptyOverwriteTitle,
+        description: save.emptyOverwriteDescription,
+      }}
       resetConfirm={{
         isOpen: showResetConfirm,
         onClose: () => setShowResetConfirm(false),
-        onConfirm: () => {
-          setCreature(initialState);
-          save.forgetLoadedLibraryItem();
-          acceptDraft();
-          clearSessionDraftCache();
-          setShowResetConfirm(false);
-        },
+        onConfirm: () => confirmReset(initialState, clearSessionDraftCache),
         title: 'Restart Creature',
         description:
           'Are you sure you want to reset all creature data? This will clear all fields and cannot be undone.',
@@ -482,8 +483,8 @@ function CreatureCreatorContent() {
         isAdmin={isAdmin}
         creature={creature}
         creatureLevel={creatureLevel}
-        creatureAbilityMin={getCreatureAbilityBounds(ws.rules).min}
-        creatureAbilityMax={getCreatureAbilityBounds(ws.rules).max}
+        creatureAbilityMin={getCreatureAbilityBounds().min}
+        creatureAbilityMax={getCreatureAbilityBounds().max}
         stats={stats}
         skillPointsHelp={skillPointsHelp}
         skillAllocations={skillAllocations}

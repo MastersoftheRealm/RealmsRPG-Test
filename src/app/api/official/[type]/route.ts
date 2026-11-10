@@ -8,18 +8,20 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import type { z } from 'zod';
-import { revalidateTag } from 'next/cache';
-import { codexTableWriteCacheTags, officialLibraryWriteCacheTags } from '@/lib/codex/cache-tags';
+import { officialListedPublicCdnTags } from '@/lib/api/public-catalog-list-cache-tags';
+import { purgeOfficialLibraryPublicCachesBestEffort } from '@/lib/api/public-catalog-cache-purge';
 import {
   officialListMayUsePublicCdn,
   PRIVATE_MUST_REVALIDATE_CACHE_CONTROL,
   PRIVATE_NO_STORE_CACHE_CONTROL,
   PUBLIC_CDN_CACHE_CONTROL,
+  withVercelCacheTags,
 } from '@/lib/api/public-cdn-cache';
 import { createPublicClient } from '@/lib/supabase/public-client';
+import { fromPublicTable, type PublicTableName } from '@/lib/supabase/database';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
-import { getSession, requireLiveUser } from '@/lib/supabase/session';
-import { isAdmin } from '@/lib/admin';
+import { getSession } from '@/lib/supabase/session';
+import { isAdmin, requireLiveAdminSession } from '@/lib/admin';
 import {
   validateJson,
   verifyMutationRequest,
@@ -42,6 +44,8 @@ import {
 import {
   fetchCachedOfficialColumnarItems,
   fetchCachedOfficialSpeciesItems,
+  fetchUncachedOfficialColumnarItems,
+  fetchUncachedOfficialSpeciesItems,
 } from '@/lib/official-library-get-payload';
 import { allocateCodexNumericId, retireCodexId } from '@/lib/codex/id-allocation';
 import {
@@ -144,6 +148,10 @@ function filterSpeciesCodexRow(row: Record<string, unknown>): Record<string, unk
   return out;
 }
 
+function officialTable(supabase: ReturnType<typeof createServiceRoleClient>, table: string) {
+  return fromPublicTable(supabase, table as PublicTableName);
+}
+
 function catalogListingFromBody(body: Record<string, unknown>): CatalogListing | undefined {
   const raw = body.catalogListing ?? body.catalog_listing;
   if (raw === undefined) return undefined;
@@ -160,8 +168,7 @@ async function officialNameConflictForUpdate(
   const name = typeof rawName === 'string' ? rawName.trim() : '';
   if (!name) return null;
 
-  const { data: current, error: currentError } = await supabase
-    .from(table)
+  const { data: current, error: currentError } = await officialTable(supabase, table)
     .select('name')
     .eq('id', existingId)
     .maybeSingle();
@@ -178,8 +185,7 @@ async function officialNameConflictForUpdate(
     return null;
   }
 
-  const { data: other, error } = await supabase
-    .from(table)
+  const { data: other, error } = await officialTable(supabase, table)
     .select('id')
     .ilike('name', name)
     .neq('id', existingId)
@@ -220,6 +226,19 @@ async function createOfficialReadClient(cookieLess: boolean): Promise<{
   return { supabase: await createClient(), usedPublicClient: false };
 }
 
+function jsonOfficialListResponse(
+  items: unknown[],
+  cacheControl: string,
+  table: string,
+  routeType: string,
+): NextResponse {
+  const response = NextResponse.json(items, { headers: { 'Cache-Control': cacheControl } });
+  if (cacheControl === PUBLIC_CDN_CACHE_CONTROL) {
+    return withVercelCacheTags(response, officialListedPublicCdnTags(table, routeType));
+  }
+  return response;
+}
+
 function officialCacheControlHeader(
   items: unknown[],
   options: {
@@ -235,17 +254,6 @@ function officialCacheControlHeader(
     return PUBLIC_CDN_CACHE_CONTROL;
   }
   return PRIVATE_MUST_REVALIDATE_CACHE_CONTROL;
-}
-
-function revalidateOfficialLibraryAfterWrite(table: string): void {
-  for (const tag of officialLibraryWriteCacheTags(table)) {
-    revalidateTag(tag, 'max');
-  }
-  if (table === SPECIES_TABLE) {
-    for (const tag of codexTableWriteCacheTags(table)) {
-      revalidateTag(tag, 'max');
-    }
-  }
 }
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ type: string }> }) {
@@ -265,13 +273,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     if (type === 'species') {
       try {
-        const items = await fetchCachedOfficialSpeciesItems(supabase, includeUnlisted);
+        const items = includeUnlisted
+          ? await fetchUncachedOfficialSpeciesItems(supabase, includeUnlisted)
+          : await fetchCachedOfficialSpeciesItems(supabase, includeUnlisted);
         const cacheControl = officialCacheControlHeader(items, {
           includeUnlisted,
           includeUnlistedRequested,
           usedPublicClient,
         });
-        return NextResponse.json(items, { headers: { 'Cache-Control': cacheControl } });
+        return jsonOfficialListResponse(items, cacheControl, SPECIES_TABLE, 'species');
       } catch (error) {
         const err = error as { code?: string; message?: string };
         if (err.code === '42P01' || err.message?.includes('does not exist')) {
@@ -285,12 +295,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     let items: Record<string, unknown>[];
+    const columnarType = type as ColumnarLibraryType;
+    const table = TABLE_MAP[columnarType];
     try {
-      items = await fetchCachedOfficialColumnarItems(
-        supabase,
-        type as ColumnarLibraryType,
-        includeUnlisted,
-      );
+      items = includeUnlisted
+        ? await fetchUncachedOfficialColumnarItems(supabase, columnarType, includeUnlisted)
+        : await fetchCachedOfficialColumnarItems(supabase, columnarType, includeUnlisted);
     } catch (error) {
       const err = error as { code?: string; message?: string };
       if (err.code === '42P01' || err.message?.includes('does not exist')) {
@@ -307,7 +317,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       includeUnlistedRequested,
       usedPublicClient,
     });
-    return NextResponse.json(items, { headers: { 'Cache-Control': cacheControl } });
+    return jsonOfficialListResponse(items, cacheControl, table, type);
   } catch (err) {
     logApiError('GET /api/official/[type]', err);
     const response = apiErrorResponse('Failed to load items', 500);
@@ -321,12 +331,12 @@ export async function POST(
   { params }: { params: Promise<{ type: string }> },
 ) {
   try {
-    let user;
-    try {
-      user = await requireLiveUser();
-    } catch {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const auth = await requireLiveAdminSession();
+    if (!auth.ok) {
+      return NextResponse.json(auth.body, { status: auth.status });
     }
+    const user = { uid: auth.userId };
+
     const paramResult = await validateRouteParams(params, officialLibraryTypeParamSchema);
     if (!paramResult.success) return paramResult.error;
     const { type } = paramResult.data;
@@ -334,12 +344,8 @@ export async function POST(
     const validation = await validateJson(request, publicItemSchema);
     if (!validation.success) return validation.error;
     const body = validation.data as Record<string, unknown>;
-    const isAdminUser = await isAdmin(user.uid);
-    const writeValidation = officialWriteValidation(type, body, isAdminUser);
+    const writeValidation = officialWriteValidation(type, body, true);
     if (writeValidation) return writeValidation;
-    if (!isAdminUser) {
-      return NextResponse.json({ error: 'Admin only' }, { status: 403 });
-    }
 
     const supabase = createServiceRoleClient();
 
@@ -363,13 +369,14 @@ export async function POST(
           normalized.name,
         );
         if (nameConflict) return nameConflict;
-        const { data: beforeRow } = await supabase
-          .from(SPECIES_TABLE)
+        const { data: beforeRow } = await officialTable(supabase, SPECIES_TABLE)
           .select('*')
           .eq('id', existingId)
           .maybeSingle();
-        const { data: updatedRows, error: updateError } = await supabase
-          .from(SPECIES_TABLE)
+        const { data: updatedRows, error: updateError } = await officialTable(
+          supabase,
+          SPECIES_TABLE,
+        )
           .update(dbRow)
           .eq('id', existingId)
           .select('*');
@@ -383,38 +390,49 @@ export async function POST(
         }
         if (updatedRows && updatedRows.length > 0) {
           const afterRow = updatedRows[0] as Record<string, unknown>;
-          await recordOfficialChangeBestEffort({
-            entityType: 'codex_species',
-            entityId: existingId,
-            operation: 'update',
-            changedByUserId: user.uid,
-            beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
-            afterData: afterRow,
-          });
-          revalidateOfficialLibraryAfterWrite(SPECIES_TABLE);
-          return NextResponse.json({ id: existingId });
+          try {
+            await recordOfficialChangeBestEffort({
+              entityType: 'codex_species',
+              entityId: existingId,
+              operation: 'update',
+              changedByUserId: user.uid,
+              beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
+              afterData: afterRow,
+            });
+            return NextResponse.json({ id: existingId });
+          } finally {
+            purgeOfficialLibraryPublicCachesBestEffort(
+              SPECIES_TABLE,
+              'POST /api/official/[type] species update cache purge',
+            );
+          }
         }
         return NextResponse.json({ error: 'Official item not found' }, { status: 404 });
       }
 
       for (let attempt = 0; attempt < 3; attempt++) {
         const id = await allocateCodexNumericId(supabase, SPECIES_TABLE);
-        const { data: inserted, error: insertError } = await supabase
-          .from(SPECIES_TABLE)
+        const { data: inserted, error: insertError } = await officialTable(supabase, SPECIES_TABLE)
           .insert({ id, catalog_listing: listing ?? 'listed', ...dbRow })
           .select('*')
           .single();
         if (!insertError) {
-          await recordOfficialChangeBestEffort({
-            entityType: 'codex_species',
-            entityId: id,
-            operation: 'create',
-            changedByUserId: user.uid,
-            beforeData: null,
-            afterData: (inserted as Record<string, unknown> | null) ?? null,
-          });
-          revalidateOfficialLibraryAfterWrite(SPECIES_TABLE);
-          return NextResponse.json({ id });
+          try {
+            await recordOfficialChangeBestEffort({
+              entityType: 'codex_species',
+              entityId: id,
+              operation: 'create',
+              changedByUserId: user.uid,
+              beforeData: null,
+              afterData: (inserted as Record<string, unknown> | null) ?? null,
+            });
+            return NextResponse.json({ id });
+          } finally {
+            purgeOfficialLibraryPublicCachesBestEffort(
+              SPECIES_TABLE,
+              'POST /api/official/[type] species insert cache purge',
+            );
+          }
         }
         if (insertError.code !== '23505') {
           return apiErrorResponse(
@@ -444,13 +462,11 @@ export async function POST(
         body.name,
       );
       if (nameConflict) return nameConflict;
-      const { data: beforeRow } = await supabase
-        .from(table)
+      const { data: beforeRow } = await officialTable(supabase, table)
         .select('*')
         .eq('id', existingId)
         .maybeSingle();
-      const { data: updatedRows, error: updateError } = await supabase
-        .from(table)
+      const { data: updatedRows, error: updateError } = await officialTable(supabase, table)
         .update(dbRow)
         .eq('id', existingId)
         .select('*');
@@ -463,23 +479,28 @@ export async function POST(
         );
       }
       if (updatedRows && updatedRows.length > 0) {
-        await recordOfficialChangeBestEffort({
-          entityType: table,
-          entityId: existingId,
-          operation: 'update',
-          changedByUserId: user.uid,
-          beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
-          afterData: updatedRows[0] as Record<string, unknown>,
-        });
-        revalidateOfficialLibraryAfterWrite(table);
-        return NextResponse.json({ id: existingId });
+        try {
+          await recordOfficialChangeBestEffort({
+            entityType: table,
+            entityId: existingId,
+            operation: 'update',
+            changedByUserId: user.uid,
+            beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
+            afterData: updatedRows[0] as Record<string, unknown>,
+          });
+          return NextResponse.json({ id: existingId });
+        } finally {
+          purgeOfficialLibraryPublicCachesBestEffort(
+            table,
+            'POST /api/official/[type] update cache purge',
+          );
+        }
       }
       return NextResponse.json({ error: 'Official item not found' }, { status: 404 });
     }
 
     const id = crypto.randomUUID();
-    const { data: inserted, error: insertError } = await supabase
-      .from(table)
+    const { data: inserted, error: insertError } = await officialTable(supabase, table)
       .insert({
         id,
         catalog_listing: listing ?? 'listed',
@@ -497,16 +518,22 @@ export async function POST(
         insertError,
       );
     }
-    await recordOfficialChangeBestEffort({
-      entityType: table,
-      entityId: id,
-      operation: 'create',
-      changedByUserId: user.uid,
-      beforeData: null,
-      afterData: (inserted as Record<string, unknown> | null) ?? null,
-    });
-    revalidateOfficialLibraryAfterWrite(table);
-    return NextResponse.json({ id });
+    try {
+      await recordOfficialChangeBestEffort({
+        entityType: table,
+        entityId: id,
+        operation: 'create',
+        changedByUserId: user.uid,
+        beforeData: null,
+        afterData: (inserted as Record<string, unknown> | null) ?? null,
+      });
+      return NextResponse.json({ id });
+    } finally {
+      purgeOfficialLibraryPublicCachesBestEffort(
+        table,
+        'POST /api/official/[type] insert cache purge',
+      );
+    }
   } catch (err) {
     logApiError('POST /api/official/[type]', err);
     return apiErrorResponse('Failed to save item', 500);
@@ -518,15 +545,11 @@ export async function PATCH(
   { params }: { params: Promise<{ type: string }> },
 ) {
   try {
-    let user;
-    try {
-      user = await requireLiveUser();
-    } catch {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const auth = await requireLiveAdminSession();
+    if (!auth.ok) {
+      return NextResponse.json(auth.body, { status: auth.status });
     }
-    if (!(await isAdmin(user.uid))) {
-      return NextResponse.json({ error: 'Admin only' }, { status: 403 });
-    }
+    const user = { uid: auth.userId };
 
     const denied = verifyMutationRequest(request);
     if (denied) return denied;
@@ -540,13 +563,11 @@ export async function PATCH(
 
     const supabase = createServiceRoleClient();
     const table = type === 'species' ? SPECIES_TABLE : TABLE_MAP[type];
-    const { data: beforeRow } = await supabase
-      .from(table)
+    const { data: beforeRow } = await officialTable(supabase, table)
       .select('*')
       .eq('id', validation.data.id)
       .maybeSingle();
-    const { data: updatedRows, error: updateError } = await supabase
-      .from(table)
+    const { data: updatedRows, error: updateError } = await officialTable(supabase, table)
       .update({
         catalog_listing: validation.data.catalogListing,
         updated_at: new Date().toISOString(),
@@ -565,19 +586,22 @@ export async function PATCH(
       return NextResponse.json({ error: 'Item not found' }, { status: 404 });
     }
     const entityType = type === 'species' ? 'codex_species' : table;
-    await recordOfficialChangeBestEffort({
-      entityType,
-      entityId: validation.data.id,
-      operation: 'update',
-      changedByUserId: user.uid,
-      beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
-      afterData: updatedRows[0] as Record<string, unknown>,
-    });
-    revalidateOfficialLibraryAfterWrite(table);
-    return NextResponse.json({
-      id: validation.data.id,
-      catalogListing: validation.data.catalogListing,
-    });
+    try {
+      await recordOfficialChangeBestEffort({
+        entityType,
+        entityId: validation.data.id,
+        operation: 'update',
+        changedByUserId: user.uid,
+        beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
+        afterData: updatedRows[0] as Record<string, unknown>,
+      });
+      return NextResponse.json({
+        id: validation.data.id,
+        catalogListing: validation.data.catalogListing,
+      });
+    } finally {
+      purgeOfficialLibraryPublicCachesBestEffort(table, 'PATCH /api/official/[type] cache purge');
+    }
   } catch (err) {
     logApiError('PATCH /api/official/[type]', err);
     return apiErrorResponse('Failed to update listing', 500);
@@ -589,15 +613,11 @@ export async function DELETE(
   { params }: { params: Promise<{ type: string }> },
 ) {
   try {
-    let user;
-    try {
-      user = await requireLiveUser();
-    } catch {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const auth = await requireLiveAdminSession();
+    if (!auth.ok) {
+      return NextResponse.json(auth.body, { status: auth.status });
     }
-    if (!(await isAdmin(user.uid))) {
-      return NextResponse.json({ error: 'Admin only' }, { status: 403 });
-    }
+    const user = { uid: auth.userId };
 
     const denied = verifyMutationRequest(_request);
     if (denied) return denied;
@@ -612,37 +632,49 @@ export async function DELETE(
 
     const supabase = createServiceRoleClient();
     const table = type === 'species' ? SPECIES_TABLE : TABLE_MAP[type];
-    const { data: beforeRow } = await supabase.from(table).select('*').eq('id', id).maybeSingle();
-    const { data: deleted, error: deleteError } = await supabase
-      .from(table)
-      .delete()
+    const { data: beforeRow } = await officialTable(supabase, table)
+      .select('*')
       .eq('id', id)
-      .select('id');
-    if (deleteError) {
-      return apiErrorResponse(
-        'Failed to delete item',
-        500,
-        'DELETE /api/official/[type]',
-        deleteError,
-      );
+      .maybeSingle();
+    let committed = false;
+    try {
+      const { data: deleted, error: deleteError } = await officialTable(supabase, table)
+        .delete()
+        .eq('id', id)
+        .select('id');
+      if (deleteError) {
+        return apiErrorResponse(
+          'Failed to delete item',
+          500,
+          'DELETE /api/official/[type]',
+          deleteError,
+        );
+      }
+      if (!deleted || deleted.length === 0) {
+        return NextResponse.json({ error: 'Item not found or already deleted' }, { status: 404 });
+      }
+      committed = true;
+      const entityType = type === 'species' ? 'codex_species' : table;
+      await recordOfficialChangeBestEffort({
+        entityType,
+        entityId: id,
+        operation: 'delete',
+        changedByUserId: user.uid,
+        beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
+        afterData: null,
+      });
+      // Tombstone so the id is never handed to a different entity, which would silently
+      // repoint every saved character that referenced the deleted one.
+      await retireCodexId(supabase, table, id);
+      return NextResponse.json({ ok: true });
+    } finally {
+      if (committed) {
+        purgeOfficialLibraryPublicCachesBestEffort(
+          table,
+          'DELETE /api/official/[type] cache purge',
+        );
+      }
     }
-    if (!deleted || deleted.length === 0) {
-      return NextResponse.json({ error: 'Item not found or already deleted' }, { status: 404 });
-    }
-    const entityType = type === 'species' ? 'codex_species' : table;
-    await recordOfficialChangeBestEffort({
-      entityType,
-      entityId: id,
-      operation: 'delete',
-      changedByUserId: user.uid,
-      beforeData: (beforeRow as Record<string, unknown> | null) ?? null,
-      afterData: null,
-    });
-    // Tombstone so the id is never handed to a different entity, which would silently
-    // repoint every saved character that referenced the deleted one.
-    await retireCodexId(supabase, table, id);
-    revalidateOfficialLibraryAfterWrite(table);
-    return NextResponse.json({ ok: true });
   } catch (err) {
     logApiError('DELETE /api/official/[type]', err);
     return apiErrorResponse('Failed to delete item', 500);

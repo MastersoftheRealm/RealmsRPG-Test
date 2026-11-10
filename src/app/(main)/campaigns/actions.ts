@@ -19,10 +19,8 @@ import { buildRateLimitKey, inviteCodeLimiter } from '@/lib/rate-limit';
 import { formatRoleQuotaExceededMessage } from '@/lib/role-quota-messages';
 import { asDbJson } from '@/lib/supabase/database';
 import type { CampaignCharacter } from '@/types/campaign';
+import { generateInviteCode } from '@/lib/campaign-invite-code';
 import { MAX_CAMPAIGN_CHARACTERS, OWNER_MAX_CHARACTERS } from './constants';
-
-const INVITE_CODE_LENGTH = 8;
-const ALPHANUMERIC = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 type CampaignCharacterMutationResult = {
   status?: string | undefined;
@@ -35,14 +33,6 @@ function campaignCharacterMutationResult(value: unknown): CampaignCharacterMutat
     throw new Error('Campaign character mutation returned an invalid payload');
   }
   return value as CampaignCharacterMutationResult;
-}
-
-function generateInviteCode(): string {
-  let code = '';
-  for (let i = 0; i < INVITE_CODE_LENGTH; i++) {
-    code += ALPHANUMERIC.charAt(Math.floor(Math.random() * ALPHANUMERIC.length));
-  }
-  return code;
 }
 
 async function getUsernameByUid(uid: string): Promise<string | undefined> {
@@ -143,15 +133,7 @@ export async function createCampaignAction(data: {
   }
 }
 
-export async function joinCampaignAction(data: {
-  inviteCode: string;
-  characterId: string;
-  characterName: string;
-  portrait?: string | undefined;
-  level: number;
-  species?: string | undefined;
-  archetypeType?: string | undefined;
-}) {
+export async function joinCampaignAction(data: { inviteCode: string; characterId: string }) {
   try {
     const user = await requireAuth();
 
@@ -233,7 +215,7 @@ export async function joinCampaignAction(data: {
       .select('user_id')
       .eq('campaign_id', campaignRow.id);
     const memberIdsFromTable = (memberRows ?? []).map((m: { user_id: string }) => m.user_id);
-    const campaignData = (campaignRow.characters as CampaignCharacter[]) ?? [];
+    const campaignData = (campaignRow.characters as unknown as CampaignCharacter[]) ?? [];
     const memberIdsFromRoster = [...new Set(campaignData.map((c) => c.userId).filter(Boolean))];
     const memberIds = [...new Set([...memberIdsFromTable, ...memberIdsFromRoster])];
     const ownerPolicy = await getRolePolicyForUser(campaignRow.owner_id, dbService);
@@ -380,7 +362,7 @@ export async function addCharacterToCampaignAction(data: {
     }
     const rosterFields = buildRosterFieldsFromCharacterData(charData);
 
-    const campaignData = (campaignRow.characters as CampaignCharacter[]) ?? [];
+    const campaignData = (campaignRow.characters as unknown as CampaignCharacter[]) ?? [];
     if (campaignData.length >= MAX_CAMPAIGN_CHARACTERS) {
       return {
         success: false,

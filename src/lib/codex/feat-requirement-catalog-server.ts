@@ -1,3 +1,5 @@
+import 'server-only';
+
 /**
  * Cached read of codex feat/skill rows for server legality feat-requirement checks.
  * Uses createPublicClient + Data Cache (same tags as GET /api/codex), not the session client.

@@ -44,9 +44,13 @@ vi.mock('@/lib/rate-limit', async (importOriginal) => {
   };
 });
 
-vi.mock('@/lib/character-save', () => ({
-  prepareCharacterForSave: vi.fn((data: unknown) => data),
-}));
+vi.mock('@/lib/character-save', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/character-save')>();
+  return {
+    ...actual,
+    prepareCharacterForSave: vi.fn(actual.prepareCharacterForSave),
+  };
+});
 
 vi.mock('@/lib/game/archetype-display', () => ({
   fetchArchetypeNameMap: vi.fn(() => Promise.resolve(new Map())),
@@ -105,6 +109,7 @@ type CampaignVisibilityMock = {
 
 type MockSupabaseOptions = {
   deleteError?: { message: string } | null;
+  patchRpcError?: { code?: string | undefined; message?: string | undefined } | null;
 };
 
 function createMockSupabase(
@@ -175,6 +180,9 @@ function createMockSupabase(
       return { data: characterRow?.document ?? null, error: null };
     }
     if (name === 'patch_character_relational') {
+      if (options?.patchRpcError) {
+        return { data: null, error: options.patchRpcError };
+      }
       if (!characterRow || args.p_character_id !== characterRow.id) {
         return { data: { status: 'not_found' }, error: null };
       }
@@ -596,6 +604,53 @@ describe('PATCH /api/characters/[id]', () => {
     expect(body.updatedAt).toBeTruthy();
   });
 
+  it('returns 400 when the relational patch RPC rejects an unmapped field', async () => {
+    const row = makeCharacterRow('char-owned', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createMockSupabase(row, undefined, {
+      patchRpcError: { code: '22023', message: 'Unmapped character key: ancestryTraits' },
+    });
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await PATCH(
+      makePatchRequest('char-owned', { notes: 'still bad if RPC rejects' }),
+      { params: Promise.resolve({ id: 'char-owned' }) },
+    );
+
+    expect(response.status).toBe(400);
+    const body = await readJson<{ error: string; details: string[] }>(response);
+    expect(body.details[0]).toContain('ancestryTraits');
+    expect(body.error).toBe('Failed to save character');
+    expect(body.error).not.toContain('Unmapped character');
+  });
+
+  it('PATCH retains an empty weapons array so the last item can be removed', async () => {
+    const row = makeCharacterRow('char-owned', OWNER.uid, {
+      equipment: {
+        weapons: [{ id: 'w1', name: 'Sword', type: 'weapon', properties: [] }],
+        armor: [],
+        shields: [],
+      },
+    });
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createMockSupabase(row);
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await PATCH(makePatchRequest('char-owned', { equipment: { weapons: [] } }), {
+      params: Promise.resolve({ id: 'char-owned' }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(supabase.rpcMock).toHaveBeenCalledWith(
+      'patch_character_relational',
+      expect.objectContaining({
+        p_patch: expect.objectContaining({
+          equipment: { weapons: [] },
+        }),
+      }),
+    );
+  });
+
   it('merges a partial payload and leaves omitted keys intact', async () => {
     const row = makeCharacterRow('char-owned', OWNER.uid, { notes: 'keep me', level: 3 });
     mockGetSession.mockResolvedValue({ user: OWNER, error: null });
@@ -606,16 +661,15 @@ describe('PATCH /api/characters/[id]', () => {
     });
 
     expect(response.status).toBe(200);
-    expect(supabase.rpcMock).toHaveBeenCalledWith(
-      'patch_character_relational',
-      expect.objectContaining({
-        p_character_id: 'char-owned',
-        p_patch: { name: 'Updated Hero' },
-      }),
-    );
     const patchArgs = supabase.rpcMock.mock.calls.find(
       ([name]) => name === 'patch_character_relational',
     )?.[1] as { p_patch?: Record<string, unknown> } | undefined;
+    expect(patchArgs).toEqual(
+      expect.objectContaining({
+        p_character_id: 'char-owned',
+        p_patch: expect.objectContaining({ name: 'Updated Hero', updatedAt: expect.any(String) }),
+      }),
+    );
     expect(patchArgs?.p_patch).not.toHaveProperty('notes');
     expect(patchArgs?.p_patch).not.toHaveProperty('level');
   });

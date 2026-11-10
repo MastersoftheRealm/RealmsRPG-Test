@@ -17,12 +17,16 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useAuth, useAdmin, useProfile } from '@/hooks';
+import { useAuth } from '@/hooks/use-auth';
+import { useAdmin } from '@/hooks/use-admin';
+import { useProfile } from '@/hooks/use-profile';
 import type { AuthUser } from '@/types/auth';
-import { ThemeToggle, InfoTippy } from '@/components/patterns';
+import { ThemeToggle } from '@/components/patterns/chrome/theme-toggle';
+import { InfoTippy } from '@/components/patterns/help/info-tippy';
 import { IconButton } from '@/components/ui';
 import { navbarCodex, navbarLibrary } from '../../../public/tooltip-text';
 import { NAV_COPY, type NavLink } from '@/lib/constants/site-copy';
+import { LOGIN_REDIRECT_SESSION_KEY } from '@/lib/auth/auth-page-client';
 
 const navLinks: NavLink[] = NAV_COPY.links;
 
@@ -235,7 +239,7 @@ export function Header() {
       if (!(target instanceof Element)) return;
       const anchor = target.closest('a');
       if (!anchor || anchor.getAttribute('data-login-link') !== 'header') return;
-      sessionStorage.setItem('loginRedirect', pathname ?? window.location.pathname);
+      sessionStorage.setItem(LOGIN_REDIRECT_SESSION_KEY, pathname ?? window.location.pathname);
     };
     window.addEventListener('click', rememberLoginRedirect, true);
     return () => window.removeEventListener('click', rememberLoginRedirect, true);

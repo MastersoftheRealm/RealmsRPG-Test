@@ -8,6 +8,7 @@
 'use client';
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useCreatorSave, type Species, type Trait, type Skill } from '@/hooks';
 import {
   useCreatorDraftDirty,
@@ -38,6 +39,7 @@ import {
   type TraitCategory,
 } from './species-creator-bootstrap';
 import { applySpeciesCreatorReset } from './species-creator-reset';
+import { scheduleCreatorEditClear } from '@/lib/creator/creator-edit-query';
 
 type UseSpeciesCreatorWorkspaceArgs = {
   traits: Trait[];
@@ -66,6 +68,11 @@ export function useSpeciesCreatorWorkspace({
   rawItems = [],
   libraryLoading = false,
 }: UseSpeciesCreatorWorkspaceArgs) {
+  const router = useRouter();
+  const clearEditQuery = useCallback(
+    (href: string) => router.replace(href, { scroll: false }),
+    [router],
+  );
   const [showAddSpeciesAncestryModal, setShowAddSpeciesAncestryModal] = useState(false);
   const [showAddFlawModal, setShowAddFlawModal] = useState(false);
   const [showAddCharacteristicModal, setShowAddCharacteristicModal] = useState(false);
@@ -163,6 +170,7 @@ export function useSpeciesCreatorWorkspace({
       }
       setForm(initialSpeciesFormState);
       acceptDraft();
+      scheduleCreatorEditClear(editSession, clearEditQuery);
     },
   });
 
@@ -240,9 +248,10 @@ export function useSpeciesCreatorWorkspace({
       resetForm: () => setForm(initialSpeciesFormState),
       forgetLoadedLibraryItem: () => save.forgetLoadedLibraryItem(),
       clearSaveMessage: () => save.setSaveMessage(null),
+      clearEditQuery: () => scheduleCreatorEditClear(editSession, clearEditQuery),
     });
     acceptDraft();
-  }, [acceptDraft, save]);
+  }, [acceptDraft, clearEditQuery, editSession, save]);
 
   const loadSpeciesIntoForm = useCallback(
     (s: Species | Record<string, unknown>) => {

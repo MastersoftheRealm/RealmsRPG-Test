@@ -35,6 +35,7 @@ export type PowerCreatorEditorProps = {
 
   attackMode: AttackMode;
   onAttackModeChange: (mode: AttackMode) => void;
+  noAttackWarning?: string | null;
 
   targetedDefenses: string[];
   onTargetedDefensesChange: (next: string[]) => void;

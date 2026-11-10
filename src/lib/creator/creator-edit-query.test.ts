@@ -1,9 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { creatorBackSentinelState } from './creator-unsaved-guard';
 import {
   bindCreatorEditClear,
+  commitCreatorEditClearAfterSave,
   creatorEditClearPlan,
   creatorPathWithoutEdit,
+  scheduleCreatorEditClear,
 } from './creator-edit-query';
 
 const EDIT_HREF = 'https://realmsrpg.com/power-creator?edit=row-1';
@@ -55,5 +57,35 @@ describe('creator edit query clear (86e3jwurq)', () => {
     await Promise.resolve();
     expect(clears).toEqual(['/power-creator']);
     expect(listeners).toHaveLength(0);
+  });
+
+  it('commitCreatorEditClearAfterSave accepts draft then schedules clear', () => {
+    const clears: string[] = [];
+    let draftAccepted = false;
+    vi.stubGlobal('window', {
+      location: { href: EDIT_HREF },
+      history: { state: null },
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    });
+    try {
+      commitCreatorEditClearAfterSave(
+        'row-1',
+        (href) => clears.push(href),
+        () => {
+          draftAccepted = true;
+        },
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
+    expect(draftAccepted).toBe(true);
+    expect(clears).toEqual(['/power-creator']);
+  });
+
+  it('scheduleCreatorEditClear no-ops without an edit id', () => {
+    const clears: string[] = [];
+    scheduleCreatorEditClear(null, (href) => clears.push(href));
+    expect(clears).toEqual([]);
   });
 });

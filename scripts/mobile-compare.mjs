@@ -1,6 +1,6 @@
 /**
- * Measure mobile density metrics on Realms list pages so "ours feels bulkier"
- * becomes a number instead of a vibe.
+ * Measure mobile density metrics on Realms list pages (localhost only) so density
+ * claims are numbers instead of vibes.
  *
  * Metrics per page:
  *   - chromeBeforeContent: y of the first list/content row (how far you scroll

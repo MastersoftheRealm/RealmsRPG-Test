@@ -191,6 +191,7 @@ export function analyzePowerEnergy(
   let dur_all = 1;
   let hasDurationParts = false;
   let positiveEnergy = 0;
+  let hasAttackPotencyIncreaseFloor = false;
   const lines: PowerEnergyLine[] = [];
 
   partsPayload.forEach((pl) => {
@@ -212,6 +213,12 @@ export function analyzePowerEnergy(
       kind = 'percentage';
       perc_all *= energyContribution;
       if (applyToDuration) perc_dur *= energyContribution;
+      if (
+        energyContribution > 1 + 1e-9 &&
+        (def.name === 'Attack / Potency Increase' || String(def.id) === '79')
+      ) {
+        hasAttackPotencyIncreaseFloor = true;
+      }
     } else {
       flat_normal += energyContribution;
       if (applyToDuration) flat_duration += energyContribution;
@@ -233,7 +240,7 @@ export function analyzePowerEnergy(
 
   const energyRaw =
     flat_normal * perc_all + (dur_all + 1) * flat_duration * perc_dur - flat_duration * perc_dur;
-  const hasPositiveEnergy = positiveEnergy > 1e-9;
+  const hasPositiveEnergy = positiveEnergy > 1e-9 || hasAttackPotencyIncreaseFloor;
   const totalEnergy = finalizePowerEnergy(energyRaw, hasPositiveEnergy);
 
   return {

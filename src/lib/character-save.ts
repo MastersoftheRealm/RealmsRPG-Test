@@ -3,11 +3,105 @@
  * `clampSavedCurrency` (TASK-739 / TASK-749).
  */
 
+import { leanCharacterArrayFieldsForRelationalSave } from '@/lib/character/relational-lean-save';
 import { normalizeTempModifiers } from '@/lib/character/temp-modifiers';
 import { normalizeCharacterForSave } from '@/lib/character/schema-normalize';
 import { getErrorMessage, isApiError } from '@/lib/api-client';
 import { removeUndefined } from '@/lib/utils/object';
 import type { Character, CharacterTempModifiers } from '@/types';
+
+/** Top-level keys rejected by `assert_character_document_mapped` — not sent to relational RPCs. */
+const DEPRECATED_RELATIONAL_SAVE_KEYS = [
+  'ancestryTraits',
+  'flawTrait',
+  'characteristicTrait',
+] as const;
+
+function readAncestryRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const record = value as Record<string, unknown>;
+  return Object.keys(record).length > 0 ? { ...record } : null;
+}
+
+export function migrateDeprecatedAncestryTraitFields(
+  cleaned: Record<string, unknown>,
+  storedDocument?: Record<string, unknown> | null,
+): void {
+  const ancestryTraits = cleaned.ancestryTraits;
+  const flawTrait = cleaned.flawTrait;
+  const characteristicTrait = cleaned.characteristicTrait;
+
+  const hasLegacy =
+    (Array.isArray(ancestryTraits) && ancestryTraits.length > 0) ||
+    (flawTrait !== undefined && flawTrait !== null && String(flawTrait).length > 0) ||
+    (characteristicTrait !== undefined &&
+      characteristicTrait !== null &&
+      String(characteristicTrait).length > 0);
+
+  if (!hasLegacy) return;
+
+  const hasAncestryKey = Object.prototype.hasOwnProperty.call(cleaned, 'ancestry');
+  const ancestry =
+    (hasAncestryKey ? readAncestryRecord(cleaned.ancestry) : null) ??
+    readAncestryRecord(storedDocument?.ancestry);
+
+  if (!ancestry) {
+    const promoted: Record<string, unknown> = {};
+    if (Array.isArray(ancestryTraits) && ancestryTraits.length > 0) {
+      promoted.selectedTraits = ancestryTraits;
+    }
+    if (flawTrait !== undefined && flawTrait !== null && String(flawTrait).length > 0) {
+      promoted.selectedFlaw = flawTrait;
+    }
+    if (
+      characteristicTrait !== undefined &&
+      characteristicTrait !== null &&
+      String(characteristicTrait).length > 0
+    ) {
+      promoted.selectedCharacteristic = characteristicTrait;
+    }
+    if (Object.keys(promoted).length > 0) {
+      cleaned.ancestry = promoted;
+    }
+    return;
+  }
+
+  if (Array.isArray(ancestryTraits) && ancestryTraits.length > 0) {
+    const current = ancestry.selectedTraits;
+    if (!Array.isArray(current) || current.length === 0) {
+      ancestry.selectedTraits = ancestryTraits;
+    }
+  }
+  if (flawTrait !== undefined && flawTrait !== null && String(flawTrait).length > 0) {
+    if (
+      ancestry.selectedFlaw === undefined ||
+      ancestry.selectedFlaw === null ||
+      String(ancestry.selectedFlaw).length === 0
+    ) {
+      ancestry.selectedFlaw = flawTrait;
+    }
+  }
+  if (
+    characteristicTrait !== undefined &&
+    characteristicTrait !== null &&
+    String(characteristicTrait).length > 0
+  ) {
+    if (
+      ancestry.selectedCharacteristic === undefined ||
+      ancestry.selectedCharacteristic === null ||
+      String(ancestry.selectedCharacteristic).length === 0
+    ) {
+      ancestry.selectedCharacteristic = characteristicTrait;
+    }
+  }
+  cleaned.ancestry = ancestry;
+}
+
+export function stripDeprecatedCharacterSaveKeys(cleaned: Record<string, unknown>): void {
+  for (const key of DEPRECATED_RELATIONAL_SAVE_KEYS) {
+    delete cleaned[key];
+  }
+}
 
 /** Matches `characterCreateSchema.clientRequestId` (uuid). */
 const CLIENT_REQUEST_ID_RE =
@@ -78,7 +172,10 @@ export function formatCharacterCreateFailureMessage(
   return message || copy.saveFailed;
 }
 
-export function prepareCharacterForSave(data: Partial<Character>): Record<string, unknown> {
+export function prepareCharacterForSave(
+  data: Partial<Character>,
+  options?: { storedDocument?: Record<string, unknown> | null },
+): Record<string, unknown> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { id, createdAt, updatedAt, ...dataToSave } = data;
 
@@ -87,6 +184,8 @@ export function prepareCharacterForSave(data: Partial<Character>): Record<string
   delete cleaned.allTraits;
   delete cleaned.defenses;
   delete cleaned.defenseBonuses;
+  migrateDeprecatedAncestryTraitFields(cleaned, options?.storedDocument);
+  stripDeprecatedCharacterSaveKeys(cleaned);
 
   // Same sparse Temp Modifier contract as cleanForSave (ADR-0006).
   // JSON null is a dirty-key clear (86e3juw04) and must survive this normalize.
@@ -100,6 +199,7 @@ export function prepareCharacterForSave(data: Partial<Character>): Record<string
 
   // Canonical field names + strip legacy aliases (TASK-663)
   normalizeCharacterForSave(cleaned);
+  leanCharacterArrayFieldsForRelationalSave(cleaned);
 
   if (typeof cleaned.currency === 'number' && Number.isFinite(cleaned.currency)) {
     cleaned.currency = clampSavedCurrency(cleaned.currency);

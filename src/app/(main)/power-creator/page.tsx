@@ -209,6 +209,7 @@ function PowerCreatorWorkspace({
       { canSaveToOfficial: isAdmin },
     ),
     onEditSaveCommitted: (href) => router.replace(href, { scroll: false }),
+    onEditResetCommitted: (href) => router.replace(href, { scroll: false }),
   });
 
   const variantTabGroup = useTabGroup('power-variants');
@@ -386,6 +387,7 @@ function PowerCreatorWorkspace({
       actionTypeDisplay={ws.actionTypeDisplay}
       attackMode={ws.attackMode}
       onAttackModeChange={ws.setAttackMode}
+      noAttackWarning={ws.noAttackWarning}
       targetedDefenses={ws.targetedDefenses}
       onTargetedDefensesChange={ws.setTargetedDefenses}
       suggestionPartsDb={ws.powerParts}
@@ -496,6 +498,13 @@ function PowerCreatorWorkspace({
             existingInPublic: ws.save.publishExistingInPublic,
           }) ?? '',
         ...creatorPublishSaveAsCopyActions(ws.save),
+      }}
+      emptyOverwrite={{
+        isOpen: ws.save.showEmptyOverwriteConfirm,
+        onClose: () => ws.save.setShowEmptyOverwriteConfirm(false),
+        onConfirm: () => void ws.save.confirmEmptyOverwrite(),
+        title: ws.save.emptyOverwriteTitle,
+        description: ws.save.emptyOverwriteDescription,
       }}
       loadModal={{
         isOpen: load.showLoadModal,

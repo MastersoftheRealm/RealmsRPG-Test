@@ -22,3 +22,36 @@ export const CAMPAIGN_ROLL_MODIFIER_LABEL_MAX_LENGTH =
 export const CAMPAIGN_ROLL_TITLE_TOO_LONG_MESSAGE = `Title must be ${CAMPAIGN_ROLL_TITLE_MAX_LENGTH} characters or fewer.`;
 
 export const CAMPAIGN_ROLL_MODIFIER_LABEL_TOO_LONG_MESSAGE = `Modifier label must be ${CAMPAIGN_ROLL_MODIFIER_LABEL_MAX_LENGTH} characters or fewer.`;
+
+/** Middle segment of sheet Randomize titles: `: 1d${sides} → `. */
+function randomizeRollTitleMiddle(sides: number): string {
+  return `: 1d${sides} → `;
+}
+
+/**
+ * `${powerName}: 1d${sides} → ${label}` capped to {@link CAMPAIGN_ROLL_TITLE_MAX_LENGTH}.
+ * Truncates the variant label first, then the power name, so API validation always passes.
+ */
+export function formatRandomizeRollTitle(powerName: string, sides: number, label: string): string {
+  const middle = randomizeRollTitleMiddle(sides);
+  let power = powerName.slice(0, CREATOR_NAME_MAX_LENGTH);
+  let variantLabel = label.slice(0, CREATOR_NAME_MAX_LENGTH);
+  const compose = () => `${power}${middle}${variantLabel}`;
+
+  if (compose().length <= CAMPAIGN_ROLL_TITLE_MAX_LENGTH) {
+    return compose();
+  }
+
+  const labelBudget = Math.max(0, CAMPAIGN_ROLL_TITLE_MAX_LENGTH - power.length - middle.length);
+  variantLabel = variantLabel.slice(0, labelBudget);
+  if (compose().length <= CAMPAIGN_ROLL_TITLE_MAX_LENGTH) {
+    return compose();
+  }
+
+  const powerBudget = Math.max(
+    0,
+    CAMPAIGN_ROLL_TITLE_MAX_LENGTH - middle.length - variantLabel.length,
+  );
+  power = power.slice(0, powerBudget);
+  return compose();
+}

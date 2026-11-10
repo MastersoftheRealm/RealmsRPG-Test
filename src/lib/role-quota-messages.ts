@@ -107,3 +107,46 @@ export function buildRoleQuotaExceededResponse(params: {
     maxAllowed: params.maxAllowed,
   };
 }
+
+type DbErrorShape = {
+  code?: string | undefined;
+  message?: string | undefined;
+  details?: string | undefined;
+};
+
+function isRoleQuotaResource(value: string): value is RoleQuotaResource {
+  return (
+    value === 'characters' ||
+    value === 'campaigns' ||
+    value === 'custom_powers' ||
+    value === 'custom_techniques' ||
+    value === 'custom_armaments' ||
+    value === 'custom_creatures'
+  );
+}
+
+/** Maps `assert_account_create_quota` P0001 failures into the standard 403 payload. */
+export function parseRoleQuotaExceededDbError(
+  error: DbErrorShape | null | undefined,
+): RoleQuotaExceededPayload | null {
+  if (!error || error.code !== 'P0001' || error.message !== 'ROLE_QUOTA_EXCEEDED') {
+    return null;
+  }
+  if (!error.details) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(error.details);
+  } catch {
+    return null;
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
+  const record = parsed as Record<string, unknown>;
+  const resource = record.resource;
+  const role = record.role;
+  const currentCount = record.currentCount;
+  const maxAllowed = record.maxAllowed;
+  if (typeof resource !== 'string' || !isRoleQuotaResource(resource)) return null;
+  if (typeof role !== 'string') return null;
+  if (typeof currentCount !== 'number' || typeof maxAllowed !== 'number') return null;
+  return buildRoleQuotaExceededResponse({ role, resource, currentCount, maxAllowed });
+}

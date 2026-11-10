@@ -1,10 +1,25 @@
 import { describe, expect, it } from 'vitest';
 import { parseArchetypePathData } from '@/lib/game/archetype-path';
-import { toColumnarPayload, toDbPayload } from './codex-column-map';
-import { spreadsheetSourceRow, visibleSpreadsheetColumns } from './codex-spreadsheet-config';
+import { assertCodexAdminPayloadKeys, toColumnarPayload, toDbPayload } from './codex-column-map';
+import {
+  spreadsheetPersistPayload,
+  spreadsheetSourceRow,
+  visibleSpreadsheetColumns,
+} from './codex-spreadsheet-config';
 import { rowDataWithoutId, stringToCellValue } from './codex-spreadsheet-helpers';
 
 describe('spreadsheet saves every real column (86e3mezkn)', () => {
+  it('Save all omits derived path_data before the admin payload guard runs', () => {
+    const payload = spreadsheetPersistPayload('archetypes', {
+      id: '1',
+      name: 'Blade',
+      path_data: { level1: { feats: ['1'] } },
+      level1_feats: '1',
+    });
+    expect(payload).not.toHaveProperty('path_data');
+    expect(() => assertCodexAdminPayloadKeys('codex_archetypes', payload)).not.toThrow();
+  });
+
   it('writes archetype fields the grid shows and list mode already saves', () => {
     const db = toDbPayload(
       'codex_archetypes',

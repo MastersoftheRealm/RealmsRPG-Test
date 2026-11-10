@@ -1,12 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
-vi.mock('@/lib/supabase/session', () => ({
-  requireLiveUser: vi.fn(),
-}));
-
 vi.mock('@/lib/admin', () => ({
-  isAdmin: vi.fn(),
+  requireLiveAdminSession: vi.fn(),
 }));
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -47,13 +43,11 @@ vi.mock('@/lib/realms-images-server', async (importOriginal) => {
 import { REALMS_IMAGES_LIST_LIMIT, type RealmsImage } from '@/lib/realms-images';
 import { encodeRealmsImagesListCursor } from '@/lib/realms-images-list-cursor';
 import { GET, POST } from './route';
-import { requireLiveUser } from '@/lib/supabase/session';
-import { isAdmin } from '@/lib/admin';
+import { requireLiveAdminSession } from '@/lib/admin';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { replaceImageCategories, fetchRealmsImageById } from '@/lib/realms-images-server';
 
-const mockRequireLiveUser = vi.mocked(requireLiveUser);
-const mockIsAdmin = vi.mocked(isAdmin);
+const mockRequireLiveAdminSession = vi.mocked(requireLiveAdminSession);
 const mockCreateClient = vi.mocked(createClient);
 const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
 const mockReplaceImageCategories = vi.mocked(replaceImageCategories);
@@ -216,7 +210,7 @@ describe('GET /api/images', () => {
     expect(chain.orderByName).toHaveBeenCalledWith('name', { ascending: true });
     expect(chain.orderById).toHaveBeenCalledWith('id', { ascending: true });
     expect(chain.range).toHaveBeenCalledWith(0, REALMS_IMAGES_LIST_LIMIT);
-    expect(mockRequireLiveUser).not.toHaveBeenCalled();
+    expect(mockRequireLiveAdminSession).not.toHaveBeenCalled();
   });
 
   it('returns hasMore and nextCursor when another page exists', async () => {
@@ -314,7 +308,11 @@ describe('POST /api/images', () => {
   });
 
   it('returns 401 when session is missing', async () => {
-    mockRequireLiveUser.mockRejectedValue(new Error('Authentication required'));
+    mockRequireLiveAdminSession.mockResolvedValue({
+      ok: false,
+      status: 401,
+      body: { error: 'Unauthorized' },
+    });
 
     const response = await POST(makePostRequest());
 
@@ -324,19 +322,21 @@ describe('POST /api/images', () => {
   });
 
   it('returns 403 when the user is authenticated but not admin', async () => {
-    mockRequireLiveUser.mockResolvedValue(USER);
-    mockIsAdmin.mockResolvedValue(false);
+    mockRequireLiveAdminSession.mockResolvedValue({
+      ok: false,
+      status: 403,
+      body: { error: 'Forbidden' },
+    });
 
     const response = await POST(makePostRequest());
 
     expect(response.status).toBe(403);
-    await expect(readJson(response)).resolves.toEqual({ error: 'Admin access required' });
+    await expect(readJson(response)).resolves.toEqual({ error: 'Forbidden' });
     expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
   });
 
   it('rejects an oversized upload before buffering the full body (API-024)', async () => {
-    mockRequireLiveUser.mockResolvedValue(USER);
-    mockIsAdmin.mockResolvedValue(true);
+    mockRequireLiveAdminSession.mockResolvedValue({ ok: true, userId: USER.uid });
 
     const totalBytes = MAX_IMAGE_BYTES + 2 * 1024 * 1024;
     const { request, getBytesConsumed } = makeStreamedMultipartPost(totalBytes);
@@ -352,8 +352,7 @@ describe('POST /api/images', () => {
   });
 
   it('reaches the storage upload path when the user is admin (COMP3-021)', async () => {
-    mockRequireLiveUser.mockResolvedValue(USER);
-    mockIsAdmin.mockResolvedValue(true);
+    mockRequireLiveAdminSession.mockResolvedValue({ ok: true, userId: USER.uid });
 
     const { client, storageUpload, rowInsert } = createAdminUploadSupabase();
     mockCreateServiceRoleClient.mockReturnValue(client as never);
@@ -374,7 +373,7 @@ describe('POST /api/images', () => {
     const response = await POST(makePostRequestWithImageForm());
 
     expect(response.status).toBe(201);
-    expect(mockIsAdmin).toHaveBeenCalledWith(USER.uid);
+    expect(mockRequireLiveAdminSession).toHaveBeenCalled();
     expect(mockCreateServiceRoleClient).toHaveBeenCalled();
     expect(storageUpload).toHaveBeenCalled();
     expect(rowInsert).toHaveBeenCalled();

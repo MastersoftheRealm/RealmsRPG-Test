@@ -1,151 +1,46 @@
 #!/usr/bin/env node
 /**
- * Fail when a changed sql/ file defines CREATE TABLE without an explicit GRANT.
- * Only files in the diff are scanned, so untouched legacy migrations do not fail.
+ * Fail when a changed sql/ file defines CREATE TABLE without the repo template:
+ * ENABLE ROW LEVEL SECURITY, CREATE POLICY, and GRANT SELECT to authenticated plus full
+ * CRUD to service_role on new public tables. Only files in the diff are scanned unless
+ * SQL_GRANTS_CHECK_TREE=1.
  *
- * Base ref:
- * - pull_request: event pull_request.base.sha
- * - push (including push to master): event before (the previous tip)
- * - local: merge-base of HEAD and origin/master
- *
- * Comments and quoted strings are not keywords. Dollar-quoted bodies are still
- * scanned, so a DO block that creates a table is caught; comments inside them
- * are ignored.
- * Ignores: sql/_TEMPLATE_new_table.sql, sql/schema/* baseline snapshots.
+ * Analysis lives in scripts/lib/sql-grant-check-engine.mjs (loop expansion, broad-policy
+ * heuristics, anon write grants, and files without CREATE TABLE).
  */
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  applySqlGrantCheckBaseline,
+  validateSqlGrantCheckBaseline,
+  validateSqlGrantCheckBaselineShrinkOnly,
+  validateSqlGrantCheckBaselineStructure,
+} from './lib/sql-grant-check-baseline.mjs';
+import {
+  expandForeachExecuteFormatSql,
+  extractCreateTableTargets,
+  findCreateTableSetupViolations,
+  findSqlFileViolations,
+  isIgnoredSqlGrantCheckPath,
+  sqlCodeWithoutCommentsAndLiterals,
+  sqlDefinesCreateTableWithoutGrant,
+} from './lib/sql-grant-check-engine.mjs';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-const IGNORED_REL = new Set(['sql/_TEMPLATE_new_table.sql', 'sql/_template_new_table.sql']);
+export {
+  expandForeachExecuteFormatSql,
+  extractCreateTableTargets,
+  findCreateTableSetupViolations,
+  sqlCodeWithoutCommentsAndLiterals,
+  sqlDefinesCreateTableWithoutGrant,
+};
+
+export { isIgnoredSqlGrantCheckPath };
 
 const COMMIT_SHA = /^[0-9a-f]{40}(?:[0-9a-f]{24})?$/i;
-
-/** @param {string} relPath posix-style path under repo root */
-export function isIgnoredSqlGrantCheckPath(relPath) {
-  const normalized = relPath.replace(/\\/g, '/');
-  if (IGNORED_REL.has(normalized)) return true;
-  if (normalized.startsWith('sql/schema/')) return true;
-  return false;
-}
-
-/**
- * SQL with comments and quoted strings blanked. Dollar-quoted bodies stay,
- * with their comments and strings removed, so keyword checks see statements.
- * @param {string} sql
- */
-export function sqlCodeWithoutCommentsAndLiterals(sql) {
-  let out = '';
-  let i = 0;
-  const n = sql.length;
-  /** @type {string[]} */
-  const dollarTags = [];
-
-  const blankUntil = (end) => {
-    while (i < end) {
-      out += sql[i] === '\n' ? '\n' : ' ';
-      i++;
-    }
-  };
-
-  while (i < n) {
-    const c = sql[i];
-    const next = sql[i + 1];
-
-    if (c === '-' && next === '-') {
-      const nl = sql.indexOf('\n', i);
-      blankUntil(nl === -1 ? n : nl);
-      continue;
-    }
-
-    if (c === '/' && next === '*') {
-      let depth = 1;
-      out += '  ';
-      i += 2;
-      while (i < n && depth > 0) {
-        if (sql[i] === '/' && sql[i + 1] === '*') {
-          depth += 1;
-          out += '  ';
-          i += 2;
-          continue;
-        }
-        if (sql[i] === '*' && sql[i + 1] === '/') {
-          depth -= 1;
-          out += '  ';
-          i += 2;
-          continue;
-        }
-        out += sql[i] === '\n' ? '\n' : ' ';
-        i += 1;
-      }
-      continue;
-    }
-
-    if (c === "'") {
-      out += ' ';
-      i += 1;
-      while (i < n) {
-        if (sql[i] === "'" && sql[i + 1] === "'") {
-          out += '  ';
-          i += 2;
-          continue;
-        }
-        const ch = sql[i];
-        out += ch === '\n' ? '\n' : ' ';
-        i += 1;
-        if (ch === "'") break;
-      }
-      continue;
-    }
-
-    if (c === '"') {
-      out += ' ';
-      i += 1;
-      while (i < n) {
-        if (sql[i] === '"' && sql[i + 1] === '"') {
-          out += '  ';
-          i += 2;
-          continue;
-        }
-        const ch = sql[i];
-        out += ch === '\n' ? '\n' : ' ';
-        i += 1;
-        if (ch === '"') break;
-      }
-      continue;
-    }
-
-    if (c === '$') {
-      const match = /^\$([A-Za-z_][A-Za-z0-9_]*)?\$/.exec(sql.slice(i));
-      if (match) {
-        const tag = match[0];
-        if (dollarTags.length && dollarTags[dollarTags.length - 1] === tag) {
-          dollarTags.pop();
-        } else {
-          dollarTags.push(tag);
-        }
-        out += ' '.repeat(tag.length);
-        i += tag.length;
-        continue;
-      }
-    }
-
-    out += c;
-    i += 1;
-  }
-
-  return out;
-}
-
-/** @param {string} sql */
-export function sqlDefinesCreateTableWithoutGrant(sql) {
-  const code = sqlCodeWithoutCommentsAndLiterals(sql).toLowerCase();
-  if (!/\bcreate\s+table\b/.test(code)) return false;
-  return !/\bgrant\b/.test(code);
-}
 
 /**
  * @param {string[]} changedRelPaths
@@ -162,11 +57,38 @@ export function findGrantViolations(changedRelPaths) {
     if (!fs.existsSync(abs)) continue;
 
     const sql = fs.readFileSync(abs, 'utf8');
-    if (sqlDefinesCreateTableWithoutGrant(sql)) {
+    const issues = findSqlFileViolations(sql, { relPath: normalized });
+    for (const issue of issues) {
       violations.push({
         file: normalized,
-        reason:
-          'contains CREATE TABLE but no GRANT (add explicit grants in the same file; see sql/_TEMPLATE_new_table.sql)',
+        reason: issue.reason,
+        statement: issue.statement ?? '',
+      });
+    }
+  }
+  return violations;
+}
+
+/**
+ * @param {string} [root]
+ */
+export function findViolationsInSqlTree(root = repoRoot) {
+  const sqlDir = path.join(root, 'sql');
+  if (!fs.existsSync(sqlDir)) return [];
+  /** @type {{ file: string; reason: string }[]} */
+  const violations = [];
+  for (const name of fs
+    .readdirSync(sqlDir)
+    .filter((f) => f.endsWith('.sql'))
+    .sort()) {
+    const rel = `sql/${name}`;
+    if (isIgnoredSqlGrantCheckPath(rel)) continue;
+    const sql = fs.readFileSync(path.join(sqlDir, name), 'utf8');
+    for (const issue of findSqlFileViolations(sql, { relPath: rel })) {
+      violations.push({
+        file: rel,
+        reason: issue.reason,
+        statement: issue.statement ?? '',
       });
     }
   }
@@ -205,12 +127,8 @@ function mergeBaseWithOriginMaster() {
 }
 
 /**
- * Left side of `git diff <base>...HEAD`.
- * On a push to master, origin/master already is HEAD, so merge-base is empty.
- * That push must use the event's previous tip (`before`).
- *
  * @param {NodeJS.ProcessEnv} [env]
- * @param {object | null} [event] webhook payload; omit to read GITHUB_EVENT_PATH; null skips the file
+ * @param {object | null} [event]
  * @returns {string | null}
  */
 export function resolveBaseRef(env = process.env, event = undefined) {
@@ -259,6 +177,35 @@ function listChangedSqlFiles(baseRef) {
 }
 
 function main() {
+  if (process.env.SQL_GRANTS_CHECK_TREE === '1') {
+    const rawViolations = findViolationsInSqlTree();
+    const baselineErrors = [
+      ...validateSqlGrantCheckBaselineStructure(),
+      ...validateSqlGrantCheckBaselineShrinkOnly('origin/master'),
+      ...validateSqlGrantCheckBaseline(rawViolations),
+    ];
+    if (baselineErrors.length) {
+      console.error('SQL grant check baseline is stale or unmatched:\n');
+      for (const err of baselineErrors) {
+        console.error(`  ${err}`);
+      }
+      process.exit(2);
+    }
+    const violations = applySqlGrantCheckBaseline(rawViolations);
+    if (violations.length) {
+      console.error('SQL grant check failed — sql/ tree has setup gaps:\n');
+      for (const v of violations) {
+        console.error(`  ${v.file}: ${v.reason}`);
+      }
+      process.exit(2);
+    }
+    const count = fs
+      .readdirSync(path.join(repoRoot, 'sql'))
+      .filter((f) => f.endsWith('.sql')).length;
+    console.log(`check-sql-table-grants: tree OK (${count} file(s) under sql/).`);
+    return;
+  }
+
   const baseRef = resolveBaseRef();
   if (!baseRef) {
     const eventName = process.env.GITHUB_EVENT_NAME;
@@ -281,7 +228,7 @@ function main() {
   }
 
   console.error(
-    'SQL grant check failed — new/changed migrations must GRANT in the same file as CREATE TABLE:\n',
+    'SQL grant check failed — new/changed migrations need RLS, policies, and explicit GRANTs in the same file as CREATE TABLE:\n',
   );
   for (const v of violations) {
     console.error(`  ${v.file}: ${v.reason}`);

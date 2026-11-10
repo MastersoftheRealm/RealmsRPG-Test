@@ -1,4 +1,10 @@
 import { mapSelectedToCharacterItems } from '@/components/character-sheet/add-library-item/map-selection';
+import {
+  leanEquipmentForRelationalSave,
+  leanPowersForRelationalSave,
+  leanProficienciesForRelationalSave,
+  leanTechniquesForRelationalSave,
+} from '@/lib/character/relational-lean-save';
 import type { Character, CharacterPower, CharacterTechnique, Item } from '@/types';
 import type { LibraryItem, LibraryPower, LibraryTechnique } from '@/types/library';
 import type { CodexDbRefs } from './types';
@@ -118,13 +124,13 @@ export function libraryAddDirtyFields(
   character: Character,
 ): Partial<Character> {
   const dirty: Partial<Character> = isArmamentKind(kind)
-    ? { equipment: character.equipment }
+    ? { equipment: leanEquipmentForRelationalSave(character.equipment) }
     : {
-        powers: character.powers,
-        techniques: character.techniques,
+        powers: leanPowersForRelationalSave(character.powers),
+        techniques: leanTechniquesForRelationalSave(character.techniques),
       };
   if (character.proficiencies !== undefined) {
-    dirty.proficiencies = character.proficiencies;
+    dirty.proficiencies = leanProficienciesForRelationalSave(character.proficiencies);
   }
   return dirty;
 }

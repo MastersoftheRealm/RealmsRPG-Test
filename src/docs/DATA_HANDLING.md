@@ -21,7 +21,7 @@
 - **Endpoint:** `GET /api/codex` — returns all codex collections (feats, skills, species, traits, powerParts, techniqueParts, parts, itemProperties, equipment, archetypes, creatureFeats, coreRules).
 - **One collection:** `GET /api/codex?collection=<payload key>` returns the same payload shape with only that key, and only queries that collection's tables (`archetypes` also reads `codex_archetype_levels`). An unknown value is a `400 { error }`. Adding a collection means adding it to `CODEX_PAYLOAD_KEYS` + `COLLECTION_TABLES` — there is no second response shape and no `/api/codex/[collection]` route (ADR-0015).
 - **Row mapping:** `lib/codex/row-map.ts` is the one DB-row → entity mapper for GET `/api/codex` and `getCharacterViewEnrichment` (TASK-777). Route-only `updated_at` stays on the route. Archetype path join stays in the route.
-- **Cache (conditional):** Listed-only reads built with the cookie-less `createPublicClient()` may return `PUBLIC_CDN_CACHE_CONTROL` from `lib/api/public-cdn-cache.ts` (`public, max-age=0, s-maxage=300, stale-while-revalidate=3600`). `?debug=1`, `includeUnlisted=1`, non–public-client paths, empty payloads, or any unlisted row use `private, no-store` or `private, max-age=0, must-revalidate` (see `codexCacheControlHeader` in `src/app/api/codex/route.ts`).
+- **Cache (conditional):** Listed-only reads built with the cookie-less `createPublicClient()` may return `CODEX_PUBLIC_CDN_CACHE_CONTROL` from `lib/api/public-cdn-cache.ts` (`public, max-age=0, s-maxage=300`). The Next.js Data Cache for those reads uses `CODEX_PUBLIC_ISR_SECONDS` (**3600s** in `lib/supabase/cached-public-read.ts`). `?debug=1`, `includeUnlisted=1`, non–public-client paths, empty payloads, or any unlisted row use `private, no-store` or `private, max-age=0, must-revalidate` (see `codexCacheControlHeader` in `src/app/api/codex/route.ts`).
 
 ### Client: one collection per consumer
 
@@ -35,6 +35,7 @@
 ### Invalidation
 
 - When admin edits codex (any tab), invalidate `['codex']`. Prefix matching covers the full payload and every `['codex', collection]` slice.
+- Server writes call `lib/api/public-catalog-cache-invalidation.ts`: **server actions** use `updateTag`; **route handlers** use `revalidateTag(tag, { expire: 0 })`. Listed public GETs set `Vercel-Cache-Tag` from `lib/codex/cache-tags.ts` so those tags purge the CDN copy. Admin editors pass `includeUnlisted: 1` (`private, no-store`) and bypass the 3600s Data Cache: codex/official list payloads use uncached loaders (`buildCodexPayloadUncached`, `fetchUncachedOfficial*`), and `core_rules` uses `fetchCoreRulesUncached` (`lib/core-rules-server.ts`) — see `ADMIN_CODEX_QUERY_OPTIONS`, `useGameRules({ admin: true })`, and official library admin tabs with `includeUnlisted: true`.
 
 ---
 
@@ -92,7 +93,7 @@ Admin pages read/write the same tables as the app; schema reference: `src/docs/S
 | **Codex Editor** (list + spreadsheet) | GET /api/codex, server actions | public.codex_feats, codex_skills, codex_species, codex_traits, codex_parts, codex_properties, codex_equipment, codex_archetypes, codex_creature_feats, core_rules |
 | **Official Library Editor** | GET/POST/DELETE /api/official/[type] | public.official_powers, official_techniques, official_items, official_creatures (if tables are empty, confirm `official_powers`, `official_techniques`, `official_items`, and `official_creatures` exist on the live database — historical create script (was `sql/supabase-official-library-public-schema.sql`, deleted 2026-10-29) in git history; see SUPABASE_SCHEMA.md) |
 | **Core Rules Editor** | useGameRules + codex actions | public.core_rules (id, data, updated_at) |
-| **User Management** | GET /api/admin/users, PATCH /api/admin/users/update-role | public.user_profiles (id, username, role) |
+| **User Management** | GET /api/admin/users, PATCH /api/admin/users/update-role | public.user_profiles (id, username, username_display, display_name, email [admin-visible], role) |
 
 Spreadsheet and list edit modes in the Codex Editor persist via `createCodexDoc` / `updateCodexDoc` / `deleteCodexDoc` (service role); columnar fields match DB columns (snake_case); API response keys (e.g. base_skill_id, ave_height) are mapped in actions so edits round-trip correctly.
 

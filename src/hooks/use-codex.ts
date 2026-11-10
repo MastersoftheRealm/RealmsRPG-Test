@@ -61,9 +61,22 @@ export function patchAdminCodexCollectionRow(
 ): void {
   const payloadKey = codexCollectionToPayloadKey(collection);
   const queryKey = adminCodexCollectionQueryKey(payloadKey);
-  queryClient.setQueryData<readonly CodexRowWithId[] | undefined>(queryKey, (rows) => {
-    if (!Array.isArray(rows)) return rows;
-    return rows.map((row) => (String(row.id) === String(id) ? { ...row, ...patch } : row));
+  queryClient.setQueryData(queryKey, (cached) => {
+    const mergeRow = (row: CodexRowWithId) =>
+      String(row.id) === String(id) ? { ...row, ...patch } : row;
+    if (
+      collection === 'codex_traits' &&
+      cached &&
+      typeof cached === 'object' &&
+      !Array.isArray(cached) &&
+      'traits' in cached
+    ) {
+      const payload = cached as { traits?: readonly CodexRowWithId[] };
+      if (!Array.isArray(payload.traits)) return cached;
+      return { ...payload, traits: payload.traits.map(mergeRow) };
+    }
+    if (!Array.isArray(cached)) return cached;
+    return cached.map(mergeRow);
   });
 }
 

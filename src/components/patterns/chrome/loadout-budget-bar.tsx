@@ -6,6 +6,10 @@ import { InfoTippy } from '../help/info-tippy';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { trainingPointsHelp } from '../../../../public/tooltip-text';
 import { cn } from '@/lib/utils';
+import {
+  guidedLoadoutTrainingPointsOverspendMessage,
+  guidedTrainingPointsPointStatusInputs,
+} from '@/lib/guided-creator/loadout-tp';
 
 const phaseCopy = GUIDED_CREATOR_COPY.steps.loadout.phases;
 const ptCopy = GUIDED_CREATOR_COPY.steps.powersTechniques;
@@ -30,6 +34,8 @@ export interface LoadoutBudgetBarProps {
   trailing?: ReactNode | undefined;
   /** Extra content above the PointStatus row (e.g. L2 confirm error). */
   children?: ReactNode | undefined;
+  /** When false, callers render their own Training Points over-pool alert. Default true. */
+  showTrainingPointsOverspendAlert?: boolean | undefined;
 }
 
 /**
@@ -50,11 +56,25 @@ export function LoadoutBudgetBar({
   leading,
   trailing,
   children,
+  showTrainingPointsOverspendAlert = true,
 }: LoadoutBudgetBarProps) {
   const showCurrency = currencyTotal != null && currencySpent != null;
   const showTp = tpTotal != null && tpSpent != null;
   const showRow = showCurrency || showTp || leading != null || trailing != null;
   if (!showRow && !children) return null;
+
+  const tpCounter = showTp
+    ? guidedTrainingPointsPointStatusInputs(tpSpent ?? 0, tpTotal ?? 0)
+    : null;
+  const tpOverspendMessage =
+    showTp && showTrainingPointsOverspendAlert && tpCounter
+      ? guidedLoadoutTrainingPointsOverspendMessage(tpCounter.spent, tpCounter.total)
+      : null;
+  const tpOverspendAlert = tpOverspendMessage ? (
+    <p className="text-center font-nunito text-sm text-warning-fg" role="alert">
+      {tpOverspendMessage}
+    </p>
+  ) : null;
 
   const tpHelp = <InfoTippy content={trainingPointsHelp} label="Training Points help" tone="tp" />;
 
@@ -65,6 +85,7 @@ export function LoadoutBudgetBar({
       aria-label="Character resources"
     >
       {children}
+      {tpOverspendAlert}
       {showRow ? (
         <div
           className={cn(
@@ -81,13 +102,14 @@ export function LoadoutBudgetBar({
               variant="inline"
             />
           ) : null}
-          {showTp ? (
+          {showTp && tpCounter ? (
             <PointStatus
-              total={tpTotal}
-              spent={tpSpent}
+              total={tpCounter.total}
+              spent={tpCounter.spent}
               label={trainingPointsLabel}
               labelAccessory={tpHelp}
               variant="inline"
+              clampRemainingAtZero={false}
             />
           ) : null}
           {trailing}

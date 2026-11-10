@@ -22,9 +22,11 @@ describe('website bugs batch 23 — roll log & unarmed damage', () => {
     expect(rollLog).toContain('flex min-w-0 flex-wrap items-center gap-1.5');
   });
 
-  it('warns when campaign roll sync hits the per-minute limit (86e3jwawc)', () => {
+  it('toasts when campaign roll sync fails (86e3jwawc)', () => {
     expect(rollContext).toContain('AUTH_RATE_LIMIT_MESSAGE');
+    expect(rollContext).toContain('getErrorMessage');
     expect(rollContext).toMatch(/err\.status === 429[\s\S]*showToast/);
+    expect(rollContext).toMatch(/getErrorMessage\(err[\s\S]*showToast/);
   });
 
   it('rolls unarmed damage without a dangling dice row (86e3jwaw8 / 86e3jwaw5)', () => {

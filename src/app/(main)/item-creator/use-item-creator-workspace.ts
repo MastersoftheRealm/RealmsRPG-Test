@@ -52,6 +52,10 @@ import {
   writeCreatorCache,
   clearCreatorSessionDraft,
 } from '@/lib/game/creator-cache';
+import {
+  commitCreatorEditClearAfterSave,
+  scheduleCreatorEditClear,
+} from '@/lib/creator/creator-edit-query';
 import { useItemCreatorCostDerivation } from './item-creator-cost-derivation';
 import { useItemCreatorPropertyActions } from './item-creator-property-actions';
 
@@ -449,6 +453,11 @@ export function useItemCreatorWorkspace({
 
   const forgetLoadedLibraryItemRef = useRef<(() => void) | null>(null);
 
+  const clearEditQuery = useCallback(
+    (href: string) => router.replace(href, { scroll: false }),
+    [router],
+  );
+
   const resetFormAfterSave = useCallback(() => {
     applyFormState(itemCreatorFormAfterSave(armamentType));
     forgetLoadedLibraryItemRef.current?.();
@@ -470,7 +479,9 @@ export function useItemCreatorWorkspace({
     publicSuccessMessage: 'Item saved to Realms Library!',
     initialSaveTarget,
     editingId: editItemId,
-    onSaveCommitted: acceptDraft,
+    onSaveCommitted: () => {
+      commitCreatorEditClearAfterSave(editItemId, clearEditQuery, acceptDraft);
+    },
     onSaveSuccess: resetFormAfterSave,
   });
 
@@ -506,9 +517,10 @@ export function useItemCreatorWorkspace({
     save.forgetLoadedLibraryItem();
     save.setSaveMessage(null);
     clearCreatorSessionDraft(ITEM_CREATOR_CACHE_KEY, editItemId, editReplacesDraft);
+    scheduleCreatorEditClear(editItemId, clearEditQuery);
     acceptDraft();
     alignTypeQuery('Weapon');
-  }, [acceptDraft, alignTypeQuery, editItemId, editReplacesDraft, save]);
+  }, [acceptDraft, alignTypeQuery, clearEditQuery, editItemId, editReplacesDraft, save]);
 
   const keepDraft = useCallback(() => {
     alignTypeQuery(armamentType);

@@ -58,8 +58,10 @@ export interface GuidedPowersTechniquesL2ModalProps {
    * (loadout + the other powers track: innate vs regular).
    */
   loadoutTpSpent: number;
-  /** When set, replaces per-row TP sum (character-level dedupe). */
+  /** When set, TP spent for the footer budget bar (may exceed deduped for warnings). */
   resolveTotalTpSpent?: ((selected: SelectableItem[]) => number) | undefined;
+  /** When set, TP spent for Confirm / handleConfirm (deduped save math). Defaults to resolveTotalTpSpent. */
+  resolveConfirmTpSpent?: ((selected: SelectableItem[]) => number) | undefined;
   tpLimit: number;
   archetypeAbility?: AbilityName | string | null | undefined;
   abilities?: Partial<Abilities> | null | undefined;
@@ -122,6 +124,7 @@ export function GuidedPowersTechniquesL2Modal({
   initialSelectedIds,
   loadoutTpSpent,
   resolveTotalTpSpent,
+  resolveConfirmTpSpent,
   tpLimit,
   archetypeAbility,
   abilities,
@@ -193,15 +196,23 @@ export function GuidedPowersTechniquesL2Modal({
   // Innate: no header help (budget lives in footer). USM closes after onConfirm — do not double-close.
   const description = mode === 'innate' ? undefined : l2Copy.description(kind);
 
-  const totalTpSpent = useCallback(
+  const displayTpSpent = useCallback(
     (selected: SelectableItem[]) =>
       resolveTotalTpSpent?.(selected) ?? computeL2PowersTechniquesTpSpent(selected, loadoutTpSpent),
     [loadoutTpSpent, resolveTotalTpSpent],
   );
 
+  const confirmTpSpent = useCallback(
+    (selected: SelectableItem[]) =>
+      resolveConfirmTpSpent?.(selected) ??
+      resolveTotalTpSpent?.(selected) ??
+      computeL2PowersTechniquesTpSpent(selected, loadoutTpSpent),
+    [loadoutTpSpent, resolveConfirmTpSpent, resolveTotalTpSpent],
+  );
+
   const handleConfirm = useCallback(
     (selected: SelectableItem[]) => {
-      const tpSpent = totalTpSpent(selected);
+      const tpSpent = confirmTpSpent(selected);
       if (tpSpent > tpLimit) {
         setError(ptCopy.tpBlocked);
         return;
@@ -209,7 +220,7 @@ export function GuidedPowersTechniquesL2Modal({
       setError(null);
       onConfirm(selectedIdsFromL2Items(selected));
     },
-    [totalTpSpent, tpLimit, onConfirm],
+    [confirmTpSpent, tpLimit, onConfirm],
   );
 
   const nextInnateSelectedIds = useCallback(
@@ -236,7 +247,7 @@ export function GuidedPowersTechniquesL2Modal({
 
   const footerExtra = useCallback(
     (selected: SelectableItem[]) => {
-      const tpSpent = totalTpSpent(selected);
+      const tpSpent = displayTpSpent(selected);
       const errorEl = error ? (
         <p className="text-center font-nunito text-sm text-warning-fg" role="alert">
           {error}
@@ -263,17 +274,12 @@ export function GuidedPowersTechniquesL2Modal({
         </LoadoutBudgetBar>
       );
     },
-    [mode, innateEnergyMax, totalTpSpent, tpLimit, error],
+    [mode, innateEnergyMax, displayTpSpent, tpLimit, error],
   );
 
   const confirmDisabled = useCallback(
-    (selected: SelectableItem[]) => {
-      if (totalTpSpent(selected) > tpLimit) {
-        return true;
-      }
-      return false;
-    },
-    [totalTpSpent, tpLimit],
+    (selected: SelectableItem[]) => confirmTpSpent(selected) > tpLimit,
+    [confirmTpSpent, tpLimit],
   );
 
   return (

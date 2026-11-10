@@ -1,102 +1,84 @@
-# Architecture Constitution
+# Engineering standards (Architecture Constitution)
 
-On demand. Do not load this file up front. PR Reviewer grades using `src/docs/ai/PR_REVIEWER_BRIEF.md`; it is not a second QA pass.
+The single engineering checklist. The writer checks it before opening a PR, the reviewer grades against it, and QA uses it. Workflow, approvals and risk by path live in root `AGENTS.md`; this file does not repeat them.
 
 ## Roles
 
 | Role | When | Constraint |
 |------|------|------------|
-| **Implementer** (default) | Almost all tasks | Extend existing patterns only. No new shared component/store/API contract without Architect path. |
-| **Architect** (rare) | New shared component, zustand store, API contract, migration strategy, or parallel pattern | Require ADR in `src/docs/ai/ADR/` **or** explicit owner ack in chat / ClickUp. Prefer deleting parallel systems over documenting them forever. |
+| **Implementer** (default) | Almost all tasks | Extend existing patterns only. |
+| **Architect** (rare) | New shared component (`src/components/patterns/`, `src/components/ui/`), zustand store, API contract, migration strategy, or a second way to do something | Needs an ADR in `src/docs/ai/ADR/` and Collin's sign-off on the survey. Prefer deleting the parallel system over documenting it. |
 
-## Session start
+## Checklist
 
-Read the ClickUp task. Search `FEATURE_INDEX.md` if you might add a pattern. That is the list. Root `AGENTS.md` is already in the prompt.
+Each item says what to search and what a failure looks like. The reviewer reports every item as pass, fail or n/a, with `file:line` for each fail.
 
-This file, the Drive playbook, and `DECISIONS.md` are on demand. Open this file for Architect-class work or a constraint the short rules do not name. Lighter session start: `AGENTS.md` (Kadin, 2026-10-11).
+1. **Rule values have one source.** Search `src/lib/game`, `src/components` and `src/app/api` for the same numbers or formulas. Fail: a rule number typed into code; a hardcoded fallback for a `core_rules` or codex value; an optional `rules` argument that silently defaults; code ignoring the database value because the database "looked wrong" (report it instead).
+2. **No forks or duplicates.** Search `src/docs/ai/FEATURE_INDEX.md`, the barrels and `src/lib/` for a helper, hook, component, parser or upload path that already does the job. Fail: a new parallel helper, duplicated math, "copied from X" logic, or copying from a `DEFERRED.md` area.
+3. **Security is on the server.** For every UI gate, find the server or RLS check. Fail: a permission enforced only in the UI; a route without auth; service-role use from a user path; a route reading query, params or JSON without `validateQuery` / `validateRouteParams` / `validateJson` (`@/lib/api-validation`).
+4. **One role model.** Search for the existing role and permission helpers. Fail: an ad-hoc `role === ...` check or a new role list.
+5. **Tests prove behavior.** Fail: a bug fix without a test that fails before and passes after (unless the PR says why that was not feasible); a test that pins a known bug with no ruling or ticket cited; a test that reads source files as text.
+6. **Known bugs stay visible.** Fail: skipping or weakening a test, broadening an assertion, catching and ignoring, or adding a fallback so CI goes green while the bug remains. A visible, ticketed failing test is acceptable.
+7. **Errors are not swallowed.** Every `catch` around a write surfaces or rethrows. Fail: an empty catch, `console.log` only, or a silent default. Client: `apiFetch` throws; check Supabase `{ error }`.
+8. **Comments are not narration.** Fail: new task-id comments, "keep in sync", "TODO remove later", or comments claiming more than the code does. Delete dead code; do not comment it out.
+9. **Legality is advisory.** Fail: hard-blocking "illegal" or homebrew characters. Expected: warnings, visible overrides, temporary modifiers. A missing written rule is a hold, not a guess.
+10. **Database safety.** Fail: any production write, migration, seed or reset without the approvals in `AGENTS.md`; SQL with `DROP`, force-delete or "verify" writes; a new `public` table without RLS, policies and GRANT in the same file.
+11. **Docs are current.** Search docs for text the PR makes stale. Fail: outdated text left in place, or a doc claiming "done/fixed" that the PR does not prove.
+12. **Scope.** One task. Fail: unrelated edits, or reverting a fix already on `master`.
+13. **Honest label.** Fail: the PR says REAL FIX but the root cause is still there, or the survey findings in the PR body are missing.
+14. **UI standards** (when `.tsx` changes). Semantic tokens (prefer `*-fg`), no raw palette (`realms/no-raw-color`); WCAG 2.2 AA (labels, headings, modal titles, target size, focus not obscured); `fullScreenOnMobile` on large modals; tiered touch targets and the six-width contracts in `src/docs/MOBILE_UX.md` (`npm run verify:responsive`).
+15. **Shared UI and barrels.** New files in `src/components/patterns/` or `src/components/ui/` are on `scripts/shared-ui-allowlist.json` with an ADR (`npm run tasks:validate-shared-ui`). Export changes regenerate the index (`npm run tasks:generate-index`).
 
-Do not read `ACTIVE_TASKS.md`, `AI_TASK_QUEUE.md`, `WAITING_TASKS.md`, `AI_CHANGELOG.md`, `AGENT_GUIDE.md`, or archives before coding.
+## Architecture rules
 
-## Source of truth (one authority per topic)
+- **Lib layers.** `src/lib/game` and `src/lib/calculators` are neutral domain math and import nothing from `src/lib/library` or `src/lib/guided-creator`. UI and creator layers import downward (ADR-0010).
+- **Parsers** live in `src/lib/game/`. No admin-local forks.
+- **Uploads.** Client multipart goes through `apiUpload` from `@/lib/api-client`, never raw `fetch` to `/api/upload/*` (eslint `realms/no-raw-upload-fetch`).
+- **SQL.** Lives in `sql/`; table narrative in `src/docs/SUPABASE_SCHEMA.md`; apply and baseline process in `sql/README.md`.
 
-| Topic | Authority |
-|-------|-----------|
-| Process / workflow | ClickUp status order: `.cursor/rules/realms-tasks.mdc`. PR review checklist: `src/docs/ai/PR_REVIEWER_BRIEF.md` (single written process in repo). [Realms Dev Workflow](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) points to the brief (Drive updated **2026-10-28**, Editor bot). **Drive wins** on conflict; fix the repo copy. |
-| Settled decisions | [Realms Web Decisions](https://docs.google.com/document/d/1tGebelYXZPegt4iZiycOjI3RBHD6N_QKZW6CI0ckxkg/edit) → repo `DECISIONS.md` (**Drive wins**; fix repo on conflict) |
-| Work queue | **ClickUp only**. Writes use `CLICKUP_API_TOKEN` in `.env.local` (API v2), not the ClickUp plugin. |
-| Product / UX intent | `REALMS_PRODUCT_OVERVIEW.md` + `human/USER_EXPERIENCE_GOALS.md` |
-| Exists already? | `FEATURE_INDEX.md` → barrels |
-| Schema | `SUPABASE_SCHEMA.md` |
-| Game terms / formulas | `GAME_RULES.md` (if it conflicts with Drive Alpha on core text or math, Drive wins by default — ask Kadin before changing either side, since some entries may be test rules) |
-| Shared UI patterns | `AGENT_GUIDE.md` hub → `guide/` appendices (on demand) + `realms-unification.mdc` |
-| Tokens / contrast | `DESIGN_SYSTEM.md` + `ACCESSIBILITY.md` — prefer `*-fg` theme-aware tokens |
-| Responsive / mobile | `MOBILE_UX.md` (ADR-0023 — six-width contracts, tiered touch targets) |
-| Accessibility | `ACCESSIBILITY.md` — **WCAG 2.2 AA** everywhere |
-| Design constraints | `DESIGN_INTENT.md` + `// DESIGN_INTENT:` comments |
-| Architecture decisions | `ADR/` |
+### API error responses
 
-## Non-negotiables
-
-- **Search before build** — never fork a parallel `Library*Tab` / load hook / upload path / parser.
-- **Stack** — Next.js App Router, Supabase (no Prisma), Vercel. SQL in `sql/`; schema docs in `SUPABASE_SCHEMA.md`.
-- **Lib layers** — `lib/game` + `lib/calculators` are neutral domain math (no imports from `lib/library` or `lib/guided-creator`). UI/creator layers import downward. See ADR-0010.
-- **Migrations (one policy):** No production writes without **Kadin explicit OK** and a fresh backup. Prefer Supabase MCP `apply_migration` on non-production when available; else Dashboard SQL Editor. **Deployed schema:** live database + applied rows in `supabase_migrations.schema_migrations` on that project; table/column narrative in `SUPABASE_SCHEMA.md`. **Repo `sql/`:** `_TEMPLATE_new_table.sql`, owner utilities, and `schema/0000_baseline_*` (kept until regenerated via `npm run db:baseline:update`) — not a replay library after apply; draft idempotent SQL before apply, then update docs/types/baseline per `sql/README.md`. **Codex data** (`codex_*` / `core_rules`): audit → propose SQL → **Kadin explicit OK** → apply on the approved environment. See `guide/07-database-operations.md` and `realms-codex-data.mdc`.
-- **Uploads** — client multipart via `apiUpload` from `@/lib/api-client` (not raw `fetch` to `/api/upload/*`).
-- **Client errors** — API/Supabase boundary convention in `ARCHITECTURE.md` § Client error handling: `apiFetch` throws; check Supabase `{ error }`; no silent `catch` on user actions.
-- **API error responses** — Route Handlers return `{ error: string }` on failure (4xx/5xx). Log raw Supabase/Postgres/storage errors server-side via `logApiError` / `apiErrorResponse` (`@/lib/api-error`); never expose `.message`, `.details`, or stack traces to clients in production. Optional `hint` / `debug` fields only when `?debug=1` (admin/non-prod) or `NODE_ENV=development`. Success payloads vary by route; errors do not.
-- **Parsers** — domain parsers in `src/lib/game/` (e.g. `archetype-path.ts`); no admin-local forks.
-- **UI gates** — keep `realms/no-raw-color`, contrast, visual/a11y Playwright. Prefer `text-success-fg` / `text-danger-fg` / `text-warning-fg` / `text-power-fg` / `text-martial-fg` over numbered ramp + ad-hoc `dark:`.
-- **Mobile** — `fullScreenOnMobile` on large modals; ≥44px touch targets.
-- **Accessibility** — **WCAG 2.2 AA** everywhere. Labels, contrast, modals, touch tiers per `MOBILE_UX.md`.
-- **Git** — Status order, PR Reviewer, Human OK, merge, and testing: `.cursor/rules/realms-tasks.mdc`. Never push `master`. Never squash. Agents do not merge.
-
-## Definition of Done
-
-Acceptance criteria are met, and:
-
-1. The regression test for the repro passes locally. CI runs typecheck, the full unit suite, and the production build. Do not run those locally as well.
-2. No new parallel pattern (or an ADR plus owner ack). Prefer deleting a weaker fork over leaving a compat layer.
-3. ClickUp id in the branch and the PR. A comment on the task says what changed and how to test. Do not update `ACTIVE_TASKS.md` or put `TASK-###` in the commit subject.
-4. One task, one branch, one PR.
-5. No `AI_CHANGELOG.md` entry. The PR and the ClickUp comment are the note.
-6. User-facing work: QA steps on the ClickUp comment. Add a `BUILD_VALIDATION.md` test only when that suite does not already cover the check.
-7. New shared UI: allowlist + ADR, then `npm run tasks:validate-shared-ui`. Barrel changes: `npm run tasks:generate-index`.
-8. Every fixed bug has a regression test from its repro when feasible.
-
-If an acceptance criterion is still open, say so on the ClickUp task. Do not mark the task complete.
-
-### QA
-
-User-facing work moves to ClickUp **testing** with the QA comment. That comment is the pending-QA record. Do not also set legacy `verification_status` fields in removed repo queue files.
-
-## Human review gates (stop and ask / DEV queue)
-
-After a passing PR Reviewer verdict, require **Human OK** (Kadin or Collin, usually Kadin) before merging:
-
-- New files under `src/components/patterns/` or `src/components/ui/` (**CI:** `npm run tasks:validate-shared-ui` — update `scripts/shared-ui-allowlist.json` + ADR)
-- New zustand stores or new state-management approach
-- API contract changes (request/response shapes clients depend on)
-- Live codex `UPDATE`/`INSERT`/`DELETE`
-
-**High-risk PRs** (classification, Web Manager second pass, and Kadin plain-language summary): `src/docs/ai/PR_REVIEWER_BRIEF.md` **Risk classification** (single list). Live database apply still needs **Kadin explicit OK** and a fresh backup.
-
-**PR review process:** The review process is written once in `src/docs/ai/PR_REVIEWER_BRIEF.md`; [Realms Dev Workflow §4](https://docs.google.com/document/d/1F6iZUKP9nN0YTFzOkZ6Y82sySaw0iW101f_a-7ZeQdI/edit) and [Realms Web Decisions](https://docs.google.com/document/d/1tGebelYXZPegt4iZiycOjI3RBHD6N_QKZW6CI0ckxkg/edit) point to it and do not duplicate it (Drive updated **2026-10-28**, Editor bot). **Drive vs repo (Oct 5, 2026):** when a Drive doc and its repo copy conflict, **Drive wins** and the repo copy is corrected—including Dev Workflow or Decisions vs the brief. Drive **core rulebook text** wins over `GAME_RULES.md` when they conflict (ask Kadin).
-
-**Model escalation:** Before implementing Architect-class or irreversible-data work, pause once and flag that a stronger model may be safer — see `.cursor/rules/realms-tasks.mdc` (narrow triggers; do not stall routine Implementer tasks).
+Route Handlers return `{ error: string }` on failure (4xx/5xx). Log raw Supabase, Postgres or storage errors server-side via `logApiError` / `apiErrorResponse` (`@/lib/api-error`); never expose `.message`, `.details` or stack traces to clients in production. Optional `hint` / `debug` fields only with `?debug=1` (admin or non-production) or `NODE_ENV=development`. Success payloads vary by route; errors do not.
 
 ## Anti-debt
 
-- Prefer **delete** the weaker of two parallel systems.
-- Prefer **extend** existing shared/ui/hook/lib (`FEATURE_INDEX` + barrels) over new parallel helpers/modals/parsers.
-- Cleanup must **remove** clutter and prove feedback/AC in code — not grow docs theater. Prefer **net remove** on cleanup/debt diffs.
-- When consolidating, ship a first slice + precise follow-ups — not aspirational prose only.
-- A hold that exists only in a waiting/backlog record stays there until it is on the ClickUp task. Do not load removed repo queue files to start work.
-- **Before merge:** PR Reviewer verdict per `src/docs/ai/PR_REVIEWER_BRIEF.md`. `/cleanup` only for an in-scope gap from REQUEST CHANGES. `/global-audit` and `/debt` are unused on a task.
+- Prefer **deleting** the weaker of two parallel systems.
+- Prefer **extending** existing shared UI, hooks and lib over new parallel helpers, modals or parsers.
+- Cleanup removes clutter. Prefer a net-negative diff on cleanup work.
+- When consolidating, ship a first slice plus precise follow-up tasks, not aspirational prose.
 
-## On-demand deep refs
+## Reviewer verdict format
 
-- Patterns / components / gotchas → `AGENT_GUIDE.md` hub → `guide/` appendices
-- Feature map → `FEATURE_INDEX.md` + generated `FEATURE_INDEX_BARRELS.generated.md`
-- PR failure-mode checklist → `PR_CHECKLIST.md` (includes PR Reviewer pointer)
-- Slash commands → `.cursor/commands/cleanup.md`. Retired: `/audit` (superseded by PR Reviewer), `/global-audit`, `/debt` (unused on a task).
-- Task record → the ClickUp task, the branch, and the PR. Not `AI_TASK_QUEUE.md`.
+```
+## PR Reviewer verdict: APPROVE | REQUEST CHANGES | HOLD FOR HUMAN
+Round: 1 | 2
+Risk: standard | high (paths)
+Label check: REAL FIX | PATCH — agrees with the writer? (why)
+Repro test: ran <command> — failed before / passes after
+Checklist: items 1–15 pass/fail/n.a., one line each, file:line for each fail
+Required changes: (REQUEST CHANGES only)
+Question for human: (HOLD only, one clear decision, addressed to Kadin for what or Collin for how)
+```
+
+- **APPROVE:** standard risk, all items pass, CI green, repro test run.
+- **REQUEST CHANGES:** a checklist fail the writer can fix. Round 2 is the last.
+- **HOLD FOR HUMAN:** high risk, a missing or conflicting rule, a product decision, or you are not independent of the writer.
+- **PATCH veto:** if your label check says PATCH, the verdict cannot be APPROVE. Use HOLD FOR HUMAN; it merges only if Kadin accepts it as a patch in his own PR comment (`AGENTS.md`, Review).
+
+**Fallback senior review** (`AGENTS.md`, Fallback when Collin is unavailable): same format, headed `## Senior fallback review: plan | implementation`. Add `Own root-cause trace:` (written before reading the diff), `Assumptions challenged:`, and `Over-engineered / over-simplified:`. Do not read the writer's PR description or reasoning.
+
+The reviewer never approves its own writing, merges, pushes, changes settings, or writes to ClickUp, Drive or the database. Green CI is not proof of correctness.
+
+### For Kadin (plain language)
+
+Mandatory when Kadin must decide something, and on every high-risk PR:
+
+```
+### For Kadin (plain language)
+- What it does: (1–2 sentences, no jargon)
+- Why: (the problem, who sees it)
+- REAL FIX or PATCH: (and what a patch leaves behind)
+- What could go wrong: (worst realistic case, how we'd notice)
+- How to undo it: (revert / restore backup / flip setting)
+- What I need from you: (the one product decision, or "nothing")
+```

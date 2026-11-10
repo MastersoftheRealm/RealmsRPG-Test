@@ -17,6 +17,7 @@ import {
   validateRouteParams,
 } from '@/lib/api-validation';
 import { prepareCharacterForSave } from '@/lib/character-save';
+import { characterRelationalValidationResponse } from '@/lib/character/character-relational-save-errors';
 import { applyCharacterDirtyPatch } from '@/lib/character/dirty-patch';
 import {
   normalizeCharacterForSave,
@@ -176,13 +177,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (!validation.success) return validation.error;
     const data = validation.data as Partial<Character>;
     const expectedUpdatedAt = typeof data.updatedAt === 'string' ? data.updatedAt : undefined;
-    const cleanedData = prepareCharacterForSave(data);
-
     const supabase = await createClient();
     const currentDocument = await getRelationalCharacterDocument(supabase, id);
     if (!currentDocument) {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });
     }
+
+    const cleanedData = prepareCharacterForSave(data, { storedDocument: currentDocument });
 
     const mergedData = applyCharacterDirtyPatch(currentDocument, cleanedData, {
       documentUpdatedAt: new Date().toISOString(),
@@ -192,11 +193,22 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       loadFeatCatalog: patchDirtyKeysNeedFeatCatalog(cleanedData),
     });
 
-    const result = await patchRelationalCharacter(supabase, {
-      characterId: id,
-      patch: cleanedData as Record<string, unknown>,
-      expectedUpdatedAt,
-    });
+    let result;
+    try {
+      result = await patchRelationalCharacter(supabase, {
+        characterId: id,
+        patch: cleanedData as Record<string, unknown>,
+        expectedUpdatedAt,
+      });
+    } catch (patchErr) {
+      const validation = characterRelationalValidationResponse(
+        'PATCH /api/characters/[id]',
+        patchErr as { code?: string; message?: string },
+        { userId: user.uid, characterId: id },
+      );
+      if (validation) return validation;
+      throw patchErr;
+    }
     if (result.status === 'not_found') {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });
     }

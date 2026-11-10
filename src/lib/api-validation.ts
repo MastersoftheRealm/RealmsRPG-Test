@@ -32,7 +32,12 @@ import {
   CAMPAIGN_ROLL_TITLE_MAX_LENGTH,
   CAMPAIGN_ROLL_TITLE_TOO_LONG_MESSAGE,
 } from '@/lib/rolls/campaign-roll-limits';
-import { DIE_MAX, ROLL_LOG_BUILDER_DICE_POOL_MAX, type DieType } from '@/lib/rolls/die';
+import {
+  DIE_MAX,
+  ROLL_LOG_BUILDER_DICE_POOL_MAX,
+  ROLL_OUTCOME_KINDS,
+  type DieType,
+} from '@/lib/rolls/die';
 import { getCanonicalSiteUrl } from '@/lib/site-url';
 
 const CAMPAIGN_ROLL_DIE_TYPES = [
@@ -572,6 +577,7 @@ const campaignRollPayloadSchema = z
     /** Client RollEntry may include id; the route assigns a new row id server-side. */
     id: z.string().optional(),
     type: z.enum(CAMPAIGN_ROLL_TYPES),
+    outcomeKind: z.enum(ROLL_OUTCOME_KINDS).optional(),
     title: z
       .string()
       .min(1)
@@ -761,6 +767,27 @@ export const adminChangelogsQuerySchema = z
     limit: z.string().regex(/^\d+$/, 'limit must be a positive integer').optional(),
   })
   .strict();
+
+const ADMIN_USERS_MAX_LIMIT = 100;
+
+export const adminUsersQuerySchema = z
+  .object({
+    limit: z.string().regex(/^\d+$/, 'limit must be a positive integer').optional(),
+    offset: z.string().regex(/^\d+$/, 'offset must be a non-negative integer').optional(),
+    q: z.string().max(200).optional(),
+  })
+  .strict();
+
+export function parseAdminUsersPaging(query: z.infer<typeof adminUsersQuerySchema>): {
+  limit: number;
+  offset: number;
+} {
+  const parsedLimit = Number(query.limit ?? String(ADMIN_USERS_MAX_LIMIT));
+  const limit = Math.max(1, Math.min(ADMIN_USERS_MAX_LIMIT, Math.floor(parsedLimit)));
+  const parsedOffset = Number(query.offset ?? '0');
+  const offset = Math.max(0, Math.floor(parsedOffset));
+  return { limit, offset };
+}
 
 export const realmsImagePatchSchema = z
   .object({

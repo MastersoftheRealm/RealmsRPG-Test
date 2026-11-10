@@ -79,11 +79,15 @@ describe('map-library-to-character', () => {
 
   it('libraryAddDirtyFields is a subset (TASK-746)', () => {
     expect(libraryAddDirtyFields('weapon', baseCharacter)).toEqual({
-      equipment: baseCharacter.equipment,
+      equipment: {
+        weapons: [{ id: 'existing-weapon', name: 'Sword' }],
+        armor: [],
+        shields: [],
+      },
     });
     expect(libraryAddDirtyFields('power', baseCharacter)).toEqual({
-      powers: baseCharacter.powers,
-      techniques: baseCharacter.techniques,
+      powers: [{ id: 'existing-power', name: 'Existing', innate: false }],
+      techniques: [],
     });
     expect(libraryAddDirtyFields('weapon', baseCharacter)).not.toHaveProperty('notes');
     expect(libraryAddDirtyFields('weapon', baseCharacter)).not.toHaveProperty('powers');

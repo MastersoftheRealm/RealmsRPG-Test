@@ -7,14 +7,21 @@
  * that would store a copy per cookie jar, including a signed-in response.
  */
 
+import type { NextResponse } from 'next/server';
 import type { CodexPayload, CodexPayloadKey } from '@/types/codex';
+
+/** Response header Vercel uses to purge CDN entries by tag on `updateTag` / `revalidateTag`. */
+export const VERCEL_CACHE_TAG_HEADER = 'Vercel-Cache-Tag';
 
 /**
  * Browsers revalidate (`max-age=0`). Shared caches keep a fresh copy for 5 minutes, then may
- * serve one stale response while refreshing (`stale-while-revalidate`).
+ * serve one stale response while refreshing (`stale-while-revalidate`). Used by `/api/official`.
  */
 export const PUBLIC_CDN_CACHE_CONTROL =
   'public, max-age=0, s-maxage=300, stale-while-revalidate=3600';
+
+/** Listed-only `GET /api/codex` CDN header — no stale-while-revalidate. */
+export const CODEX_PUBLIC_CDN_CACHE_CONTROL = 'public, max-age=0, s-maxage=300';
 
 export const PRIVATE_MUST_REVALIDATE_CACHE_CONTROL = 'private, max-age=0, must-revalidate';
 
@@ -53,4 +60,17 @@ export function codexResponseMayUsePublicCdn(
 
 export function officialListMayUsePublicCdn(items: unknown[]): boolean {
   return items.length > 0 && !items.some(recordIsUnlisted);
+}
+
+function joinVercelCacheTags(tags: readonly string[]): string | undefined {
+  const unique = [...new Set(tags.filter((tag) => tag.length > 0 && tag.length <= 256))];
+  return unique.length > 0 ? unique.join(',') : undefined;
+}
+
+export function withVercelCacheTags(response: NextResponse, tags: readonly string[]): NextResponse {
+  const joined = joinVercelCacheTags(tags);
+  if (joined) {
+    response.headers.set(VERCEL_CACHE_TAG_HEADER, joined);
+  }
+  return response;
 }

@@ -314,4 +314,59 @@ describe('GET /api/admin/changelogs', () => {
     expect(tables).toEqual(['codex_change_logs', 'user_profiles']);
     expect(body[0]?.after_data).toEqual({});
   });
+
+  it('API-025: actor payload has no email key', async () => {
+    mockRequireAdminSession.mockResolvedValue({ ok: true, userId: ADMIN_ID });
+    mockCreateServiceRoleClient.mockReturnValue({
+      from: (table: string) => {
+        if (table === 'codex_change_logs') {
+          return {
+            select: () => ({
+              eq: () => ({
+                order: () => ({
+                  limit: () =>
+                    Promise.resolve({
+                      data: [changelogFixture({ changed_by_user_id: 'actor-1' })],
+                      error: null,
+                    }),
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === 'user_profiles') {
+          return {
+            select: () => ({
+              in: () =>
+                Promise.resolve({
+                  data: [
+                    {
+                      id: 'actor-1',
+                      username: 'editor',
+                      username_display: 'Editor',
+                      display_name: 'Codex Editor',
+                      email: 'editor@example.com',
+                    },
+                  ],
+                  error: null,
+                }),
+            }),
+          };
+        }
+        return { select: () => ({ in: () => Promise.resolve({ data: [], error: null }) }) };
+      },
+    } as never);
+
+    const response = await GET(makeGetRequest());
+    const body = await readJson<Array<{ actor: Record<string, unknown> | null }>>(response);
+
+    expect(response.status).toBe(200);
+    expect(body[0]?.actor).toEqual({
+      id: 'actor-1',
+      username: 'editor',
+      usernameDisplay: 'Editor',
+      displayName: 'Codex Editor',
+    });
+    expect(body[0]?.actor).not.toHaveProperty('email');
+  });
 });

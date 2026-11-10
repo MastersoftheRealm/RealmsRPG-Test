@@ -96,7 +96,11 @@ type MockSupabaseConfig = {
    */
   replayCharacterIdAfterInsert?: string | null | undefined;
   /** Error the insert rejects with (e.g. a 23505 from the idempotency index). */
-  insertError?: { code?: string | undefined; message?: string | undefined } | null;
+  insertError?: {
+    code?: string | undefined;
+    message?: string | undefined;
+    details?: string | undefined;
+  } | null;
   coreRules?: Array<{ id: string; data: unknown }> | undefined;
   /** Official feats for the level-1 requirement check. Default [] skips the check. */
   codexFeats?: unknown[] | undefined;
@@ -133,6 +137,7 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
   let insertAttempted = false;
   let skillSelectColumns: string | undefined;
   let storedSheetSelectCalls = 0;
+  let headQuotaSelectCalls = 0;
   const insertedRows: Array<Record<string, unknown>> = [];
   const insert = vi.fn((row: Record<string, unknown>) => {
     insertAttempted = true;
@@ -161,6 +166,7 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
           select: vi.fn(
             (cols?: string, opts?: { count?: string | undefined; head?: boolean | undefined }) => {
               if (opts?.head) {
+                headQuotaSelectCalls += 1;
                 return {
                   eq: vi.fn().mockResolvedValue({ count: characterCount, error: null }),
                 };
@@ -229,6 +235,9 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
         return { data: sheet, error: null };
       }
       if (name === 'create_character_relational') {
+        if (insertError && insertError.code !== '23505') {
+          return { data: null, error: insertError };
+        }
         const document = args.p_document as Record<string, unknown>;
         insert({
           id: args.p_character_id,
@@ -238,9 +247,6 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
           level: document.level,
           client_request_id: args.p_client_request_id,
         });
-        if (insertError && insertError.code !== '23505') {
-          return { data: null, error: insertError };
-        }
         const id =
           insertError?.code === '23505'
             ? (replayCharacterIdAfterInsert ?? replayCharacterId ?? insertId)
@@ -256,6 +262,9 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
     },
     get storedSheetSelectCalls() {
       return storedSheetSelectCalls;
+    },
+    get headQuotaSelectCalls() {
+      return headQuotaSelectCalls;
     },
   };
 
@@ -481,17 +490,59 @@ describe('POST /api/characters', () => {
     expect(body.details?.some((d) => d.includes('name'))).toBe(true);
   });
 
-  it('creates a character and returns the new id', async () => {
+  it('returns 400 when the relational create RPC rejects an unmapped field', async () => {
     mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
     mockCreateClient.mockResolvedValue(
-      createMockSupabase({ characterCount: 1, insertId: 'created-char-id' }) as never,
+      createMockSupabase({
+        insertError: {
+          code: '22023',
+          message: 'Unmapped character key: staleField',
+        },
+      }) as never,
     );
+
+    const response = await POST(makePostRequest({ name: 'New Hero', level: 2 }));
+
+    expect(response.status).toBe(400);
+    const body = await readJson<{ error: string; details: string[] }>(response);
+    expect(body.details[0]).toContain('staleField');
+    expect(body.error).toBe('Failed to save character');
+    expect(body.error).not.toContain('Unmapped character');
+  });
+
+  it('does not send deprecated trait keys on create', async () => {
+    mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+    const supabase = createMockSupabase({ characterCount: 1, insertId: 'legacy-trait-strip' });
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await POST(
+      makePostRequest({
+        name: 'Legacy Trait',
+        level: 1,
+        ancestryTraits: ['t1'],
+        flawTrait: 'flaw',
+        characteristicTrait: 'char',
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    const saved = defined(supabase.insertedRows[0]).document as Record<string, unknown>;
+    expect(saved).not.toHaveProperty('ancestryTraits');
+    expect(saved).not.toHaveProperty('flawTrait');
+    expect(saved).not.toHaveProperty('characteristicTrait');
+  });
+
+  it('creates a character and returns the new id', async () => {
+    mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+    const supabase = createMockSupabase({ characterCount: 1, insertId: 'created-char-id' });
+    mockCreateClient.mockResolvedValue(supabase as never);
 
     const response = await POST(makePostRequest({ name: 'New Hero', level: 2 }));
 
     expect(response.status).toBe(200);
     await expect(readJson(response)).resolves.toEqual({ id: 'created-char-id' });
     expect(mockEnsureUserProfile).toHaveBeenCalled();
+    expect(supabase.headQuotaSelectCalls).toBe(1);
   });
 
   it('returns 403 when the user is at the character quota', async () => {
@@ -890,12 +941,9 @@ describe('POST /api/characters', () => {
     });
 
     it('replays ahead of the quota check, so a retry is not refused for the slot it took', async () => {
-      const policy = getDefaultRolePolicy('new_player');
       mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
-      mockGetRolePolicyForUser.mockResolvedValue(policy);
       mockCreateClient.mockResolvedValue(
         createMockSupabase({
-          characterCount: policy.maxCharacters,
           replayCharacterId: 'already-created-id',
           replayCharacterSheet: legalLevel1Payload(),
         }) as never,

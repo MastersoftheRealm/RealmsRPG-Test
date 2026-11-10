@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { DeleteConfirmModal, OfficialPowerList } from '@/components/patterns';
 import { useToast } from '@/components/ui';
 import {
+  ADMIN_CODEX_QUERY_OPTIONS,
   officialLibraryKeys,
   useOfficialLibrary,
   usePatchOfficialCatalogListing,
@@ -31,7 +32,7 @@ export function AdminPublicPowersTab() {
   } = useOfficialLibrary('powers', {
     includeUnlisted: true,
   });
-  const { data: partsDb = [] } = usePowerParts();
+  const { data: partsDb = [] } = usePowerParts(ADMIN_CODEX_QUERY_OPTIONS);
   const patchListing = usePatchOfficialCatalogListing('powers');
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
 

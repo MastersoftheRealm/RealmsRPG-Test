@@ -1,3 +1,5 @@
+import 'server-only';
+
 /**
  * Memoized whole-table reads for official_* library GET routes.
  */

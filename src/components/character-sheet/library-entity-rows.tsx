@@ -81,6 +81,7 @@ import {
   withPowerReverseNote,
 } from '@/lib/power-variant-chips';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
+import { formatRandomizeRollTitle } from '@/lib/rolls/campaign-roll-limits';
 import { DIE_MAX, generateRollId, type DieType } from '@/lib/rolls/die';
 import type { LibraryPower } from '@/types/library';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
@@ -279,7 +280,7 @@ function buildRandomizeRollEntry(powerName: string, face: number, sides: number,
   return {
     id: generateRollId(),
     type: 'custom' as const,
-    title: `${powerName}: 1d${sides} → ${label}`,
+    title: formatRandomizeRollTitle(powerName, sides, label),
     dice: known ? [{ type: dieType, value: face, isMax: face === sides, isMin: face === 1 }] : [],
     modifier: 0,
     total: face,

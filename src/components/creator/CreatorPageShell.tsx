@@ -95,6 +95,7 @@ export type CreatorPageShellProps = {
   onDiscardLocalDraft?: (() => void) | undefined;
 
   publish: CreatorPagePublishConfig;
+  emptyOverwrite?: CreatorPagePublishConfig | undefined;
   resetConfirm?: CreatorPageResetConfirmConfig | undefined;
 
   loading?: CreatorPageLoadingConfig | undefined;
@@ -135,6 +136,7 @@ export function CreatorPageShell({
   unsavedDirty = false,
   onDiscardLocalDraft,
   publish,
+  emptyOverwrite,
   resetConfirm,
   loading,
   loadModal,
@@ -283,6 +285,18 @@ export function CreatorPageShell({
               publish.onSecondaryConfirm ? () => void publish.onSecondaryConfirm?.() : undefined
             }
           />
+          {emptyOverwrite ? (
+            <ConfirmActionModal
+              isOpen={emptyOverwrite.isOpen}
+              onClose={emptyOverwrite.onClose}
+              onConfirm={() => void emptyOverwrite.onConfirm()}
+              title={emptyOverwrite.title}
+              description={emptyOverwrite.description}
+              confirmLabel={emptyOverwrite.confirmLabel ?? 'Save anyway'}
+              icon="warning"
+              confirmVariant="danger"
+            />
+          ) : null}
           <ConfirmActionModal
             isOpen={unsavedDirty && (discardAction !== null || leaveBlocker.request !== null)}
             onClose={() => {

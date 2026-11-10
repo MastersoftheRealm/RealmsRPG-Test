@@ -92,7 +92,7 @@ describe('validateUserLibraryWriteBody', () => {
     expect(validateUserLibraryWriteBody('creatures', body)).toBeNull();
   });
 
-  it('strips direct image URL writes for user library saves', () => {
+  it('strips imageUrl and keeps a valid bank imageId for non-admin user library saves', () => {
     const body = {
       name: 'Bolt',
       imageId: '11111111-1111-4111-8111-111111111111',
@@ -100,6 +100,17 @@ describe('validateUserLibraryWriteBody', () => {
     };
     expect(validateUserLibraryWriteBody('powers', body)).toBeNull();
     expect(body.imageUrl).toBeUndefined();
+    expect(body.imageId).toBe('11111111-1111-4111-8111-111111111111');
+  });
+
+  it('allows image fields when allowImageUrl is set (admin)', () => {
+    const body = {
+      name: 'Bolt',
+      imageId: '11111111-1111-4111-8111-111111111111',
+      imageUrl: 'https://cdn.test/art.jpg',
+    };
+    expect(validateUserLibraryWriteBody('powers', body, { allowImageUrl: true })).toBeNull();
+    expect(body.imageUrl).toBe('https://cdn.test/art.jpg');
     expect(body.imageId).toBe('11111111-1111-4111-8111-111111111111');
   });
 

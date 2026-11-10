@@ -3,11 +3,11 @@ import { NextRequest } from 'next/server';
 
 vi.mock('@/lib/supabase/session', () => ({
   getSession: vi.fn(),
-  requireLiveUser: vi.fn(),
 }));
 
 vi.mock('@/lib/admin', () => ({
   isAdmin: vi.fn(),
+  requireLiveAdminSession: vi.fn(),
 }));
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -36,18 +36,20 @@ import {
   PRIVATE_MUST_REVALIDATE_CACHE_CONTROL,
   PRIVATE_NO_STORE_CACHE_CONTROL,
   PUBLIC_CDN_CACHE_CONTROL,
+  VERCEL_CACHE_TAG_HEADER,
 } from '@/lib/api/public-cdn-cache';
+import { officialPublicRouteCdnCacheTag } from '@/lib/codex/cache-tags';
 import { GET, POST, PATCH, DELETE } from './route';
-import { getSession, requireLiveUser } from '@/lib/supabase/session';
-import { isAdmin } from '@/lib/admin';
+import { getSession } from '@/lib/supabase/session';
+import { isAdmin, requireLiveAdminSession } from '@/lib/admin';
 import { createPublicClient } from '@/lib/supabase/public-client';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { recordCodexChange } from '@/lib/codex-changelog';
 import * as nextCache from 'next/cache';
 
 const mockGetSession = vi.mocked(getSession);
-const mockRequireLiveUser = vi.mocked(requireLiveUser);
 const mockIsAdmin = vi.mocked(isAdmin);
+const mockRequireLiveAdminSession = vi.mocked(requireLiveAdminSession);
 const mockCreateClient = vi.mocked(createClient);
 const mockCreatePublicClient = vi.mocked(createPublicClient);
 const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
@@ -221,6 +223,9 @@ describe('GET /api/official/[type]', () => {
     const response = await GET(makeGetRequest('powers'), params('powers'));
     expect(response.status).toBe(200);
     expect(response.headers.get('Cache-Control')).toBe(PUBLIC_CDN_CACHE_CONTROL);
+    expect(response.headers.get(VERCEL_CACHE_TAG_HEADER)).toContain(
+      officialPublicRouteCdnCacheTag('powers'),
+    );
     expect(mockCreateClient).not.toHaveBeenCalled();
   });
 
@@ -316,7 +321,11 @@ describe('POST /api/official/[type]', () => {
   });
 
   it('returns 401 when session is missing', async () => {
-    mockRequireLiveUser.mockRejectedValue(new Error('Authentication required'));
+    mockRequireLiveAdminSession.mockResolvedValue({
+      ok: false,
+      status: 401,
+      body: { error: 'Unauthorized' },
+    });
 
     const response = await POST(makePostRequest('powers'), params('powers'));
 
@@ -326,19 +335,25 @@ describe('POST /api/official/[type]', () => {
   });
 
   it('returns 403 when the user is authenticated but not admin', async () => {
-    mockRequireLiveUser.mockResolvedValue(USER);
-    mockIsAdmin.mockResolvedValue(false);
+    mockRequireLiveAdminSession.mockResolvedValue({
+      ok: false,
+      status: 403,
+      body: { error: 'Forbidden' },
+    });
 
     const response = await POST(makePostRequest('powers'), params('powers'));
 
     expect(response.status).toBe(403);
-    await expect(readJson(response)).resolves.toEqual({ error: 'Admin only' });
+    await expect(readJson(response)).resolves.toEqual({ error: 'Forbidden' });
     expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
   });
 
-  it('returns 403 when a non-admin posts official image fields', async () => {
-    mockRequireLiveUser.mockResolvedValue(USER);
-    mockIsAdmin.mockResolvedValue(false);
+  it('returns 403 before validation when a non-admin posts official image fields', async () => {
+    mockRequireLiveAdminSession.mockResolvedValue({
+      ok: false,
+      status: 403,
+      body: { error: 'Forbidden' },
+    });
 
     const request = new NextRequest('http://localhost/api/official/powers', {
       method: 'POST',
@@ -353,13 +368,12 @@ describe('POST /api/official/[type]', () => {
     const response = await POST(request, params('powers'));
 
     expect(response.status).toBe(403);
-    await expect(readJson(response)).resolves.toEqual({ error: 'Admin only' });
+    await expect(readJson(response)).resolves.toEqual({ error: 'Forbidden' });
     expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
   });
 
   it('records create changelog with afterData and null beforeData', async () => {
-    mockRequireLiveUser.mockResolvedValue(USER);
-    mockIsAdmin.mockResolvedValue(true);
+    mockRequireLiveAdminSession.mockResolvedValue({ ok: true, userId: USER.uid });
     const insertSingle = vi.fn(async () => ({
       data: {
         id: 'power-new-id',
@@ -400,8 +414,7 @@ describe('POST /api/official/[type]', () => {
   });
 
   it('returns success when changelog rejects with an Error (no raw message in logs)', async () => {
-    mockRequireLiveUser.mockResolvedValue(USER);
-    mockIsAdmin.mockResolvedValue(true);
+    mockRequireLiveAdminSession.mockResolvedValue({ ok: true, userId: USER.uid });
     const canary = 'PRIVATE_CANARY_ERROR_7f3a';
     vi.mocked(recordCodexChange).mockRejectedValueOnce(new Error(`changelog failure ${canary}`));
     const { insertSingle } = mockOfficialPowerCreateSupabase();
@@ -429,8 +442,7 @@ describe('POST /api/official/[type]', () => {
   });
 
   it('returns success when changelog rejects with a non-Error throw (no raw value in logs)', async () => {
-    mockRequireLiveUser.mockResolvedValue(USER);
-    mockIsAdmin.mockResolvedValue(true);
+    mockRequireLiveAdminSession.mockResolvedValue({ ok: true, userId: USER.uid });
     const canary = 'PRIVATE_CANARY_STRING_9b2e';
     vi.mocked(recordCodexChange).mockRejectedValueOnce(`changelog string throw ${canary}`);
     const { insertSingle } = mockOfficialPowerCreateSupabase();
@@ -458,8 +470,7 @@ describe('POST /api/official/[type]', () => {
   });
 
   it('creates an official creature with nonempty skill objects', async () => {
-    mockRequireLiveUser.mockResolvedValue(USER);
-    mockIsAdmin.mockResolvedValue(true);
+    mockRequireLiveAdminSession.mockResolvedValue({ ok: true, userId: USER.uid });
     const insertSingle = vi.fn(async () => ({ data: { id: 'creature-new' }, error: null }));
     const supabase = {
       from: vi.fn(() => ({
@@ -494,8 +505,7 @@ describe('POST /api/official/[type]', () => {
   });
 
   it('returns 400 for malformed official creature skills without writing', async () => {
-    mockRequireLiveUser.mockResolvedValue(USER);
-    mockIsAdmin.mockResolvedValue(true);
+    mockRequireLiveAdminSession.mockResolvedValue({ ok: true, userId: USER.uid });
     const insertSingle = vi.fn();
     mockCreateServiceRoleClient.mockReturnValue({
       from: vi.fn(() => ({
@@ -579,8 +589,7 @@ describe('POST /api/official/[type]', () => {
   }
 
   it('returns 404 when update id does not match any row (no silent insert)', async () => {
-    mockRequireLiveUser.mockResolvedValue(USER);
-    mockIsAdmin.mockResolvedValue(true);
+    mockRequireLiveAdminSession.mockResolvedValue({ ok: true, userId: USER.uid });
 
     const missingId = '11111111-1111-1111-1111-111111111111';
     const { supabase, insertSingle } = mockOfficialPostSupabase({
@@ -604,8 +613,7 @@ describe('POST /api/official/[type]', () => {
   });
 
   it('returns 409 when rename would collide with another official row name (case-insensitive)', async () => {
-    mockRequireLiveUser.mockResolvedValue(USER);
-    mockIsAdmin.mockResolvedValue(true);
+    mockRequireLiveAdminSession.mockResolvedValue({ ok: true, userId: USER.uid });
 
     const existingId = '22222222-2222-2222-2222-222222222222';
     const { supabase, update, selectChain } = mockOfficialPostSupabase({
@@ -632,8 +640,7 @@ describe('POST /api/official/[type]', () => {
   });
 
   it('persists new image_id and null image_url when admin changes bank art on update', async () => {
-    mockRequireLiveUser.mockResolvedValue(USER);
-    mockIsAdmin.mockResolvedValue(true);
+    mockRequireLiveAdminSession.mockResolvedValue({ ok: true, userId: USER.uid });
 
     const existingId = '44444444-4444-4444-4444-444444444444';
     const newImageId = '55555555-5555-4555-8555-555555555555';
@@ -672,8 +679,7 @@ describe('POST /api/official/[type]', () => {
   });
 
   it('allows update when the name is unchanged even if another row shares that name', async () => {
-    mockRequireLiveUser.mockResolvedValue(USER);
-    mockIsAdmin.mockResolvedValue(true);
+    mockRequireLiveAdminSession.mockResolvedValue({ ok: true, userId: USER.uid });
 
     const existingId = '33333333-3333-3333-3333-333333333333';
     const { supabase, update, selectChain } = mockOfficialPostSupabase({
@@ -724,7 +730,11 @@ describe('PATCH /api/official/[type]', () => {
   }
 
   it('returns 401 when session is missing', async () => {
-    mockRequireLiveUser.mockRejectedValue(new Error('Authentication required'));
+    mockRequireLiveAdminSession.mockResolvedValue({
+      ok: false,
+      status: 401,
+      body: { error: 'Unauthorized' },
+    });
 
     const response = await PATCH(makePatchRequest('powers'), params('powers'));
 
@@ -734,13 +744,16 @@ describe('PATCH /api/official/[type]', () => {
   });
 
   it('returns 403 when the user is authenticated but not admin', async () => {
-    mockRequireLiveUser.mockResolvedValue(USER);
-    mockIsAdmin.mockResolvedValue(false);
+    mockRequireLiveAdminSession.mockResolvedValue({
+      ok: false,
+      status: 403,
+      body: { error: 'Forbidden' },
+    });
 
     const response = await PATCH(makePatchRequest('powers'), params('powers'));
 
     expect(response.status).toBe(403);
-    await expect(readJson(response)).resolves.toEqual({ error: 'Admin only' });
+    await expect(readJson(response)).resolves.toEqual({ error: 'Forbidden' });
     expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
   });
 });
@@ -751,7 +764,11 @@ describe('DELETE /api/official/[type]', () => {
   });
 
   it('returns 401 when session is missing', async () => {
-    mockRequireLiveUser.mockRejectedValue(new Error('Authentication required'));
+    mockRequireLiveAdminSession.mockResolvedValue({
+      ok: false,
+      status: 401,
+      body: { error: 'Unauthorized' },
+    });
 
     const response = await DELETE(makeDeleteRequest('powers'), params('powers'));
 
@@ -761,19 +778,21 @@ describe('DELETE /api/official/[type]', () => {
   });
 
   it('returns 403 when the user is authenticated but not admin', async () => {
-    mockRequireLiveUser.mockResolvedValue(USER);
-    mockIsAdmin.mockResolvedValue(false);
+    mockRequireLiveAdminSession.mockResolvedValue({
+      ok: false,
+      status: 403,
+      body: { error: 'Forbidden' },
+    });
 
     const response = await DELETE(makeDeleteRequest('powers'), params('powers'));
 
     expect(response.status).toBe(403);
-    await expect(readJson(response)).resolves.toEqual({ error: 'Admin only' });
+    await expect(readJson(response)).resolves.toEqual({ error: 'Forbidden' });
     expect(mockCreateServiceRoleClient).not.toHaveBeenCalled();
   });
 
   it('deletes species by non-UUID codex id', async () => {
-    mockRequireLiveUser.mockResolvedValue(USER);
-    mockIsAdmin.mockResolvedValue(true);
+    mockRequireLiveAdminSession.mockResolvedValue({ ok: true, userId: USER.uid });
 
     const selectChain = {
       eq: vi.fn(function eq() {

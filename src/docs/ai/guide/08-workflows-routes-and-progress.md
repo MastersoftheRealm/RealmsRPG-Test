@@ -16,11 +16,11 @@
 
 ## Recording Progress
 
-The record is the ClickUp task and the PR. Status moves are in `.cursor/rules/realms-tasks.mdc`. Do not write the files in this table. They are history.
+The record is the ClickUp task and the PR. Status moves are in root `AGENTS.md`. Do not write the files in this table. They are history.
 
 | What | Where |
 |------|-------|
-| Open work | **ClickUp** (`.cursor/rules/realms-tasks.mdc`) |
+| Open work | **ClickUp** (root `AGENTS.md`) |
 | Done / changelog (history) | ClickUp comments and git history |
 | Raw feedback (history) | ClickUp comments / Drive |
 | Game rules | `src/docs/GAME_RULES.md` — terminology, formulas, display conventions |

@@ -109,6 +109,22 @@ describe('library-columnar API round-trip — techniques', () => {
     expect((loaded.range as { steps?: number | undefined }).steps).toBe(2);
     expect(loaded.damage).toEqual([{ amount: 1, size: 8 }]);
   });
+
+  it('prefers payload damage when promoted column is an empty array', () => {
+    const row = {
+      id: 'tech-payload-dmg',
+      name: 'Stored Strike',
+      damage: [],
+      payload: {
+        parts: [],
+        damage: [{ amount: 2, size: 6, type: 'slashing' }],
+      },
+    };
+
+    const loaded = rowToItem('techniques', row, 'official');
+
+    expect(loaded.damage).toEqual([{ amount: 2, size: 6, type: 'slashing' }]);
+  });
 });
 
 describe('library-columnar API round-trip — empowered techniques', () => {
@@ -335,6 +351,23 @@ describe('library-columnar API round-trip — powers', () => {
 
     const loaded = apiRoundTrip('powers', body);
     expect(loaded.targetedDefenses).toEqual(['Mental Fortitude', 'Resolve']);
+  });
+
+  it('prefers payload damage when promoted column is an empty array', () => {
+    const row = {
+      id: 'power-payload-dmg',
+      name: 'Arc Bolt',
+      action_type: 'basic',
+      damage: [],
+      payload: {
+        parts: [],
+        damage: [{ amount: 1, size: 10, type: 'lightning' }],
+      },
+    };
+
+    const loaded = rowToItem('powers', row, 'official');
+
+    expect(loaded.damage).toEqual([{ amount: 1, size: 10, type: 'lightning' }]);
   });
 });
 

@@ -8,9 +8,11 @@ export function applySpeciesCreatorReset(actions: {
   resetForm: () => void;
   forgetLoadedLibraryItem: () => void;
   clearSaveMessage: () => void;
+  clearEditQuery?: (() => void) | undefined;
 }): void {
   actions.clearDraftCache();
   actions.resetForm();
   actions.forgetLoadedLibraryItem();
   actions.clearSaveMessage();
+  actions.clearEditQuery?.();
 }

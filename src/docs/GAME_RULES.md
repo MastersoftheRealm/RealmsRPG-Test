@@ -265,9 +265,10 @@ Every Character, creature, and monster has six Abilities:
 | Rule | Value | Notes |
 |------|-------|------|
 | Typical range | -3 to 5 | Default for player Characters |
-| Absolute min | -2 | Ability **scores** never go below −2 (characters and creatures). Temp modifiers can push past this in play. Creatures may break other hard rules; they still use this score floor. |
+| Absolute min (characters) | -2 | Character ability scores never go below −2 (Kadin, Nov 10, 2026). Temp modifiers can push past this in play. |
+| Absolute min (creatures) | -4 | Creature ability scores never go below −4 (Kadin, Nov 9 and Nov 10, 2026). |
 | Hard cap (characters) | 10 | Absolute maximum for player Characters |
-| Hard cap (creatures) | 20 | Absolute maximum for creatures |
+| Hard cap (creatures) | 10 | Absolute maximum for creatures (Kadin, Nov 9 and Nov 10, 2026). |
 | Max at creation | 3 | From point allocation alone |
 | Level cap | None | No level-based ability cap; cost increase provides soft cap |
 
@@ -572,7 +573,7 @@ Combined innate Energy across all innate powers must stay within **Innate Energy
 
 Built into the Power Creator (replaces the Choice, Split Power Parts into Groups, Randomize, and Reverse Effects mechanic parts on new powers). The things you switch between are **variants** (not "options", which are part option levels).
 
-A power or technique's final Energy is rounded up once, at the end of the whole power, never per part or per tab. 1 round and Instant are no duration and cost the same. A duration modifier does not add Energy when the duration is 1 round. The **1 EN** floor applies only when positive energy is reduced below 1. No parts, only 0 EN parts, a quick-only or duration-only multiplier, No Attack alone, and a Randomize power whose rolled faces are all drawbacks publish no Energy (a dash). Drawback parts do not turn the floor on by themselves. The floor is on the finished cost, not a base cost. Official published energies are that math applied to the Codex part rows. They are results, not targets. Breakdowns show the action-type multiplier at its Codex value (0.875 stays 0.875). Other energy intermediates show at most 2 decimals.
+A power or technique's final Energy is rounded up once, at the end of the whole power, never per part or per tab. 1 round and Instant are no duration and cost the same. A duration modifier does not add Energy when the duration is 1 round. A dash means the energy is not calculable yet, so there is no energy value: not 0 and not 1 (Kadin, Nov 10, 2026). That covers a blank power and a power whose parts do not yet produce a cost: no parts, only 0 EN parts, a quick-only or duration-only multiplier, No Attack alone, and a Randomize power whose rolled faces are all drawbacks. When the cost is calculable, the **1 EN** floor applies, including when a positive cost is reduced below 1. Drawback parts do not turn the floor on by themselves. The floor is on the finished cost, not a base cost. Official published energies are that math applied to the Codex part rows. They are results, not targets. Breakdowns show the action-type multiplier at its Codex value (0.875 stays 0.875). Other energy intermediates show at most 2 decimals.
 
 | Structure | What the variants are | Energy |
 |-----------|----------------------|--------|

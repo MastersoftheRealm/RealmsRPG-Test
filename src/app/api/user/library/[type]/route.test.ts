@@ -13,6 +13,10 @@ vi.mock('@/lib/entity-image-enrich-server', () => ({
   enrichRowsWithBankImageUrls: vi.fn(() => Promise.resolve()),
 }));
 
+vi.mock('@/lib/admin', () => ({
+  isAdmin: vi.fn(),
+}));
+
 vi.mock('@/lib/rate-limit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/rate-limit')>();
   return {
@@ -28,10 +32,12 @@ vi.mock('@/lib/rate-limit', async (importOriginal) => {
 import { GET, POST } from './route';
 import { getSession } from '@/lib/supabase/session';
 import { createClient } from '@/lib/supabase/server';
+import { isAdmin } from '@/lib/admin';
 import { USER_LIBRARY_COLUMNAR_TABLES } from '@/lib/library-columnar-keys';
 
 const mockGetSession = vi.mocked(getSession);
 const mockCreateClient = vi.mocked(createClient);
+const mockIsAdmin = vi.mocked(isAdmin);
 
 async function readJson<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
@@ -197,7 +203,8 @@ type ProfileWrite = { action: 'insert' | 'upsert' | 'update'; payload: Record<st
 function createCreateClient(options: { profileExists: boolean }) {
   const profileWrites: ProfileWrite[] = [];
   let profileExists = options.profileExists;
-  const libraryInserts: string[] = [];
+  const libraryRpcKinds: string[] = [];
+  const libraryRpcRows: Record<string, unknown>[] = [];
 
   const from = vi.fn((table: string) => {
     if (table === 'user_profiles') {
@@ -232,38 +239,20 @@ function createCreateClient(options: { profileExists: boolean }) {
       };
     }
 
-    if (table === 'role_policies') {
-      return {
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            maybeSingle: vi.fn(async () => ({ data: null, error: null })),
-          })),
-        })),
-      };
-    }
-
-    return {
-      select: vi.fn((_columns: string, query?: { head?: boolean }) => {
-        const result = query?.head
-          ? { data: null, error: null, count: 0 }
-          : { data: [], error: null };
-        const filters = {
-          eq: vi.fn(() => filters),
-          then: (
-            resolve: (value: typeof result) => unknown,
-            reject?: (reason: unknown) => unknown,
-          ) => Promise.resolve(result).then(resolve, reject),
-        };
-        return filters;
-      }),
-      insert: vi.fn(async () => {
-        libraryInserts.push(table);
-        return { data: null, error: null };
-      }),
-    };
+    throw new Error(`Unexpected table: ${table}`);
   });
 
-  return { from, profileWrites, libraryInserts };
+  const rpc = vi.fn(async (name: string, args: Record<string, unknown>) => {
+    if (name === 'insert_user_library_row_with_quota') {
+      libraryRpcKinds.push(String(args.p_library_kind));
+      const row = args.p_row as Record<string, unknown>;
+      libraryRpcRows.push(row);
+      return { data: { id: 'rpc-insert-id' }, error: null };
+    }
+    return { data: null, error: { message: `Unexpected RPC: ${name}` } };
+  });
+
+  return { from, rpc, profileWrites, libraryRpcKinds, libraryRpcRows };
 }
 
 function makeCreateRequest(type: string, body: Record<string, unknown> = { name: 'New entry' }) {
@@ -277,6 +266,13 @@ function makeCreateRequest(type: string, body: Record<string, unknown> = { name:
   });
 }
 
+const POWER_CREATE_BODY = {
+  name: 'Mind Lance',
+  parts: [],
+  damage: [],
+  composition: { enabled: true },
+};
+
 describe('POST /api/user/library/[type]', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -284,6 +280,7 @@ describe('POST /api/user/library/[type]', () => {
       user: { uid: 'user-1', email: 'user@example.com' },
       error: null,
     });
+    mockIsAdmin.mockResolvedValue(false);
   });
 
   it.each(['powers', 'items'] as const)(
@@ -300,7 +297,7 @@ describe('POST /api/user/library/[type]', () => {
       const body = await readJson<{ id: string }>(response);
       expect(body.id).toEqual(expect.any(String));
       expect(client.profileWrites).toEqual([]);
-      expect(client.libraryInserts).toEqual([type === 'powers' ? 'user_powers' : 'user_items']);
+      expect(client.libraryRpcKinds).toEqual([type]);
     },
   );
 
@@ -320,7 +317,7 @@ describe('POST /api/user/library/[type]', () => {
     });
 
     expect(response.status).toBe(200);
-    expect(client.libraryInserts).toEqual(['user_creatures']);
+    expect(client.libraryRpcKinds).toEqual(['creatures']);
   });
 
   it('returns 400 for malformed creature skills without inserting', async () => {
@@ -336,7 +333,7 @@ describe('POST /api/user/library/[type]', () => {
     );
 
     expect(response.status).toBe(400);
-    expect(client.libraryInserts).toEqual([]);
+    expect(client.libraryRpcKinds).toEqual([]);
   });
 
   it('inserts only granted profile columns when the profile row is missing', async () => {
@@ -355,6 +352,45 @@ describe('POST /api/user/library/[type]', () => {
     for (const key of Object.keys(client.profileWrites[0]?.payload ?? {})) {
       expect(SESSION_INSERT.has(key)).toBe(true);
     }
-    expect(client.libraryInserts).toEqual(['user_powers']);
+    expect(client.libraryRpcKinds).toEqual(['powers']);
+  });
+
+  it('PAGES4-018: non-admin POST strips image fields before insert (200, no image_id)', async () => {
+    const client = createCreateClient({ profileExists: true });
+    mockCreateClient.mockResolvedValue(client as never);
+    mockIsAdmin.mockResolvedValue(false);
+
+    const response = await POST(
+      makeCreateRequest('powers', {
+        ...POWER_CREATE_BODY,
+        imageUrl: 'https://evil.example/art.jpg',
+        imageId: '11111111-1111-4111-8111-111111111111',
+      }),
+      { params: Promise.resolve({ type: 'powers' }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(client.libraryRpcRows[0]).toBeDefined();
+    expect(client.libraryRpcRows[0]?.image_id).toBe('11111111-1111-4111-8111-111111111111');
+    expect(client.libraryRpcRows[0]?.image_url).toBeUndefined();
+  });
+
+  it('PAGES4-018: admin POST may persist image_id', async () => {
+    const client = createCreateClient({ profileExists: true });
+    mockCreateClient.mockResolvedValue(client as never);
+    mockIsAdmin.mockResolvedValue(true);
+    const imageId = '22222222-2222-4222-8222-222222222222';
+
+    const response = await POST(
+      makeCreateRequest('powers', {
+        ...POWER_CREATE_BODY,
+        imageId,
+        imageUrl: 'https://cdn.test/art.jpg',
+      }),
+      { params: Promise.resolve({ type: 'powers' }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(client.libraryRpcRows[0]?.image_id).toBe(imageId);
   });
 });

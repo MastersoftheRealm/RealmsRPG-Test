@@ -1,13 +1,13 @@
 'use server';
 
 import { updateCodexDoc } from '@/app/(main)/admin/codex/actions';
-import { isAdmin } from '@/lib/admin';
+import { requireAdminSession, requireLiveAdminSession } from '@/lib/admin';
 import { logApiError } from '@/lib/api-error';
 import {
   loadAdminCodexSourceRows,
   type AdminCodexSourceRowsPayload,
 } from '@/lib/codex/admin-source-rows';
-import { CODEX_API_CACHE_TAG, codexApiTableCacheTag } from '@/lib/codex/cache-tags';
+import { invalidateCodexApiAfterSourceRenameFromServerAction } from '@/lib/api/public-catalog-cache-invalidation';
 import { assertCodexCollection } from '@/lib/codex/collections';
 import {
   CODEX_SOURCE_TABLES,
@@ -21,9 +21,8 @@ import {
   codexSourceNameError,
   collapseCodexSourceName,
 } from '@/lib/codex/sources';
-import { getSession, requireLiveUser } from '@/lib/supabase/session';
 import { createServiceRoleClient } from '@/lib/supabase/server';
-import { revalidatePath, updateTag } from 'next/cache';
+import { revalidatePath } from 'next/cache';
 import {
   ADMIN_SOURCES_ADD_FAILED,
   ADMIN_SOURCES_LOAD_ERROR,
@@ -51,17 +50,20 @@ export type AdminCodexSourceMembershipResult = {
 };
 
 async function requireAdmin(): Promise<string> {
-  const { user } = await getSession();
-  if (!user?.uid) throw new Error(AUTH_ERROR);
-  if (!(await isAdmin(user.uid))) throw new Error(ADMIN_ERROR);
-  return user.uid;
+  const auth = await requireAdminSession();
+  if (!auth.ok) {
+    throw new Error(auth.status === 401 ? AUTH_ERROR : ADMIN_ERROR);
+  }
+  return auth.userId;
 }
 
 /** Live Auth check for source mutations. Catalog and row reads stay on `requireAdmin`. */
 async function requireLiveAdmin(): Promise<string> {
-  const user = await requireLiveUser();
-  if (!(await isAdmin(user.uid))) throw new Error(ADMIN_ERROR);
-  return user.uid;
+  const auth = await requireLiveAdminSession();
+  if (!auth.ok) {
+    throw new Error(auth.status === 401 ? AUTH_ERROR : ADMIN_ERROR);
+  }
+  return auth.userId;
 }
 
 function validateSourceName(sourceName: string): string | null {
@@ -204,10 +206,7 @@ function renameTotal(data: unknown): number {
 
 /** One cache bust per tag. This does not write a table. */
 function revalidateAfterSourceRename(): void {
-  updateTag(CODEX_API_CACHE_TAG);
-  for (const table of CODEX_SOURCE_TABLES) {
-    updateTag(codexApiTableCacheTag(table));
-  }
+  invalidateCodexApiAfterSourceRenameFromServerAction(CODEX_SOURCE_TABLES);
   revalidatePath('/codex');
   revalidatePath('/admin/codex');
   revalidatePath('/admin/sources');
@@ -225,7 +224,14 @@ export async function renameAdminCodexSource(
     if (toError) return { success: false, updatedCount: 0, error: toError };
 
     const supabase = createServiceRoleClient();
-    const { data, error } = await supabase.rpc('rename_codex_source', {
+    const { data, error } = await (
+      supabase as unknown as {
+        rpc: (
+          fn: string,
+          args: Record<string, unknown>,
+        ) => Promise<{ data: unknown; error: { message: string } | null }>;
+      }
+    ).rpc('rename_codex_source', {
       from_name: collapseCodexSourceName(fromName),
       to_name: collapseCodexSourceName(toName),
       actor,

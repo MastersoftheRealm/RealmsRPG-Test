@@ -71,6 +71,45 @@ describe('prepareCharacterForSave (ADR-0006 tempModifiers)', () => {
     expect(cleaned.archetype).toEqual({ id: 'a1', type: 'powered-martial' });
   });
 
+  it('migrates then strips deprecated top-level trait fields before relational save', () => {
+    const cleaned = prepareCharacterForSave({
+      name: 'Test',
+      level: 1,
+      ancestryTraits: ['t1'],
+      flawTrait: 'flaw',
+      characteristicTrait: 'char',
+    } as Parameters<typeof prepareCharacterForSave>[0]);
+
+    expect(cleaned).not.toHaveProperty('ancestryTraits');
+    expect(cleaned).not.toHaveProperty('flawTrait');
+    expect(cleaned).not.toHaveProperty('characteristicTrait');
+    expect(cleaned.ancestry).toEqual({
+      selectedTraits: ['t1'],
+      selectedFlaw: 'flaw',
+      selectedCharacteristic: 'char',
+    });
+    expect(cleaned.name).toBe('Test');
+  });
+
+  it('merges legacy traits into stored ancestry when the patch omits ancestry', () => {
+    const cleaned = prepareCharacterForSave(
+      {
+        flawTrait: 'flaw-b',
+      } as Parameters<typeof prepareCharacterForSave>[0],
+      {
+        storedDocument: {
+          ancestry: { id: 'species-1', selectedFlaw: null, selectedTraits: ['t0'] },
+        },
+      },
+    );
+    expect(cleaned).not.toHaveProperty('flawTrait');
+    expect(cleaned.ancestry).toEqual({
+      id: 'species-1',
+      selectedFlaw: 'flaw-b',
+      selectedTraits: ['t0'],
+    });
+  });
+
   it('floors currency when the key is present and does not invent it (TASK-749)', () => {
     const withDebt = prepareCharacterForSave({
       name: 'Test',

@@ -8,6 +8,7 @@ describe('technique creator reset (86e3jywcr)', () => {
     let loaded = true;
     let formReset = false;
     let draftAccepted = false;
+    let editCleared = false;
     applyTechniqueCreatorReset({
       clearDraftCache: () => {},
       resetForm: () => {
@@ -17,6 +18,9 @@ describe('technique creator reset (86e3jywcr)', () => {
         loaded = false;
       },
       clearSaveMessage: () => {},
+      clearEditQuery: () => {
+        editCleared = true;
+      },
       acceptDraft: () => {
         draftAccepted = true;
       },
@@ -24,6 +28,7 @@ describe('technique creator reset (86e3jywcr)', () => {
     expect(formReset).toBe(true);
     expect(loaded).toBe(false);
     expect(draftAccepted).toBe(true);
+    expect(editCleared).toBe(true);
   });
 
   it('requires confirmation before reset runs', () => {

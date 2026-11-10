@@ -16,7 +16,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { CoreRulesMap } from '@/types/core-rules';
 import type { CodexPayload } from '@/types/codex';
 import { fetchCodexCollection } from '@/lib/api-client';
-import { codexKeys } from './use-codex';
+import { adminCodexCollectionQueryKey, ADMIN_CODEX_QUERY_OPTIONS, codexKeys } from './use-codex';
 
 // Import current hardcoded values as fallback defaults
 import {
@@ -392,21 +392,29 @@ function mergeCoreRules(dbRules: Record<string, unknown>): CoreRulesMap {
 const selectCoreRules = (data: Pick<CodexPayload, 'coreRules'>): CoreRulesMap =>
   mergeCoreRules(data.coreRules ?? {});
 
-export function useGameRules(): {
+export type GameRulesQueryOptions = {
+  /**
+   * Admin Core Rules editor: session GET with `includeUnlisted=1` (private, no-store) so
+   * reload never serves a CDN-cached public payload.
+   */
+  admin?: boolean | undefined;
+};
+
+export function useGameRules(options?: GameRulesQueryOptions): {
   rules: CoreRulesMap;
   isLoading: boolean;
   isFetching: boolean;
   error: Error | null;
   refetch: () => Promise<unknown>;
 } {
-  const query = useQuery<
-    Pick<CodexPayload, 'coreRules'>,
-    Error,
-    CoreRulesMap,
-    readonly ['codex', 'coreRules']
-  >({
-    queryKey: codexKeys.collection('coreRules'),
-    queryFn: () => fetchCodexCollection('coreRules'),
+  const adminRead = options?.admin === true;
+  const queryKey = adminRead
+    ? adminCodexCollectionQueryKey('coreRules')
+    : codexKeys.collection('coreRules');
+  const query = useQuery({
+    queryKey,
+    queryFn: () =>
+      fetchCodexCollection('coreRules', adminRead ? ADMIN_CODEX_QUERY_OPTIONS : undefined),
     select: selectCoreRules,
     staleTime: 10 * 60 * 1000, // 10 min — rules change infrequently
     gcTime: 60 * 60 * 1000, // 1 hour cache
