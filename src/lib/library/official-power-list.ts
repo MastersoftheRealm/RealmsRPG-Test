@@ -31,20 +31,12 @@ import {
   powerHasDamageCategory,
   withDamageCategory,
 } from '@/lib/library/power-technique-categories';
-import {
-  applyPowerTechniqueFilters,
-  type PowerTechniqueFilterState,
-} from '@/lib/library/power-technique-filters';
+import type { PowerTechniqueFilterState } from '@/lib/library/power-technique-filters';
+import type { OfficialPowerTechniqueFilterableRow } from '@/lib/library/official-catalog-row-filter';
 import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
-import {
-  filterRowsByCodexRulesSources,
-  readRowRulesSources,
-} from '@/lib/codex/list-rules-source-filter';
-import {
-  libraryRowPathIds,
-  rowMatchesPathRecommendedIds,
-} from '@/lib/game/path-recommendation-index';
-import { glrColumnKeyFor, glrListChrome } from '@/lib/glr';
+import { glrColumnKeyFor } from '@/lib/glr';
+import { officialEntityBrowseChrome } from '@/lib/library/official-glr-browse-chrome';
+import { filterOfficialPowerTechniqueRows } from '@/lib/library/official-catalog-row-filter';
 import {
   glrSurfaceDetailSections,
   mergeDetailSections,
@@ -54,18 +46,14 @@ import {
 import { targetsFactChip } from '@/lib/detail-option/compact-facts';
 import { parseCatalogListing } from '@/lib/library/catalog-listing';
 
-const officialPowerChrome = glrListChrome({ entityType: 'power', mode: 'browse' });
+const {
+  chrome: officialPowerChrome,
+  grid: OFFICIAL_POWER_GRID,
+  headers: OFFICIAL_POWER_HEADER_COLUMNS,
+} = officialEntityBrowseChrome('power');
 
 /** Data columns only — edit/delete/add use ListHeader `rowChrome` (not a leftover 40px track). */
-export const OFFICIAL_POWER_GRID = officialPowerChrome.grid;
-
-export const OFFICIAL_POWER_HEADER_COLUMNS = officialPowerChrome.headers.map(
-  ({ key, label, align }) => ({
-    key,
-    label,
-    align: align ?? ('center' as const),
-  }),
-);
+export { OFFICIAL_POWER_GRID, OFFICIAL_POWER_HEADER_COLUMNS };
 
 export interface OfficialPowerRow {
   id: string;
@@ -190,25 +178,7 @@ export function officialPowerRowColumns(row: OfficialPowerRow): ColumnValue[] {
   });
 }
 
-export function filterOfficialPowerRows<
-  T extends {
-    id?: string | number | undefined;
-    raw?:
-      | { id?: string | number | null | undefined; docId?: string | number | null | undefined }
-      | undefined;
-    name?: string | undefined;
-    description?: string | undefined;
-    categories?: string[] | undefined;
-    energy?: string | number | null | undefined;
-    tp?: number | null | undefined;
-    action?: string | null | undefined;
-    actionTypeRaw?: string | null | undefined;
-    isReaction?: boolean | undefined;
-    partIds?: string[] | undefined;
-    partNames?: string[] | undefined;
-    category?: string | undefined;
-  },
->(
+export function filterOfficialPowerRows<T extends OfficialPowerTechniqueFilterableRow>(
   rows: T[],
   search: string,
   sortItems: (items: T[]) => T[],
@@ -217,32 +187,14 @@ export function filterOfficialPowerRows<
   pathRecommendedIds?: ReadonlySet<string> | null,
   rulesSources?: readonly string[],
 ): T[] {
-  let result = rows;
-  if (pathRecommendedIds) {
-    result = result.filter((x) =>
-      rowMatchesPathRecommendedIds(libraryRowPathIds(x), pathRecommendedIds),
-    );
-  }
-  if (search) {
-    const s = search.toLowerCase();
-    result = result.filter(
-      (x) =>
-        String(x.name ?? '')
-          .toLowerCase()
-          .includes(s) ||
-        String(x.description ?? '')
-          .toLowerCase()
-          .includes(s) ||
-        String(x.category ?? '')
-          .toLowerCase()
-          .includes(s),
-    );
-  }
-  if (advanced) {
-    result = applyPowerTechniqueFilters(result, advanced, 'power', character);
-  }
-  if (rulesSources && rulesSources.length > 0) {
-    result = filterRowsByCodexRulesSources(result, rulesSources, readRowRulesSources);
-  }
-  return sortItems(result);
+  return filterOfficialPowerTechniqueRows(
+    rows,
+    search,
+    sortItems,
+    'power',
+    advanced,
+    character,
+    pathRecommendedIds,
+    rulesSources,
+  );
 }

@@ -16,7 +16,6 @@ import { PowerTechniqueFilters } from '@/components/patterns/filters';
 import { useSort } from '@/hooks/use-sort';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-library';
-import { usePathListFilter } from '@/hooks';
 import { useUserPowers, usePowerParts, useDuplicatePower } from '@/hooks';
 import type { DisplayItem } from '@/types';
 import { getPowerSyncResult, sanitizePowerForSync } from '@/lib/library-sync';
@@ -29,20 +28,13 @@ import {
   OFFICIAL_POWER_GRID,
   OFFICIAL_POWER_HEADER_COLUMNS,
 } from '@/lib/library/official-power-list';
-import {
-  EMPTY_POWER_TECHNIQUE_FILTERS,
-  countActivePowerTechniqueFilters,
-  type PowerTechniqueFilterState,
-} from '@/lib/library/power-technique-filters';
-import { countActiveCodexRulesSourceFilters } from '@/lib/codex/list-rules-source-filter';
-import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 import { listInnateThresholdFilterOptions } from '@/lib/game/innate-eligibility';
 import {
-  POWER_LIST_PATH_KINDS,
   libraryRowPathIds,
   pathChipLabelsForEntity,
   pathFilterEmptyTitle,
 } from '@/lib/game/path-recommendation-index';
+import { useOfficialPowerTechniqueBrowseFilters } from '@/lib/library/use-official-power-technique-browse-filters';
 import {
   LibrarySyncRowAction,
   UserLibraryEntityTabShell,
@@ -70,18 +62,24 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
   const { data: partsDb = [] } = usePowerParts();
   const duplicatePower = useDuplicatePower();
   const [search, setSearch] = useState('');
-  const [advancedFilters, setAdvancedFilters] = useState<PowerTechniqueFilterState>(
-    EMPTY_POWER_TECHNIQUE_FILTERS,
-  );
-  const [characterContext, setCharacterContext] = useState<PowerTechniqueCharacterContext | null>(
-    null,
-  );
-  const [characterFilterId, setCharacterFilterId] = useState('');
-  const [rulesSources, setRulesSources] = useState<string[]>([]);
+  const {
+    advancedFilters,
+    setAdvancedFilters,
+    setCharacterContext,
+    characterFilterId,
+    setCharacterFilterId,
+    rulesSources,
+    setRulesSources,
+    selectedPathIds,
+    setSelectedPathIds,
+    pathIndex,
+    pathRecommendedIds,
+    pathFilterActive,
+    filterActiveCount,
+    characterContext,
+  } = useOfficialPowerTechniqueBrowseFilters({ kind: 'power', entities: powers });
   const addToCharacter = useAddToCharacterFromLibrary('power', characterFilterId);
   const { sortState, handleSort, sortItems } = useSort('name');
-  const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
-    usePathListFilter({ entities: powers, kind: POWER_LIST_PATH_KINDS });
 
   const cardData = useMemo(() => {
     return buildOfficialPowerRows(powers, partsDb).map((row) => {
@@ -196,12 +194,7 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
             onRulesSourcesChange={setRulesSources}
           />
         }
-        filterActiveCount={
-          countActivePowerTechniqueFilters(advancedFilters, 'power', Boolean(characterContext)) +
-          countActiveCodexRulesSourceFilters(rulesSources) +
-          (characterFilterId ? 1 : 0) +
-          (pathFilterActive ? 1 : 0)
-        }
+        filterActiveCount={filterActiveCount}
         filterEmptyTitle={pathFilterActive ? pathFilterEmptyTitle('powers') : undefined}
       >
         {filteredData.map((power) => {

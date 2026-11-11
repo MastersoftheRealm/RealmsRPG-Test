@@ -16,7 +16,6 @@ import {
 import { PowerTechniqueFilters } from '@/components/patterns/filters';
 import { useSort } from '@/hooks/use-sort';
 import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-library';
-import { usePathListFilter } from '@/hooks';
 import { empoweredTechniquePartsSection } from '@/lib/library/empowered-technique-display';
 import {
   buildOfficialTechniqueRows,
@@ -27,13 +26,7 @@ import {
   OFFICIAL_TECHNIQUE_HEADER_COLUMNS,
 } from '@/lib/library/official-technique-list';
 import { collectCategoryOptionsFromItems } from '@/lib/library/power-technique-categories';
-import {
-  EMPTY_POWER_TECHNIQUE_FILTERS,
-  countActivePowerTechniqueFilters,
-  type PowerTechniqueFilterState,
-} from '@/lib/library/power-technique-filters';
-import { countActiveCodexRulesSourceFilters } from '@/lib/codex/list-rules-source-filter';
-import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
+import { useOfficialPowerTechniqueBrowseFilters } from '@/lib/library/use-official-power-technique-browse-filters';
 import {
   useUserTechniques,
   useUserEmpoweredTechniques,
@@ -92,31 +85,36 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
   const duplicateTechnique = useDuplicateTechnique();
   const duplicateEmpoweredTechnique = useDuplicateEmpoweredTechnique();
   const [search, setSearch] = useState('');
-  const [advancedFilters, setAdvancedFilters] = useState<PowerTechniqueFilterState>(
-    EMPTY_POWER_TECHNIQUE_FILTERS,
-  );
-  const [characterContext, setCharacterContext] = useState<PowerTechniqueCharacterContext | null>(
-    null,
-  );
-  const [characterFilterId, setCharacterFilterId] = useState('');
-  const [rulesSources, setRulesSources] = useState<string[]>([]);
+  const techniques = mode === 'empowered' ? empoweredTechniques : standardTechniques;
+  const {
+    advancedFilters,
+    setAdvancedFilters,
+    setCharacterContext,
+    characterFilterId,
+    setCharacterFilterId,
+    rulesSources,
+    setRulesSources,
+    selectedPathIds,
+    setSelectedPathIds,
+    pathIndex,
+    pathRecommendedIds,
+    pathFilterActive,
+    filterActiveCount,
+    characterContext,
+  } = useOfficialPowerTechniqueBrowseFilters({
+    kind: 'technique',
+    entities: techniques,
+    pathFilterEnabled: mode === 'standard',
+  });
   const addToCharacter = useAddToCharacterFromLibrary('technique', characterFilterId);
   const { sortState, handleSort, sortItems } = useSort('name');
 
-  const techniques = mode === 'empowered' ? empoweredTechniques : standardTechniques;
   const isLoading = mode === 'empowered' ? empoweredLoading : standardLoading;
   const error = mode === 'empowered' ? empoweredError : standardError;
   const labels =
     mode === 'empowered' ? EMPOWERED_TECHNIQUE_LIBRARY_LABELS : TECHNIQUE_LIBRARY_LABELS;
   const saveType = mode === 'empowered' ? 'empowered-techniques' : 'techniques';
   const duplicateMutation = mode === 'empowered' ? duplicateEmpoweredTechnique : duplicateTechnique;
-  const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
-    usePathListFilter({
-      entities: techniques,
-      kind: 'techniques',
-      enabled: mode === 'standard',
-    });
-
   const cardData = useMemo(() => {
     return buildOfficialTechniqueRows(techniques, partsDb, mode).map((row) => {
       const syncResult = getTechniqueSyncResult(row.raw, partsDb);
@@ -233,18 +231,7 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
             />
           )
         }
-        filterActiveCount={
-          mode === 'empowered'
-            ? undefined
-            : countActivePowerTechniqueFilters(
-                advancedFilters,
-                'technique',
-                Boolean(characterContext),
-              ) +
-              countActiveCodexRulesSourceFilters(rulesSources) +
-              (characterFilterId ? 1 : 0) +
-              (pathFilterActive ? 1 : 0)
-        }
+        filterActiveCount={mode === 'empowered' ? undefined : filterActiveCount}
         filterEmptyTitle={
           mode !== 'empowered' && pathFilterActive ? pathFilterEmptyTitle('techniques') : undefined
         }
