@@ -283,6 +283,79 @@ describe('buildTechniquesForDisplay saved snapshots', () => {
   });
 });
 
+describe('library ref resolution (powers)', () => {
+  const creatureBase = { id: 'c-match', name: 'Matcher', powers: [] } satisfies CreatureData;
+
+  it('prefers user library over official when both share the same id', () => {
+    const user = {
+      id: 'bolt-1',
+      docId: 'bolt-1',
+      name: 'User Bolt',
+      description: 'from user library',
+      parts: [],
+    } satisfies LibraryPower;
+    const official = {
+      id: 'bolt-1',
+      docId: 'bolt-1',
+      name: 'Official Bolt',
+      description: 'from codex',
+      parts: [],
+    } satisfies LibraryPower;
+    const creature = {
+      ...creatureBase,
+      powers: [{ id: 'bolt-1', name: 'User Bolt' }],
+    } satisfies CreatureData;
+    const row = buildPowersForDisplay(creature, [user], [official], [])[0];
+    expect(row?.description).toBe('from user library');
+  });
+
+  it('resolves user rows by docId when the creature ref names that docId', () => {
+    const user = {
+      id: 'internal-9',
+      docId: 'doc-facing-9',
+      name: 'Doc Bolt',
+      description: 'docId hit',
+      parts: [],
+    } satisfies LibraryPower;
+    const creature = {
+      ...creatureBase,
+      powers: [{ id: 'doc-facing-9', name: 'Doc Bolt' }],
+    } satisfies CreatureData;
+    const row = buildPowersForDisplay(creature, [user], [], [])[0];
+    expect(row?.description).toBe('docId hit');
+  });
+
+  it('falls back to a case-insensitive trimmed name match', () => {
+    const user = {
+      id: 'n1',
+      name: 'Fire Bolt',
+      description: 'name match',
+      parts: [],
+    } satisfies LibraryPower;
+    const creature = {
+      ...creatureBase,
+      powers: [{ name: '  fire bolt  ' }],
+    } satisfies CreatureData;
+    const row = buildPowersForDisplay(creature, [user], [], [])[0];
+    expect(row?.description).toBe('name match');
+  });
+
+  it('does not look up by ref id zero (master truthy refId)', () => {
+    const official = {
+      id: '0',
+      name: 'Zero Id Power',
+      description: 'should not match via ref 0',
+      parts: [],
+    } satisfies LibraryPower;
+    const creature = {
+      ...creatureBase,
+      powers: [{ id: 0 as unknown as string, name: 'Other' }],
+    } satisfies CreatureData;
+    const row = buildPowersForDisplay(creature, [], [official], [])[0];
+    expect(row?.description).not.toBe('should not match via ref 0');
+  });
+});
+
 describe('buildSkillRows saved proficiency', () => {
   it('omits a saved skill with proficient false from the stat block and summary lists', () => {
     const skills = [

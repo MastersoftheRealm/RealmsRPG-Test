@@ -45,21 +45,23 @@ type IndexedLibraryItem = {
   name?: string | null | undefined;
 };
 
+/** User lists key by docId + id; official codex rows key by id only (master semantics). */
 function buildLibraryItemIndexes<T extends IndexedLibraryItem>(
   items: readonly T[],
+  source: 'user' | 'official',
 ): { byId: Map<string, T>; byName: Map<string, T> } {
   const byId = new Map<string, T>();
   const byName = new Map<string, T>();
   for (const item of items) {
-    if (item.docId != null && item.docId !== '') byId.set(String(item.docId), item);
-    if (item.id != null && item.id !== '') byId.set(String(item.id), item);
+    if (source === 'user' && item.docId) byId.set(String(item.docId), item);
+    if (item.id) byId.set(String(item.id), item);
     if (item.name) byName.set(String(item.name).trim().toLowerCase(), item);
   }
   return { byId, byName };
 }
 
 function resolveLibraryItemMatch<T extends IndexedLibraryItem>(
-  refId: string | undefined,
+  refId: string | number | undefined,
   refName: string | undefined,
   indexes: { byId: Map<string, T>; byName: Map<string, T> },
 ): T | undefined {
@@ -131,8 +133,8 @@ export function buildPowersForDisplay(
   const refs = Array.isArray(creature.powers) ? creature.powers : [];
   if (refs.length === 0) return [];
 
-  const userIndexes = buildLibraryItemIndexes<LibraryPowerLike>(userPowers);
-  const officialIndexes = buildLibraryItemIndexes<LibraryPower>(officialPowers);
+  const userIndexes = buildLibraryItemIndexes<LibraryPowerLike>(userPowers, 'user');
+  const officialIndexes = buildLibraryItemIndexes<LibraryPower>(officialPowers, 'official');
 
   return refs.map((ref, idx): EntityPowerRow => {
     const refId =
@@ -140,16 +142,8 @@ export function buildPowersForDisplay(
       (ref as { id?: string | undefined }).id;
     const refName = ref.name;
 
-    const userMatch = resolveLibraryItemMatch(
-      refId != null ? String(refId) : undefined,
-      refName,
-      userIndexes,
-    );
-    const officialMatch = resolveLibraryItemMatch(
-      refId != null ? String(refId) : undefined,
-      refName,
-      officialIndexes,
-    );
+    const userMatch = resolveLibraryItemMatch(refId, refName, userIndexes);
+    const officialMatch = resolveLibraryItemMatch(refId, refName, officialIndexes);
 
     const enriched = userMatch
       ? {
@@ -304,23 +298,15 @@ export function buildTechniquesForDisplay(
   const refs = Array.isArray(creature.techniques) ? creature.techniques : [];
   if (refs.length === 0) return [];
 
-  const userIndexes = buildLibraryItemIndexes<LibraryTechniqueLike>(userTechniques);
-  const officialIndexes = buildLibraryItemIndexes<LibraryTechnique>(officialTechniques);
+  const userIndexes = buildLibraryItemIndexes<LibraryTechniqueLike>(userTechniques, 'user');
+  const officialIndexes = buildLibraryItemIndexes<LibraryTechnique>(officialTechniques, 'official');
 
   return refs.map((ref, idx): EntityTechniqueRow => {
     const refId = (ref as { id?: string | undefined }).id;
     const refName = ref.name;
 
-    const userMatch = resolveLibraryItemMatch(
-      refId != null ? String(refId) : undefined,
-      refName,
-      userIndexes,
-    );
-    const officialMatch = resolveLibraryItemMatch(
-      refId != null ? String(refId) : undefined,
-      refName,
-      officialIndexes,
-    );
+    const userMatch = resolveLibraryItemMatch(refId, refName, userIndexes);
+    const officialMatch = resolveLibraryItemMatch(refId, refName, officialIndexes);
 
     const enriched = userMatch
       ? {
