@@ -29,13 +29,7 @@ import type { Abilities } from '@/types';
 import { resolveCreatureInventoryBuckets } from '@/lib/game/creature-inventory';
 import { creatureArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 
-export type {
-  CreatureAbilities,
-  CreatureDefenses,
-  CreatureData,
-  CreatureStatBlockArmament,
-  CreatureStatBlockProps,
-} from './creature-stat-block-types';
+export type { CreatureData, CreatureStatBlockProps } from './creature-stat-block-types';
 
 import type { CreatureStatBlockProps } from './creature-stat-block-types';
 import {
