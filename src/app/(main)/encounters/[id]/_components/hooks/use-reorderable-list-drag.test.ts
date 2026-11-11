@@ -28,6 +28,18 @@ describe('useReorderableListDrag', () => {
     expect(result.current.draggedId).toBe('row-1');
   });
 
+  it('does not set dragOverId when hovering the dragged row', () => {
+    const { result } = renderHook(() => useReorderableListDrag());
+    const event = dragEventStub();
+    act(() => {
+      result.current.handleDragStart(event, 'row-1');
+    });
+    act(() => {
+      result.current.handleDragOver(dragEventStub('move'), 'row-1');
+    });
+    expect(result.current.dragOverId).toBeNull();
+  });
+
   it('clears drag state on drag end', () => {
     const { result } = renderHook(() => useReorderableListDrag());
     const startEvent = dragEventStub();

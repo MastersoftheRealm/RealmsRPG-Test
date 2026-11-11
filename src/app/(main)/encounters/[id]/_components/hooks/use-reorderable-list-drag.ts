@@ -22,7 +22,11 @@ export function useReorderableListDrag() {
     (e: DragEvent<HTMLDivElement>, id: string) => {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
-      if (id !== draggedId) setDragOverId(id);
+      if (id === draggedId) {
+        setDragOverId(null);
+        return;
+      }
+      setDragOverId(id);
     },
     [draggedId],
   );

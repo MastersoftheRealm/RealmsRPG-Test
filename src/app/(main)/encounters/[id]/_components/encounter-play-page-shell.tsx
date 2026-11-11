@@ -140,7 +140,7 @@ export function useEncounterPlayPage({
   );
 
   const { showToast } = useToast();
-  const autosaveEnabled = isInitialized && !!encounter;
+  const autosaveEnabled = !isLoading && isInitialized && Boolean(encounter);
 
   const { isSaving, hasUnsavedChanges, syncBlockedByNetwork, saveNow } =
     useAutoSave<Encounter | null>({
@@ -164,10 +164,13 @@ export function useEncounterPlayPage({
   const handleCommitName = () => {
     if (!encounter) return;
     const trimmed = nameInput.trim();
-    if (trimmed && trimmed !== encounter.name) {
-      setEncounter((prev) => (prev ? { ...prev, name: trimmed } : prev));
-    } else {
+    if (!trimmed) {
       setNameInput(encounter.name || '');
+      setIsEditingName(false);
+      return;
+    }
+    if (trimmed !== encounter.name) {
+      setEncounter((prev) => (prev ? { ...prev, name: trimmed } : prev));
     }
     setIsEditingName(false);
   };

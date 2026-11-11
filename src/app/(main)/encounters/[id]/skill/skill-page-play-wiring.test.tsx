@@ -27,11 +27,12 @@ vi.mock('react', async (importOriginal) => {
   return {
     ...actual,
     use: <T,>(usable: T): T => {
+      const maybeThen = usable as { then?: unknown };
       if (
-        usable &&
         typeof usable === 'object' &&
-        'then' in usable &&
-        typeof (usable as Promise<unknown>).then === 'function'
+        usable !== null &&
+        'then' in maybeThen &&
+        typeof maybeThen.then === 'function'
       ) {
         return { id: 'enc-skill-wiring' } as T;
       }
