@@ -7,7 +7,7 @@
 
 **Product (Kadin, Nov 11, 2026):** Option **A** (`base_feat_id`). Thrall **1–3**; Regional Revival II → level **2** (base **164**); Spectral Movement **1** / Spectral Movement II → **2** (3:22 PM ET); Charge/Charger **separate**; bases 121, 109, 116 → `feat_lvl = 1`; Tunneller **1** feat point.
 
-**Stage 2 gate:** Plan-pass review of this revision, then implementation pass per fallback path.
+**Re-review (head `612e4cac`):** SOUND WITH ISSUES — data model/SQL accepted; this revision closes merge-rule and SQL checklist gaps before Stage 2.
 
 ---
 
@@ -39,7 +39,7 @@ Saved creatures reference feats by **id** in JSON only. The same numeric id can 
 
 ### Recommendation
 
-**Option A** remains correct: add `base_feat_id`, backfill links, map it in `mapCodexCreatureFeat`, reuse **`leveled-feats.ts`** for grouping/chips/next-level math, keep creature-specific columns in existing `GridListRow` UIs. Replace-on-add uses **one shared reducer** scoped by catalog (`creature` vs `character`), not a third copy of the sheet reducer.
+**Option A** remains correct: add `base_feat_id`, backfill links, map it in `mapCodexCreatureFeat`, reuse **`leveled-feats.ts`** for grouping/chips/next-level math, keep creature-specific columns in existing `GridListRow` UIs. Replace-on-add uses **one shared reducer** with **per-row catalog** (creature vs character/archetype), two definition maps, never unioned — not a third copy of the sheet reducer.
 
 ### Rollback (honest)
 
@@ -88,19 +88,11 @@ Saved creatures reference feats by **id** in JSON only. The same numeric id can 
 **Live census:** 161 total; 49 child updates; 26 bases with `base_feat_id IS NULL`; 86 singletons.  
 **One-shot:** Header on `sql/codex-creature-feats-base-feat-id.sql` must state “run once per environment; re-run overwrites admin edits.”
 
-### 3.1 DDL
+### 3.1 DDL (executed inside §3.3 `BEGIN`)
 
-```sql
-ALTER TABLE public.codex_creature_feats
-  ADD COLUMN IF NOT EXISTS base_feat_id text;
+Add nullable `base_feat_id text` + column comment (mirrors `codex_feats`). RLS unchanged (`sql/schema/0000_baseline_2026-08-13.sql:8184-8187`, `:8725-8728`). `touch_updated_at` bumps `updated_at`.
 
-COMMENT ON COLUMN public.codex_creature_feats.base_feat_id IS
-  'Level-1 creature feat id in this family. NULL on level-1 rows. Mirrors codex_feats.base_feat_id.';
-```
-
-RLS: existing public SELECT on table (`sql/schema/0000_baseline_2026-08-13.sql:8184-8187`, `:8725-8728`); new column needs no new policy. `touch_updated_at` trigger will bump `updated_at` on updates (no changelog table).
-
-### 3.2 Kadin-approved data corrections (same transaction, before links)
+### 3.2 Kadin-approved data corrections (first updates inside §3.3)
 
 | id | name | change |
 |----|------|--------|
@@ -112,7 +104,28 @@ RLS: existing public SELECT on table (`sql/schema/0000_baseline_2026-08-13.sql:8
 | 137 | Spectral Movement II | `feat_lvl = 2` (was NULL; Kadin Nov 11, 3:22 PM ET) |
 | 120 | Tunneller | `feat_points = 1` |
 
+### 3.3 Apply transaction (`§3.1` + `§3.2` + 26 base clears + 49 child links)
+
+**Rules:**
+
+- One `BEGIN` … `COMMIT`. No apply outside this block.
+- After **each** `UPDATE`, `GET DIAGNOSTICS … ROW_COUNT` and `RAISE EXCEPTION` unless the expected count matches (pattern below). Single-row fixes expect **1**; multi-id `IN (...)` expect that count.
+- **One-shot** (header comment on SQL file).
+
 ```sql
+BEGIN;
+
+-- §3.1 DDL
+ALTER TABLE public.codex_creature_feats
+  ADD COLUMN IF NOT EXISTS base_feat_id text;
+COMMENT ON COLUMN public.codex_creature_feats.base_feat_id IS
+  'Level-1 creature feat id in this family. NULL on level-1 rows. Mirrors codex_feats.base_feat_id.';
+
+-- Helper pattern (repeat after every UPDATE in this file):
+--   GET DIAGNOSTICS v_n = ROW_COUNT;
+--   IF v_n <> <expected> THEN RAISE EXCEPTION '…', v_n; END IF;
+
+-- §3.2 (each expects ROW_COUNT = 1)
 UPDATE public.codex_creature_feats SET feat_lvl = 3 WHERE id = '151' AND name = 'Create Thrall III';
 UPDATE public.codex_creature_feats SET feat_lvl = 2 WHERE id = '23'  AND name = 'Regional Revival II';
 UPDATE public.codex_creature_feats SET feat_lvl = 2 WHERE id = '137' AND name = 'Spectral Movement II';
@@ -120,49 +133,110 @@ UPDATE public.codex_creature_feats SET feat_lvl = 1 WHERE id = '121' AND name = 
 UPDATE public.codex_creature_feats SET feat_lvl = 1 WHERE id = '109' AND name = 'Shapeshifter';
 UPDATE public.codex_creature_feats SET feat_lvl = 1 WHERE id = '116' AND name = 'Spectral Movement';
 UPDATE public.codex_creature_feats SET feat_points = 1 WHERE id = '120' AND name = 'Tunneller';
+
+-- Level-1 bases: base_feat_id NULL (26 updates, each ROW_COUNT = 1)
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '121' AND name = 'Ambusher';
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '13'  AND name = 'Blindsense';
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '87'  AND name = 'Blood Rage';
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '8'   AND name = 'Burrow';
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '69'  AND name = 'Champion';
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '92'  AND name = 'Constrictor';
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '149' AND name = 'Create Thrall';
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '10'  AND name = 'Darkvision';
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '154' AND name = 'Dimensional Effect';
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '58'  AND name = 'Elemental Affinity';
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '6'   AND name = 'Flying';
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '61'  AND name = 'Instinct';
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '19'  AND name = 'Jump';
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '64'  AND name = 'Lycanthrope';
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '77'  AND name = 'Power Resistant';
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '54'  AND name = 'Regenerative';
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '164' AND name = 'Regional Revival';
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '42'  AND name = 'Resources';
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '109' AND name = 'Shapeshifter';
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '39'  AND name = 'Slow';
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '116' AND name = 'Spectral Movement';
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '36'  AND name = 'Speedy';
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '25'  AND name = 'Sun Sickness';
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '27'  AND name = 'Telepathy';
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '82'  AND name = 'Teleport';
+UPDATE public.codex_creature_feats SET base_feat_id = NULL WHERE id = '96'  AND name = 'Tight Grapple';
+
+-- Children (49 updates, each ROW_COUNT = 1)
+UPDATE public.codex_creature_feats SET base_feat_id = '121' WHERE id = '122' AND name = 'Ambusher II';
+UPDATE public.codex_creature_feats SET base_feat_id = '121' WHERE id = '123' AND name = 'Ambusher III';
+UPDATE public.codex_creature_feats SET base_feat_id = '13'  WHERE id = '14'  AND name = 'Blindsense II';
+UPDATE public.codex_creature_feats SET base_feat_id = '13'  WHERE id = '15'  AND name = 'Blindsense III';
+UPDATE public.codex_creature_feats SET base_feat_id = '13'  WHERE id = '16'  AND name = 'Blindsense IV';
+UPDATE public.codex_creature_feats SET base_feat_id = '87'  WHERE id = '88'  AND name = 'Blood Rage II';
+UPDATE public.codex_creature_feats SET base_feat_id = '87'  WHERE id = '89'  AND name = 'Blood Rage III';
+UPDATE public.codex_creature_feats SET base_feat_id = '87'  WHERE id = '90'  AND name = 'Blood Rage IV';
+UPDATE public.codex_creature_feats SET base_feat_id = '8'   WHERE id = '9'   AND name = 'Burrow II';
+UPDATE public.codex_creature_feats SET base_feat_id = '69'  WHERE id = '70'  AND name = 'Champion II';
+UPDATE public.codex_creature_feats SET base_feat_id = '69'  WHERE id = '71'  AND name = 'Champion III';
+UPDATE public.codex_creature_feats SET base_feat_id = '69'  WHERE id = '72'  AND name = 'Champion IV';
+UPDATE public.codex_creature_feats SET base_feat_id = '69'  WHERE id = '73'  AND name = 'Champion V';
+UPDATE public.codex_creature_feats SET base_feat_id = '69'  WHERE id = '74'  AND name = 'Champion VI';
+UPDATE public.codex_creature_feats SET base_feat_id = '92'  WHERE id = '93'  AND name = 'Constrictor II';
+UPDATE public.codex_creature_feats SET base_feat_id = '92'  WHERE id = '94'  AND name = 'Constrictor III';
+UPDATE public.codex_creature_feats SET base_feat_id = '92'  WHERE id = '95'  AND name = 'Constrictor IV';
+UPDATE public.codex_creature_feats SET base_feat_id = '149' WHERE id = '150' AND name = 'Create Thrall II';
+UPDATE public.codex_creature_feats SET base_feat_id = '149' WHERE id = '151' AND name = 'Create Thrall III';
+UPDATE public.codex_creature_feats SET base_feat_id = '10'  WHERE id = '11'  AND name = 'Darkvision II';
+UPDATE public.codex_creature_feats SET base_feat_id = '10'  WHERE id = '12'  AND name = 'Darkvision III';
+UPDATE public.codex_creature_feats SET base_feat_id = '154' WHERE id = '155' AND name = 'Dimensional Effect II';
+UPDATE public.codex_creature_feats SET base_feat_id = '58'  WHERE id = '59'  AND name = 'Elemental Affinity II';
+UPDATE public.codex_creature_feats SET base_feat_id = '58'  WHERE id = '60'  AND name = 'Elemental Affinity III';
+UPDATE public.codex_creature_feats SET base_feat_id = '6'   WHERE id = '7'   AND name = 'Flying II';
+UPDATE public.codex_creature_feats SET base_feat_id = '61'  WHERE id = '62'  AND name = 'Instinct II';
+UPDATE public.codex_creature_feats SET base_feat_id = '19'  WHERE id = '20'  AND name = 'Jump II';
+UPDATE public.codex_creature_feats SET base_feat_id = '19'  WHERE id = '21'  AND name = 'Jump III';
+UPDATE public.codex_creature_feats SET base_feat_id = '64'  WHERE id = '65'  AND name = 'Lycanthrope II';
+UPDATE public.codex_creature_feats SET base_feat_id = '64'  WHERE id = '66'  AND name = 'Lycanthrope III';
+UPDATE public.codex_creature_feats SET base_feat_id = '77'  WHERE id = '78'  AND name = 'Power Resistant II';
+UPDATE public.codex_creature_feats SET base_feat_id = '77'  WHERE id = '79'  AND name = 'Power Resistant III';
+UPDATE public.codex_creature_feats SET base_feat_id = '54'  WHERE id = '55'  AND name = 'Regenerative II';
+UPDATE public.codex_creature_feats SET base_feat_id = '54'  WHERE id = '56'  AND name = 'Regenerative III';
+UPDATE public.codex_creature_feats SET base_feat_id = '54'  WHERE id = '57'  AND name = 'Regenerative IV';
+UPDATE public.codex_creature_feats SET base_feat_id = '164' WHERE id = '23'  AND name = 'Regional Revival II';
+UPDATE public.codex_creature_feats SET base_feat_id = '42'  WHERE id = '43'  AND name = 'Resources II';
+UPDATE public.codex_creature_feats SET base_feat_id = '109' WHERE id = '110' AND name = 'Shapeshifter II';
+UPDATE public.codex_creature_feats SET base_feat_id = '109' WHERE id = '111' AND name = 'Shapeshifter III';
+UPDATE public.codex_creature_feats SET base_feat_id = '39'  WHERE id = '40'  AND name = 'Slow II';
+UPDATE public.codex_creature_feats SET base_feat_id = '39'  WHERE id = '41'  AND name = 'Slow III';
+UPDATE public.codex_creature_feats SET base_feat_id = '116' WHERE id = '137' AND name = 'Spectral Movement II';
+UPDATE public.codex_creature_feats SET base_feat_id = '36'  WHERE id = '37'  AND name = 'Speedy II';
+UPDATE public.codex_creature_feats SET base_feat_id = '36'  WHERE id = '38'  AND name = 'Speedy III';
+UPDATE public.codex_creature_feats SET base_feat_id = '25'  WHERE id = '26'  AND name = 'Sun Sickness II';
+UPDATE public.codex_creature_feats SET base_feat_id = '27'  WHERE id = '28'  AND name = 'Telepathy II';
+UPDATE public.codex_creature_feats SET base_feat_id = '82'  WHERE id = '83'  AND name = 'Teleport II';
+UPDATE public.codex_creature_feats SET base_feat_id = '82'  WHERE id = '84'  AND name = 'Teleport III';
+UPDATE public.codex_creature_feats SET base_feat_id = '96'  WHERE id = '97'  AND name = 'Tight Grapple II';
+
+COMMIT;
 ```
 
-### 3.3 Families to link (26 bases, 49 children)
+**Not linked:** Slow Walker (**22**), Charge (**99**), Charger (**86**), and all singletons.
 
-Same 26 families as prior plan (Ambusher through Tight Grapple). **Slow (39)** links 40, 41 only — **not** Slow Walker (22).
-
-Child updates use **`id` AND `name`** guards (example pattern):
+### 3.4 Post-apply verification (read-only; run after `COMMIT`)
 
 ```sql
-UPDATE public.codex_creature_feats SET base_feat_id = '36'
-WHERE id = '37' AND name = 'Speedy II';
-UPDATE public.codex_creature_feats SET base_feat_id = '36'
-WHERE id = '38' AND name = 'Speedy III';
--- … repeat for all 49 children (full list in Stage 2 SQL file)
-```
-
-Bases (26 ids): explicit `base_feat_id = NULL` with `AND name = '…'` on each base row.
-
-### 3.4 Post-apply verification (read-only)
-
-```sql
--- Counts
-SELECT count(*) FILTER (WHERE base_feat_id IS NOT NULL) AS children FROM codex_creature_feats;
+SELECT count(*) FILTER (WHERE base_feat_id IS NOT NULL) AS linked_children FROM codex_creature_feats;
 -- expect 49
 
-SELECT count(*) FILTER (WHERE base_feat_id IS NULL AND id IN (/* 26 base ids */)) AS bases;
--- expect 26
-
--- No duplicate feat_lvl within a family
-SELECT base_feat_id, feat_lvl, count(*)
+-- Duplicate level within a family (includes level-1 bases)
+SELECT COALESCE(base_feat_id, id) AS family_id,
+       COALESCE(feat_lvl, 1) AS lvl,
+       count(*) AS n
 FROM codex_creature_feats
-WHERE base_feat_id IS NOT NULL
+WHERE COALESCE(base_feat_id, id) IN (
+  SELECT DISTINCT COALESCE(base_feat_id, id) FROM codex_creature_feats WHERE base_feat_id IS NOT NULL
+     UNION SELECT id FROM codex_creature_feats WHERE id IN (
+       '121','13','87','8','69','92','149','10','154','58','6','61','19','64','77','54',
+       '164','42','109','39','116','36','25','27','82','96'))
 GROUP BY 1, 2
 HAVING count(*) > 1;
-
--- One row per level 1..max per family
-WITH fam AS (
-  SELECT base_feat_id AS fid, feat_lvl, count(*) AS n
-  FROM codex_creature_feats
-  WHERE base_feat_id IS NOT NULL
-  GROUP BY 1, 2
-)
-SELECT * FROM fam WHERE n <> 1;
+-- expect zero rows
 ```
 
 ---
@@ -171,21 +245,40 @@ SELECT * FROM fam WHERE n <> 1;
 
 ### 4.1 Shared logic (`leveled-feats.ts`)
 
-- **`computeNextLeveledFeatFields`** (name TBD): given current level-1 id, current `feat_lvl`, returns `{ feat_lvl: n+1, base_feat_id }` only.
-- **`mergeFeatsInFamilyOnAdd`** (name TBD): single reducer; parameters:
-  - `catalog: 'creature' | 'character'` — only removes existing rows whose saved `featSourceType` matches catalog (creature creator / creature tab).
-  - `defsById: Map<string, LeveledFeatLike>` for **that catalog only** — never union creature + character maps.
-  - Replace rule: remove same-family rows with **strictly lower** `getFeatLevel` (same level keeps both until data fixes duplicates — prefer tightening to `>` once levels are distinct).
-- **`getFeatFamilyId` only** — do **not** copy `featPathFamilyId` from `feat-list.ts:189-191`.
+- **`computeNextLeveledFeatFields`**: next `feat_lvl`, `base_feat_id` only (no creature `lvl_req`, no character `2×level` rule).
+- **`mergeFeatsInFamilyOnAdd`** (single reducer; lives beside other helpers in this file):
 
-Refactor **`computeNextLevelFormState`** (`admin-feat-form.ts:100-118`) to call shared helper, then apply character `lvl_req = newLevel * 2`. Creature admin modal calls the same helper, leaves **`lvl_req` blank/admin-entered** (creature level), **no** `lvl_req * 2` rule.
+  **Mixed batch:** `AddCreatureFeatModal.tsx:348-378` can confirm creature, library, and species rows in one call; `page.tsx:427-431` passes the full `added[]` once. Catalog is decided **per added row**, not once per call.
+
+  | Added row `featSourceType` | Definition map | May remove existing rows with |
+  |---------------------------|----------------|------------------------------|
+  | `creature` | `codexCreatureFeatsById` | `featSourceType === 'creature'` only, same creature-family, strictly lower `getFeatLevel` |
+  | `character` or `archetype` | `codexFeatsById` (character feats) | `character` **or** `archetype`, same character-family, strictly lower level |
+  | `trait` / `flaw` / `characteristic` | — | **None** (species feats are never leveled family members) |
+
+  **Never** union the two maps into one lookup.
+
+  **`featSourceType` missing on an existing row** (legacy saves): assign a catalog only when the saved **`name`** matches that catalog’s row name for the same `id` and does **not** match the other catalog’s name. If both match, neither, or ambiguous → **do not remove** that existing row.
+
+  Examples (verified requirement):
+
+  - Id **41** saved as **Astute Tracking** (character) must **not** be removed when adding creature **Slow III** (41).
+  - Id **83** saved as **Fungal Empowerment** must **not** be removed when adding creature **Teleport II** (83).
+  - User creature `b87f86d4-9806-4ea9-bacb-9d81d25fca3f`: **Regenerative** (54), **Constrictor II** (93), **Tight Grapple II** (97) with null `featSourceType` — names match **creature** codex names; treat as creature catalog for merge only when adding another creature feat in those families.
+
+  Replace uses **`>`** on `getFeatLevel` (strictly lower removed), after §3.2 distinct levels.
+
+- **`getFeatFamilyId` only** — do not copy `featPathFamilyId` (`feat-list.ts:189-191`).
+
+Refactor **`computeNextLevelFormState`** (`admin-feat-form.ts:100-118`) to call shared helper, then apply character `lvl_req = newLevel * 2`. Creature admin keeps creature `lvl_req` entry only.
 
 ### 4.2 Consolidate merge reducers
 
 | Caller | Action |
 |--------|--------|
-| `creature-feat-utils.ts` | Replace `mergeCreatureFeatsOnAdd` body with shared reducer (`catalog: 'character'` for library adds; `'creature'` for creature-tab adds). |
-| `use-sheet-feat-actions.ts:122-141`, `:155-174` | **Follow-up** (same PR if small, else linked task): replace duplicated reduce blocks with shared reducer — **do not add a third inline copy** in the creator. |
+| `creature-feat-utils.ts` | Thin wrapper: pass **both** maps into `mergeFeatsInFamilyOnAdd` (per-row catalog inside reducer). |
+| `page.tsx:427-431` | Pass `codexFeatsById` **and** `codexCreatureFeatsById` (today only character map — bug for creature-tab adds). |
+| `use-sheet-feat-actions.ts:122-141`, `:155-174` | **Follow-up:** same reducer; sheet rows are character/archetype only. |
 
 ### 4.3 Types / API / admin columnar
 
@@ -200,7 +293,7 @@ Character `CodexFeatRow` (`codex-feat-row.tsx:13-38`) uses character columns fro
 
 - **`AdminCreatureFeatsTab.tsx`** / **`CodexCreatureFeatsTab.tsx`**: `groupFeatFamilies` on mapped creature feats; keep existing `GridListRow` columns (`:26-32` public, `:143-171` admin); expand rows with **`buildFeatLevelChips`** from `leveled-feats.ts` (same chip pattern as character codex, not `checkFeatRequirements`).
 - **`admin-creature-feat-edit-modal.tsx`**: “Add level” uses shared next-level helper; points/mechanic/`lvl_req` stay creature-specific; **no** new `admin-creature-feat-form.ts` file (Collin Q1 answered by constitution item 2).
-- **`AddCreatureFeatModal.tsx`**: creature tab — `groupFeatFamilies`, one row per family, highest qualified level; merge on confirm via shared reducer + **creature defs map only**.
+- **`AddCreatureFeatModal.tsx`**: creature tab — `groupFeatFamilies`; one selectable row per family = **highest `feat_lvl` whose creature `lvl_req` is met** (`lvl_req` null OR `creature.level >= lvl_req`). **Do not** use `getMaxQualifiedFeatLevel` / `checkFeatRequirements`. Merge on confirm via `mergeFeatsInFamilyOnAdd` with both maps (`:348-378`).
 - **`creature-creator-feat-armament-display.ts`**: level chips for `featSourceType === 'creature'` using creature catalog map only; **no** `checkFeatRequirements` (`feat-requirements.ts:303-315` is for character feats).
 
 ### 4.5 Movement / sense chips (replace `creature-trait-tiers.ts`)
@@ -228,18 +321,16 @@ PR #529, `1dfe8wf3mzj`, B2 speed **values**, new feat copy, payload JSON shape c
 
 ## 5. Test plan — must fail on master
 
-Run before Stage 2 implementation (verified **2026-11-11** on branch at plan-only commits, `npm ci`):
+| # | File | Assertion | Master (verified) |
+|---|------|-----------|-------------------|
+| 1 | `src/lib/codex/row-map.test.ts` | DB-shaped Slow / Slow II / Slow III rows through **`mapCodexCreatureFeat`**, then `groupFeatFamilies` → **1** family | **FAIL** (3 families) |
+| 2 | `src/lib/leveled-feats.test.ts` (next to `mergeFeatsInFamilyOnAdd`) | Existing **archetype** `{ id: '37', name: 'Astral Projection' }`; add **creature** `{ id: '38', name: 'Speedy III' }`; pass **only** creature defs map (`36–38` with `base_feat_id`); expect **2** rows | **FAIL** on today’s `mergeCreatureFeatsOnAdd` — drops 37, length **1** (`npx vitest run src/lib/leveled-feats.test.ts -t "archetype id 37"`, 2026-11-11) |
 
-| Test | File (Stage 2) | Master result |
-|------|----------------|---------------|
-| Slow family via mapper + `groupFeatFamilies` | `src/lib/codex/row-map.test.ts` | **FAIL** — `expect(groupFeatFamilies(rows)).toHaveLength(1)` received **3** families (`mapCodexCreatureFeat` drops `base_feat_id`). Command: `npx vitest run src/lib/codex/row-map.test.ts -t "Slow family"`. |
-| Catalog-scoped merge keeps character row when adding creature feat same id | `src/lib/creature-feat-utils.test.ts` (new) | **FAIL** until `mergeFeatsInFamilyOnAdd` exists — import/call new API: existing archetype id `41`, add creature Slow III id `41`, expect **2** feats; wrong single-map wiring yields **1**. |
+Stage 2: add test **2** beside the new reducer in `leveled-feats.test.ts`; implement `mergeFeatsInFamilyOnAdd` until both pass. No `creature-feat-utils.test.ts` (file does not exist).
 
-**Do not** treat `creature-trait-tiers.test.ts:6-11` as the regression — it **passes** on master (name hack).
+**Do not** use `creature-trait-tiers.test.ts` or same-id 41/41 as the merge regression (41/41 does not fail today’s function the same way).
 
-**Do not** pass Slow rows through `groupFeatFamilies` without `mapCodexCreatureFeat` in the first test — that bypasses the real bug.
-
-After Stage 2: run full `npx vitest run src/lib/codex/row-map.test.ts src/lib/creature-feat-utils.test.ts` + movement helper tests replacing `creature-trait-tiers.test.ts`.
+After implementation: `npx vitest run src/lib/codex/row-map.test.ts src/lib/leveled-feats.test.ts` + movement-helper tests.
 
 ---
 
@@ -247,8 +338,8 @@ After Stage 2: run full `npx vitest run src/lib/codex/row-map.test.ts src/lib/cr
 
 ### A. Links and data (schema + one-shot SQL)
 
-- [ ] Named backup; §3.4 transaction applied.
-- [ ] Post-apply checks: **49** children, **26** null bases, no duplicate `(base_feat_id, feat_lvl)`.
+- [ ] Named backup; **§3.1–§3.3** single transaction applied (ROW_COUNT guard after each UPDATE).
+- [ ] **§3.4** verification: **49** linked children; no duplicate `(COALESCE(base_feat_id, id), COALESCE(feat_lvl, 1))`.
 - [ ] Kadin-approved §3.2 rows corrected (includes **137** → level 2).
 - [ ] `baseFeatId` on admin allowlist; types/docs updated.
 
