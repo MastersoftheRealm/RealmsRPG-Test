@@ -4,6 +4,7 @@
 
 import type { Feat } from '@/hooks';
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
+import { computeNextLeveledFeatFields } from '@/lib/leveled-feats';
 import { codexSourcesOrCore, DEFAULT_CODEX_SOURCES } from '@/lib/codex/sources';
 
 export type FeatFormState = {
@@ -103,14 +104,16 @@ export function computeNextLevelFormState(
   sourceDbFeatId: string,
 ): FeatFormState {
   const curLvl = sourceForm.feat_lvl != null && sourceForm.feat_lvl > 0 ? sourceForm.feat_lvl : 1;
-  const newLvl = curLvl + 1;
-  const baseId = sourceForm.base_feat_id.trim() || sourceDbFeatId;
+  const { feat_lvl: newLvl, base_feat_id: baseId } = computeNextLeveledFeatFields({
+    sourceFeatLvl: sourceForm.feat_lvl,
+    sourceBaseFeatId: sourceForm.base_feat_id.trim() || undefined,
+    sourceDbFeatId,
+  });
   const defaultReq = newLvl * 2;
   const prevReq = sourceForm.lvl_req;
   const prevExpected = curLvl * 2;
   const lvl_req =
     prevReq != null && prevReq > prevExpected ? Math.max(defaultReq, prevReq) : defaultReq;
-
   return {
     ...sourceForm,
     feat_lvl: newLvl,

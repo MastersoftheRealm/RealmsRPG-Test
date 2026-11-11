@@ -2,8 +2,8 @@
  * Creature creator — feat requirement mapping, point costs, and leveled-feat helpers.
  */
 
-import type { Feat } from '@/hooks';
-import { formatFeatName, getFeatFamilyId, getFeatLevel } from '@/lib/leveled-feats';
+import type { CreatureFeat as CodexCreatureFeat, Feat } from '@/hooks';
+import { formatFeatName, mergeFeatsInFamilyOnAdd, type LeveledFeatLike } from '@/lib/leveled-feats';
 import type { CharacterForFeatRequirement } from '@/lib/game/feat-requirements';
 import type { CreatureSkill, CreatureState } from './creature-creator-types';
 import type { CreatureFeat } from './transformers';
@@ -57,33 +57,27 @@ export function codexFeatToCreatureFeat(feat: Feat): CreatureFeat {
   };
 }
 
-/** When adding library feats, replace lower levels in the same feat family (matches character sheet). */
+export function codexCreatureFeatToCreatureFeat(feat: CodexCreatureFeat): CreatureFeat {
+  return {
+    id: String(feat.id),
+    name: formatFeatName(feat),
+    description: feat.description,
+    points: feat.points,
+    featSourceType: 'creature',
+  };
+}
+
+/** Replace lower ranks in the same catalog family when adding feats (creature vs character maps stay separate). */
 export function mergeCreatureFeatsOnAdd(
   existing: CreatureFeat[],
   added: CreatureFeat[],
-  codexFeatsById: Map<string, Feat>,
+  characterDefsById: Map<string, LeveledFeatLike>,
+  creatureDefsById: Map<string, LeveledFeatLike>,
 ): CreatureFeat[] {
-  const getLevel = (id: string) => {
-    const def = codexFeatsById.get(id);
-    return def ? getFeatLevel(def) : 1;
-  };
-  const getFamily = (id: string) => {
-    const def = codexFeatsById.get(id);
-    return def ? getFeatFamilyId(def) : id;
-  };
-
-  return added.reduce<CreatureFeat[]>(
-    (acc, nextFeat) => {
-      const nextFamily = getFamily(nextFeat.id);
-      const nextLevel = getLevel(nextFeat.id);
-      const filtered = acc.filter((existing) => {
-        const existingDef = codexFeatsById.get(existing.id);
-        if (!existingDef) return true;
-        if (getFamily(existing.id) !== nextFamily) return true;
-        return getLevel(existing.id) >= nextLevel;
-      });
-      return [...filtered, nextFeat];
-    },
-    [...existing],
-  );
+  return mergeFeatsInFamilyOnAdd({
+    existing,
+    added,
+    characterDefsById,
+    creatureDefsById,
+  });
 }

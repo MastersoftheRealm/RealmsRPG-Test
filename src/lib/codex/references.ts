@@ -73,6 +73,14 @@ export const REFERENCE_PROBES: Partial<Record<CodexCollection, ReferenceProbe[]>
         `Archetype ${String(row.archetype_id ?? '')} level ${String(row.level ?? '')}`,
     },
   ],
+  codex_creature_feats: [
+    {
+      table: 'codex_creature_feats',
+      columns: ['base_feat_id'],
+      selectColumns: 'id, name, base_feat_id',
+      describe: named('Creature feat'),
+    },
+  ],
   codex_traits: [
     {
       table: 'codex_traits',

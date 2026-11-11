@@ -98,7 +98,6 @@ function CreatureCreatorContent() {
     empoweredTechniqueSelectableItems,
     techniqueSelectableItems,
     armamentSelectableItems,
-    codexFeatsById,
     skillAllocations,
     senseDescriptions,
     movementDescriptions,
@@ -427,7 +426,7 @@ function CreatureCreatorContent() {
               onAdd={(feats) =>
                 setCreature((prev) => ({
                   ...prev,
-                  feats: mergeCreatureFeatsOnAdd(prev.feats, feats, codexFeatsById),
+                  feats: mergeCreatureFeatsOnAdd(prev.feats, feats),
                 }))
               }
               maxSelections={creaturePickerMaxSelections(stats.featRemaining)}

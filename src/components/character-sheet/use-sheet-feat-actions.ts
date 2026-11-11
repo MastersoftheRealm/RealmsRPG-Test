@@ -11,7 +11,12 @@ import {
   checkFeatRequirements,
   characterToFeatRequirementCharacter,
 } from '@/lib/game/feat-requirements';
-import { getFeatFamilyId, getFeatLevel, formatFeatName } from '@/lib/leveled-feats';
+import {
+  formatFeatName,
+  getFeatFamilyId,
+  getFeatLevel,
+  mergeFeatsInFamilyOnAdd,
+} from '@/lib/leveled-feats';
 import type { FeatModalType } from './character-sheet-context';
 
 type UseSheetFeatActionsArgs = {
@@ -113,68 +118,48 @@ export function useSheetFeatActions({
             : null,
         );
       } else if (type === 'archetype') {
-        type LeveledFeat = CodexFeat & {
-          base_feat_id?: string | undefined;
-          feat_lvl?: number | undefined;
-        };
-        const db = featsDb as LeveledFeat[];
-        const byId = new Map<string, LeveledFeat>(db.map((f) => [String(f.id), f]));
-        const getLevel = (f: LeveledFeat | undefined) =>
-          f?.feat_lvl != null && f.feat_lvl > 0 ? f.feat_lvl : 1;
-        const getFamily = (f: LeveledFeat | undefined) =>
-          f?.base_feat_id ? String(f.base_feat_id) : String(f?.id ?? '');
+        const byId = new Map(featsDb.map((f) => [String(f.id), f]));
         setCharacter((prev) =>
           prev
             ? {
                 ...prev,
-                archetypeFeats: newFeats.reduce<CharacterFeat[]>(
-                  (acc, nextFeat) => {
-                    const nextDef = byId.get(String(nextFeat.id));
-                    const nextFamily = getFamily(nextDef);
-                    const nextLevel = getLevel(nextDef);
-                    const filtered = acc.filter((existing) => {
-                      const existingDef = byId.get(String(existing.id));
-                      if (!existingDef || !nextFamily) return true;
-                      if (getFamily(existingDef) !== nextFamily) return true;
-                      return getLevel(existingDef) >= nextLevel;
-                    });
-                    return [...filtered, nextFeat];
-                  },
-                  [...(prev.archetypeFeats || [])],
-                ),
+                archetypeFeats: mergeFeatsInFamilyOnAdd({
+                  existing: (prev.archetypeFeats || []).map((f) => ({
+                    ...f,
+                    id: String(f.id),
+                    featSourceType: 'archetype' as const,
+                  })),
+                  added: newFeats.map((f) => ({
+                    ...f,
+                    id: String(f.id),
+                    featSourceType: 'archetype' as const,
+                  })),
+                  creatureDefsById: new Map(),
+                  characterDefsById: byId,
+                }) as CharacterFeat[],
               }
             : null,
         );
       } else {
-        type LeveledFeat = CodexFeat & {
-          base_feat_id?: string | undefined;
-          feat_lvl?: number | undefined;
-        };
-        const db = featsDb as LeveledFeat[];
-        const byId = new Map<string, LeveledFeat>(db.map((f) => [String(f.id), f]));
-        const getLevel = (f: LeveledFeat | undefined) =>
-          f?.feat_lvl != null && f.feat_lvl > 0 ? f.feat_lvl : 1;
-        const getFamily = (f: LeveledFeat | undefined) =>
-          f?.base_feat_id ? String(f.base_feat_id) : String(f?.id ?? '');
+        const byId = new Map(featsDb.map((f) => [String(f.id), f]));
         setCharacter((prev) =>
           prev
             ? {
                 ...prev,
-                feats: newFeats.reduce<CharacterFeat[]>(
-                  (acc, nextFeat) => {
-                    const nextDef = byId.get(String(nextFeat.id));
-                    const nextFamily = getFamily(nextDef);
-                    const nextLevel = getLevel(nextDef);
-                    const filtered = acc.filter((existing) => {
-                      const existingDef = byId.get(String(existing.id));
-                      if (!existingDef || !nextFamily) return true;
-                      if (getFamily(existingDef) !== nextFamily) return true;
-                      return getLevel(existingDef) >= nextLevel;
-                    });
-                    return [...filtered, nextFeat];
-                  },
-                  [...(prev.feats || [])],
-                ),
+                feats: mergeFeatsInFamilyOnAdd({
+                  existing: (prev.feats || []).map((f) => ({
+                    ...f,
+                    id: String(f.id),
+                    featSourceType: 'character' as const,
+                  })),
+                  added: newFeats.map((f) => ({
+                    ...f,
+                    id: String(f.id),
+                    featSourceType: 'character' as const,
+                  })),
+                  creatureDefsById: new Map(),
+                  characterDefsById: byId,
+                }) as CharacterFeat[],
               }
             : null,
         );

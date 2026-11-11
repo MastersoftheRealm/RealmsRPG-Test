@@ -162,13 +162,9 @@ describe('86e3nwaru mergeFeatsInFamilyOnAdd', () => {
       ['38', { id: '38', name: 'Speedy III', feat_lvl: 3, base_feat_id: '36' }],
     ]);
     const characterMap = new Map<string, { id: string; name: string; feat_lvl: number }>();
-    const existing = [
-      { id: '37', name: 'Astral Projection', featSourceType: 'archetype' as const },
-    ];
-    const added = [{ id: '38', name: 'Speedy III', featSourceType: 'creature' as const }];
     const result = mergeFeatsInFamilyOnAdd({
-      existing,
-      added,
+      existing: [{ id: '37', name: 'Astral Projection', featSourceType: 'archetype' as const }],
+      added: [{ id: '38', name: 'Speedy III', featSourceType: 'creature' as const }],
       creatureDefsById: creatureMap,
       characterDefsById: characterMap,
     });

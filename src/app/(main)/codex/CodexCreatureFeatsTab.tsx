@@ -19,6 +19,7 @@ import {
   rowMatchesCodexRulesSourceFilter,
 } from '@/lib/codex/list-rules-source-filter';
 import { formatCreatureLevel } from '@/lib/game';
+import { buildFeatLevelChips, formatFeatName, groupFeatFamilies } from '@/lib/leveled-feats';
 import { useCreatureFeats, type CreatureFeat } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
@@ -64,6 +65,8 @@ export function CodexCreatureFeatsTab({
     [creatureFeats, search, rulesSources, sortItems],
   );
 
+  const featFamilies = useMemo(() => groupFeatFamilies(filtered), [filtered]);
+
   if (codexMode === 'my') {
     return <CodexMyCodexEmpty />;
   }
@@ -88,24 +91,33 @@ export function CodexCreatureFeatsTab({
       sortState={sortState}
       onSort={handleSort}
       isLoading={isLoading}
-      isEmpty={filtered.length === 0}
+      isEmpty={featFamilies.length === 0}
       emptyTitle="No creature feats found"
       emptyMessage="Try adjusting your search."
     >
-      {filtered.map((f: CreatureFeat) => (
-        <GridListRow
-          key={f.id}
-          id={f.id}
-          name={f.name}
-          description={f.description || ''}
-          gridColumns={CREATURE_FEAT_GRID_COLUMNS}
-          columns={[
-            { key: 'Pts', value: String(f.points ?? '-') },
-            { key: 'Feat Lvl', value: f.feat_lvl != null ? String(f.feat_lvl) : '-' },
-            { key: 'Req. Lvl', value: f.lvl_req != null ? formatCreatureLevel(f.lvl_req) : '-' },
-          ]}
-        />
-      ))}
+      {featFamilies.map(({ main, levels }) => {
+        const levelChips = buildFeatLevelChips(levels, main.id);
+        const detailSections =
+          levelChips.length > 0 ? [{ label: 'Feat Levels', chips: levelChips }] : undefined;
+        return (
+          <GridListRow
+            key={main.id}
+            id={main.id}
+            name={formatFeatName(main)}
+            description={main.description || ''}
+            gridColumns={CREATURE_FEAT_GRID_COLUMNS}
+            columns={[
+              { key: 'Pts', value: String(main.points ?? '-') },
+              { key: 'Feat Lvl', value: main.feat_lvl != null ? String(main.feat_lvl) : '-' },
+              {
+                key: 'Req. Lvl',
+                value: main.lvl_req != null ? formatCreatureLevel(main.lvl_req) : '-',
+              },
+            ]}
+            detailSections={detailSections}
+          />
+        );
+      })}
     </CodexBrowseListShell>
   );
 }

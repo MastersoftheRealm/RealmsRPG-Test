@@ -160,6 +160,7 @@ export const CODEX_COLUMNAR_FIELDS: Record<CodexCollection, readonly string[]> =
     'description',
     'featPoints',
     'featLvl',
+    'baseFeatId',
     'lvlReq',
     'mechanic',
     'sources',

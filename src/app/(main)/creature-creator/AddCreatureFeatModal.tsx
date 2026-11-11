@@ -203,36 +203,66 @@ export function AddCreatureFeatModal({
   }, [feats]);
 
   const creatureTabItems = useMemo((): SelectableItem[] => {
-    const items: SelectableItem[] = [];
-    (creatureFeatsData as CodexCreatureFeatRow[]).forEach((feat) => {
-      if (existingFeatIdSet.has(String(feat.id))) return;
+    const baseFiltered = (creatureFeatsData as CodexCreatureFeatRow[]).filter((feat) => {
+      if (existingFeatIdSet.has(String(feat.id))) return false;
       const numId = parseInt(String(feat.id), 10);
-      if (!isNaN(numId) && MECHANICAL_CREATURE_FEAT_IDS.has(numId)) return;
-
-      const lr = feat.lvl_req;
-      const meetsLvl = !(lr != null && lr > 0 && creatureLevel < lr);
-      if (!meetsLvl && !showBlocked) return;
-
+      if (!isNaN(numId) && MECHANICAL_CREATURE_FEAT_IDS.has(numId)) return false;
+      return true;
+    });
+    const families = groupFeatFamilies(baseFiltered);
+    return families.flatMap(({ levels }): SelectableItem[] => {
+      const selectableLevels = levels
+        .filter((levelFeat) => !existingFeatIdSet.has(String(levelFeat.id)))
+        .filter((levelFeat) => {
+          const lr = levelFeat.lvl_req;
+          return !(lr != null && lr > 0 && creatureLevel < lr);
+        })
+        .slice()
+        .sort((a, b) => getFeatLevel(b) - getFeatLevel(a));
+      if (selectableLevels.length === 0) {
+        if (!showBlocked) return [];
+        const blocked = levels
+          .filter((levelFeat) => !existingFeatIdSet.has(String(levelFeat.id)))
+          .slice()
+          .sort((a, b) => getFeatLevel(b) - getFeatLevel(a))[0];
+        if (!blocked) return [];
+        const di = transformCreatureFeatToDisplayItem(
+          blocked,
+          existingFeatIdSet,
+          MECHANICAL_CREATURE_FEAT_IDS,
+        );
+        if (!di) return [];
+        const lr = blocked.lvl_req;
+        const base = displayItemToSelectableItem(di);
+        return [
+          {
+            ...base,
+            id: `ccf:${blocked.id}`,
+            columns: [{ key: 'Type', value: 'Creature', align: 'center' }, ...(base.columns ?? [])],
+            disabled: true,
+            warningMessage: lr != null ? `Requires ${formatCreatureLevelLabel(lr)}` : undefined,
+            data: { tab: 'creature', displayItem: di } as ModalRowData,
+          },
+        ];
+      }
+      const displayFeat = selectableLevels[0];
+      if (!displayFeat) return [];
       const di = transformCreatureFeatToDisplayItem(
-        feat,
+        displayFeat,
         existingFeatIdSet,
         MECHANICAL_CREATURE_FEAT_IDS,
       );
-      if (!di) return;
-
+      if (!di) return [];
       const base = displayItemToSelectableItem(di);
-      const warning =
-        !meetsLvl && lr != null ? `Requires ${formatCreatureLevelLabel(lr)}` : undefined;
-      items.push({
-        ...base,
-        id: `ccf:${feat.id}`,
-        columns: [{ key: 'Type', value: 'Creature', align: 'center' }, ...(base.columns ?? [])],
-        disabled: !meetsLvl && !showBlocked,
-        warningMessage: warning,
-        data: { tab: 'creature', displayItem: di } as ModalRowData,
-      });
+      return [
+        {
+          ...base,
+          id: `ccf:${displayFeat.id}`,
+          columns: [{ key: 'Type', value: 'Creature', align: 'center' }, ...(base.columns ?? [])],
+          data: { tab: 'creature', displayItem: di } as ModalRowData,
+        },
+      ];
     });
-    return items;
   }, [creatureFeatsData, existingFeatIdSet, creatureLevel, showBlocked]);
 
   const libraryTabItems = useMemo((): SelectableItem[] => {

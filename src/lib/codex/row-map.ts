@@ -260,6 +260,8 @@ export function mapCodexCreatureFeat(r: CodexDbRow): CodexCreatureFeat {
     points: pointsVal as number,
     feat_points: pointsVal,
     feat_lvl: toNum(r.feat_lvl),
+    base_feat_id:
+      r.base_feat_id != null && r.base_feat_id !== '' ? String(r.base_feat_id) : undefined,
     lvl_req: toNum(r.lvl_req),
     mechanic: r.mechanic === true,
     prereqs: [],

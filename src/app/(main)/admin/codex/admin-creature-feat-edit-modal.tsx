@@ -16,6 +16,7 @@ export type CreatureFeatFormState = {
   description: string;
   points: number | undefined;
   feat_lvl: number | undefined;
+  base_feat_id: string;
   lvl_req: number | undefined;
   mechanic: boolean;
   sources: string[];
@@ -26,6 +27,7 @@ export const EMPTY_CREATURE_FEAT_FORM: CreatureFeatFormState = {
   description: '',
   points: undefined,
   feat_lvl: undefined,
+  base_feat_id: '',
   lvl_req: undefined,
   mechanic: false,
   sources: [...DEFAULT_CODEX_SOURCES],
