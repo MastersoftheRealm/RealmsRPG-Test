@@ -106,7 +106,7 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
   } = useOfficialPowerTechniqueBrowseFilters({
     kind: 'technique',
     entities: techniques,
-    pathFilterEnabled: mode === 'standard',
+    rowFiltersEnabled: mode === 'standard',
   });
   const addToCharacter = useAddToCharacterFromLibrary('technique', characterFilterId);
   const { sortState, handleSort, sortItems } = useSort('name');
@@ -234,7 +234,7 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
             />
           )
         }
-        filterActiveCount={mode === 'empowered' ? undefined : filterActiveCount}
+        filterActiveCount={filterActiveCount}
         filterEmptyTitle={
           mode !== 'empowered' && pathFilterActive ? pathFilterEmptyTitle('techniques') : undefined
         }

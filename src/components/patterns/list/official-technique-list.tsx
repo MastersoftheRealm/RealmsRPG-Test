@@ -84,7 +84,7 @@ export function OfficialTechniqueList({
   const browseFilters = useOfficialPowerTechniqueBrowseFilters({
     kind: 'technique',
     entities: items,
-    pathFilterEnabled: !empowered,
+    rowFiltersEnabled: !empowered,
   });
   const {
     advancedFilters,
@@ -160,7 +160,7 @@ export function OfficialTechniqueList({
             />
           )
         }
-        filterActiveCount={empowered ? undefined : filterActiveCount}
+        filterActiveCount={filterActiveCount}
         getNameChipLabels={
           empowered
             ? undefined

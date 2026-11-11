@@ -15,12 +15,12 @@ vi.mock('./use-path-recommendation-index', () => ({
 }));
 
 describe('useOfficialPowerTechniqueBrowseFilters', () => {
-  it('omits row filter inputs when pathFilterEnabled is false', () => {
+  it('omits row filter inputs when rowFiltersEnabled is false', () => {
     const { result } = renderHook(() =>
       useOfficialPowerTechniqueBrowseFilters({
         kind: 'technique',
         entities: [{ id: '1', name: 'T', pathIds: [] }],
-        pathFilterEnabled: false,
+        rowFiltersEnabled: false,
       }),
     );
     act(() => {
@@ -30,7 +30,7 @@ describe('useOfficialPowerTechniqueBrowseFilters', () => {
     expect(result.current.advancedFiltersForRows).toBeUndefined();
     expect(result.current.characterContextForRows).toBeNull();
     expect(result.current.rulesSourcesForRows).toBeUndefined();
-    expect(result.current.filterActiveCount).toBe(0);
+    expect(result.current.filterActiveCount).toBeUndefined();
   });
 
   it('counts rules-source and advanced filters when browse filters are enabled', () => {

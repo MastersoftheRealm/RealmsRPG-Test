@@ -21,10 +21,10 @@ export function useOfficialPowerTechniqueBrowseFilters<
 >(options: {
   kind: 'power' | 'technique';
   entities: readonly T[];
-  /** When false, row filters are omitted (e.g. empowered techniques tab). */
-  pathFilterEnabled?: boolean | undefined;
+  /** When false, browse/path/advanced/rules row filters and filter badge count are omitted (e.g. empowered techniques). */
+  rowFiltersEnabled?: boolean | undefined;
 }) {
-  const { kind, entities, pathFilterEnabled = true } = options;
+  const { kind, entities, rowFiltersEnabled = true } = options;
 
   const [advancedFilters, setAdvancedFilters] = useState<PowerTechniqueFilterState>(
     EMPTY_POWER_TECHNIQUE_FILTERS,
@@ -41,25 +41,22 @@ export function useOfficialPowerTechniqueBrowseFilters<
     usePathListFilter({
       entities,
       kind: pathKind,
-      enabled: pathFilterEnabled,
+      enabled: rowFiltersEnabled,
     });
 
-  const effectivePathFilterActive = pathFilterEnabled && pathFilterActive;
-  const pathRecommendedIdsForFilter = pathFilterEnabled ? pathRecommendedIds : null;
-  const advancedFiltersForRows = pathFilterEnabled ? advancedFilters : undefined;
-  const characterContextForRows = pathFilterEnabled ? characterContext : null;
-  const rulesSourcesForRows = pathFilterEnabled ? rulesSources : undefined;
+  const effectivePathFilterActive = rowFiltersEnabled && pathFilterActive;
+  const pathRecommendedIdsForFilter = rowFiltersEnabled ? pathRecommendedIds : null;
+  const advancedFiltersForRows = rowFiltersEnabled ? advancedFilters : undefined;
+  const characterContextForRows = rowFiltersEnabled ? characterContext : null;
+  const rulesSourcesForRows = rowFiltersEnabled ? rulesSources : undefined;
 
-  const filterActiveCount = useMemo(
+  const filterActiveCountValue = useMemo(
     () =>
-      (pathFilterEnabled
-        ? countActivePowerTechniqueFilters(advancedFilters, kind, Boolean(characterContext))
-        : 0) +
-      (pathFilterEnabled ? countActiveCodexRulesSourceFilters(rulesSources) : 0) +
-      (pathFilterEnabled && characterFilterId ? 1 : 0) +
+      countActivePowerTechniqueFilters(advancedFilters, kind, Boolean(characterContext)) +
+      countActiveCodexRulesSourceFilters(rulesSources) +
+      (characterFilterId ? 1 : 0) +
       (effectivePathFilterActive ? 1 : 0),
     [
-      pathFilterEnabled,
       kind,
       advancedFilters,
       characterContext,
@@ -68,6 +65,7 @@ export function useOfficialPowerTechniqueBrowseFilters<
       effectivePathFilterActive,
     ],
   );
+  const filterActiveCount = rowFiltersEnabled ? filterActiveCountValue : undefined;
 
   return {
     advancedFilters,
