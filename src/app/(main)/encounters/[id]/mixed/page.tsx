@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, use, useCallback, useMemo } from 'react';
+import { useState, use, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Swords, Brain } from 'lucide-react';
 import { PageContainer } from '@/components/ui';
@@ -22,7 +22,6 @@ import { EncounterPageHeader } from '../_components/EncounterPageHeader';
 import { OpenTabletopButton } from '../_components/OpenTabletopButton';
 import {
   EncounterPlayPageGate,
-  encounterMutationAutosaveHandler,
   useEncounterPlayPage,
 } from '../_components/encounter-play-page-shell';
 import {
@@ -39,7 +38,6 @@ interface PageParams {
 
 function prepareMixedEncounter(encounter: Encounter): Encounter {
   if (!encounter.skillEncounter) {
-    // Mixed encounter: default to initiative so turn order can sync with combat.
     return {
       ...encounter,
       skillEncounter: { ...defaultSkillEncounterState(), useInitiative: true },
@@ -69,10 +67,12 @@ export default function MixedEncounterPage({ params }: PageParams) {
 function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) {
   const { id: encounterId } = use(params);
   const saveMutation = useSaveEncounter();
-  const onAutosave = useMemo(
-    () => encounterMutationAutosaveHandler(encounterId, saveMutation),
-    [encounterId, saveMutation],
-  );
+  const play = useEncounterPlayPage({
+    encounterId,
+    saveMutation,
+    autosave: 'mutation-strip',
+    prepareLoaded: prepareMixedEncounter,
+  });
 
   const [viewForEncounter, setViewForEncounter] = useState(() => ({
     encounterId,
@@ -93,12 +93,6 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
     },
     [encounterId],
   );
-
-  const play = useEncounterPlayPage({
-    encounterId,
-    prepareLoaded: prepareMixedEncounter,
-    onAutosave,
-  });
 
   if (play.gatePhase !== 'ready') {
     return <EncounterPlayPageGate phase={play.gatePhase} />;

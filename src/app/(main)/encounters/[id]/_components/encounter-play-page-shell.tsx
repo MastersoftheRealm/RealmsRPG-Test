@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { UseMutationResult } from '@tanstack/react-query';
 import {
   PageContainer,
@@ -16,17 +16,14 @@ import type { Encounter } from '@/types/encounter';
 
 export type EncounterPlayPageGatePhase = 'loading' | 'error' | 'initializing';
 
-export type EncounterAutosaveHandler = (
-  data: Encounter | null,
-  flush?: { unload: boolean },
-) => Promise<void>;
-
 type SaveEncounterMutation = UseMutationResult<
   unknown,
   Error,
   { id: string; data: Partial<Omit<Encounter, 'id' | 'createdAt'>> },
   unknown
 >;
+
+export type EncounterPlayAutosaveMode = 'mutation-strip' | 'skill-flush';
 
 export function encounterPlayPageGatePhase({
   isLoading,
@@ -56,7 +53,6 @@ export function EncounterPlayPageGate({
   fillsViewport?: boolean;
 }) {
   const className = fillsViewport ? PAGE_FILLS_VIEWPORT_CLASSNAME : undefined;
-
   if (phase === 'loading') {
     return (
       <PageContainer size="full" className={className}>
@@ -68,7 +64,6 @@ export function EncounterPlayPageGate({
       </PageContainer>
     );
   }
-
   if (phase === 'error') {
     return (
       <PageContainer size="full" className={className}>
@@ -81,7 +76,6 @@ export function EncounterPlayPageGate({
       </PageContainer>
     );
   }
-
   return (
     <PageContainer size="full" className={className}>
       <LoadingState message="Initializing..." />
@@ -89,45 +83,20 @@ export function EncounterPlayPageGate({
   );
 }
 
-export function encounterMutationAutosaveHandler(
-  encounterId: string,
-  saveMutation: SaveEncounterMutation,
-): EncounterAutosaveHandler {
-  return async (data) => {
-    if (!data || !encounterId) return;
-    const { id, createdAt, ...rest } = data;
-    void id;
-    void createdAt;
-    await saveMutation.mutateAsync({ id: encounterId, data: rest });
-  };
-}
-
-export function skillEncounterAutosaveHandler(
-  encounterId: string,
-  saveMutation: SaveEncounterMutation,
-  signedIn: boolean,
-): EncounterAutosaveHandler {
-  return async (data, flush) => {
-    if (!data || !encounterId) return;
-    const body = encounterAutosaveBody(data);
-    if (flush?.unload) {
-      await persistEncounterSave(encounterId, body, { signedIn, keepalive: true });
-      return;
-    }
-    await saveMutation.mutateAsync({ id: encounterId, data: body });
-  };
-}
-
 export function useEncounterPlayPage({
   encounterId,
+  saveMutation,
+  autosave,
+  signedIn = false,
   prepareLoaded,
-  onAutosave,
   autosaveWhenReady,
   requireSkillEncounter,
 }: {
   encounterId: string;
+  saveMutation: SaveEncounterMutation;
+  autosave: EncounterPlayAutosaveMode;
+  signedIn?: boolean;
   prepareLoaded?: (data: Encounter) => Encounter;
-  onAutosave: EncounterAutosaveHandler;
   autosaveWhenReady?: (encounter: Encounter) => boolean;
   requireSkillEncounter?: boolean;
 }) {
@@ -143,6 +112,26 @@ export function useEncounterPlayPage({
     setInitializedEncounterId(encounterId);
   }
   const isInitialized = initializedEncounterId === encounterId;
+
+  const onAutosave = useCallback(
+    async (data: Encounter | null, flush?: { unload: boolean }) => {
+      if (!data || !encounterId) return;
+      if (autosave === 'skill-flush') {
+        const body = encounterAutosaveBody(data);
+        if (flush?.unload) {
+          await persistEncounterSave(encounterId, body, { signedIn, keepalive: true });
+          return;
+        }
+        await saveMutation.mutateAsync({ id: encounterId, data: body });
+        return;
+      }
+      const { id, createdAt, ...rest } = data;
+      void id;
+      void createdAt;
+      await saveMutation.mutateAsync({ id: encounterId, data: rest });
+    },
+    [autosave, encounterId, saveMutation, signedIn],
+  );
 
   const { user } = useAuth();
   const { showToast } = useToast();

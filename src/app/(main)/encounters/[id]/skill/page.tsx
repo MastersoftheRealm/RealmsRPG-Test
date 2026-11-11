@@ -7,7 +7,7 @@
 
 'use client';
 
-import { use, useMemo } from 'react';
+import { use } from 'react';
 import { PageContainer } from '@/components/ui';
 import { CloudSyncOfflineBanner } from '@/components/patterns';
 import { useAuth, useSaveEncounter } from '@/hooks';
@@ -19,7 +19,6 @@ import SkillEncounterView from '../_components/SkillEncounterView';
 import { EncounterPageHeader } from '../_components/EncounterPageHeader';
 import {
   EncounterPlayPageGate,
-  skillEncounterAutosaveHandler,
   useEncounterPlayPage,
 } from '../_components/encounter-play-page-shell';
 
@@ -75,15 +74,12 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
   const { id: encounterId } = use(params);
   const { user } = useAuth();
   const saveMutation = useSaveEncounter();
-  const onAutosave = useMemo(
-    () => skillEncounterAutosaveHandler(encounterId, saveMutation, !!user),
-    [encounterId, saveMutation, user],
-  );
-
   const play = useEncounterPlayPage({
     encounterId,
+    saveMutation,
+    autosave: 'skill-flush',
+    signedIn: !!user,
     prepareLoaded: prepareSkillEncounter,
-    onAutosave,
     requireSkillEncounter: true,
   });
 
