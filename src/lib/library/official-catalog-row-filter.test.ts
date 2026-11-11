@@ -16,7 +16,8 @@ describe('filterOfficialPowerTechniqueRows', () => {
       category: 'Damage',
       categories: ['Damage'],
       weapon: 'Weapon',
-      raw: { sources: ['Core'], pathIds: ['p-damage'] },
+      sources: ['Core'],
+      raw: { id: '1' },
     },
     {
       id: 'p-attack',
@@ -25,7 +26,8 @@ describe('filterOfficialPowerTechniqueRows', () => {
       category: 'Attack',
       categories: ['Attack'],
       weapon: 'Unarmed',
-      raw: { sources: ['Crafting'], pathIds: ['p-attack'] },
+      sources: ['Crafting'],
+      raw: { id: 'p-attack' },
     },
   ];
 
@@ -90,8 +92,8 @@ describe('filterOfficialArmamentRows', () => {
 
   it('filters by rules sources after armament filters', () => {
     const rows = [
-      { id: 'a', name: 'Longsword', description: 'Steel', raw: { sources: ['Core'] } },
-      { id: 'b', name: 'Spear', description: 'Reach', raw: { sources: ['Crafting'] } },
+      { id: 'a', name: 'Longsword', description: 'Steel', sources: ['Core'], raw: { id: 'a' } },
+      { id: 'b', name: 'Spear', description: 'Reach', sources: ['Crafting'], raw: { id: 'b' } },
     ];
     expect(
       filterOfficialArmamentRows(rows, '', identitySort, undefined, null, null, ['Core']).map(
