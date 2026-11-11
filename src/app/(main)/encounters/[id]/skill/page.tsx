@@ -20,7 +20,6 @@ import {
   EncounterPlayPageGate,
   useEncounterPlayPage,
 } from '../_components/encounter-play-page-shell';
-import { SKILL_PLAY_HOOK_OPTIONS } from './skill-play-hook-options';
 
 interface PageParams {
   params: Promise<{ id: string }>;
@@ -74,7 +73,8 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
   const { id: encounterId } = use(params);
   const play = useEncounterPlayPage({
     encounterId,
-    ...SKILL_PLAY_HOOK_OPTIONS,
+    keepaliveOnUnload: true,
+    requireSkillEncounter: true,
     prepareLoaded: prepareSkillEncounter,
   });
 

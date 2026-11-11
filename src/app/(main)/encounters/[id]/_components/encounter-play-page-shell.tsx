@@ -53,7 +53,7 @@ export function encounterPlayPageGatePhase({
   requireSkillEncounter?: boolean;
 }): 'ready' | EncounterPlayPageGatePhase {
   if (isLoading) return 'loading';
-  if (error || (!isLoading && !encounterData)) return 'error';
+  if (error || !encounterData) return 'error';
   if (!encounter) return 'initializing';
   if (requireSkillEncounter && !encounter.skillEncounter) return 'initializing';
   return 'ready';
@@ -101,14 +101,13 @@ export function useEncounterPlayPage({
   encounterId,
   keepaliveOnUnload = false,
   prepareLoaded,
-  autosaveWhenReady,
   requireSkillEncounter,
 }: {
   encounterId: string;
   /** Skill play route: unload flush uses keepalive persist (combat/mixed use mutation only). */
   keepaliveOnUnload?: boolean;
   prepareLoaded?: (data: Encounter) => Encounter;
-  autosaveWhenReady?: (encounter: Encounter) => boolean;
+  /** Skill play: stay on initializing until `skillEncounter` is hydrated. */
   requireSkillEncounter?: boolean;
 }): EncounterPlayPageResult {
   const { data: encounterData, isLoading, error } = useEncounter(encounterId);
@@ -141,8 +140,7 @@ export function useEncounterPlayPage({
   );
 
   const { showToast } = useToast();
-  const autosaveEnabled =
-    isInitialized && !!encounter && (autosaveWhenReady ? autosaveWhenReady(encounter) : true);
+  const autosaveEnabled = isInitialized && !!encounter;
 
   const { isSaving, hasUnsavedChanges, syncBlockedByNetwork, saveNow } =
     useAutoSave<Encounter | null>({
@@ -206,9 +204,12 @@ export function useEncounterPlayPage({
     return { ...shared, gatePhase: 'ready', encounter };
   }
 
+  const blockedPhase: EncounterPlayPageGatePhase =
+    gatePhase === 'ready' ? 'initializing' : gatePhase;
+
   return {
     ...shared,
-    gatePhase,
+    gatePhase: blockedPhase,
     encounter,
-  } as EncounterPlayPageResult;
+  };
 }
