@@ -152,3 +152,26 @@ describe('formatFeatName', () => {
     expect(formatFeatName({ id: '3', name: 'Amplify II', feat_lvl: 3 })).toBe('Amplify III');
   });
 });
+
+describe('86e3nwaru mergeFeatsInFamilyOnAdd', () => {
+  it('keeps archetype id 37 when adding creature Speedy III id 38', async () => {
+    const { mergeFeatsInFamilyOnAdd } = await import('./leveled-feats');
+    const creatureMap = new Map([
+      ['36', { id: '36', name: 'Speedy', feat_lvl: 1 }],
+      ['37', { id: '37', name: 'Speedy II', feat_lvl: 2, base_feat_id: '36' }],
+      ['38', { id: '38', name: 'Speedy III', feat_lvl: 3, base_feat_id: '36' }],
+    ]);
+    const characterMap = new Map<string, { id: string; name: string; feat_lvl: number }>();
+    const existing = [
+      { id: '37', name: 'Astral Projection', featSourceType: 'archetype' as const },
+    ];
+    const added = [{ id: '38', name: 'Speedy III', featSourceType: 'creature' as const }];
+    const result = mergeFeatsInFamilyOnAdd({
+      existing,
+      added,
+      creatureDefsById: creatureMap,
+      characterDefsById: characterMap,
+    });
+    expect(result).toHaveLength(2);
+  });
+});
