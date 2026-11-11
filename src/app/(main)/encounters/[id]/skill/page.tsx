@@ -25,6 +25,12 @@ interface PageParams {
   params: Promise<{ id: string }>;
 }
 
+/** Wired into `useEncounterPlayPage` — tested so skill unload keepalive cannot drift. */
+export const SKILL_PLAY_HOOK_OPTIONS = {
+  keepaliveOnUnload: true,
+  requireSkillEncounter: true,
+} as const;
+
 function prepareSkillEncounter(encounter: Encounter): Encounter {
   if (!encounter.skillEncounter) {
     return { ...encounter, skillEncounter: defaultSkillEncounterState() };
@@ -73,9 +79,8 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
   const { id: encounterId } = use(params);
   const play = useEncounterPlayPage({
     encounterId,
-    keepaliveOnUnload: true,
+    ...SKILL_PLAY_HOOK_OPTIONS,
     prepareLoaded: prepareSkillEncounter,
-    requireSkillEncounter: true,
   });
 
   if (play.gatePhase !== 'ready') {
