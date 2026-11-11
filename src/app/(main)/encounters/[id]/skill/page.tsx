@@ -10,7 +10,6 @@
 import { use } from 'react';
 import { PageContainer } from '@/components/ui';
 import { CloudSyncOfflineBanner } from '@/components/patterns';
-import { useAuth } from '@/hooks';
 import { RollProvider } from '@/components/rolls';
 import type { Encounter } from '@/types/encounter';
 import { defaultSkillEncounterState } from '@/types/encounter';
@@ -72,11 +71,9 @@ export default function SkillEncounterPage({ params }: PageParams) {
 
 function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) {
   const { id: encounterId } = use(params);
-  const { user } = useAuth();
   const play = useEncounterPlayPage({
     encounterId,
     keepaliveOnUnload: true,
-    signedIn: !!user,
     prepareLoaded: prepareSkillEncounter,
     requireSkillEncounter: true,
   });

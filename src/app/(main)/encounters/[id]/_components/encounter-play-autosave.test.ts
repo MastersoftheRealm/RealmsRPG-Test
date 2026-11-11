@@ -55,7 +55,6 @@ describe('useEncounterPlayPage autosave', () => {
       useEncounterPlayPage({
         encounterId: 'e-autosave',
         keepaliveOnUnload: true,
-        signedIn: true,
       }),
     );
     await waitFor(() => expect(autoSaveOptions?.enabled).toBe(true));
@@ -75,7 +74,6 @@ describe('useEncounterPlayPage autosave', () => {
       useEncounterPlayPage({
         encounterId: 'e-autosave',
         keepaliveOnUnload: true,
-        signedIn: true,
       }),
     );
     await waitFor(() => expect(autoSaveOptions?.enabled).toBe(true));
