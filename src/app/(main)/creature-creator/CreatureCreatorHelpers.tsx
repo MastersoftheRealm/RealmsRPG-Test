@@ -6,13 +6,7 @@
 
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import {
-  GridListRow,
-  DecrementButton,
-  IncrementButton,
-  type SelectableItem,
-  type ColumnValue,
-} from '@/components/patterns';
+import { GridListRow, type SelectableItem, type ColumnValue } from '@/components/patterns';
 import { Button, DescriptorChip } from '@/components/ui';
 import type { DisplayItem } from '@/types/items';
 import { resolveListRowThumbnail, type ListRowImageKind } from '@/lib/list-row-image';
@@ -210,45 +204,6 @@ export function AddItemDropdown({
         <Button size="sm" onClick={handleAdd} disabled={!selectedValue} className="flex-shrink-0">
           Add
         </Button>
-      </div>
-    </div>
-  );
-}
-
-// =============================================================================
-// DefenseBlock
-// =============================================================================
-
-export function DefenseBlock({
-  name,
-  baseValue,
-  bonusValue,
-  onChange,
-}: {
-  name: string;
-  baseValue: number;
-  bonusValue: number;
-  onChange: (value: number) => void;
-}) {
-  const totalValue = 10 + baseValue + bonusValue;
-
-  return (
-    <div className="rounded-lg bg-surface-alt p-3 text-center">
-      <label className="mb-1 block text-xs font-medium text-text-muted uppercase">{name}</label>
-      <div className="mb-1 text-2xl font-bold text-text-primary">{totalValue}</div>
-      <div className="flex items-center justify-center gap-1">
-        <DecrementButton
-          onClick={() => onChange(Math.max(0, bonusValue - 1))}
-          disabled={bonusValue <= 0}
-          size="sm"
-          title={`Decrease ${name} bonus`}
-        />
-        <span className="w-8 text-xs text-text-muted">+{bonusValue}</span>
-        <IncrementButton
-          onClick={() => onChange(bonusValue + 1)}
-          size="sm"
-          title={`Increase ${name} bonus`}
-        />
       </div>
     </div>
   );
