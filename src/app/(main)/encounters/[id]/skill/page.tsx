@@ -20,16 +20,11 @@ import {
   EncounterPlayPageGate,
   useEncounterPlayPage,
 } from '../_components/encounter-play-page-shell';
+import { SKILL_PLAY_HOOK_OPTIONS } from './skill-play-hook-options';
 
 interface PageParams {
   params: Promise<{ id: string }>;
 }
-
-/** Wired into `useEncounterPlayPage` — tested so skill unload keepalive cannot drift. */
-export const SKILL_PLAY_HOOK_OPTIONS = {
-  keepaliveOnUnload: true,
-  requireSkillEncounter: true,
-} as const;
 
 function prepareSkillEncounter(encounter: Encounter): Encounter {
   if (!encounter.skillEncounter) {
