@@ -20,9 +20,11 @@ import CombatEncounterView from '../_components/CombatEncounterView';
 import SkillEncounterView from '../_components/SkillEncounterView';
 import { EncounterPageHeader } from '../_components/EncounterPageHeader';
 import { OpenTabletopButton } from '../_components/OpenTabletopButton';
-import { EncounterPlayPageGate } from '../_components/EncounterPlayPageGate';
-import { encounterMutationAutosaveHandler } from '../_components/encounter-play-autosave';
-import { useEncounterPlayPage } from '../_components/use-encounter-play-page';
+import {
+  EncounterPlayPageGate,
+  encounterMutationAutosaveHandler,
+  useEncounterPlayPage,
+} from '../_components/encounter-play-page-shell';
 import {
   readMixedEncounterViewTab,
   writeMixedEncounterViewTab,

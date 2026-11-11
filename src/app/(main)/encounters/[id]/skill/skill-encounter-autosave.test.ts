@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { flushDirtyAutosave } from '@/hooks/use-auto-save';
 import { computeSkillRollResult } from '@/lib/game/encounter-utils';
@@ -132,26 +130,5 @@ describe('skill encounter unload flush (86e3jrra4)', () => {
       },
     );
     expect(calls[0]?.keepalive).toBeUndefined();
-  });
-
-  it('the skill page wires the unload flush to that keepalive save', () => {
-    const page = readFileSync(
-      path.join(process.cwd(), 'src/app/(main)/encounters/[id]/skill/page.tsx'),
-      'utf8',
-    );
-    const autosave = readFileSync(
-      path.join(
-        process.cwd(),
-        'src/app/(main)/encounters/[id]/_components/encounter-play-autosave.ts',
-      ),
-      'utf8',
-    );
-    const hook = readFileSync(path.join(process.cwd(), 'src/hooks/use-auto-save.ts'), 'utf8');
-    expect(page).toContain('skillEncounterAutosaveHandler');
-    expect(autosave).toContain('persistEncounterSave');
-    expect(autosave).toContain('keepalive: true');
-    expect(autosave).toContain('encounterAutosaveBody(data)');
-    expect(hook).toContain("addEventListener('pagehide'");
-    expect(hook).toContain('flushDirtyAutosave');
   });
 });

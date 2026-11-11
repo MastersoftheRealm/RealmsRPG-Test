@@ -3,7 +3,7 @@ import { createDefaultEncounter } from '@/types/encounter';
 import {
   encounterMutationAutosaveHandler,
   skillEncounterAutosaveHandler,
-} from './encounter-play-autosave';
+} from './encounter-play-page-shell';
 import { persistEncounterSave } from '@/services/encounter-service';
 
 vi.mock('@/services/encounter-service', async (importOriginal) => {

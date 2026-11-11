@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createDefaultEncounter, type Encounter } from '@/types/encounter';
-import { encounterPlayPageGatePhase } from './EncounterPlayPageGate';
+import { encounterPlayPageGatePhase } from './encounter-play-page-shell';
 
 describe('encounterPlayPageGatePhase', () => {
   it('returns loading while the encounter query is in flight', () => {

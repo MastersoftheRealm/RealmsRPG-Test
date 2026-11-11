@@ -17,9 +17,11 @@ import { defaultSkillEncounterState } from '@/types/encounter';
 import { computeSkillRollResult } from '@/lib/game/encounter-utils';
 import SkillEncounterView from '../_components/SkillEncounterView';
 import { EncounterPageHeader } from '../_components/EncounterPageHeader';
-import { EncounterPlayPageGate } from '../_components/EncounterPlayPageGate';
-import { skillEncounterAutosaveHandler } from '../_components/encounter-play-autosave';
-import { useEncounterPlayPage } from '../_components/use-encounter-play-page';
+import {
+  EncounterPlayPageGate,
+  skillEncounterAutosaveHandler,
+  useEncounterPlayPage,
+} from '../_components/encounter-play-page-shell';
 
 interface PageParams {
   params: Promise<{ id: string }>;
