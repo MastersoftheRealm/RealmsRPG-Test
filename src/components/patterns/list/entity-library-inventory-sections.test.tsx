@@ -26,14 +26,20 @@ describe('entity library inventory sections', () => {
     expect(titles).toEqual(['Weapons', 'Shields', 'Armor', 'Equipment']);
   });
 
-  it('passes headerRightContent on armament sections but not equipment', () => {
+  it('renders headerRightContent on shield sections but not on equipment', () => {
     render(
       <div>
-        <WeaponsListSection items={[]} headerRightContent={<span data-testid="weapons-right" />} />
+        <ShieldsListSection
+          items={[]}
+          headerRightContent={<span data-testid="shields-header-right">slot</span>}
+        />
         <EquipmentListSection items={[]} />
       </div>,
     );
-    expect(screen.getByTestId('weapons-right')).toBeTruthy();
-    expect(screen.queryByTestId('equipment-right')).toBeNull();
+    expect(screen.getByTestId('shields-header-right')).toBeTruthy();
+    const equipmentTitle = screen.getByRole('heading', { level: 2, name: 'Equipment' });
+    expect(
+      equipmentTitle.parentElement?.querySelector('[data-testid="shields-header-right"]'),
+    ).toBeNull();
   });
 });
