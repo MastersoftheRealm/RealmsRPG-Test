@@ -5,7 +5,7 @@
 **Branch:** `cursor/86e3nwaru-leveled-creature-feats`  
 **Prior plan head reviewed:** `09d6cfcd` — independent plan-pass graded **UNSOUND** (grok-4.7-high). This revision answers every blocker and should-fix with verified file:line references.
 
-**Product (Kadin, Nov 11, 2026, 3:13 PM ET):** Option **A** (`base_feat_id` on `codex_creature_feats`). Create Thrall I–III → levels **1, 2, 3**. Regional Revival II → level **2** (base **164**). Charge and Charger **separate**. Ambusher, Shapeshifter, Spectral Movement **bases** → `feat_lvl = 1`. Tunneller → **1** feat point. **Open:** `feat_lvl` for **Spectral Movement II (137)** — not in the 3:13 list; Kadin is deciding.
+**Product (Kadin, Nov 11, 2026):** Option **A** (`base_feat_id`). Thrall **1–3**; Regional Revival II → level **2** (base **164**); Spectral Movement **1** / Spectral Movement II → **2** (3:22 PM ET); Charge/Charger **separate**; bases 121, 109, 116 → `feat_lvl = 1`; Tunneller **1** feat point.
 
 **Stage 2 gate:** Plan-pass review of this revision, then implementation pass per fallback path.
 
@@ -79,9 +79,7 @@ Saved creatures reference feats by **id** in JSON only. The same numeric id can 
 | Most families | Yes, when distinct `feat_lvl` on each row | — |
 | Create Thrall | Yes, after §3.2 sets 151 → level 3 | Kadin approved |
 | Regional Revival | Yes, after §3.2 sets 23 → level 2 | Kadin approved |
-| Spectral Movement | **No** until **137** has its own positive `feat_lvl` | **Pending Kadin** (137 currently NULL; base 116 fixed to 1 in §3.2) |
-
-Links for Spectral Movement may ship in the same migration, but **done-when for replace-on-add** excludes this family until 137’s level is set in data (not inferred from “II” in the name).
+| Spectral Movement | Yes, after §3.2 sets 116 → 1, **137 → 2** | Kadin approved (Nov 11, 3:22 PM ET) |
 
 ---
 
@@ -111,13 +109,13 @@ RLS: existing public SELECT on table (`sql/schema/0000_baseline_2026-08-13.sql:8
 | 121 | Ambusher | `feat_lvl = 1` |
 | 109 | Shapeshifter | `feat_lvl = 1` |
 | 116 | Spectral Movement | `feat_lvl = 1` |
+| 137 | Spectral Movement II | `feat_lvl = 2` (was NULL; Kadin Nov 11, 3:22 PM ET) |
 | 120 | Tunneller | `feat_points = 1` |
-
-**Not in §3.2 until Kadin rules:** **137** Spectral Movement II `feat_lvl`.
 
 ```sql
 UPDATE public.codex_creature_feats SET feat_lvl = 3 WHERE id = '151' AND name = 'Create Thrall III';
 UPDATE public.codex_creature_feats SET feat_lvl = 2 WHERE id = '23'  AND name = 'Regional Revival II';
+UPDATE public.codex_creature_feats SET feat_lvl = 2 WHERE id = '137' AND name = 'Spectral Movement II';
 UPDATE public.codex_creature_feats SET feat_lvl = 1 WHERE id = '121' AND name = 'Ambusher';
 UPDATE public.codex_creature_feats SET feat_lvl = 1 WHERE id = '109' AND name = 'Shapeshifter';
 UPDATE public.codex_creature_feats SET feat_lvl = 1 WHERE id = '116' AND name = 'Spectral Movement';
@@ -157,7 +155,7 @@ WHERE base_feat_id IS NOT NULL
 GROUP BY 1, 2
 HAVING count(*) > 1;
 
--- One row per level 1..max per family (after 137 decided for Spectral Movement)
+-- One row per level 1..max per family
 WITH fam AS (
   SELECT base_feat_id AS fid, feat_lvl, count(*) AS n
   FROM codex_creature_feats
@@ -224,7 +222,7 @@ New helper (location TBD, likely `creature-creator/`): chip string → feat id v
 
 ### Explicitly out of scope
 
-PR #529, `1dfe8wf3mzj`, B2 speed **values**, new feat copy, payload JSON shape changes.
+PR #529, `1dfe8wf3mzj`, B2 speed **values**, new feat copy, payload JSON shape changes, **Roman suffix removal from codex names** (see §10).
 
 ---
 
@@ -251,7 +249,7 @@ After Stage 2: run full `npx vitest run src/lib/codex/row-map.test.ts src/lib/cr
 
 - [ ] Named backup; §3.4 transaction applied.
 - [ ] Post-apply checks: **49** children, **26** null bases, no duplicate `(base_feat_id, feat_lvl)`.
-- [ ] Kadin-approved §3.2 rows corrected; **137** handled when he answers.
+- [ ] Kadin-approved §3.2 rows corrected (includes **137** → level 2).
 - [ ] `baseFeatId` on admin allowlist; types/docs updated.
 
 ### B. Replace-on-add and UI (code)
@@ -259,7 +257,7 @@ After Stage 2: run full `npx vitest run src/lib/codex/row-map.test.ts src/lib/cr
 - [ ] `mapCodexCreatureFeat` exposes `base_feat_id`; lists nest via `groupFeatFamilies`.
 - [ ] Shared merge reducer; **separate** creature vs character maps; payload unchanged.
 - [ ] Creature-tab / movement chip replace works for families with **confirmed distinct `feat_lvl`** (§2 table).
-- [ ] Spectral Movement replace-on-add — **only when** id **137** has approved `feat_lvl`.
+- [ ] Spectral Movement replace-on-add after §3.2 (116 = 1, 137 = 2).
 - [ ] Tests in §5 green; `creature-trait-tiers.ts` removed.
 
 ### C. Follow-up (may be same PR or small sibling task)
@@ -270,9 +268,7 @@ After Stage 2: run full `npx vitest run src/lib/codex/row-map.test.ts src/lib/cr
 
 ## 7. Kadin product decisions
 
-**Settled (Nov 11, 3:13 PM ET):** Thrall 1–3; Regional II = level 2; Charge/Charger separate; bases 121, 109, 116 → level 1; Tunneller 1 point.
-
-**Open:** **137** Spectral Movement II — feat level not decided (do not infer “2” from name in code or SQL).
+**Settled (Nov 11):** Thrall 1–3; Regional II = level 2; Charge/Charger separate; bases 121, 109, 116 → level 1; Tunneller 1 point; **Spectral Movement** = level 1, **Spectral Movement II (137)** = level 2 (Kadin, 3:22 PM ET — same family pattern as character feats; Roman “II” in the **name** is a placeholder for now).
 
 ---
 
@@ -288,4 +284,33 @@ After Stage 2: run full `npx vitest run src/lib/codex/row-map.test.ts src/lib/cr
 
 High: `sql/`, official `codex_creature_feats`, admin codex, creature creator. Kadin merges data change; Collin post-review on implementation.
 
-**Verdict target after Stage 2:** REAL FIX for link column + catalog-scoped merge; partial until Spectral II level is data-complete.
+**Verdict target after Stage 2:** REAL FIX for link column + catalog-scoped merge (all 26 families including Spectral Movement, with §3.2 levels distinct).
+
+---
+
+## 10. Follow-up task (not 86e3nwaru / not this PR): drop Roman suffixes from names
+
+**Product intent (Kadin, Nov 11, 3:22 PM ET):** After families are linked and replace-on-add works, every level in a family should share the **same base name** in the codex (like character feats). Today’s `… II`, `… III` etc. on creature feat **row names** are **placeholders** only. Removing them is a **separate** data + engineering task after this PR.
+
+**Why not in 86e3nwaru:** This PR adds `base_feat_id`, fixes `feat_lvl`, and keys behavior off **ids + `feat_lvl`**, not display names. Renaming rows touches saved creature JSON **name** strings, chip keys, and drive/rulebook copy — needs its own backup, Editor pass, and QA.
+
+### Dependencies on Roman suffixes or per-level names today (audit for safe removal later)
+
+| Area | File / symbol | What keys off suffix or level-specific name |
+|------|----------------|---------------------------------------------|
+| Display | `leveled-feats.ts` — `formatFeatName`, `parseFeatNameRomanSuffix`, `levelToRomanNumeral` | UI shows `Speedy II` when `name` is `Speedy` and `feat_lvl` is 2; after rename, display stays via `feat_lvl` alone |
+| Creature picker / save | `creature-feat-utils.ts:53`, `AddCreatureFeatModal.tsx:100`, `:358` | `formatFeatName` when adding or listing feats |
+| Character sheet / codex (character feats) | `feats-tab.tsx`, `add-feat-modal.tsx`, `codex-feat-row.tsx`, `AdminFeatsTab.tsx`, `admin-archetype-path-rows.tsx` | Same display helper (creature rename should not break these) |
+| Movement chip **values** (stored on creature) | `creature-creator-constants.ts` — `MOVEMENT_TYPES[]` | `value` strings: `Speedy`, `Speedy II`, `Speedy III`, `Burrow II`, `Jump II`, …; labels/descriptions duplicate roman levels |
+| Sense chip **values** | `SENSES` in same file | `Darkvision II`, `Blindsense II`, `Telepathy II`, … |
+| Chip → feat id maps | `MOVEMENT_TO_FEAT_ID`, `SENSE_TO_FEAT_ID` (`creature-creator-constants.ts:153-180`) | Record keys include roman numerals; **Fly Half** / **Fly** are separate from codex “Flying” names |
+| Feat point budget | `creature-creator-derived-stats.ts:117-133` | Looks up cost by map keys above |
+| Chip labels / descriptions | `creature-trait-labels.ts` | `MOVEMENT_BY_VALUE` / `SENSE_BY_VALUE` keyed by chip `value` strings |
+| Speed calculation (movement strings) | `calculations.ts:93-108` — keys `Speedy`, `Speedy II`, `Speedy III`, `Slow`, … | Creature `movementTypes` array uses chip values, not codex row names |
+| Tests | `calculations.test.ts`, `creature-creator-derived-stats.test.ts`, `creature-trait-tiers.test.ts` | Assert on `Speedy II` style strings |
+| Mechanical ids | `lib/id-constants.ts` — `CREATURE_FEAT_IDS` (`SPEEDY_II`, …) | Constant **names** only; values are numeric ids — stable across rename |
+| Name-based tier hack (removed in Stage 2) | `creature-trait-tiers.ts` | Hard-coded roman name families — deleted here, not a long-term dependency |
+| Official data | `codex_creature_feats.name` column (all 26 families) | Row names still `Foo II` until follow-up `UPDATE` + Editor/changelog |
+| Saved library JSON | `user_creatures` / `official_creatures` payload `feats[].name`, `movementTypes[]`, `senses[]` | May embed old strings; follow-up needs read compat or one-time normalize |
+
+**Follow-up done-when (sketch):** All levels in a linked family share one `name` in DB; UI still shows rank via `formatFeatName` + `feat_lvl`; movement/sense storage keys move to **feat id** or a single chip id + level (design TBD); regression on speed points and feat budget; Editor updates external copy.
