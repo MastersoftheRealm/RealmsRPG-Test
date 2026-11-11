@@ -5,6 +5,8 @@
 **Branch (implementation):** `cursor/86e3nwaru-leveled-creature-feats`  
 **Risk:** High (schema + official `codex_creature_feats` data). Kadin Nov 10 fallback applies before Stage 2 merge.
 
+**Product decisions (Kadin, Nov 11, 2026, 3:13 PM ET):** Option **A** (`base_feat_id` mirror). Create Thrall I–III are one family at levels 1–3. Regional Revival II is level 2 with base **164**. Charge and Charger stay **separate**. Ambusher, Shapeshifter, and Spectral Movement bases get `feat_lvl = 1`. Tunneller gets `feat_points = 1`. Independent plan review in progress — Stage 2 waits for that pass + implementation review.
+
 ---
 
 ## 1. Plain-English brief for Kadin
@@ -21,7 +23,7 @@ Creature **saved files** (your creatures in My Library) store chosen feats as a 
 
 | Option | What it means | Upside | Downside |
 |--------|----------------|--------|----------|
-| **A. Mirror `base_feat_id` on `codex_creature_feats`** (recommended) | Add the same nullable link character feats use. Backfill every multi-level family from current names + levels. Reuse `leveled-feats.ts`, `CodexFeatRow`, admin “Add level”, picker grouping, and replace-on-upgrade logic. | One mental model for players and RMs; delete the name-based tier list; admin/library/creator match character feats. | Schema change + one-time data backfill on production; a few rows have bad level numbers that need your call before we “fix” them in data. |
+| **A. Mirror `base_feat_id` on `codex_creature_feats`** (**chosen**, Nov 11, 2026) | Add the same nullable link character feats use. Backfill every multi-level family from current names + levels, plus Kadin-approved row corrections (§3.2). Reuse `leveled-feats.ts`, `CodexFeatRow`, admin “Add level”, picker grouping, and replace-on-upgrade logic. | One mental model for players and RMs; delete the name-based tier list; admin/library/creator match character feats. | Schema change + one-time data backfill on production; includes a small set of approved `feat_lvl` / `feat_points` fixes. |
 | **B. Separate “family” table** | New table mapping family id → member feat ids. | Could model weird edge cases in theory. | Second system to maintain; nothing in the app uses this pattern today; more SQL and UI glue for no gain. |
 | **C. Do nothing** | Keep name matching in code forever. | No migration risk. | Every new leveled creature feat needs code changes; admin and library stay flat lists; diverges from character feats. |
 
@@ -116,7 +118,33 @@ COMMENT ON COLUMN public.codex_creature_feats.base_feat_id IS
 -- Optional: GIN/index not required (same as codex_feats — no FK; id strings only).
 ```
 
-### 3.2 Backfill — families to link
+### 3.2 Product data corrections (Kadin-approved; run in same transaction before `base_feat_id` backfill)
+
+These fixes correct bad live rows so families and UI match intent. No renames; ids unchanged.
+
+| id | name | change |
+|----|------|--------|
+| 149 | Create Thrall | `feat_lvl = 1` (confirm; already 1 on live read) |
+| 150 | Create Thrall II | `feat_lvl = 2` (confirm; already 2) |
+| 151 | Create Thrall III | `feat_lvl = 3` (was **1**) |
+| 164 | Regional Revival | `feat_lvl = 1` (base; already 1) |
+| 23 | Regional Revival II | `feat_lvl = 2` (was **1**) |
+| 121 | Ambusher | `feat_lvl = 1` (was NULL) |
+| 109 | Shapeshifter | `feat_lvl = 1` (was NULL) |
+| 116 | Spectral Movement | `feat_lvl = 1` (was NULL) |
+| 120 | Tunneller | `feat_points = 1` (was NULL) |
+
+**Not linked:** **99** Charge and **86** Charger remain unrelated singletons (Kadin: separate feats).
+
+```sql
+-- Product data corrections (included in §3.4 transaction)
+UPDATE public.codex_creature_feats SET feat_lvl = 3 WHERE id = '151';
+UPDATE public.codex_creature_feats SET feat_lvl = 2 WHERE id = '23';
+UPDATE public.codex_creature_feats SET feat_lvl = 1 WHERE id IN ('121','109','116');
+UPDATE public.codex_creature_feats SET feat_points = 1 WHERE id = '120';
+```
+
+### 3.3 Backfill — families to link
 
 For each family: **base** = level-1 row id (`base_feat_id` stays `NULL`). **Children** set `base_feat_id = <base id>`.
 
@@ -128,7 +156,7 @@ For each family: **base** = level-1 row id (`base_feat_id` stays `NULL`). **Chil
 | Burrow | 8 | 9 → 8 |
 | Champion | 69 | 70, 71, 72, 73, 74 → 69 |
 | Constrictor | 92 | 93, 94, 95 → 92 |
-| Create Thrall | 149 | 150 → 149; **151 → 149 (see anomaly)** |
+| Create Thrall | 149 | 150, 151 → 149 (levels 1, 2, 3 after §3.2) |
 | Darkvision | 10 | 11, 12 → 10 |
 | Dimensional Effect | 154 | 155 → 154 |
 | Elemental Affinity | 58 | 59, 60 → 58 |
@@ -151,12 +179,27 @@ For each family: **base** = level-1 row id (`base_feat_id` stays `NULL`). **Chil
 
 **26 families**, **70 child rows** (total linked rows: 26 bases + 70 children = 96 rows in families; remaining ~68 rows are singletons).
 
-### 3.3 Backfill SQL (transactional pattern)
+### 3.4 Apply SQL (transactional pattern)
+
+Order: **data corrections → DDL (if not already applied) → base_feat_id backfill**. One named backup before `BEGIN`.
 
 ```sql
 BEGIN;
 
--- Level-1 rows: explicit NULL (no-op if already null)
+-- §3.2 Kadin-approved data corrections
+UPDATE public.codex_creature_feats SET feat_lvl = 3 WHERE id = '151';
+UPDATE public.codex_creature_feats SET feat_lvl = 2 WHERE id = '23';
+UPDATE public.codex_creature_feats SET feat_lvl = 1 WHERE id IN ('121','109','116');
+UPDATE public.codex_creature_feats SET feat_points = 1 WHERE id = '120';
+
+-- DDL (omit if column already exists from partial apply)
+ALTER TABLE public.codex_creature_feats
+  ADD COLUMN IF NOT EXISTS base_feat_id text;
+
+COMMENT ON COLUMN public.codex_creature_feats.base_feat_id IS
+  'Id of the level-1 creature feat in this family. NULL for level-1 rows; set for higher levels. Mirrors codex_feats.base_feat_id.';
+
+-- Level-1 rows: explicit NULL
 UPDATE public.codex_creature_feats SET base_feat_id = NULL
 WHERE id IN (
   '121','13','87','8','69','92','149','10','154','58','6','61','19','64','77','54',
@@ -194,20 +237,25 @@ UPDATE public.codex_creature_feats SET base_feat_id = '96'  WHERE id = '97';
 COMMIT;
 ```
 
-### 3.4 Anomalies (flagged — not corrected in backfill without product OK)
+### 3.5 Resolved anomalies and remaining notes
 
-| Row | Issue | Plan handling |
-|-----|--------|----------------|
-| **151** Create Thrall III | `feat_lvl = 1` (should be 3) | Link `base_feat_id` to 149; **separate** `UPDATE feat_lvl = 3` only if Kadin approves |
-| **164** / **23** Regional Revival | Both `feat_lvl = 1` | Link 23 → 164; **feat_lvl** on 23 should likely be 2 — needs Kadin |
-| **120** Tunneller | `feat_points` IS NULL | Not a family issue; fix points in a separate content task |
-| **99** Charge vs **86** Charger | Same theme, different names; not same `base_name` | **Do not** link unless Kadin says Charge is a level of Charger |
-| **121** Ambusher, **109** Shapeshifter, **116** Spectral Movement | Base row `feat_lvl` NULL while children have levels | `groupFeatFamilies` tolerates via Roman suffix; optional normalize `feat_lvl = 1` with Kadin |
-| **Flying** vs UI label **Fly Half** / **Fly** | `MOVEMENT_TO_FEAT_ID` maps UI strings to ids 6/7 | B2 / creator button mapping — out of scope |
+| Row | Issue | Resolution |
+|-----|--------|------------|
+| **151** Create Thrall III | `feat_lvl = 1` | **Fixed** in §3.2 → `feat_lvl = 3`; `base_feat_id` → 149 |
+| **23** Regional Revival II | `feat_lvl = 1` | **Fixed** in §3.2 → `feat_lvl = 2`; `base_feat_id` → 164 |
+| **120** Tunneller | `feat_points` NULL | **Fixed** in §3.2 → `feat_points = 1` |
+| **99** Charge / **86** Charger | Similar theme | **Separate feats**; no `base_feat_id` link |
+| **121**, **109**, **116** | Base `feat_lvl` NULL | **Fixed** in §3.2 → `feat_lvl = 1` |
+| **Flying** vs UI **Fly Half** / **Fly** | Label vs codex name | B2 / creator button mapping — still out of scope |
 
-**Verification query after apply (read-only):**
+**Verification queries after apply (read-only):**
 
 ```sql
+SELECT id, name, feat_lvl, feat_points, base_feat_id
+FROM codex_creature_feats
+WHERE id IN ('149','150','151','164','23','121','109','116','120')
+ORDER BY id;
+
 SELECT base_feat_id, count(*) FROM codex_creature_feats
 WHERE base_feat_id IS NOT NULL GROUP BY 1 ORDER BY 1;
 ```
@@ -269,7 +317,7 @@ WHERE base_feat_id IS NOT NULL GROUP BY 1 ORDER BY 1;
 
 ## 6. Done when
 
-- [ ] Named Supabase backup taken; migration + backfill applied in a single controlled window with SQL from this plan (adjusted per Kadin answers on anomalies).
+- [ ] Named Supabase backup taken; migration + data corrections + backfill applied in one transaction per §3.4 (Kadin product decisions recorded above).
 - [ ] Every row in the 26 families has correct `base_feat_id`; level-1 rows NULL.
 - [ ] Admin, public Codex, and creature creator **creature** feat picker show nested families like character feats; higher level replaces lower on add.
 - [ ] `creature-trait-tiers.ts` name grouping removed; movement/sense tier replacement uses shared leveled-feat family logic.
@@ -278,20 +326,24 @@ WHERE base_feat_id IS NOT NULL GROUP BY 1 ORDER BY 1;
 
 ## 7. Out of scope
 
-- New feat content or renames (Charge vs Charger merge, Tunneller points, Thrall III level — unless Kadin approves separate data fixes).
+- New feat content or renames beyond §3.2 (Charge/Charger remain separate; no new feats).
 - B2 creator button / effect mapping refactor.
 - Creature-row relational migration `1dfe8wf3mzj`.
 - PR #529 character relational storage.
 
 ---
 
-## 8. Questions for Kadin (what)
+## 8. Kadin product decisions (settled)
 
-1. **Create Thrall III (151):** Confirm `feat_lvl` should be **3** before we fix the row.
-2. **Regional Revival II (23):** Confirm `feat_lvl` should be **2** and that **164** is the level-1 base (naming vs “II” on the lower id).
-3. **Charge (99) and Charger (86):** Separate feats forever, or is Charge a lower tier of Charger?
-4. **Ambusher / Shapeshifter / Spectral Movement bases** with null `feat_lvl`: OK to set `feat_lvl = 1` on the base row when we touch data?
-5. **Tunneller (120):** What should `feat_points` be?
+Recorded Nov 11, 2026, 3:13 PM ET (Kadin’s words, paraphrased for the plan):
+
+1. **Create Thrall** I, II, and III are one feat family at levels **1, 2, and 3** (includes fixing III’s level).
+2. **Regional Revival II** is level **2**; **164** is the level-1 base.
+3. **Charge** and **Charger** are **separate** feats (not one family).
+4. **Ambusher**, **Shapeshifter**, and **Spectral Movement** bases → `feat_lvl = 1`.
+5. **Tunneller** → **1** feat point.
+
+**Stage 2 gate:** Wait for independent **plan-pass** senior review findings before implementation code.
 
 ## 9. Questions for Collin (how) — post-review queue
 
