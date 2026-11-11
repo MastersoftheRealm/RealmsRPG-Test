@@ -1,9 +1,5 @@
 'use client';
 
-/**
- * Shared Realms / My Library browse filter state for powers and techniques (DUP-09 tabs + Official*List).
- */
-
 import { useMemo, useState } from 'react';
 import { usePathListFilter } from '@/hooks';
 import {
@@ -19,22 +15,7 @@ import {
 } from '@/lib/library/power-technique-filters';
 import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 
-function countOfficialPowerTechniqueBrowseFilterActive(
-  kind: 'power' | 'technique',
-  advancedFilters: PowerTechniqueFilterState,
-  characterContext: PowerTechniqueCharacterContext | null,
-  rulesSources: readonly string[],
-  characterFilterId: string,
-  pathFilterActive: boolean,
-): number {
-  return (
-    countActivePowerTechniqueFilters(advancedFilters, kind, Boolean(characterContext)) +
-    countActiveCodexRulesSourceFilters(rulesSources) +
-    (characterFilterId ? 1 : 0) +
-    (pathFilterActive ? 1 : 0)
-  );
-}
-
+/** Realms / My Library browse filter state for powers and techniques (DUP-09). */
 export function useOfficialPowerTechniqueBrowseFilters<
   T extends PathRecommendationEntity,
 >(options: {
@@ -67,14 +48,10 @@ export function useOfficialPowerTechniqueBrowseFilters<
 
   const filterActiveCount = useMemo(
     () =>
-      countOfficialPowerTechniqueBrowseFilterActive(
-        kind,
-        advancedFilters,
-        characterContext,
-        rulesSources,
-        characterFilterId,
-        effectivePathFilterActive,
-      ),
+      countActivePowerTechniqueFilters(advancedFilters, kind, Boolean(characterContext)) +
+      countActiveCodexRulesSourceFilters(rulesSources) +
+      (characterFilterId ? 1 : 0) +
+      (effectivePathFilterActive ? 1 : 0),
     [
       kind,
       advancedFilters,

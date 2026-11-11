@@ -14,11 +14,11 @@ import { usePathListFilter } from '@/hooks';
 import type { ItemProperty } from '@/hooks/codex-types';
 import type { LibraryItem } from '@/types/library';
 import { ARMAMENT_LABELS_BY_KIND } from '@/lib/library/armament-library-labels';
+import { filterOfficialArmamentRows } from '@/lib/library/official-catalog-row-filter';
 import {
   ARMAMENT_LIBRARY_CONFIG,
   armamentRowColumns,
   buildOfficialItemRows,
-  filterOfficialItemRows,
   officialItemDetailSections,
   type ArmamentLibraryKind,
   type OfficialItemRow,
@@ -110,7 +110,7 @@ export function OfficialItemList({
       search: string,
       sortItems: (items: OfficialItemRow[]) => OfficialItemRow[],
     ) =>
-      filterOfficialItemRows(
+      filterOfficialArmamentRows(
         rows,
         search,
         sortItems,

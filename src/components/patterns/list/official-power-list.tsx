@@ -13,9 +13,9 @@ import { useGameRules } from '@/hooks/use-game-rules';
 import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-library';
 import type { PowerPart } from '@/hooks/codex-types';
 import type { LibraryPower } from '@/types/library';
+import { filterOfficialPowerTechniqueRows } from '@/lib/library/official-catalog-row-filter';
 import {
   buildOfficialPowerRows,
-  filterOfficialPowerRows,
   officialPowerCategoryOptions,
   officialPowerDetailSections,
   officialPowerRowColumns,
@@ -23,7 +23,7 @@ import {
   OFFICIAL_POWER_HEADER_COLUMNS,
   type OfficialPowerRow,
 } from '@/lib/library/official-power-list';
-import { useOfficialPowerTechniqueBrowseFilters } from '@/lib/library/use-official-power-technique-browse-filters';
+import { useOfficialPowerTechniqueBrowseFilters } from '@/hooks/use-official-power-technique-browse-filters';
 import { listInnateThresholdFilterOptions } from '@/lib/game/innate-eligibility';
 import {
   libraryRowPathIds,
@@ -111,10 +111,11 @@ export function OfficialPowerList({
       search: string,
       sortItems: (items: OfficialPowerRow[]) => OfficialPowerRow[],
     ) =>
-      filterOfficialPowerRows(
+      filterOfficialPowerTechniqueRows(
         rows,
         search,
         sortItems,
+        'power',
         advancedFilters,
         browseFilters.characterContext,
         pathRecommendedIds,

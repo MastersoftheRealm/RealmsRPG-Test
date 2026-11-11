@@ -20,12 +20,12 @@ import { usePathListFilter } from '@/hooks';
 import { useUserItems, useItemProperties, useDuplicateItem } from '@/hooks';
 import type { DisplayItem } from '@/types';
 import { getItemSyncResult, sanitizeItemForSync } from '@/lib/library-sync';
+import { filterOfficialArmamentRows } from '@/lib/library/official-catalog-row-filter';
 import {
   ARMAMENT_LIBRARY_CONFIG,
   armamentRowColumns,
   buildOfficialItemRows,
   filterItemsByArmamentKind,
-  filterOfficialItemRows,
   officialItemDetailSections,
   type ArmamentLibraryKind,
 } from '@/lib/library/official-item-list';
@@ -134,7 +134,7 @@ export function LibraryItemsTab({ armamentKind, onDelete }: LibraryItemsTabProps
 
   const filteredData = useMemo(
     () =>
-      filterOfficialItemRows(
+      filterOfficialArmamentRows(
         cardData,
         search,
         sortItems,

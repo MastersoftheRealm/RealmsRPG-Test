@@ -18,6 +18,7 @@ import {
 } from '@/lib/library/power-technique-filters';
 import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 import type { AbilityRequirement, WeaponPropertyRef } from '@/lib/game/weapon-attack-ability';
+import { glrListChrome, type GlrEntityType } from '@/lib/glr';
 
 type CatalogRowWithPath = {
   id?: string | number | undefined;
@@ -126,4 +127,17 @@ export function filterOfficialArmamentRows<T extends OfficialArmamentFilterableR
     result = applyArmamentFilters(result, filters, characterContext ?? null);
   }
   return sortItems(result);
+}
+
+export function officialEntityBrowseChrome(entityType: GlrEntityType) {
+  const chrome = glrListChrome({ entityType, mode: 'browse' });
+  return {
+    chrome,
+    grid: chrome.grid,
+    headers: chrome.headers.map(({ key, label, align }) => ({
+      key,
+      label,
+      align: align ?? 'center',
+    })),
+  };
 }

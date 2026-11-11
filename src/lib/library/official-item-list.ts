@@ -31,14 +31,7 @@ import {
 import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import type { ArmamentLibraryKind } from '@/lib/library/armament-library-labels';
-import type { ArmamentFilterState } from '@/lib/library/armament-filters';
-import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
 import { glrListChrome } from '@/lib/glr';
-import { officialBrowseHeaderColumns } from '@/lib/library/official-glr-browse-chrome';
-import {
-  filterOfficialArmamentRows,
-  type OfficialArmamentFilterableRow,
-} from '@/lib/library/official-catalog-row-filter';
 import {
   glrSurfaceDetailSections,
   propertiesProficienciesSection,
@@ -82,7 +75,11 @@ function armamentChrome(kind: ArmamentLibraryKind): {
   const chrome = glrListChrome({ entityType: kind, mode: 'browse' });
   return {
     grid: chrome.grid,
-    headers: officialBrowseHeaderColumns(chrome),
+    headers: chrome.headers.map(({ key, label, align }) => ({
+      key,
+      label,
+      align: align ?? 'center',
+    })),
   };
 }
 
@@ -269,25 +266,5 @@ export function officialItemDetailSections(row: OfficialItemRow, kind: ArmamentL
       block: row.block,
     },
     properties ? [properties] : undefined,
-  );
-}
-
-export function filterOfficialItemRows<T extends OfficialArmamentFilterableRow>(
-  rows: T[],
-  search: string,
-  sortItems: (items: T[]) => T[],
-  filters?: ArmamentFilterState,
-  characterContext?: ArmamentCharacterContext | null,
-  pathRecommendedIds?: ReadonlySet<string> | null,
-  rulesSources?: readonly string[],
-): T[] {
-  return filterOfficialArmamentRows(
-    rows,
-    search,
-    sortItems,
-    filters,
-    characterContext,
-    pathRecommendedIds,
-    rulesSources,
   );
 }

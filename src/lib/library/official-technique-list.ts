@@ -15,14 +15,8 @@ import {
   derivePartCategories,
   formatPartCategoriesColumn,
 } from '@/lib/library/power-technique-categories';
-import type { PowerTechniqueFilterState } from '@/lib/library/power-technique-filters';
-import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 import { glrColumnKeyFor } from '@/lib/glr';
-import { officialEntityBrowseChrome } from '@/lib/library/official-glr-browse-chrome';
-import {
-  filterOfficialPowerTechniqueRows,
-  type OfficialPowerTechniqueFilterableRow,
-} from '@/lib/library/official-catalog-row-filter';
+import { officialEntityBrowseChrome } from '@/lib/library/official-catalog-row-filter';
 import {
   glrSurfaceDetailSections,
   mergeDetailSections,
@@ -149,25 +143,4 @@ export function officialTechniqueRowColumns(row: OfficialTechniqueRow): ColumnVa
       align: 'center' as const,
     };
   });
-}
-
-export function filterOfficialTechniqueRows<T extends OfficialPowerTechniqueFilterableRow>(
-  rows: T[],
-  search: string,
-  sortItems: (items: T[]) => T[],
-  advanced?: PowerTechniqueFilterState,
-  character?: PowerTechniqueCharacterContext | null,
-  pathRecommendedIds?: ReadonlySet<string> | null,
-  rulesSources?: readonly string[],
-): T[] {
-  return filterOfficialPowerTechniqueRows(
-    rows,
-    search,
-    sortItems,
-    'technique',
-    advanced,
-    character,
-    pathRecommendedIds,
-    rulesSources,
-  );
 }

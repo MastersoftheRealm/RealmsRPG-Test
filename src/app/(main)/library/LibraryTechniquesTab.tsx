@@ -19,14 +19,14 @@ import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-
 import { empoweredTechniquePartsSection } from '@/lib/library/empowered-technique-display';
 import {
   buildOfficialTechniqueRows,
-  filterOfficialTechniqueRows,
   officialTechniqueDetailSections,
   officialTechniqueRowColumns,
   OFFICIAL_TECHNIQUE_GRID,
   OFFICIAL_TECHNIQUE_HEADER_COLUMNS,
 } from '@/lib/library/official-technique-list';
+import { filterOfficialPowerTechniqueRows } from '@/lib/library/official-catalog-row-filter';
 import { collectCategoryOptionsFromItems } from '@/lib/library/power-technique-categories';
-import { useOfficialPowerTechniqueBrowseFilters } from '@/lib/library/use-official-power-technique-browse-filters';
+import { useOfficialPowerTechniqueBrowseFilters } from '@/hooks/use-official-power-technique-browse-filters';
 import {
   useUserTechniques,
   useUserEmpoweredTechniques,
@@ -158,10 +158,11 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
 
   const filteredData = useMemo(() => {
     const advanced = mode === 'empowered' ? undefined : advancedFilters;
-    return filterOfficialTechniqueRows(
+    return filterOfficialPowerTechniqueRows(
       cardData,
       search,
       sortItems,
+      'technique',
       advanced,
       mode === 'empowered' ? null : characterContext,
       mode === 'empowered' ? null : pathRecommendedIds,

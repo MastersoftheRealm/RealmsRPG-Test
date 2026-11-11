@@ -19,9 +19,9 @@ import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-
 import { useUserPowers, usePowerParts, useDuplicatePower } from '@/hooks';
 import type { DisplayItem } from '@/types';
 import { getPowerSyncResult, sanitizePowerForSync } from '@/lib/library-sync';
+import { filterOfficialPowerTechniqueRows } from '@/lib/library/official-catalog-row-filter';
 import {
   buildOfficialPowerRows,
-  filterOfficialPowerRows,
   officialPowerCategoryOptions,
   officialPowerDetailSections,
   officialPowerRowColumns,
@@ -34,7 +34,7 @@ import {
   pathChipLabelsForEntity,
   pathFilterEmptyTitle,
 } from '@/lib/game/path-recommendation-index';
-import { useOfficialPowerTechniqueBrowseFilters } from '@/lib/library/use-official-power-technique-browse-filters';
+import { useOfficialPowerTechniqueBrowseFilters } from '@/hooks/use-official-power-technique-browse-filters';
 import {
   LibrarySyncRowAction,
   UserLibraryEntityTabShell,
@@ -125,10 +125,11 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
 
   const filteredData = useMemo(
     () =>
-      filterOfficialPowerRows(
+      filterOfficialPowerTechniqueRows(
         cardData,
         search,
         sortItems,
+        'power',
         advancedFilters,
         characterContext,
         pathRecommendedIds,

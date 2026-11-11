@@ -12,9 +12,9 @@ import { PowerTechniqueFilters } from '@/components/patterns/filters';
 import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-library';
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import type { LibraryTechnique } from '@/types/library';
+import { filterOfficialPowerTechniqueRows } from '@/lib/library/official-catalog-row-filter';
 import {
   buildOfficialTechniqueRows,
-  filterOfficialTechniqueRows,
   officialTechniqueDetailSections,
   officialTechniqueRowColumns,
   OFFICIAL_TECHNIQUE_GRID,
@@ -22,7 +22,7 @@ import {
   type OfficialTechniqueRow,
 } from '@/lib/library/official-technique-list';
 import { collectCategoryOptionsFromItems } from '@/lib/library/power-technique-categories';
-import { useOfficialPowerTechniqueBrowseFilters } from '@/lib/library/use-official-power-technique-browse-filters';
+import { useOfficialPowerTechniqueBrowseFilters } from '@/hooks/use-official-power-technique-browse-filters';
 import { empoweredTechniquePartsSection } from '@/lib/library/empowered-technique-display';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import type { CatalogListing } from '@/lib/library/catalog-listing';
@@ -114,10 +114,11 @@ export function OfficialTechniqueList({
       search: string,
       sortItems: (items: OfficialTechniqueRow[]) => OfficialTechniqueRow[],
     ) =>
-      filterOfficialTechniqueRows(
+      filterOfficialPowerTechniqueRows(
         rows,
         search,
         sortItems,
+        'technique',
         advancedFilters,
         browseFilters.characterContext,
         empowered ? null : pathRecommendedIds,
