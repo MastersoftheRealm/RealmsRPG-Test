@@ -39,6 +39,50 @@ import {
 type LibraryPowerLike = LibraryPower & { docId?: string | undefined };
 type LibraryTechniqueLike = LibraryTechnique & { docId?: string | undefined };
 
+type IndexedLibraryItem = {
+  docId?: string | number | null | undefined;
+  id?: string | number | null | undefined;
+  name?: string | null | undefined;
+};
+
+function buildLibraryItemIndexes<T extends IndexedLibraryItem>(
+  items: readonly T[],
+): { byId: Map<string, T>; byName: Map<string, T> } {
+  const byId = new Map<string, T>();
+  const byName = new Map<string, T>();
+  for (const item of items) {
+    if (item.docId != null && item.docId !== '') byId.set(String(item.docId), item);
+    if (item.id != null && item.id !== '') byId.set(String(item.id), item);
+    if (item.name) byName.set(String(item.name).trim().toLowerCase(), item);
+  }
+  return { byId, byName };
+}
+
+function resolveLibraryItemMatch<T extends IndexedLibraryItem>(
+  refId: string | undefined,
+  refName: string | undefined,
+  indexes: { byId: Map<string, T>; byName: Map<string, T> },
+): T | undefined {
+  const { byId, byName } = indexes;
+  return (
+    (refId ? byId.get(String(refId)) : undefined) ??
+    (refName ? byName.get(String(refName).trim().toLowerCase()) : undefined)
+  );
+}
+
+function creatureRowImageRecord(
+  enriched:
+    | { image_id?: string | null | undefined; image_url?: string | null | undefined }
+    | null
+    | undefined,
+  ref: { image_id?: string | null | undefined; image_url?: string | null | undefined },
+) {
+  return {
+    image_id: enriched?.image_id ?? ref.image_id,
+    image_url: enriched?.image_url ?? ref.image_url,
+  };
+}
+
 type SavedPartRef =
   | string
   | {
@@ -87,22 +131,8 @@ export function buildPowersForDisplay(
   const refs = Array.isArray(creature.powers) ? creature.powers : [];
   if (refs.length === 0) return [];
 
-  const userById = new Map<string, LibraryPowerLike>();
-  const userByName = new Map<string, LibraryPowerLike>();
-  userPowers.forEach((p) => {
-    if (p.docId) userById.set(String(p.docId), p);
-    if (p.id) userById.set(String(p.id), p);
-    if (p.name) userByName.set(p.name.trim().toLowerCase(), p);
-  });
-
-  const officialById = new Map<string, LibraryPower>();
-  const officialByName = new Map<string, LibraryPower>();
-  officialPowers.forEach((p) => {
-    const id = p.id != null ? String(p.id) : '';
-    const name = p.name != null ? String(p.name) : '';
-    if (id) officialById.set(id, p);
-    if (name) officialByName.set(name.trim().toLowerCase(), p);
-  });
+  const userIndexes = buildLibraryItemIndexes<LibraryPowerLike>(userPowers);
+  const officialIndexes = buildLibraryItemIndexes<LibraryPower>(officialPowers);
 
   return refs.map((ref, idx): EntityPowerRow => {
     const refId =
@@ -110,13 +140,16 @@ export function buildPowersForDisplay(
       (ref as { id?: string | undefined }).id;
     const refName = ref.name;
 
-    const userMatch =
-      (refId ? userById.get(String(refId)) : undefined) ??
-      (refName ? userByName.get(String(refName).trim().toLowerCase()) : undefined);
-
-    const officialMatch =
-      (refId ? officialById.get(String(refId)) : undefined) ??
-      (refName ? officialByName.get(String(refName).trim().toLowerCase()) : undefined);
+    const userMatch = resolveLibraryItemMatch(
+      refId != null ? String(refId) : undefined,
+      refName,
+      userIndexes,
+    );
+    const officialMatch = resolveLibraryItemMatch(
+      refId != null ? String(refId) : undefined,
+      refName,
+      officialIndexes,
+    );
 
     const enriched = userMatch
       ? {
@@ -156,11 +189,10 @@ export function buildPowersForDisplay(
     const baseDescription = enriched?.description ?? ref.description;
     const parts: SavedPartRef[] = enriched?.parts ?? ref.parts ?? [];
     const damage = enriched?.damage ?? ref.damageValue ?? ref.damage;
-    const imageRecord = {
-      image_id: enriched?.image_id ?? (ref as { image_id?: string | null | undefined }).image_id,
-      image_url:
-        enriched?.image_url ?? (ref as { image_url?: string | null | undefined }).image_url,
-    };
+    const imageRecord = creatureRowImageRecord(
+      enriched,
+      ref as { image_id?: string | null | undefined; image_url?: string | null | undefined },
+    );
     const hasObjectParts = parts.some((part) => typeof part !== 'string');
     const hasCreatorMechanics = !!(
       ref.actionType ||
@@ -272,33 +304,23 @@ export function buildTechniquesForDisplay(
   const refs = Array.isArray(creature.techniques) ? creature.techniques : [];
   if (refs.length === 0) return [];
 
-  const userById = new Map<string, LibraryTechniqueLike>();
-  const userByName = new Map<string, LibraryTechniqueLike>();
-  userTechniques.forEach((t) => {
-    if (t.docId) userById.set(String(t.docId), t);
-    if (t.id) userById.set(String(t.id), t);
-    if (t.name) userByName.set(t.name.trim().toLowerCase(), t);
-  });
-
-  const officialById = new Map<string, LibraryTechnique>();
-  const officialByName = new Map<string, LibraryTechnique>();
-  officialTechniques.forEach((t) => {
-    const id = t.id != null ? String(t.id) : '';
-    const name = t.name != null ? String(t.name) : '';
-    if (id) officialById.set(id, t);
-    if (name) officialByName.set(name.trim().toLowerCase(), t);
-  });
+  const userIndexes = buildLibraryItemIndexes<LibraryTechniqueLike>(userTechniques);
+  const officialIndexes = buildLibraryItemIndexes<LibraryTechnique>(officialTechniques);
 
   return refs.map((ref, idx): EntityTechniqueRow => {
     const refId = (ref as { id?: string | undefined }).id;
     const refName = ref.name;
 
-    const userMatch =
-      (refId ? userById.get(String(refId)) : undefined) ??
-      (refName ? userByName.get(String(refName).trim().toLowerCase()) : undefined);
-    const officialMatch =
-      (refId ? officialById.get(String(refId)) : undefined) ??
-      (refName ? officialByName.get(String(refName).trim().toLowerCase()) : undefined);
+    const userMatch = resolveLibraryItemMatch(
+      refId != null ? String(refId) : undefined,
+      refName,
+      userIndexes,
+    );
+    const officialMatch = resolveLibraryItemMatch(
+      refId != null ? String(refId) : undefined,
+      refName,
+      officialIndexes,
+    );
 
     const enriched = userMatch
       ? {
@@ -330,11 +352,10 @@ export function buildTechniquesForDisplay(
     const baseDescription = enriched?.description ?? ref.description;
     const parts: SavedPartRef[] = enriched?.parts ?? ref.parts ?? [];
     const damage = enriched?.damage ?? ref.damage;
-    const imageRecord = {
-      image_id: enriched?.image_id ?? (ref as { image_id?: string | null | undefined }).image_id,
-      image_url:
-        enriched?.image_url ?? (ref as { image_url?: string | null | undefined }).image_url,
-    };
+    const imageRecord = creatureRowImageRecord(
+      enriched,
+      ref as { image_id?: string | null | undefined; image_url?: string | null | undefined },
+    );
     const hasObjectParts = parts.some((part) => typeof part !== 'string');
     // A library match or saved parts can be priced. A creature-only snapshot
     // (no parts) keeps the stored Energy, Attack, and Training Pts.
