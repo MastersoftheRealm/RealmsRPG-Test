@@ -338,6 +338,20 @@ export function ListHeader({
     </>
   );
 
+  const mobileSortMenu = hasSortable ? (
+    <MobileSortMenu
+      sortableColumns={sortableColumns}
+      sortState={sortState}
+      currentLabel={currentLabel}
+      currentDir={currentDir}
+      open={mobileSortOpen}
+      onOpenChange={setMobileSortOpen}
+      menuRef={mobileSortRef}
+      onColumnClick={handleColumnClick}
+      compact={compact}
+    />
+  ) : null;
+
   if (rightSlotWidth) {
     return (
       <>
@@ -362,19 +376,7 @@ export function ListHeader({
             aria-hidden
           />
         </div>
-        {hasSortable && (
-          <MobileSortMenu
-            sortableColumns={sortableColumns}
-            sortState={sortState}
-            currentLabel={currentLabel}
-            currentDir={currentDir}
-            open={mobileSortOpen}
-            onOpenChange={setMobileSortOpen}
-            menuRef={mobileSortRef}
-            onColumnClick={handleColumnClick}
-            compact={compact}
-          />
-        )}
+        {mobileSortMenu}
       </>
     );
   }
@@ -463,19 +465,7 @@ export function ListHeader({
             />
           )}
         </div>
-        {hasSortable && (
-          <MobileSortMenu
-            sortableColumns={sortableColumns}
-            sortState={sortState}
-            currentLabel={currentLabel}
-            currentDir={currentDir}
-            open={mobileSortOpen}
-            onOpenChange={setMobileSortOpen}
-            menuRef={mobileSortRef}
-            onColumnClick={handleColumnClick}
-            compact={compact}
-          />
-        )}
+        {mobileSortMenu}
       </>
     );
   }
@@ -486,19 +476,7 @@ export function ListHeader({
       <div className={desktopGridOnlyClasses} style={{ gridTemplateColumns: finalGridTemplate }}>
         {headerContent}
       </div>
-      {hasSortable && (
-        <MobileSortMenu
-          sortableColumns={sortableColumns}
-          sortState={sortState}
-          currentLabel={currentLabel}
-          currentDir={currentDir}
-          open={mobileSortOpen}
-          onOpenChange={setMobileSortOpen}
-          menuRef={mobileSortRef}
-          onColumnClick={handleColumnClick}
-          compact={compact}
-        />
-      )}
+      {mobileSortMenu}
     </>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { GridListRow, type ColumnValue } from '@/components/patterns/list/grid-list-row';
 import { ListHeader } from '@/components/patterns/list/list-header';
 import { SectionHeader } from '@/components/patterns/chrome/section-header';
@@ -39,6 +40,49 @@ import type {
 
 /** Attack roll + damage roll (sm) plus the gap between them. */
 const CREATURE_WEAPON_ROLL_SLOT_WIDTH = '7rem';
+
+type InventorySectionHeaderCollapseProps = ReturnType<
+  typeof useEntityListSectionCollapse
+>['headerCollapseProps'];
+
+function EntityInventorySectionFrame({
+  showTitle,
+  title,
+  headingLevel,
+  onAddWrapped,
+  addLabel,
+  headerRightContent,
+  headerCollapseProps,
+  isContentVisible,
+  listBody,
+}: {
+  showTitle: boolean;
+  title: string;
+  headingLevel?: Parameters<typeof SectionHeader>[0]['headingLevel'];
+  onAddWrapped: (() => void) | undefined;
+  addLabel?: string | undefined;
+  headerRightContent?: ReactNode;
+  headerCollapseProps: InventorySectionHeaderCollapseProps;
+  isContentVisible: boolean;
+  listBody: ReactNode;
+}) {
+  return (
+    <div>
+      {showTitle && (
+        <SectionHeader
+          title={title}
+          size="lg"
+          headingLevel={headingLevel}
+          onAdd={onAddWrapped}
+          addLabel={addLabel}
+          rightContent={headerRightContent}
+          {...headerCollapseProps}
+        />
+      )}
+      {isContentVisible ? listBody : null}
+    </div>
+  );
+}
 
 export function WeaponsListSection({
   title = 'Weapons',
@@ -179,20 +223,17 @@ export function WeaponsListSection({
   );
 
   return (
-    <div>
-      {showTitle && (
-        <SectionHeader
-          title={title}
-          size="lg"
-          headingLevel={headingLevel}
-          onAdd={onAddWrapped}
-          addLabel={addLabel}
-          rightContent={headerRightContent}
-          {...headerCollapseProps}
-        />
-      )}
-      {isContentVisible ? listBody : null}
-    </div>
+    <EntityInventorySectionFrame
+      showTitle={showTitle}
+      title={title}
+      headingLevel={headingLevel}
+      onAddWrapped={onAddWrapped}
+      addLabel={addLabel}
+      headerRightContent={headerRightContent}
+      headerCollapseProps={headerCollapseProps}
+      isContentVisible={isContentVisible}
+      listBody={listBody}
+    />
   );
 }
 
@@ -286,20 +327,17 @@ export function ShieldsListSection({
   );
 
   return (
-    <div>
-      {showTitle && (
-        <SectionHeader
-          title={title}
-          size="lg"
-          headingLevel={headingLevel}
-          onAdd={onAddWrapped}
-          addLabel={addLabel}
-          rightContent={headerRightContent}
-          {...headerCollapseProps}
-        />
-      )}
-      {isContentVisible ? listBody : null}
-    </div>
+    <EntityInventorySectionFrame
+      showTitle={showTitle}
+      title={title}
+      headingLevel={headingLevel}
+      onAddWrapped={onAddWrapped}
+      addLabel={addLabel}
+      headerRightContent={headerRightContent}
+      headerCollapseProps={headerCollapseProps}
+      isContentVisible={isContentVisible}
+      listBody={listBody}
+    />
   );
 }
 
@@ -384,20 +422,17 @@ export function ArmorListSection({
   );
 
   return (
-    <div>
-      {showTitle && (
-        <SectionHeader
-          title={title}
-          size="lg"
-          headingLevel={headingLevel}
-          onAdd={onAddWrapped}
-          addLabel={addLabel}
-          rightContent={headerRightContent}
-          {...headerCollapseProps}
-        />
-      )}
-      {isContentVisible ? listBody : null}
-    </div>
+    <EntityInventorySectionFrame
+      showTitle={showTitle}
+      title={title}
+      headingLevel={headingLevel}
+      onAddWrapped={onAddWrapped}
+      addLabel={addLabel}
+      headerRightContent={headerRightContent}
+      headerCollapseProps={headerCollapseProps}
+      isContentVisible={isContentVisible}
+      listBody={listBody}
+    />
   );
 }
 
@@ -482,18 +517,15 @@ export function EquipmentListSection({
   );
 
   return (
-    <div>
-      {showTitle && (
-        <SectionHeader
-          title={title}
-          size="lg"
-          headingLevel={headingLevel}
-          onAdd={onAddWrapped}
-          addLabel={addLabel}
-          {...headerCollapseProps}
-        />
-      )}
-      {isContentVisible ? listBody : null}
-    </div>
+    <EntityInventorySectionFrame
+      showTitle={showTitle}
+      title={title}
+      headingLevel={headingLevel}
+      onAddWrapped={onAddWrapped}
+      addLabel={addLabel}
+      headerCollapseProps={headerCollapseProps}
+      isContentVisible={isContentVisible}
+      listBody={listBody}
+    />
   );
 }
