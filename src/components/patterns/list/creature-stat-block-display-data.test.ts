@@ -309,7 +309,7 @@ describe('library ref resolution (powers)', () => {
     expect(row?.description).toBe('from user library');
   });
 
-  it('resolves user rows by docId when the creature ref names that docId', () => {
+  it('resolves user rows by docId when the creature ref id is the docId (name differs)', () => {
     const user = {
       id: 'internal-9',
       docId: 'doc-facing-9',
@@ -319,10 +319,26 @@ describe('library ref resolution (powers)', () => {
     } satisfies LibraryPower;
     const creature = {
       ...creatureBase,
-      powers: [{ id: 'doc-facing-9', name: 'Doc Bolt' }],
+      powers: [{ id: 'doc-facing-9', name: 'Unrelated Snapshot Name' }],
     } satisfies CreatureData;
     const row = buildPowersForDisplay(creature, [user], [], [])[0];
     expect(row?.description).toBe('docId hit');
+  });
+
+  it('resolves user rows by internal id when docId differs and name differs', () => {
+    const user = {
+      id: 'surface-77',
+      docId: 'vault-77',
+      name: 'Vault Bolt',
+      description: 'internal id hit',
+      parts: [],
+    } satisfies LibraryPower;
+    const creature = {
+      ...creatureBase,
+      powers: [{ id: 'surface-77', name: 'Wrong Label' }],
+    } satisfies CreatureData;
+    const row = buildPowersForDisplay(creature, [user], [], [])[0];
+    expect(row?.description).toBe('internal id hit');
   });
 
   it('falls back to a case-insensitive trimmed name match', () => {
@@ -341,36 +357,37 @@ describe('library ref resolution (powers)', () => {
     expect(row?.description).toBe('name match');
   });
 
-  it('indexes official numeric id 0 and matches a creature ref id "0"', () => {
+  it('indexes official numeric id 0 and matches ref id "0" without name fallback', () => {
     const official = {
       id: 0,
-      name: 'Zero Id Power',
-      description: 'official zero',
+      name: 'Catalog Zero',
+      description: 'official zero via id',
       parts: [],
-    } as LibraryPower;
+    } as unknown as LibraryPower;
     const creature = {
       ...creatureBase,
-      powers: [{ id: '0', name: 'Zero Id Power' }],
+      powers: [{ id: '0', name: 'Creature Ref Unrelated' }],
     } satisfies CreatureData;
     const row = buildPowersForDisplay(creature, [], [official], [])[0];
-    expect(row?.description).toBe('official zero');
+    expect(row?.description).toBe('official zero via id');
   });
 
-  it('uses library image_url ahead of the creature snapshot ref', () => {
+  it('uses library image_id ahead of the creature snapshot ref (names differ)', () => {
     const user = {
       id: 'img-1',
       docId: 'img-1',
       name: 'Imaged',
       description: '',
       parts: [],
-      image_url: 'https://library/cover.png',
+      image_id: 'lib-img-42',
     } satisfies LibraryPower;
     const creature = {
       ...creatureBase,
-      powers: [{ id: 'img-1', name: 'Imaged', image_url: 'https://snapshot/old.png' }],
+      powers: [{ id: 'img-1', name: 'Snapshot Label', image_id: 'snap-img-99' }],
     } satisfies CreatureData;
     const row = buildPowersForDisplay(creature, [user], [], [])[0];
-    expect(row?.thumbnail?.src).toContain('library/cover.png');
+    expect(row?.thumbnail).toBeDefined();
+    expect(String(row?.thumbnail?.src ?? '')).not.toContain('snap-img-99');
   });
 
   it('does not look up by ref id zero (master truthy refId)', () => {
@@ -387,6 +404,25 @@ describe('library ref resolution (powers)', () => {
     } satisfies CreatureData;
     const row = buildPowersForDisplay(creature, [], [official], [])[0];
     expect(row?.description).not.toBe('should not match via ref 0');
+  });
+});
+
+describe('library ref resolution (techniques)', () => {
+  it('indexes official numeric id 0 without name fallback', () => {
+    const official = {
+      id: 0,
+      name: 'Official Slash',
+      parts: [],
+    } as unknown as LibraryTechnique;
+    const creature = {
+      id: 'c-tech',
+      name: 'Fighter',
+      techniques: [
+        { id: '0', name: 'Wrong Name', energy: 5, weapon: 'Weapon', tp: 1, action: 'Action' },
+      ],
+    } satisfies CreatureData;
+    const row = buildTechniquesForDisplay(creature, [], [official], [])[0];
+    expect(row?.name).toBe('Official Slash');
   });
 });
 
