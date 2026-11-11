@@ -95,6 +95,9 @@ export function OfficialPowerList({
     pathRecommendedIds,
     pathFilterActive,
     filterActiveCount,
+    advancedFiltersForRows,
+    characterContextForRows,
+    rulesSourcesForRows,
   } = browseFilters;
   const addToCharacter = useAddToCharacterFromLibrary('power', characterFilterId);
 
@@ -116,12 +119,12 @@ export function OfficialPowerList({
         search,
         sortItems,
         'power',
-        advancedFilters,
-        browseFilters.characterContext,
+        advancedFiltersForRows,
+        characterContextForRows,
         pathRecommendedIds,
-        rulesSources,
+        rulesSourcesForRows,
       ),
-    [advancedFilters, browseFilters.characterContext, pathRecommendedIds, rulesSources],
+    [advancedFiltersForRows, characterContextForRows, pathRecommendedIds, rulesSourcesForRows],
   );
 
   return (

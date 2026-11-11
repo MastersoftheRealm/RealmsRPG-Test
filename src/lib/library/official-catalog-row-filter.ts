@@ -18,8 +18,6 @@ import {
 } from '@/lib/library/power-technique-filters';
 import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 import type { AbilityRequirement, WeaponPropertyRef } from '@/lib/game/weapon-attack-ability';
-import { glrListChrome, type GlrEntityType } from '@/lib/glr';
-
 type CatalogRowWithPath = {
   id?: string | number | undefined;
   raw?:
@@ -33,7 +31,6 @@ function applyOfficialCatalogCommonFilters<T extends CatalogRowWithPath>(
   rows: T[],
   search: string,
   pathRecommendedIds: ReadonlySet<string> | null | undefined,
-  rulesSources: readonly string[] | undefined,
   matchesExtraSearch?: (row: T, searchLower: string) => boolean,
 ): T[] {
   let result = rows;
@@ -54,9 +51,6 @@ function applyOfficialCatalogCommonFilters<T extends CatalogRowWithPath>(
           .includes(s);
       return inNameOrDescription || (matchesExtraSearch?.(x, s) ?? false);
     });
-  }
-  if (rulesSources && rulesSources.length > 0) {
-    result = filterRowsByCodexRulesSources(result, rulesSources, readRowRulesSources);
   }
   return result;
 }
@@ -88,7 +82,6 @@ export function filterOfficialPowerTechniqueRows<T extends OfficialPowerTechniqu
     rows,
     search,
     pathRecommendedIds,
-    rulesSources,
     (x, s) =>
       String(x.category ?? '')
         .toLowerCase()
@@ -101,6 +94,9 @@ export function filterOfficialPowerTechniqueRows<T extends OfficialPowerTechniqu
   );
   if (advanced) {
     result = applyPowerTechniqueFilters(result, advanced, kind, character);
+  }
+  if (rulesSources && rulesSources.length > 0) {
+    result = filterRowsByCodexRulesSources(result, rulesSources, readRowRulesSources);
   }
   return sortItems(result);
 }
@@ -122,22 +118,12 @@ export function filterOfficialArmamentRows<T extends OfficialArmamentFilterableR
   pathRecommendedIds?: ReadonlySet<string> | null,
   rulesSources?: readonly string[],
 ): T[] {
-  let result = applyOfficialCatalogCommonFilters(rows, search, pathRecommendedIds, rulesSources);
+  let result = applyOfficialCatalogCommonFilters(rows, search, pathRecommendedIds);
   if (filters) {
     result = applyArmamentFilters(result, filters, characterContext ?? null);
   }
+  if (rulesSources && rulesSources.length > 0) {
+    result = filterRowsByCodexRulesSources(result, rulesSources, readRowRulesSources);
+  }
   return sortItems(result);
-}
-
-export function officialEntityBrowseChrome(entityType: GlrEntityType) {
-  const chrome = glrListChrome({ entityType, mode: 'browse' });
-  return {
-    chrome,
-    grid: chrome.grid,
-    headers: chrome.headers.map(({ key, label, align }) => ({
-      key,
-      label,
-      align: align ?? 'center',
-    })),
-  };
 }

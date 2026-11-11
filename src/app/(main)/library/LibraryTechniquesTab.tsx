@@ -100,7 +100,9 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
     pathRecommendedIds,
     pathFilterActive,
     filterActiveCount,
-    characterContext,
+    advancedFiltersForRows,
+    characterContextForRows,
+    rulesSourcesForRows,
   } = useOfficialPowerTechniqueBrowseFilters({
     kind: 'technique',
     entities: techniques,
@@ -156,28 +158,28 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
     mutate: (id, handlers) => duplicateMutation.mutate(id, handlers),
   });
 
-  const filteredData = useMemo(() => {
-    const advanced = mode === 'empowered' ? undefined : advancedFilters;
-    return filterOfficialPowerTechniqueRows(
+  const filteredData = useMemo(
+    () =>
+      filterOfficialPowerTechniqueRows(
+        cardData,
+        search,
+        sortItems,
+        'technique',
+        advancedFiltersForRows,
+        characterContextForRows,
+        pathRecommendedIds,
+        rulesSourcesForRows,
+      ),
+    [
       cardData,
       search,
       sortItems,
-      'technique',
-      advanced,
-      mode === 'empowered' ? null : characterContext,
-      mode === 'empowered' ? null : pathRecommendedIds,
-      mode === 'empowered' ? undefined : rulesSources,
-    );
-  }, [
-    cardData,
-    search,
-    sortItems,
-    mode,
-    advancedFilters,
-    characterContext,
-    pathRecommendedIds,
-    rulesSources,
-  ]);
+      advancedFiltersForRows,
+      characterContextForRows,
+      pathRecommendedIds,
+      rulesSourcesForRows,
+    ],
+  );
 
   return (
     <>

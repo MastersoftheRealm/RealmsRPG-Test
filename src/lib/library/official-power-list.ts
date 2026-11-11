@@ -32,7 +32,7 @@ import {
   withDamageCategory,
 } from '@/lib/library/power-technique-categories';
 import { glrColumnKeyFor } from '@/lib/glr';
-import { officialEntityBrowseChrome } from '@/lib/library/official-catalog-row-filter';
+import { officialEntityBrowseChrome } from '@/lib/glr';
 import {
   glrSurfaceDetailSections,
   mergeDetailSections,

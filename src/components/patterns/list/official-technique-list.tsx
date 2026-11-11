@@ -100,6 +100,9 @@ export function OfficialTechniqueList({
     pathRecommendedIds,
     pathFilterActive,
     filterActiveCount,
+    advancedFiltersForRows,
+    characterContextForRows,
+    rulesSourcesForRows,
   } = browseFilters;
   const addToCharacter = useAddToCharacterFromLibrary('technique', characterFilterId);
 
@@ -119,12 +122,12 @@ export function OfficialTechniqueList({
         search,
         sortItems,
         'technique',
-        advancedFilters,
-        browseFilters.characterContext,
-        empowered ? null : pathRecommendedIds,
-        rulesSources,
+        advancedFiltersForRows,
+        characterContextForRows,
+        pathRecommendedIds,
+        rulesSourcesForRows,
       ),
-    [advancedFilters, browseFilters.characterContext, empowered, pathRecommendedIds, rulesSources],
+    [advancedFiltersForRows, characterContextForRows, pathRecommendedIds, rulesSourcesForRows],
   );
 
   return (

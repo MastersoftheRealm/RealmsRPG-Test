@@ -76,7 +76,9 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
     pathRecommendedIds,
     pathFilterActive,
     filterActiveCount,
-    characterContext,
+    advancedFiltersForRows,
+    characterContextForRows,
+    rulesSourcesForRows,
   } = useOfficialPowerTechniqueBrowseFilters({ kind: 'power', entities: powers });
   const addToCharacter = useAddToCharacterFromLibrary('power', characterFilterId);
   const { sortState, handleSort, sortItems } = useSort('name');
@@ -130,19 +132,19 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
         search,
         sortItems,
         'power',
-        advancedFilters,
-        characterContext,
+        advancedFiltersForRows,
+        characterContextForRows,
         pathRecommendedIds,
-        rulesSources,
+        rulesSourcesForRows,
       ),
     [
       cardData,
       search,
-      advancedFilters,
-      characterContext,
       sortItems,
+      advancedFiltersForRows,
+      characterContextForRows,
       pathRecommendedIds,
-      rulesSources,
+      rulesSourcesForRows,
     ],
   );
 

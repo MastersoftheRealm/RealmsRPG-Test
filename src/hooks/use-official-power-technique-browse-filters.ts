@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { usePathListFilter } from '@/hooks';
+import { usePathListFilter } from './use-path-recommendation-index';
 import {
   POWER_LIST_PATH_KINDS,
   type PathRecommendationEntity,
@@ -15,12 +15,13 @@ import {
 } from '@/lib/library/power-technique-filters';
 import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 
-/** Realms / My Library browse filter state for powers and techniques (DUP-09). */
+/** Realms / My Library browse filter state for powers and techniques. */
 export function useOfficialPowerTechniqueBrowseFilters<
   T extends PathRecommendationEntity,
 >(options: {
   kind: 'power' | 'technique';
   entities: readonly T[];
+  /** When false, row filters are omitted (e.g. empowered techniques tab). */
   pathFilterEnabled?: boolean | undefined;
 }) {
   const { kind, entities, pathFilterEnabled = true } = options;
@@ -45,14 +46,20 @@ export function useOfficialPowerTechniqueBrowseFilters<
 
   const effectivePathFilterActive = pathFilterEnabled && pathFilterActive;
   const pathRecommendedIdsForFilter = pathFilterEnabled ? pathRecommendedIds : null;
+  const advancedFiltersForRows = pathFilterEnabled ? advancedFilters : undefined;
+  const characterContextForRows = pathFilterEnabled ? characterContext : null;
+  const rulesSourcesForRows = pathFilterEnabled ? rulesSources : undefined;
 
   const filterActiveCount = useMemo(
     () =>
-      countActivePowerTechniqueFilters(advancedFilters, kind, Boolean(characterContext)) +
-      countActiveCodexRulesSourceFilters(rulesSources) +
-      (characterFilterId ? 1 : 0) +
+      (pathFilterEnabled
+        ? countActivePowerTechniqueFilters(advancedFilters, kind, Boolean(characterContext))
+        : 0) +
+      (pathFilterEnabled ? countActiveCodexRulesSourceFilters(rulesSources) : 0) +
+      (pathFilterEnabled && characterFilterId ? 1 : 0) +
       (effectivePathFilterActive ? 1 : 0),
     [
+      pathFilterEnabled,
       kind,
       advancedFilters,
       characterContext,
@@ -77,5 +84,8 @@ export function useOfficialPowerTechniqueBrowseFilters<
     pathRecommendedIds: pathRecommendedIdsForFilter,
     pathFilterActive: effectivePathFilterActive,
     filterActiveCount,
+    advancedFiltersForRows,
+    characterContextForRows,
+    rulesSourcesForRows,
   };
 }
