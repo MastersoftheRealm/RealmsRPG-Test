@@ -23,7 +23,7 @@ export type EncounterPlayPageShared = {
   isSaving: boolean;
   hasUnsavedChanges: boolean;
   syncBlockedByNetwork: boolean;
-  saveNow: () => void;
+  saveNow: () => Promise<void>;
   isEditingName: boolean;
   nameInput: string;
   setNameInput: Dispatch<SetStateAction<string>>;
