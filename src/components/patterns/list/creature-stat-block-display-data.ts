@@ -40,7 +40,7 @@ type LibraryPowerLike = LibraryPower & { docId?: string | undefined };
 type LibraryTechniqueLike = LibraryTechnique & { docId?: string | undefined };
 
 type IndexedLibraryItem = {
-  docId?: string | number | null | undefined;
+  docId?: string | undefined;
   id?: string | number | null | undefined;
   name?: string | null | undefined;
 };
@@ -53,8 +53,13 @@ function buildLibraryItemIndexes<T extends IndexedLibraryItem>(
   const byId = new Map<string, T>();
   const byName = new Map<string, T>();
   for (const item of items) {
-    if (source === 'user' && item.docId) byId.set(String(item.docId), item);
-    if (item.id) byId.set(String(item.id), item);
+    if (source === 'user') {
+      if (item.docId) byId.set(String(item.docId), item);
+      if (item.id) byId.set(String(item.id), item);
+    } else {
+      const id = item.id != null ? String(item.id) : '';
+      if (id) byId.set(id, item);
+    }
     if (item.name) byName.set(String(item.name).trim().toLowerCase(), item);
   }
   return { byId, byName };

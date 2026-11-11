@@ -341,6 +341,38 @@ describe('library ref resolution (powers)', () => {
     expect(row?.description).toBe('name match');
   });
 
+  it('indexes official numeric id 0 and matches a creature ref id "0"', () => {
+    const official = {
+      id: 0,
+      name: 'Zero Id Power',
+      description: 'official zero',
+      parts: [],
+    } as LibraryPower;
+    const creature = {
+      ...creatureBase,
+      powers: [{ id: '0', name: 'Zero Id Power' }],
+    } satisfies CreatureData;
+    const row = buildPowersForDisplay(creature, [], [official], [])[0];
+    expect(row?.description).toBe('official zero');
+  });
+
+  it('uses library image_url ahead of the creature snapshot ref', () => {
+    const user = {
+      id: 'img-1',
+      docId: 'img-1',
+      name: 'Imaged',
+      description: '',
+      parts: [],
+      image_url: 'https://library/cover.png',
+    } satisfies LibraryPower;
+    const creature = {
+      ...creatureBase,
+      powers: [{ id: 'img-1', name: 'Imaged', image_url: 'https://snapshot/old.png' }],
+    } satisfies CreatureData;
+    const row = buildPowersForDisplay(creature, [user], [], [])[0];
+    expect(row?.thumbnail?.src).toContain('library/cover.png');
+  });
+
   it('does not look up by ref id zero (master truthy refId)', () => {
     const official = {
       id: '0',
