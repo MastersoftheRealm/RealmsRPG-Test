@@ -1,4 +1,5 @@
-import { beforeEach, vi } from 'vitest';
+import { afterEach, beforeEach, vi } from 'vitest';
+import { cleanup } from '@testing-library/react';
 
 vi.mock('server-only', () => ({}));
 
@@ -43,4 +44,8 @@ vi.mock('next/cache', () => ({
 
 beforeEach(() => {
   unstableCacheStore.clear();
+});
+
+afterEach(() => {
+  cleanup();
 });
