@@ -7,18 +7,19 @@
 
 'use client';
 
-import { useState, use } from 'react';
-import Link from 'next/link';
-import { PageContainer, LoadingState, Alert, useToast } from '@/components/ui';
+import { use, useMemo } from 'react';
+import { PageContainer } from '@/components/ui';
 import { CloudSyncOfflineBanner } from '@/components/patterns';
-import { useAuth, useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
-import { encounterAutosaveBody, persistEncounterSave } from '@/services/encounter-service';
+import { useAuth, useSaveEncounter } from '@/hooks';
 import { RollProvider } from '@/components/rolls';
 import type { Encounter } from '@/types/encounter';
 import { defaultSkillEncounterState } from '@/types/encounter';
 import { computeSkillRollResult } from '@/lib/game/encounter-utils';
 import SkillEncounterView from '../_components/SkillEncounterView';
 import { EncounterPageHeader } from '../_components/EncounterPageHeader';
+import { EncounterPlayPageGate } from '../_components/EncounterPlayPageGate';
+import { skillEncounterAutosaveHandler } from '../_components/encounter-play-autosave';
+import { useEncounterPlayPage } from '../_components/use-encounter-play-page';
 
 interface PageParams {
   params: Promise<{ id: string }>;
@@ -70,86 +71,28 @@ export default function SkillEncounterPage({ params }: PageParams) {
 
 function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) {
   const { id: encounterId } = use(params);
-  const { data: encounterData, isLoading, error } = useEncounter(encounterId);
-  const saveMutation = useSaveEncounter();
-  const [encounter, setEncounter] = useState<Encounter | null>(null);
-  const [initializedEncounterId, setInitializedEncounterId] = useState<string | null>(null);
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [nameInput, setNameInput] = useState('');
-  const { data: campaignsFull = [] } = useCampaignsFull();
-
-  if (encounterData && initializedEncounterId !== encounterId) {
-    setEncounter(prepareSkillEncounter(encounterData));
-    setInitializedEncounterId(encounterId);
-  }
-  const isInitialized = initializedEncounterId === encounterId;
-
   const { user } = useAuth();
-  const { showToast } = useToast();
-  const { isSaving, hasUnsavedChanges, syncBlockedByNetwork, saveNow } = useAutoSave({
-    data: encounter,
-    onSave: async (data, flush) => {
-      if (!data || !encounterId) return;
-      const body = encounterAutosaveBody(data);
-      if (flush?.unload) {
-        await persistEncounterSave(encounterId, body, {
-          signedIn: !!user,
-          keepalive: true,
-        });
-        return;
-      }
-      await saveMutation.mutateAsync({ id: encounterId, data: body });
-    },
-    delay: 1500,
-    enabled: isInitialized && !!encounter,
-    onSaveError: () => {
-      showToast('Failed to save encounter. Your latest changes may not be stored.', 'error');
-    },
+  const saveMutation = useSaveEncounter();
+  const onAutosave = useMemo(
+    () => skillEncounterAutosaveHandler(encounterId, saveMutation, !!user),
+    [encounterId, saveMutation, user],
+  );
+
+  const play = useEncounterPlayPage({
+    encounterId,
+    prepareLoaded: prepareSkillEncounter,
+    onAutosave,
+    requireSkillEncounter: true,
   });
 
-  if (isLoading) {
-    return (
-      <PageContainer size="full">
-        <LoadingState message="Loading encounter..." size="lg" />
-      </PageContainer>
-    );
+  if (play.gatePhase !== 'ready') {
+    return <EncounterPlayPageGate phase={play.gatePhase} />;
+  }
+  if (!play.encounter?.skillEncounter) {
+    return <EncounterPlayPageGate phase="initializing" />;
   }
 
-  if (error || (!isLoading && !encounterData)) {
-    return (
-      <PageContainer size="full">
-        <Alert variant="danger" title="Encounter not found">
-          This encounter may have been deleted or you may not have access.
-        </Alert>
-        <Link href="/encounters" className="mt-4 inline-block text-primary-link-fg hover:underline">
-          Back to Encounters
-        </Link>
-      </PageContainer>
-    );
-  }
-
-  if (!encounter || !encounter.skillEncounter) {
-    return (
-      <PageContainer size="full">
-        <LoadingState message="Initializing..." />
-      </PageContainer>
-    );
-  }
-
-  const handleCommitName = () => {
-    const trimmed = nameInput.trim();
-    if (trimmed && trimmed !== encounter.name) {
-      setEncounter((prev) => (prev ? { ...prev, name: trimmed } : prev));
-    } else {
-      setNameInput(encounter.name || '');
-    }
-    setIsEditingName(false);
-  };
-
-  const handleCancelEditName = () => {
-    setNameInput(encounter.name || '');
-    setIsEditingName(false);
-  };
+  const encounter = play.encounter;
 
   return (
     <RollProvider>
@@ -158,30 +101,27 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
           encounterType="Skill"
           name={encounter.name}
           description={encounter.description}
-          isEditingName={isEditingName}
-          nameInput={nameInput}
-          onNameInputChange={setNameInput}
-          onStartEditingName={() => {
-            setNameInput(encounter.name || '');
-            setIsEditingName(true);
-          }}
-          onCommitName={handleCommitName}
-          onCancelEdit={handleCancelEditName}
-          isSaving={isSaving}
-          hasUnsavedChanges={hasUnsavedChanges}
+          isEditingName={play.isEditingName}
+          nameInput={play.nameInput}
+          onNameInputChange={play.setNameInput}
+          onStartEditingName={play.startEditingName}
+          onCommitName={play.handleCommitName}
+          onCancelEdit={play.handleCancelEditName}
+          isSaving={play.isSaving}
+          hasUnsavedChanges={play.hasUnsavedChanges}
         />
 
         <CloudSyncOfflineBanner
-          enabled={!!user}
-          syncBlocked={syncBlockedByNetwork}
-          onRetry={() => void saveNow()}
+          enabled={!!play.user}
+          syncBlocked={play.syncBlockedByNetwork}
+          onRetry={() => void play.saveNow()}
         />
 
         <SkillEncounterView
           encounterId={encounterId}
           encounter={encounter}
-          setEncounter={setEncounter}
-          campaignsFull={campaignsFull}
+          setEncounter={play.setEncounter}
+          campaignsFull={play.campaignsFull}
           showRollLog
         />
       </PageContainer>

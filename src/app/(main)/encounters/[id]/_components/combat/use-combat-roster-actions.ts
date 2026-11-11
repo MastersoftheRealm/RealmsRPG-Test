@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useCallback, useMemo, useState, type DragEvent } from 'react';
+import { useCallback, useState, type DragEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Combatant, CombatantCondition, Encounter, TrackedCombatant } from '@/types/encounter';
 import { CONDITION_OPTIONS } from '@/components/encounters/encounter-constants';
@@ -14,10 +14,9 @@ import {
   isOwnedLinkedCombatant,
   scheduleCharacterResourceSyncFromCombatant,
 } from '@/lib/encounter/character-resource-sync';
-import {
-  filterDuplicateCampaignCharacterEntries,
-  getCampaignCharacterIds,
-} from '@/lib/encounter/unique-campaign-characters';
+import { filterDuplicateCampaignCharacterEntries } from '@/lib/encounter/unique-campaign-characters';
+import { useLinkedCampaignCharacters } from '@/lib/encounter/use-linked-campaign-characters';
+import { useReorderableListDrag } from '@/lib/encounter/use-reorderable-list-drag';
 import type { Campaign } from '@/types/campaign';
 import {
   sortCombatantsForTurnOrder,
@@ -50,52 +49,28 @@ export function useCombatRosterActions({
   const [newCombatant, setNewCombatant] = useState<NewCombatantForm>(() =>
     createEmptyNewCombatantForm(),
   );
-  const [draggedId, setDraggedId] = useState<string | null>(null);
-  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const {
+    draggedId,
+    dragOverId,
+    handleDragStart,
+    handleDragEnd,
+    handleDragOver,
+    handleDragLeave,
+    clearDragState,
+  } = useReorderableListDrag();
 
-  const linkedCampaign = encounter?.campaignId
-    ? campaignsFull.find((c: Campaign) => c.id === encounter.campaignId)
-    : undefined;
-  const existingCampaignCharacterIds = useMemo(
-    () => getCampaignCharacterIds(encounter.combatants),
-    [encounter.combatants],
-  );
-  const availableCampaignCharacters = useMemo(
-    () =>
-      (linkedCampaign?.characters ?? []).filter(
-        (c) => !existingCampaignCharacterIds.has(c.characterId),
-      ),
-    [existingCampaignCharacterIds, linkedCampaign?.characters],
-  );
-
-  const handleDragStart = useCallback((e: DragEvent<HTMLDivElement>, id: string) => {
-    setDraggedId(id);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', id);
-  }, []);
-
-  const handleDragEnd = useCallback(() => {
-    setDraggedId(null);
-    setDragOverId(null);
-  }, []);
-
-  const handleDragOver = useCallback(
-    (e: DragEvent<HTMLDivElement>, id: string) => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      if (id !== draggedId) setDragOverId(id);
-    },
-    [draggedId],
-  );
-
-  const handleDragLeave = useCallback(() => setDragOverId(null), []);
+  const { linkedCampaign, existingCampaignCharacterIds, availableCampaignCharacters } =
+    useLinkedCampaignCharacters({
+      campaignId: encounter?.campaignId,
+      campaignsFull,
+      rosterEntries: encounter.combatants,
+    });
 
   const handleDrop = useCallback(
     (e: DragEvent<HTMLDivElement>, targetId: string) => {
       e.preventDefault();
       if (!draggedId || draggedId === targetId) {
-        setDraggedId(null);
-        setDragOverId(null);
+        clearDragState();
         return;
       }
       setEncounter((prev) => {
@@ -116,10 +91,9 @@ export function useCombatRosterActions({
         );
         return { ...prev, combatants, currentTurnIndex: newTurnIndex };
       });
-      setDraggedId(null);
-      setDragOverId(null);
+      clearDragState();
     },
-    [draggedId, setEncounter],
+    [clearDragState, draggedId, setEncounter],
   );
 
   const moveCombatant = useCallback(

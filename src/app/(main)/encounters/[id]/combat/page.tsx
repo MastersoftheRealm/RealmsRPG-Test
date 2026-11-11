@@ -7,22 +7,17 @@
 
 'use client';
 
-import { useState, use } from 'react';
-import Link from 'next/link';
-import {
-  LoadingState,
-  PageContainer,
-  PAGE_FILLS_VIEWPORT_CLASSNAME,
-  Alert,
-  useToast,
-} from '@/components/ui';
+import { use, useMemo } from 'react';
+import { PageContainer, PAGE_FILLS_VIEWPORT_CLASSNAME } from '@/components/ui';
 import { CloudSyncOfflineBanner } from '@/components/patterns';
-import { useAuth, useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
+import { useSaveEncounter } from '@/hooks';
 import { RollProvider } from '@/components/rolls';
-import type { Encounter } from '@/types/encounter';
 import CombatEncounterView from '../_components/CombatEncounterView';
 import { EncounterPageHeader } from '../_components/EncounterPageHeader';
 import { OpenTabletopButton } from '../_components/OpenTabletopButton';
+import { EncounterPlayPageGate } from '../_components/EncounterPlayPageGate';
+import { encounterMutationAutosaveHandler } from '../_components/encounter-play-autosave';
+import { useEncounterPlayPage } from '../_components/use-encounter-play-page';
 
 interface PageParams {
   params: Promise<{ id: string }>;
@@ -34,81 +29,25 @@ export default function CombatEncounterPage({ params }: PageParams) {
 
 function CombatEncounterContent({ params }: { params: Promise<{ id: string }> }) {
   const { id: encounterId } = use(params);
-  const { data: encounterData, isLoading, error } = useEncounter(encounterId);
   const saveMutation = useSaveEncounter();
-  const [encounter, setEncounter] = useState<Encounter | null>(null);
-  const [initializedEncounterId, setInitializedEncounterId] = useState<string | null>(null);
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [nameInput, setNameInput] = useState('');
-  const { data: campaignsFull = [] } = useCampaignsFull();
+  const onAutosave = useMemo(
+    () => encounterMutationAutosaveHandler(encounterId, saveMutation),
+    [encounterId, saveMutation],
+  );
 
-  if (encounterData && initializedEncounterId !== encounterId) {
-    setEncounter(encounterData);
-    setInitializedEncounterId(encounterId);
-  }
-  const isInitialized = initializedEncounterId === encounterId;
-
-  const { user } = useAuth();
-  const { showToast } = useToast();
-  const { isSaving, hasUnsavedChanges, syncBlockedByNetwork, saveNow } = useAutoSave({
-    data: encounter,
-    onSave: async (data) => {
-      if (!data || !encounterId) return;
-      const { id, createdAt, ...rest } = data;
-      void id;
-      void createdAt;
-      await saveMutation.mutateAsync({ id: encounterId, data: rest });
-    },
-    delay: 1500,
-    enabled: isInitialized && !!encounter,
-    onSaveError: () => {
-      showToast('Failed to save encounter. Your latest changes may not be stored.', 'error');
-    },
+  const play = useEncounterPlayPage({
+    encounterId,
+    onAutosave,
   });
 
-  if (isLoading) {
-    return (
-      <PageContainer size="full" className={PAGE_FILLS_VIEWPORT_CLASSNAME}>
-        <LoadingState message="Loading encounter..." size="lg" padding="lg" />
-      </PageContainer>
-    );
+  if (play.gatePhase !== 'ready') {
+    return <EncounterPlayPageGate phase={play.gatePhase} fillsViewport />;
+  }
+  if (!play.encounter) {
+    return <EncounterPlayPageGate phase="initializing" fillsViewport />;
   }
 
-  if (error || (!isLoading && !encounterData)) {
-    return (
-      <PageContainer size="full" className={PAGE_FILLS_VIEWPORT_CLASSNAME}>
-        <Alert variant="danger" title="Encounter not found">
-          This encounter may have been deleted or you may not have access.
-        </Alert>
-        <Link href="/encounters" className="mt-4 inline-block text-primary-link-fg hover:underline">
-          Back to Encounters
-        </Link>
-      </PageContainer>
-    );
-  }
-
-  if (!encounter) {
-    return (
-      <PageContainer size="full" className={PAGE_FILLS_VIEWPORT_CLASSNAME}>
-        <LoadingState message="Initializing..." />
-      </PageContainer>
-    );
-  }
-
-  const handleCommitName = () => {
-    const trimmed = nameInput.trim();
-    if (trimmed && trimmed !== encounter.name) {
-      setEncounter((prev) => (prev ? { ...prev, name: trimmed } : prev));
-    } else {
-      setNameInput(encounter.name || '');
-    }
-    setIsEditingName(false);
-  };
-
-  const handleCancelEditName = () => {
-    setNameInput(encounter.name || '');
-    setIsEditingName(false);
-  };
+  const encounter = play.encounter;
 
   return (
     <RollProvider>
@@ -117,37 +56,34 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
           encounterType="Combat"
           name={encounter.name}
           description={encounter.description}
-          isEditingName={isEditingName}
-          nameInput={nameInput}
-          onNameInputChange={setNameInput}
-          onStartEditingName={() => {
-            setNameInput(encounter.name || '');
-            setIsEditingName(true);
-          }}
-          onCommitName={handleCommitName}
-          onCancelEdit={handleCancelEditName}
-          isSaving={isSaving}
-          hasUnsavedChanges={hasUnsavedChanges}
+          isEditingName={play.isEditingName}
+          nameInput={play.nameInput}
+          onNameInputChange={play.setNameInput}
+          onStartEditingName={play.startEditingName}
+          onCommitName={play.handleCommitName}
+          onCancelEdit={play.handleCancelEditName}
+          isSaving={play.isSaving}
+          hasUnsavedChanges={play.hasUnsavedChanges}
           actions={
             <OpenTabletopButton
               encounterId={encounterId}
               campaignId={encounter.campaignId}
-              onBeforeOpen={saveNow}
+              onBeforeOpen={play.saveNow}
             />
           }
         />
 
         <CloudSyncOfflineBanner
-          enabled={!!user}
-          syncBlocked={syncBlockedByNetwork}
-          onRetry={() => void saveNow()}
+          enabled={!!play.user}
+          syncBlocked={play.syncBlockedByNetwork}
+          onRetry={() => void play.saveNow()}
         />
 
         <CombatEncounterView
           encounterId={encounterId}
           encounter={encounter}
-          setEncounter={setEncounter}
-          campaignsFull={campaignsFull}
+          setEncounter={play.setEncounter}
+          campaignsFull={play.campaignsFull}
           showRollLog
         />
       </PageContainer>

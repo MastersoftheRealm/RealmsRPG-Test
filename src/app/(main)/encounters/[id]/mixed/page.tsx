@@ -7,13 +7,12 @@
 
 'use client';
 
-import { useState, use, useCallback } from 'react';
-import Link from 'next/link';
+import { useState, use, useCallback, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Swords, Brain } from 'lucide-react';
-import { PageContainer, LoadingState, Alert, useToast } from '@/components/ui';
+import { PageContainer } from '@/components/ui';
 import { CloudSyncOfflineBanner, SegmentedControl } from '@/components/patterns';
-import { useAuth, useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
+import { useSaveEncounter } from '@/hooks';
 import { RollProvider, RollLog } from '@/components/rolls';
 import type { Encounter } from '@/types/encounter';
 import { defaultSkillEncounterState } from '@/types/encounter';
@@ -21,6 +20,9 @@ import CombatEncounterView from '../_components/CombatEncounterView';
 import SkillEncounterView from '../_components/SkillEncounterView';
 import { EncounterPageHeader } from '../_components/EncounterPageHeader';
 import { OpenTabletopButton } from '../_components/OpenTabletopButton';
+import { EncounterPlayPageGate } from '../_components/EncounterPlayPageGate';
+import { encounterMutationAutosaveHandler } from '../_components/encounter-play-autosave';
+import { useEncounterPlayPage } from '../_components/use-encounter-play-page';
 import {
   readMixedEncounterViewTab,
   writeMixedEncounterViewTab,
@@ -64,10 +66,12 @@ export default function MixedEncounterPage({ params }: PageParams) {
 
 function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) {
   const { id: encounterId } = use(params);
-  const { data: encounterData, isLoading, error } = useEncounter(encounterId);
   const saveMutation = useSaveEncounter();
-  const [encounter, setEncounter] = useState<Encounter | null>(null);
-  const [initializedEncounterId, setInitializedEncounterId] = useState<string | null>(null);
+  const onAutosave = useMemo(
+    () => encounterMutationAutosaveHandler(encounterId, saveMutation),
+    [encounterId, saveMutation],
+  );
+
   const [viewForEncounter, setViewForEncounter] = useState(() => ({
     encounterId,
     tab: readMixedEncounterViewTab(encounterId),
@@ -79,7 +83,6 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
     });
   }
   const activeView = viewForEncounter.tab;
-  const [isEditingName, setIsEditingName] = useState(false);
 
   const handleActiveViewChange = useCallback(
     (tab: ViewTab) => {
@@ -88,76 +91,21 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
     },
     [encounterId],
   );
-  const [nameInput, setNameInput] = useState('');
-  const { data: campaignsFull = [] } = useCampaignsFull();
 
-  if (encounterData && initializedEncounterId !== encounterId) {
-    setEncounter(prepareMixedEncounter(encounterData));
-    setInitializedEncounterId(encounterId);
-  }
-  const isInitialized = initializedEncounterId === encounterId;
-
-  const { user } = useAuth();
-  const { showToast } = useToast();
-  const { isSaving, hasUnsavedChanges, syncBlockedByNetwork, saveNow } = useAutoSave({
-    data: encounter,
-    onSave: async (data) => {
-      if (!data || !encounterId) return;
-      const { id, createdAt, ...rest } = data;
-      void id;
-      void createdAt;
-      await saveMutation.mutateAsync({ id: encounterId, data: rest });
-    },
-    delay: 1500,
-    enabled: isInitialized && !!encounter,
-    onSaveError: () => {
-      showToast('Failed to save encounter. Your latest changes may not be stored.', 'error');
-    },
+  const play = useEncounterPlayPage({
+    encounterId,
+    prepareLoaded: prepareMixedEncounter,
+    onAutosave,
   });
 
-  if (isLoading) {
-    return (
-      <PageContainer size="full">
-        <LoadingState message="Loading encounter..." size="lg" />
-      </PageContainer>
-    );
+  if (play.gatePhase !== 'ready') {
+    return <EncounterPlayPageGate phase={play.gatePhase} />;
+  }
+  if (!play.encounter) {
+    return <EncounterPlayPageGate phase="initializing" />;
   }
 
-  if (error || (!isLoading && !encounterData)) {
-    return (
-      <PageContainer size="full">
-        <Alert variant="danger" title="Encounter not found">
-          This encounter may have been deleted or you may not have access.
-        </Alert>
-        <Link href="/encounters" className="mt-4 inline-block text-primary-link-fg hover:underline">
-          Back to Encounters
-        </Link>
-      </PageContainer>
-    );
-  }
-
-  if (!encounter) {
-    return (
-      <PageContainer size="full">
-        <LoadingState message="Initializing..." />
-      </PageContainer>
-    );
-  }
-
-  const handleCommitName = () => {
-    const trimmed = nameInput.trim();
-    if (trimmed && trimmed !== encounter.name) {
-      setEncounter((prev) => (prev ? { ...prev, name: trimmed } : prev));
-    } else {
-      setNameInput(encounter.name || '');
-    }
-    setIsEditingName(false);
-  };
-
-  const handleCancelEditName = () => {
-    setNameInput(encounter.name || '');
-    setIsEditingName(false);
-  };
+  const encounter = play.encounter;
 
   return (
     <RollProvider>
@@ -166,30 +114,27 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
           encounterType="Mixed"
           name={encounter.name}
           description={encounter.description}
-          isEditingName={isEditingName}
-          nameInput={nameInput}
-          onNameInputChange={setNameInput}
-          onStartEditingName={() => {
-            setNameInput(encounter.name || '');
-            setIsEditingName(true);
-          }}
-          onCommitName={handleCommitName}
-          onCancelEdit={handleCancelEditName}
-          isSaving={isSaving}
-          hasUnsavedChanges={hasUnsavedChanges}
+          isEditingName={play.isEditingName}
+          nameInput={play.nameInput}
+          onNameInputChange={play.setNameInput}
+          onStartEditingName={play.startEditingName}
+          onCommitName={play.handleCommitName}
+          onCancelEdit={play.handleCancelEditName}
+          isSaving={play.isSaving}
+          hasUnsavedChanges={play.hasUnsavedChanges}
           actions={
             <OpenTabletopButton
               encounterId={encounterId}
               campaignId={encounter.campaignId}
-              onBeforeOpen={saveNow}
+              onBeforeOpen={play.saveNow}
             />
           }
         />
 
         <CloudSyncOfflineBanner
-          enabled={!!user}
-          syncBlocked={syncBlockedByNetwork}
-          onRetry={() => void saveNow()}
+          enabled={!!play.user}
+          syncBlocked={play.syncBlockedByNetwork}
+          onRetry={() => void play.saveNow()}
         />
 
         <SegmentedControl
@@ -216,8 +161,8 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
           <CombatEncounterView
             encounterId={encounterId}
             encounter={encounter}
-            setEncounter={setEncounter}
-            campaignsFull={campaignsFull}
+            setEncounter={play.setEncounter}
+            campaignsFull={play.campaignsFull}
             showRollLog={false}
           />
         </div>
@@ -225,8 +170,8 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
           <SkillEncounterView
             encounterId={encounterId}
             encounter={encounter}
-            setEncounter={setEncounter}
-            campaignsFull={campaignsFull}
+            setEncounter={play.setEncounter}
+            campaignsFull={play.campaignsFull}
             showRollLog={false}
             isMixedEncounter
           />
