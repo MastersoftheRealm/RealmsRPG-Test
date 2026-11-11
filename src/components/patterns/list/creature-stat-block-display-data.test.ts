@@ -328,6 +328,7 @@ describe('library ref resolution (powers)', () => {
   it('falls back to a case-insensitive trimmed name match', () => {
     const user = {
       id: 'n1',
+      docId: 'n1',
       name: 'Fire Bolt',
       description: 'name match',
       parts: [],
@@ -343,6 +344,7 @@ describe('library ref resolution (powers)', () => {
   it('does not look up by ref id zero (master truthy refId)', () => {
     const official = {
       id: '0',
+      docId: '0',
       name: 'Zero Id Power',
       description: 'should not match via ref 0',
       parts: [],
