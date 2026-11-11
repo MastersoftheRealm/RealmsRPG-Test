@@ -10,8 +10,8 @@ import { useState, useCallback, useMemo, type DragEvent } from 'react';
 import { useCodexSkills } from '@/hooks';
 import { computeSkillRollResult } from '@/lib/game/encounter-utils';
 import { filterDuplicateCampaignCharacterEntries } from '@/lib/encounter/unique-campaign-characters';
-import { useLinkedCampaignCharacters } from '@/lib/encounter/use-linked-campaign-characters';
-import { useReorderableListDrag } from '@/lib/encounter/use-reorderable-list-drag';
+import { useLinkedCampaignCharacters } from '../hooks/use-linked-campaign-characters';
+import { useReorderableListDrag } from '../hooks/use-reorderable-list-drag';
 import type {
   Encounter,
   SkillParticipant,

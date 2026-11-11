@@ -10,7 +10,6 @@
 import { use } from 'react';
 import { PageContainer, PAGE_FILLS_VIEWPORT_CLASSNAME } from '@/components/ui';
 import { CloudSyncOfflineBanner } from '@/components/patterns';
-import { useSaveEncounter } from '@/hooks';
 import { RollProvider } from '@/components/rolls';
 import CombatEncounterView from '../_components/CombatEncounterView';
 import { EncounterPageHeader } from '../_components/EncounterPageHeader';
@@ -30,18 +29,10 @@ export default function CombatEncounterPage({ params }: PageParams) {
 
 function CombatEncounterContent({ params }: { params: Promise<{ id: string }> }) {
   const { id: encounterId } = use(params);
-  const saveMutation = useSaveEncounter();
-  const play = useEncounterPlayPage({
-    encounterId,
-    saveMutation,
-    autosave: 'mutation-strip',
-  });
+  const play = useEncounterPlayPage({ encounterId });
 
   if (play.gatePhase !== 'ready') {
     return <EncounterPlayPageGate phase={play.gatePhase} fillsViewport />;
-  }
-  if (!play.encounter) {
-    return <EncounterPlayPageGate phase="initializing" fillsViewport />;
   }
 
   const encounter = play.encounter;

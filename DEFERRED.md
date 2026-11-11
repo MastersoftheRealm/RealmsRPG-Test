@@ -10,12 +10,6 @@ These trees are out of scope as **pattern sources** for new work elsewhere in th
 - `src/components/crafting/`
 - `src/app/api/crafting/`
 
-## Encounter tracker
-
-- `src/app/(main)/encounters/`
-- `src/components/encounters/`
-- `src/lib/encounter/`
-
 ## Empowered technique creator
 
 - `src/app/(main)/empowered-technique-creator/`

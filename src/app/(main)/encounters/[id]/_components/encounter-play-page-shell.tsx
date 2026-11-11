@@ -1,8 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useState } from 'react';
-import type { UseMutationResult } from '@tanstack/react-query';
+import { useCallback, useState, type Dispatch, type SetStateAction } from 'react';
 import {
   PageContainer,
   LoadingState,
@@ -10,20 +9,34 @@ import {
   PAGE_FILLS_VIEWPORT_CLASSNAME,
   useToast,
 } from '@/components/ui';
-import { useAuth, useEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
+import { useAuth, useEncounter, useAutoSave, useCampaignsFull, useSaveEncounter } from '@/hooks';
 import { encounterAutosaveBody, persistEncounterSave } from '@/services/encounter-service';
 import type { Encounter } from '@/types/encounter';
 
 export type EncounterPlayPageGatePhase = 'loading' | 'error' | 'initializing';
 
-type SaveEncounterMutation = UseMutationResult<
-  unknown,
-  Error,
-  { id: string; data: Partial<Omit<Encounter, 'id' | 'createdAt'>> },
-  unknown
->;
+export type EncounterPlayPageShared = {
+  setEncounter: Dispatch<SetStateAction<Encounter | null>>;
+  campaignsFull: ReturnType<typeof useCampaignsFull>['data'];
+  user: ReturnType<typeof useAuth>['user'];
+  isSaving: boolean;
+  hasUnsavedChanges: boolean;
+  syncBlockedByNetwork: boolean;
+  saveNow: () => void;
+  isEditingName: boolean;
+  nameInput: string;
+  setNameInput: Dispatch<SetStateAction<string>>;
+  handleCommitName: () => void;
+  handleCancelEditName: () => void;
+  startEditingName: () => void;
+};
 
-export type EncounterPlayAutosaveMode = 'mutation-strip' | 'skill-flush';
+export type EncounterPlayPageResult =
+  | (EncounterPlayPageShared & { gatePhase: 'ready'; encounter: Encounter })
+  | (EncounterPlayPageShared & {
+      gatePhase: EncounterPlayPageGatePhase;
+      encounter: Encounter | null;
+    });
 
 export function encounterPlayPageGatePhase({
   isLoading,
@@ -85,22 +98,22 @@ export function EncounterPlayPageGate({
 
 export function useEncounterPlayPage({
   encounterId,
-  saveMutation,
-  autosave,
+  keepaliveOnUnload = false,
   signedIn = false,
   prepareLoaded,
   autosaveWhenReady,
   requireSkillEncounter,
 }: {
   encounterId: string;
-  saveMutation: SaveEncounterMutation;
-  autosave: EncounterPlayAutosaveMode;
+  /** Skill play route: unload flush uses keepalive persist (combat/mixed use mutation only). */
+  keepaliveOnUnload?: boolean;
   signedIn?: boolean;
   prepareLoaded?: (data: Encounter) => Encounter;
   autosaveWhenReady?: (encounter: Encounter) => boolean;
   requireSkillEncounter?: boolean;
-}) {
+}): EncounterPlayPageResult {
   const { data: encounterData, isLoading, error } = useEncounter(encounterId);
+  const saveMutation = useSaveEncounter();
   const [encounter, setEncounter] = useState<Encounter | null>(null);
   const [initializedEncounterId, setInitializedEncounterId] = useState<string | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -116,21 +129,14 @@ export function useEncounterPlayPage({
   const onAutosave = useCallback(
     async (data: Encounter | null, flush?: { unload: boolean }) => {
       if (!data || !encounterId) return;
-      if (autosave === 'skill-flush') {
-        const body = encounterAutosaveBody(data);
-        if (flush?.unload) {
-          await persistEncounterSave(encounterId, body, { signedIn, keepalive: true });
-          return;
-        }
-        await saveMutation.mutateAsync({ id: encounterId, data: body });
+      const body = encounterAutosaveBody(data);
+      if (keepaliveOnUnload && flush?.unload) {
+        await persistEncounterSave(encounterId, body, { signedIn, keepalive: true });
         return;
       }
-      const { id, createdAt, ...rest } = data;
-      void id;
-      void createdAt;
-      await saveMutation.mutateAsync({ id: encounterId, data: rest });
+      await saveMutation.mutateAsync({ id: encounterId, data: body });
     },
-    [autosave, encounterId, saveMutation, signedIn],
+    [encounterId, keepaliveOnUnload, saveMutation, signedIn],
   );
 
   const { user } = useAuth();
@@ -180,8 +186,7 @@ export function useEncounterPlayPage({
     setIsEditingName(true);
   };
 
-  return {
-    encounter,
+  const shared: EncounterPlayPageShared = {
     setEncounter,
     campaignsFull,
     user,
@@ -189,12 +194,21 @@ export function useEncounterPlayPage({
     hasUnsavedChanges,
     syncBlockedByNetwork,
     saveNow,
-    gatePhase,
     isEditingName,
     nameInput,
     setNameInput,
     handleCommitName,
     handleCancelEditName,
     startEditingName,
+  };
+
+  if (gatePhase === 'ready' && encounter) {
+    return { ...shared, gatePhase: 'ready', encounter };
+  }
+
+  return {
+    ...shared,
+    gatePhase: gatePhase === 'ready' ? 'initializing' : gatePhase,
+    encounter,
   };
 }

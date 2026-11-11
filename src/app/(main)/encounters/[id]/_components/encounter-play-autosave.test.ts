@@ -1,64 +1,109 @@
+/** @vitest-environment happy-dom */
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { flushDirtyAutosave } from '@/hooks/use-auto-save';
-import { encounterAutosaveBody, persistEncounterSave } from '@/services/encounter-service';
 import { createDefaultEncounter } from '@/types/encounter';
+import { encounterAutosaveBody, persistEncounterSave } from '@/services/encounter-service';
+import type { useAutoSave } from '@/hooks';
+import { useEncounterPlayPage } from './encounter-play-page-shell';
+
+const mutateAsync = vi.fn().mockResolvedValue(undefined);
+const encounterRow = { ...createDefaultEncounter('skill', 'Autosave'), id: 'e-autosave' };
+
+let autoSaveOptions: Parameters<typeof useAutoSave<unknown>>[0] | null = null;
 
 vi.mock('@/services/encounter-service', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/services/encounter-service')>();
+  return { ...actual, persistEncounterSave: vi.fn() };
+});
+
+vi.mock('@/hooks', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/hooks')>();
   return {
     ...actual,
-    persistEncounterSave: vi.fn(),
+    useEncounter: () => ({ data: encounterRow, isLoading: false, error: null }),
+    useSaveEncounter: () => ({ mutateAsync, isPending: false }),
+    useCampaignsFull: () => ({ data: [] }),
+    useAuth: () => ({ user: { id: 'u1' } }),
+    useAutoSave: (opts: Parameters<typeof useAutoSave<unknown>>[0]) => {
+      autoSaveOptions = opts;
+      return {
+        isSaving: false,
+        hasUnsavedChanges: false,
+        syncBlockedByNetwork: false,
+        saveNow: vi.fn(),
+      };
+    },
   };
 });
 
-/** Mirrors the skill-flush branch inside useEncounterPlayPage (unload path). */
-async function skillFlushAutosave(
-  encounterId: string,
-  signedIn: boolean,
-  data: ReturnType<typeof createDefaultEncounter> & { id: string },
-  flush?: { unload: boolean },
-  mutateAsync = vi.fn(),
-) {
-  if (flush?.unload) {
-    await persistEncounterSave(encounterId, encounterAutosaveBody(data), {
-      signedIn,
-      keepalive: true,
-    });
-    return;
-  }
-  await mutateAsync({ id: encounterId, data: encounterAutosaveBody(data) });
-}
+vi.mock('@/components/ui', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/components/ui')>();
+  return {
+    ...actual,
+    useToast: () => ({ showToast: vi.fn() }),
+  };
+});
 
-describe('encounter play autosave (skill flush)', () => {
+describe('useEncounterPlayPage autosave', () => {
   afterEach(() => {
     vi.clearAllMocks();
+    autoSaveOptions = null;
   });
 
-  it('unload flush uses keepalive persistEncounterSave', async () => {
-    const encounter = { ...createDefaultEncounter('skill', 'Flush'), id: 'e-2' };
-    const mutateAsync = vi.fn();
-
-    await skillFlushAutosave('e-2', true, encounter, { unload: true }, mutateAsync);
-
+  it('uses keepalive persistEncounterSave on unload when keepaliveOnUnload is true', async () => {
+    renderHook(() =>
+      useEncounterPlayPage({
+        encounterId: 'e-autosave',
+        keepaliveOnUnload: true,
+        signedIn: true,
+      }),
+    );
+    await waitFor(() => expect(autoSaveOptions?.enabled).toBe(true));
+    await act(async () => {
+      await autoSaveOptions!.onSave(encounterRow, { unload: true });
+    });
     expect(persistEncounterSave).toHaveBeenCalledWith(
-      'e-2',
-      expect.not.objectContaining({ id: expect.anything() }),
+      'e-autosave',
+      encounterAutosaveBody(encounterRow),
       { signedIn: true, keepalive: true },
     );
     expect(mutateAsync).not.toHaveBeenCalled();
   });
 
-  it('debounced save does not use keepalive', async () => {
-    const encounter = { ...createDefaultEncounter('skill', 'Gate'), id: 'e-1' };
-    const mutateAsync = vi.fn();
-    flushDirtyAutosave({
-      enabled: true,
-      dirty: true,
-      data: encounter,
-      save: (data) =>
-        skillFlushAutosave('e-1', true, data as typeof encounter, undefined, mutateAsync),
+  it('uses save mutation without keepalive for debounced saves', async () => {
+    renderHook(() =>
+      useEncounterPlayPage({
+        encounterId: 'e-autosave',
+        keepaliveOnUnload: true,
+        signedIn: true,
+      }),
+    );
+    await waitFor(() => expect(autoSaveOptions?.enabled).toBe(true));
+    await act(async () => {
+      await autoSaveOptions!.onSave(encounterRow, undefined);
     });
-    expect(mutateAsync).toHaveBeenCalled();
+    expect(mutateAsync).toHaveBeenCalledWith({
+      id: 'e-autosave',
+      data: encounterAutosaveBody(encounterRow),
+    });
+    expect(persistEncounterSave).not.toHaveBeenCalled();
+  });
+
+  it('does not use keepalive on unload when keepaliveOnUnload is false', async () => {
+    renderHook(() =>
+      useEncounterPlayPage({
+        encounterId: 'e-autosave',
+        keepaliveOnUnload: false,
+      }),
+    );
+    await waitFor(() => expect(autoSaveOptions?.enabled).toBe(true));
+    await act(async () => {
+      await autoSaveOptions!.onSave(encounterRow, { unload: true });
+    });
+    expect(mutateAsync).toHaveBeenCalledWith({
+      id: 'e-autosave',
+      data: encounterAutosaveBody(encounterRow),
+    });
     expect(persistEncounterSave).not.toHaveBeenCalled();
   });
 });

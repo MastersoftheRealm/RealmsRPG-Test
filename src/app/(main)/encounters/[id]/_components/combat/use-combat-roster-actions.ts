@@ -15,8 +15,8 @@ import {
   scheduleCharacterResourceSyncFromCombatant,
 } from '@/lib/encounter/character-resource-sync';
 import { filterDuplicateCampaignCharacterEntries } from '@/lib/encounter/unique-campaign-characters';
-import { useLinkedCampaignCharacters } from '@/lib/encounter/use-linked-campaign-characters';
-import { useReorderableListDrag } from '@/lib/encounter/use-reorderable-list-drag';
+import { useLinkedCampaignCharacters } from '../hooks/use-linked-campaign-characters';
+import { useReorderableListDrag } from '../hooks/use-reorderable-list-drag';
 import type { Campaign } from '@/types/campaign';
 import {
   sortCombatantsForTurnOrder,

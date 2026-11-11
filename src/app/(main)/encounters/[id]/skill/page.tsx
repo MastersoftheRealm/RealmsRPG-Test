@@ -10,7 +10,7 @@
 import { use } from 'react';
 import { PageContainer } from '@/components/ui';
 import { CloudSyncOfflineBanner } from '@/components/patterns';
-import { useAuth, useSaveEncounter } from '@/hooks';
+import { useAuth } from '@/hooks';
 import { RollProvider } from '@/components/rolls';
 import type { Encounter } from '@/types/encounter';
 import { defaultSkillEncounterState } from '@/types/encounter';
@@ -73,11 +73,9 @@ export default function SkillEncounterPage({ params }: PageParams) {
 function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) {
   const { id: encounterId } = use(params);
   const { user } = useAuth();
-  const saveMutation = useSaveEncounter();
   const play = useEncounterPlayPage({
     encounterId,
-    saveMutation,
-    autosave: 'skill-flush',
+    keepaliveOnUnload: true,
     signedIn: !!user,
     prepareLoaded: prepareSkillEncounter,
     requireSkillEncounter: true,
@@ -85,9 +83,6 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
 
   if (play.gatePhase !== 'ready') {
     return <EncounterPlayPageGate phase={play.gatePhase} />;
-  }
-  if (!play.encounter?.skillEncounter) {
-    return <EncounterPlayPageGate phase="initializing" />;
   }
 
   const encounter = play.encounter;

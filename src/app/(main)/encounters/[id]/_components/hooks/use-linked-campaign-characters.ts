@@ -6,6 +6,7 @@ import { getCampaignCharacterIds } from '@/lib/encounter/unique-campaign-charact
 
 /**
  * Linked campaign + characters not yet on the encounter roster (combat or skill).
+ * Colocated under play `_components` — only used by encounter play roster hooks.
  */
 export function useLinkedCampaignCharacters({
   campaignId,

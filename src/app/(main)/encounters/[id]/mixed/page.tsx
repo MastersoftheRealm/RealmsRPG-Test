@@ -12,7 +12,6 @@ import { cn } from '@/lib/utils';
 import { Swords, Brain } from 'lucide-react';
 import { PageContainer } from '@/components/ui';
 import { CloudSyncOfflineBanner, SegmentedControl } from '@/components/patterns';
-import { useSaveEncounter } from '@/hooks';
 import { RollProvider, RollLog } from '@/components/rolls';
 import type { Encounter } from '@/types/encounter';
 import { defaultSkillEncounterState } from '@/types/encounter';
@@ -38,6 +37,7 @@ interface PageParams {
 
 function prepareMixedEncounter(encounter: Encounter): Encounter {
   if (!encounter.skillEncounter) {
+    // Mixed encounter: default to initiative so turn order can sync with combat.
     return {
       ...encounter,
       skillEncounter: { ...defaultSkillEncounterState(), useInitiative: true },
@@ -66,11 +66,8 @@ export default function MixedEncounterPage({ params }: PageParams) {
 
 function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) {
   const { id: encounterId } = use(params);
-  const saveMutation = useSaveEncounter();
   const play = useEncounterPlayPage({
     encounterId,
-    saveMutation,
-    autosave: 'mutation-strip',
     prepareLoaded: prepareMixedEncounter,
   });
 
@@ -96,9 +93,6 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
 
   if (play.gatePhase !== 'ready') {
     return <EncounterPlayPageGate phase={play.gatePhase} />;
-  }
-  if (!play.encounter) {
-    return <EncounterPlayPageGate phase="initializing" />;
   }
 
   const encounter = play.encounter;
