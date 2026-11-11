@@ -77,9 +77,10 @@ export function useOfficialPowerTechniqueBrowseFilters<
     pathFilterActive,
   ]);
 
-  const pathEmptyListTitle = pathFilterActive
-    ? pathFilterEmptyTitle(kind === 'power' ? 'powers' : 'techniques')
-    : undefined;
+  const pathEmptyListTitle =
+    rowFiltersEnabled && pathFilterActive
+      ? pathFilterEmptyTitle(kind === 'power' ? 'powers' : 'techniques')
+      : undefined;
 
   return {
     advancedFilters,

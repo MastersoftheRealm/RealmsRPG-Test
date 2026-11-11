@@ -73,19 +73,18 @@ export function usePathListFilter({
     }
     return [];
   }, [selectedPathIds, autoSelectType, autoSelectWhen, pathIndex]);
-  const pathRecommendedIds = useMemo(
-    () =>
-      resolvedSelectedPathIds.length > 0
-        ? pathRecommendedEntityIds(pathIndex, resolvedSelectedPathIds)
-        : null,
-    [pathIndex, resolvedSelectedPathIds],
-  );
+  const pathRecommendedIds = useMemo(() => {
+    if (!enabled || resolvedSelectedPathIds.length === 0) return null;
+    return pathRecommendedEntityIds(pathIndex, resolvedSelectedPathIds);
+  }, [enabled, pathIndex, resolvedSelectedPathIds]);
+
+  const pathFilterActive = enabled && resolvedSelectedPathIds.length > 0;
 
   return {
-    selectedPathIds: resolvedSelectedPathIds,
+    selectedPathIds: enabled ? resolvedSelectedPathIds : [],
     setSelectedPathIds: (pathIds: string[]) => setSelectedPathIds(pathIds),
     pathIndex,
     pathRecommendedIds,
-    pathFilterActive: resolvedSelectedPathIds.length > 0,
+    pathFilterActive,
   };
 }

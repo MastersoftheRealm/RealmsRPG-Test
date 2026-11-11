@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { EMPTY_ARMAMENT_FILTERS } from '@/lib/library/armament-filters';
 import { EMPTY_POWER_TECHNIQUE_FILTERS } from '@/lib/library/power-technique-filters';
 import {
   filterOfficialArmamentRows,
@@ -132,6 +133,37 @@ describe('filterOfficialArmamentRows', () => {
         (r) => r.id,
       ),
     ).toEqual(['b']);
+  });
+
+  it('filters by armament advanced state', () => {
+    const rows = [
+      { id: 'a', name: 'Cheap', description: '', currency: 10 },
+      { id: 'b', name: 'Costly', description: '', currency: 500 },
+    ];
+    const armament = { ...EMPTY_ARMAMENT_FILTERS, maxCurrency: 100 };
+    expect(
+      filterOfficialArmamentRows({
+        rows,
+        search: '',
+        sortItems: identitySort,
+        rowFilters: { armament },
+      }).map((r) => r.id),
+    ).toEqual(['a']);
+  });
+
+  it('filters by path recommendation ids when provided', () => {
+    const rows = [
+      { id: 'w1', name: 'Sword', description: '', raw: { id: 'w1' } },
+      { id: 'w2', name: 'Spear', description: '', raw: { id: 'w2' } },
+    ];
+    expect(
+      filterOfficialArmamentRows({
+        rows,
+        search: '',
+        sortItems: identitySort,
+        rowFilters: { pathRecommendedIds: new Set(['w2']) as ReadonlySet<string> },
+      }).map((r) => r.id),
+    ).toEqual(['w2']);
   });
 
   it('filters by rules sources after armament filters', () => {

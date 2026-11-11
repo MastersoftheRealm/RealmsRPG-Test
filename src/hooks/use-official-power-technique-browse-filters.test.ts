@@ -61,6 +61,20 @@ describe('useOfficialPowerTechniqueBrowseFilters', () => {
     expect(result.current.filterActiveCount).toBe(2);
   });
 
+  it('omits pathEmptyListTitle when rowFiltersEnabled is false even if paths are selected', () => {
+    const { result } = renderHook(() =>
+      useOfficialPowerTechniqueBrowseFilters({
+        kind: 'technique',
+        entities: [{ id: '1', name: 'T', pathIds: [] }],
+        rowFiltersEnabled: false,
+      }),
+    );
+    act(() => {
+      result.current.setSelectedPathIds(['martial']);
+    });
+    expect(result.current.pathEmptyListTitle).toBeUndefined();
+  });
+
   it('exposes pathRecommendedIds only inside rowFilters when enabled', () => {
     const { result } = renderHook(() =>
       useOfficialPowerTechniqueBrowseFilters({
