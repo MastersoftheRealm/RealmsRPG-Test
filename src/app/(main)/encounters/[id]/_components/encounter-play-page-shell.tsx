@@ -12,12 +12,13 @@ import {
 import { useAuth, useEncounter, useAutoSave, useCampaignsFull, useSaveEncounter } from '@/hooks';
 import { encounterAutosaveBody, persistEncounterSave } from '@/services/encounter-service';
 import type { Encounter } from '@/types/encounter';
+import type { Campaign } from '@/types/campaign';
 
 export type EncounterPlayPageGatePhase = 'loading' | 'error' | 'initializing';
 
 export type EncounterPlayPageShared = {
   setEncounter: Dispatch<SetStateAction<Encounter | null>>;
-  campaignsFull: ReturnType<typeof useCampaignsFull>['data'];
+  campaignsFull: Campaign[];
   user: ReturnType<typeof useAuth>['user'];
   isSaving: boolean;
   hasUnsavedChanges: boolean;
