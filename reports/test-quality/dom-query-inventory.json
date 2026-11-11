@@ -1,0 +1,718 @@
+{
+  "description": "Literal ripgrep match counts. document.querySelector counts querySelector and querySelectorAll. document.body. counts property access. container.querySelector counts querySelector and querySelectorAll. Matches inside strings are included. Playwright files are separate because they are not part of the vitest unit run.",
+  "node": "v24.22.3",
+  "rgVersion": "ripgrep 15.1.0-cursor5 (rev c3e3c2f7ec)",
+  "briefComparison": "The brief said master was 0 / 0 / 1 for these three patterns. These counts are whatever the commands below returned. A string match is still a match.",
+  "heads": [
+    {
+      "label": "master",
+      "pr": null,
+      "headSha": "e5fabdfea9c4c545a13fb367af6325be59b7d740",
+      "cwd": "/tmp/measure-master",
+      "gitHeadAtCommand": "e5fabdfea9c4c545a13fb367af6325be59b7d740",
+      "worktreePorcelain": "",
+      "note": "Detached worktree at the master head. DOM and source-read commands do not use the Phase 0 vitest.setup.ts edit.",
+      "vitestTestFiles": {
+        "globs": [
+          "*.test.*",
+          "*.spec.*"
+        ],
+        "commands": [
+          {
+            "id": "document.querySelector",
+            "command": "rg -n --glob '*.test.*' --glob '*.spec.*' 'document\\.querySelector\\w*' .",
+            "exitCode": 1
+          },
+          {
+            "id": "document.body.",
+            "command": "rg -n --glob '*.test.*' --glob '*.spec.*' 'document\\.body\\.[A-Za-z_$]' .",
+            "exitCode": 0
+          },
+          {
+            "id": "container.querySelector",
+            "command": "rg -n --glob '*.test.*' --glob '*.spec.*' 'container\\.querySelector\\w*' .",
+            "exitCode": 0
+          }
+        ],
+        "counts": {
+          "document.querySelector": 0,
+          "document.body.": 1,
+          "container.querySelector": 1
+        },
+        "matches": {
+          "document.querySelector": {
+            "matchCount": 0,
+            "matches": []
+          },
+          "document.body.": {
+            "matchCount": 1,
+            "matches": [
+              {
+                "file": "./src/components/creator/creator-layout-sticky-86e3jzdw5.test.ts",
+                "line": 33,
+                "text": "    expect(modal).toContain('document.body.style.paddingRight');"
+              }
+            ]
+          },
+          "container.querySelector": {
+            "matchCount": 1,
+            "matches": [
+              {
+                "file": "./src/components/patterns/chrome/point-status.test.tsx",
+                "line": 23,
+                "text": "    const bold = container.querySelector('.font-bold');"
+              }
+            ]
+          }
+        }
+      },
+      "playwrightFiles": {
+        "globs": [
+          "*.pw.ts",
+          "*.pw.tsx"
+        ],
+        "commands": [
+          {
+            "id": "document.querySelector",
+            "command": "rg -n --glob '*.pw.ts' --glob '*.pw.tsx' 'document\\.querySelector\\w*' .",
+            "exitCode": 0
+          },
+          {
+            "id": "document.body.",
+            "command": "rg -n --glob '*.pw.ts' --glob '*.pw.tsx' 'document\\.body\\.[A-Za-z_$]' .",
+            "exitCode": 0
+          },
+          {
+            "id": "container.querySelector",
+            "command": "rg -n --glob '*.pw.ts' --glob '*.pw.tsx' 'container\\.querySelector\\w*' .",
+            "exitCode": 1
+          }
+        ],
+        "counts": {
+          "document.querySelector": 5,
+          "document.body.": 1,
+          "container.querySelector": 0
+        },
+        "matches": {
+          "document.querySelector": {
+            "matchCount": 5,
+            "matches": [
+              {
+                "file": "./tests/visual/shell-creators-audit.pw.ts",
+                "line": 116,
+                "text": "        const grid = [...document.querySelectorAll('[data-creator-page] .grid')].find((el) =>"
+              },
+              {
+                "file": "./tests/visual/shell-creators-audit.pw.ts",
+                "line": 151,
+                "text": "        const card = document.querySelector('.creature-creator-summary-fab-clear');"
+              },
+              {
+                "file": "./tests/visual/shell-creators-audit.pw.ts",
+                "line": 152,
+                "text": "        const fab = document.querySelector('[data-creator-roll-dock]');"
+              },
+              {
+                "file": "./tests/visual/responsive-layout.pw.ts",
+                "line": 55,
+                "text": "    const all = Array.from(document.querySelectorAll('body *')).filter("
+              },
+              {
+                "file": "./tests/visual/responsive-layout.pw.ts",
+                "line": 210,
+                "text": "          for (const el of document.querySelectorAll('input, select, textarea')) {"
+              }
+            ]
+          },
+          "document.body.": {
+            "matchCount": 1,
+            "matches": [
+              {
+                "file": "./tests/visual/shell-creators-audit.pw.ts",
+                "line": 170,
+                "text": "          ...document.body.querySelectorAll("
+              }
+            ]
+          },
+          "container.querySelector": {
+            "matchCount": 0,
+            "matches": []
+          }
+        }
+      }
+    },
+    {
+      "label": "pr-569",
+      "pr": 569,
+      "headSha": "558b3f44f5d92ba6637e5b6297d897a7a1181475",
+      "cwd": "/tmp/measure-pr-569",
+      "gitHeadAtCommand": "558b3f44f5d92ba6637e5b6297d897a7a1181475",
+      "worktreePorcelain": "",
+      "note": "Detached worktree at the PR head. Not pushed.",
+      "vitestTestFiles": {
+        "globs": [
+          "*.test.*",
+          "*.spec.*"
+        ],
+        "commands": [
+          {
+            "id": "document.querySelector",
+            "command": "rg -n --glob '*.test.*' --glob '*.spec.*' 'document\\.querySelector\\w*' .",
+            "exitCode": 1
+          },
+          {
+            "id": "document.body.",
+            "command": "rg -n --glob '*.test.*' --glob '*.spec.*' 'document\\.body\\.[A-Za-z_$]' .",
+            "exitCode": 0
+          },
+          {
+            "id": "container.querySelector",
+            "command": "rg -n --glob '*.test.*' --glob '*.spec.*' 'container\\.querySelector\\w*' .",
+            "exitCode": 0
+          }
+        ],
+        "counts": {
+          "document.querySelector": 0,
+          "document.body.": 1,
+          "container.querySelector": 1
+        },
+        "matches": {
+          "document.querySelector": {
+            "matchCount": 0,
+            "matches": []
+          },
+          "document.body.": {
+            "matchCount": 1,
+            "matches": [
+              {
+                "file": "./src/components/creator/creator-layout-sticky-86e3jzdw5.test.ts",
+                "line": 33,
+                "text": "    expect(modal).toContain('document.body.style.paddingRight');"
+              }
+            ]
+          },
+          "container.querySelector": {
+            "matchCount": 1,
+            "matches": [
+              {
+                "file": "./src/components/patterns/chrome/point-status.test.tsx",
+                "line": 23,
+                "text": "    const bold = container.querySelector('.font-bold');"
+              }
+            ]
+          }
+        }
+      },
+      "playwrightFiles": {
+        "globs": [
+          "*.pw.ts",
+          "*.pw.tsx"
+        ],
+        "commands": [
+          {
+            "id": "document.querySelector",
+            "command": "rg -n --glob '*.pw.ts' --glob '*.pw.tsx' 'document\\.querySelector\\w*' .",
+            "exitCode": 0
+          },
+          {
+            "id": "document.body.",
+            "command": "rg -n --glob '*.pw.ts' --glob '*.pw.tsx' 'document\\.body\\.[A-Za-z_$]' .",
+            "exitCode": 0
+          },
+          {
+            "id": "container.querySelector",
+            "command": "rg -n --glob '*.pw.ts' --glob '*.pw.tsx' 'container\\.querySelector\\w*' .",
+            "exitCode": 1
+          }
+        ],
+        "counts": {
+          "document.querySelector": 5,
+          "document.body.": 1,
+          "container.querySelector": 0
+        },
+        "matches": {
+          "document.querySelector": {
+            "matchCount": 5,
+            "matches": [
+              {
+                "file": "./tests/visual/shell-creators-audit.pw.ts",
+                "line": 116,
+                "text": "        const grid = [...document.querySelectorAll('[data-creator-page] .grid')].find((el) =>"
+              },
+              {
+                "file": "./tests/visual/shell-creators-audit.pw.ts",
+                "line": 151,
+                "text": "        const card = document.querySelector('.creature-creator-summary-fab-clear');"
+              },
+              {
+                "file": "./tests/visual/shell-creators-audit.pw.ts",
+                "line": 152,
+                "text": "        const fab = document.querySelector('[data-creator-roll-dock]');"
+              },
+              {
+                "file": "./tests/visual/responsive-layout.pw.ts",
+                "line": 55,
+                "text": "    const all = Array.from(document.querySelectorAll('body *')).filter("
+              },
+              {
+                "file": "./tests/visual/responsive-layout.pw.ts",
+                "line": 210,
+                "text": "          for (const el of document.querySelectorAll('input, select, textarea')) {"
+              }
+            ]
+          },
+          "document.body.": {
+            "matchCount": 1,
+            "matches": [
+              {
+                "file": "./tests/visual/shell-creators-audit.pw.ts",
+                "line": 170,
+                "text": "          ...document.body.querySelectorAll("
+              }
+            ]
+          },
+          "container.querySelector": {
+            "matchCount": 0,
+            "matches": []
+          }
+        }
+      }
+    },
+    {
+      "label": "pr-570",
+      "pr": 570,
+      "headSha": "9ecf2d137a1ab900897067848a2d1417e1e0ecf2",
+      "cwd": "/tmp/measure-pr-570",
+      "gitHeadAtCommand": "9ecf2d137a1ab900897067848a2d1417e1e0ecf2",
+      "worktreePorcelain": "",
+      "note": "Detached worktree at the PR head. Not pushed.",
+      "vitestTestFiles": {
+        "globs": [
+          "*.test.*",
+          "*.spec.*"
+        ],
+        "commands": [
+          {
+            "id": "document.querySelector",
+            "command": "rg -n --glob '*.test.*' --glob '*.spec.*' 'document\\.querySelector\\w*' .",
+            "exitCode": 1
+          },
+          {
+            "id": "document.body.",
+            "command": "rg -n --glob '*.test.*' --glob '*.spec.*' 'document\\.body\\.[A-Za-z_$]' .",
+            "exitCode": 0
+          },
+          {
+            "id": "container.querySelector",
+            "command": "rg -n --glob '*.test.*' --glob '*.spec.*' 'container\\.querySelector\\w*' .",
+            "exitCode": 0
+          }
+        ],
+        "counts": {
+          "document.querySelector": 0,
+          "document.body.": 1,
+          "container.querySelector": 1
+        },
+        "matches": {
+          "document.querySelector": {
+            "matchCount": 0,
+            "matches": []
+          },
+          "document.body.": {
+            "matchCount": 1,
+            "matches": [
+              {
+                "file": "./src/components/creator/creator-layout-sticky-86e3jzdw5.test.ts",
+                "line": 33,
+                "text": "    expect(modal).toContain('document.body.style.paddingRight');"
+              }
+            ]
+          },
+          "container.querySelector": {
+            "matchCount": 1,
+            "matches": [
+              {
+                "file": "./src/components/patterns/chrome/point-status.test.tsx",
+                "line": 23,
+                "text": "    const bold = container.querySelector('.font-bold');"
+              }
+            ]
+          }
+        }
+      },
+      "playwrightFiles": {
+        "globs": [
+          "*.pw.ts",
+          "*.pw.tsx"
+        ],
+        "commands": [
+          {
+            "id": "document.querySelector",
+            "command": "rg -n --glob '*.pw.ts' --glob '*.pw.tsx' 'document\\.querySelector\\w*' .",
+            "exitCode": 0
+          },
+          {
+            "id": "document.body.",
+            "command": "rg -n --glob '*.pw.ts' --glob '*.pw.tsx' 'document\\.body\\.[A-Za-z_$]' .",
+            "exitCode": 0
+          },
+          {
+            "id": "container.querySelector",
+            "command": "rg -n --glob '*.pw.ts' --glob '*.pw.tsx' 'container\\.querySelector\\w*' .",
+            "exitCode": 1
+          }
+        ],
+        "counts": {
+          "document.querySelector": 5,
+          "document.body.": 1,
+          "container.querySelector": 0
+        },
+        "matches": {
+          "document.querySelector": {
+            "matchCount": 5,
+            "matches": [
+              {
+                "file": "./tests/visual/shell-creators-audit.pw.ts",
+                "line": 116,
+                "text": "        const grid = [...document.querySelectorAll('[data-creator-page] .grid')].find((el) =>"
+              },
+              {
+                "file": "./tests/visual/shell-creators-audit.pw.ts",
+                "line": 151,
+                "text": "        const card = document.querySelector('.creature-creator-summary-fab-clear');"
+              },
+              {
+                "file": "./tests/visual/shell-creators-audit.pw.ts",
+                "line": 152,
+                "text": "        const fab = document.querySelector('[data-creator-roll-dock]');"
+              },
+              {
+                "file": "./tests/visual/responsive-layout.pw.ts",
+                "line": 55,
+                "text": "    const all = Array.from(document.querySelectorAll('body *')).filter("
+              },
+              {
+                "file": "./tests/visual/responsive-layout.pw.ts",
+                "line": 210,
+                "text": "          for (const el of document.querySelectorAll('input, select, textarea')) {"
+              }
+            ]
+          },
+          "document.body.": {
+            "matchCount": 1,
+            "matches": [
+              {
+                "file": "./tests/visual/shell-creators-audit.pw.ts",
+                "line": 170,
+                "text": "          ...document.body.querySelectorAll("
+              }
+            ]
+          },
+          "container.querySelector": {
+            "matchCount": 0,
+            "matches": []
+          }
+        }
+      }
+    },
+    {
+      "label": "pr-571",
+      "pr": 571,
+      "headSha": "74181511fede1c9b33d41506c7b8e87ea664b04f",
+      "cwd": "/tmp/measure-pr-571",
+      "gitHeadAtCommand": "74181511fede1c9b33d41506c7b8e87ea664b04f",
+      "worktreePorcelain": "",
+      "note": "Detached worktree at the PR head. Not pushed.",
+      "vitestTestFiles": {
+        "globs": [
+          "*.test.*",
+          "*.spec.*"
+        ],
+        "commands": [
+          {
+            "id": "document.querySelector",
+            "command": "rg -n --glob '*.test.*' --glob '*.spec.*' 'document\\.querySelector\\w*' .",
+            "exitCode": 1
+          },
+          {
+            "id": "document.body.",
+            "command": "rg -n --glob '*.test.*' --glob '*.spec.*' 'document\\.body\\.[A-Za-z_$]' .",
+            "exitCode": 0
+          },
+          {
+            "id": "container.querySelector",
+            "command": "rg -n --glob '*.test.*' --glob '*.spec.*' 'container\\.querySelector\\w*' .",
+            "exitCode": 0
+          }
+        ],
+        "counts": {
+          "document.querySelector": 0,
+          "document.body.": 1,
+          "container.querySelector": 5
+        },
+        "matches": {
+          "document.querySelector": {
+            "matchCount": 0,
+            "matches": []
+          },
+          "document.body.": {
+            "matchCount": 1,
+            "matches": [
+              {
+                "file": "./src/components/creator/creator-layout-sticky-86e3jzdw5.test.ts",
+                "line": 33,
+                "text": "    expect(modal).toContain('document.body.style.paddingRight');"
+              }
+            ]
+          },
+          "container.querySelector": {
+            "matchCount": 5,
+            "matches": [
+              {
+                "file": "./src/components/patterns/chrome/point-status.test.tsx",
+                "line": 23,
+                "text": "    const bold = container.querySelector('.font-bold');"
+              },
+              {
+                "file": "./src/components/patterns/list/list-header-mobile-sort.test.tsx",
+                "line": 18,
+                "text": "  const btn = container.querySelector("
+              },
+              {
+                "file": "./src/components/patterns/list/entity-library-inventory-sections.test.tsx",
+                "line": 29,
+                "text": "    const titles = Array.from(container.querySelectorAll('h2')).map((el) => el.textContent);"
+              },
+              {
+                "file": "./src/components/patterns/list/entity-library-inventory-sections.test.tsx",
+                "line": 40,
+                "text": "    expect(container.querySelector('[data-testid=\"shields-header-right\"]')).toBeTruthy();"
+              },
+              {
+                "file": "./src/components/patterns/list/entity-library-inventory-sections.test.tsx",
+                "line": 45,
+                "text": "    expect(container.querySelector('[data-testid=\"shields-header-right\"]')).toBeNull();"
+              }
+            ]
+          }
+        }
+      },
+      "playwrightFiles": {
+        "globs": [
+          "*.pw.ts",
+          "*.pw.tsx"
+        ],
+        "commands": [
+          {
+            "id": "document.querySelector",
+            "command": "rg -n --glob '*.pw.ts' --glob '*.pw.tsx' 'document\\.querySelector\\w*' .",
+            "exitCode": 0
+          },
+          {
+            "id": "document.body.",
+            "command": "rg -n --glob '*.pw.ts' --glob '*.pw.tsx' 'document\\.body\\.[A-Za-z_$]' .",
+            "exitCode": 0
+          },
+          {
+            "id": "container.querySelector",
+            "command": "rg -n --glob '*.pw.ts' --glob '*.pw.tsx' 'container\\.querySelector\\w*' .",
+            "exitCode": 1
+          }
+        ],
+        "counts": {
+          "document.querySelector": 5,
+          "document.body.": 1,
+          "container.querySelector": 0
+        },
+        "matches": {
+          "document.querySelector": {
+            "matchCount": 5,
+            "matches": [
+              {
+                "file": "./tests/visual/shell-creators-audit.pw.ts",
+                "line": 116,
+                "text": "        const grid = [...document.querySelectorAll('[data-creator-page] .grid')].find((el) =>"
+              },
+              {
+                "file": "./tests/visual/shell-creators-audit.pw.ts",
+                "line": 151,
+                "text": "        const card = document.querySelector('.creature-creator-summary-fab-clear');"
+              },
+              {
+                "file": "./tests/visual/shell-creators-audit.pw.ts",
+                "line": 152,
+                "text": "        const fab = document.querySelector('[data-creator-roll-dock]');"
+              },
+              {
+                "file": "./tests/visual/responsive-layout.pw.ts",
+                "line": 55,
+                "text": "    const all = Array.from(document.querySelectorAll('body *')).filter("
+              },
+              {
+                "file": "./tests/visual/responsive-layout.pw.ts",
+                "line": 210,
+                "text": "          for (const el of document.querySelectorAll('input, select, textarea')) {"
+              }
+            ]
+          },
+          "document.body.": {
+            "matchCount": 1,
+            "matches": [
+              {
+                "file": "./tests/visual/shell-creators-audit.pw.ts",
+                "line": 170,
+                "text": "          ...document.body.querySelectorAll("
+              }
+            ]
+          },
+          "container.querySelector": {
+            "matchCount": 0,
+            "matches": []
+          }
+        }
+      }
+    },
+    {
+      "label": "pr-572",
+      "pr": 572,
+      "headSha": "8e71eb82f94f47462f37f8a29f999f398660a4bb",
+      "cwd": "/tmp/measure-pr-572",
+      "gitHeadAtCommand": "8e71eb82f94f47462f37f8a29f999f398660a4bb",
+      "worktreePorcelain": "",
+      "note": "Detached worktree at the PR head. Not pushed.",
+      "vitestTestFiles": {
+        "globs": [
+          "*.test.*",
+          "*.spec.*"
+        ],
+        "commands": [
+          {
+            "id": "document.querySelector",
+            "command": "rg -n --glob '*.test.*' --glob '*.spec.*' 'document\\.querySelector\\w*' .",
+            "exitCode": 1
+          },
+          {
+            "id": "document.body.",
+            "command": "rg -n --glob '*.test.*' --glob '*.spec.*' 'document\\.body\\.[A-Za-z_$]' .",
+            "exitCode": 0
+          },
+          {
+            "id": "container.querySelector",
+            "command": "rg -n --glob '*.test.*' --glob '*.spec.*' 'container\\.querySelector\\w*' .",
+            "exitCode": 0
+          }
+        ],
+        "counts": {
+          "document.querySelector": 0,
+          "document.body.": 1,
+          "container.querySelector": 2
+        },
+        "matches": {
+          "document.querySelector": {
+            "matchCount": 0,
+            "matches": []
+          },
+          "document.body.": {
+            "matchCount": 1,
+            "matches": [
+              {
+                "file": "./src/components/creator/creator-layout-sticky-86e3jzdw5.test.ts",
+                "line": 33,
+                "text": "    expect(modal).toContain('document.body.style.paddingRight');"
+              }
+            ]
+          },
+          "container.querySelector": {
+            "matchCount": 2,
+            "matches": [
+              {
+                "file": "./src/components/patterns/chrome/point-status.test.tsx",
+                "line": 23,
+                "text": "    const bold = container.querySelector('.font-bold');"
+              },
+              {
+                "file": "./src/app/(main)/encounters/[id]/_components/EncounterCampaignRosterSection.test.tsx",
+                "line": 42,
+                "text": "    const addAll = container.querySelector('button') as HTMLButtonElement;"
+              }
+            ]
+          }
+        }
+      },
+      "playwrightFiles": {
+        "globs": [
+          "*.pw.ts",
+          "*.pw.tsx"
+        ],
+        "commands": [
+          {
+            "id": "document.querySelector",
+            "command": "rg -n --glob '*.pw.ts' --glob '*.pw.tsx' 'document\\.querySelector\\w*' .",
+            "exitCode": 0
+          },
+          {
+            "id": "document.body.",
+            "command": "rg -n --glob '*.pw.ts' --glob '*.pw.tsx' 'document\\.body\\.[A-Za-z_$]' .",
+            "exitCode": 0
+          },
+          {
+            "id": "container.querySelector",
+            "command": "rg -n --glob '*.pw.ts' --glob '*.pw.tsx' 'container\\.querySelector\\w*' .",
+            "exitCode": 1
+          }
+        ],
+        "counts": {
+          "document.querySelector": 5,
+          "document.body.": 1,
+          "container.querySelector": 0
+        },
+        "matches": {
+          "document.querySelector": {
+            "matchCount": 5,
+            "matches": [
+              {
+                "file": "./tests/visual/shell-creators-audit.pw.ts",
+                "line": 116,
+                "text": "        const grid = [...document.querySelectorAll('[data-creator-page] .grid')].find((el) =>"
+              },
+              {
+                "file": "./tests/visual/shell-creators-audit.pw.ts",
+                "line": 151,
+                "text": "        const card = document.querySelector('.creature-creator-summary-fab-clear');"
+              },
+              {
+                "file": "./tests/visual/shell-creators-audit.pw.ts",
+                "line": 152,
+                "text": "        const fab = document.querySelector('[data-creator-roll-dock]');"
+              },
+              {
+                "file": "./tests/visual/responsive-layout.pw.ts",
+                "line": 55,
+                "text": "    const all = Array.from(document.querySelectorAll('body *')).filter("
+              },
+              {
+                "file": "./tests/visual/responsive-layout.pw.ts",
+                "line": 210,
+                "text": "          for (const el of document.querySelectorAll('input, select, textarea')) {"
+              }
+            ]
+          },
+          "document.body.": {
+            "matchCount": 1,
+            "matches": [
+              {
+                "file": "./tests/visual/shell-creators-audit.pw.ts",
+                "line": 170,
+                "text": "          ...document.body.querySelectorAll("
+              }
+            ]
+          },
+          "container.querySelector": {
+            "matchCount": 0,
+            "matches": []
+          }
+        }
+      }
+    }
+  ]
+}
