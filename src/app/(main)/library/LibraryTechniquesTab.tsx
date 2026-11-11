@@ -48,11 +48,7 @@ import {
 import { useLibraryEntitySync } from './hooks/use-library-entity-sync';
 import { useLibraryDuplicateConfirm } from './hooks/use-library-duplicate-confirm';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
-import {
-  libraryRowPathIds,
-  pathChipLabelsForEntity,
-  pathFilterEmptyTitle,
-} from '@/lib/game/path-recommendation-index';
+import { libraryRowPathIds, pathChipLabelsForEntity } from '@/lib/game/path-recommendation-index';
 
 const TECHNIQUE_ROW_CHROME = {
   edit: true,
@@ -97,12 +93,10 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
     selectedPathIds,
     setSelectedPathIds,
     pathIndex,
-    pathRecommendedIds,
+    rowFilters,
     pathFilterActive,
     filterActiveCount,
-    advancedFiltersForRows,
-    characterContextForRows,
-    rulesSourcesForRows,
+    pathEmptyListTitle,
   } = useOfficialPowerTechniqueBrowseFilters({
     kind: 'technique',
     entities: techniques,
@@ -160,25 +154,14 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
 
   const filteredData = useMemo(
     () =>
-      filterOfficialPowerTechniqueRows(
-        cardData,
+      filterOfficialPowerTechniqueRows({
+        rows: cardData,
         search,
         sortItems,
-        'technique',
-        advancedFiltersForRows,
-        characterContextForRows,
-        pathRecommendedIds,
-        rulesSourcesForRows,
-      ),
-    [
-      cardData,
-      search,
-      sortItems,
-      advancedFiltersForRows,
-      characterContextForRows,
-      pathRecommendedIds,
-      rulesSourcesForRows,
-    ],
+        kind: 'technique',
+        rowFilters,
+      }),
+    [cardData, search, sortItems, rowFilters],
   );
 
   return (
@@ -235,9 +218,7 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
           )
         }
         filterActiveCount={filterActiveCount}
-        filterEmptyTitle={
-          mode !== 'empowered' && pathFilterActive ? pathFilterEmptyTitle('techniques') : undefined
-        }
+        filterEmptyTitle={pathEmptyListTitle}
       >
         {filteredData.map((tech) => {
           const detailSections =
@@ -249,10 +230,9 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
                   return section ? [section] : undefined;
                 })()
               : officialTechniqueDetailSections(tech);
-          const nameLabels =
-            mode !== 'empowered' && pathFilterActive
-              ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(tech), selectedPathIds)
-              : undefined;
+          const nameLabels = pathFilterActive
+            ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(tech), selectedPathIds)
+            : undefined;
           const nameBadges = nameLabels?.map((label) => ({ label })) ?? [];
           const driftBadges = tech.hasDrift
             ? [{ label: 'Needs sync' as const, color: 'amber' as const }]

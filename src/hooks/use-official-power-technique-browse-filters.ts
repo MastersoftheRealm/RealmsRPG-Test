@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { usePathListFilter } from './use-path-recommendation-index';
 import {
   POWER_LIST_PATH_KINDS,
+  pathFilterEmptyTitle,
   type PathRecommendationEntity,
   type PathRecommendationKindInput,
 } from '@/lib/game/path-recommendation-index';
@@ -14,14 +15,18 @@ import {
   type PowerTechniqueFilterState,
 } from '@/lib/library/power-technique-filters';
 import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
+import type { OfficialPowerTechniqueRowFilters } from '@/lib/library/official-catalog-row-filter';
 
-/** Realms / My Library browse filter state for powers and techniques. */
+/**
+ * Browse filter state for powers and techniques on **My Library tabs** and **Official*List** surfaces.
+ * Same PowerTechniqueFilters UX as Codex; not used for creator modals (they keep local state).
+ */
 export function useOfficialPowerTechniqueBrowseFilters<
   T extends PathRecommendationEntity,
 >(options: {
   kind: 'power' | 'technique';
   entities: readonly T[];
-  /** When false, browse/path/advanced/rules row filters and filter badge count are omitted (e.g. empowered techniques). */
+  /** When false, row filtering and filter badge count are off (empowered techniques tab). Matches master. */
   rowFiltersEnabled?: boolean | undefined;
 }) {
   const { kind, entities, rowFiltersEnabled = true } = options;
@@ -44,33 +49,41 @@ export function useOfficialPowerTechniqueBrowseFilters<
       enabled: rowFiltersEnabled,
     });
 
-  const effectivePathFilterActive = rowFiltersEnabled && pathFilterActive;
-  const pathRecommendedIdsForFilter = rowFiltersEnabled ? pathRecommendedIds : null;
-  const advancedFiltersForRows = rowFiltersEnabled ? advancedFilters : undefined;
-  const characterContextForRows = rowFiltersEnabled ? characterContext : null;
-  const rulesSourcesForRows = rowFiltersEnabled ? rulesSources : undefined;
+  const rowFilters = useMemo((): OfficialPowerTechniqueRowFilters | null => {
+    if (!rowFiltersEnabled) return null;
+    return {
+      pathRecommendedIds,
+      advanced: advancedFilters,
+      character: characterContext,
+      rulesSources,
+    };
+  }, [rowFiltersEnabled, pathRecommendedIds, advancedFilters, characterContext, rulesSources]);
 
-  const filterActiveCountValue = useMemo(
-    () =>
+  const filterActiveCount = useMemo(() => {
+    if (!rowFiltersEnabled) return undefined;
+    return (
       countActivePowerTechniqueFilters(advancedFilters, kind, Boolean(characterContext)) +
       countActiveCodexRulesSourceFilters(rulesSources) +
       (characterFilterId ? 1 : 0) +
-      (effectivePathFilterActive ? 1 : 0),
-    [
-      kind,
-      advancedFilters,
-      characterContext,
-      rulesSources,
-      characterFilterId,
-      effectivePathFilterActive,
-    ],
-  );
-  const filterActiveCount = rowFiltersEnabled ? filterActiveCountValue : undefined;
+      (pathFilterActive ? 1 : 0)
+    );
+  }, [
+    rowFiltersEnabled,
+    kind,
+    advancedFilters,
+    characterContext,
+    rulesSources,
+    characterFilterId,
+    pathFilterActive,
+  ]);
+
+  const pathEmptyListTitle = pathFilterActive
+    ? pathFilterEmptyTitle(kind === 'power' ? 'powers' : 'techniques')
+    : undefined;
 
   return {
     advancedFilters,
     setAdvancedFilters,
-    characterContext,
     setCharacterContext,
     characterFilterId,
     setCharacterFilterId,
@@ -79,11 +92,9 @@ export function useOfficialPowerTechniqueBrowseFilters<
     selectedPathIds,
     setSelectedPathIds,
     pathIndex,
-    pathRecommendedIds: pathRecommendedIdsForFilter,
-    pathFilterActive: effectivePathFilterActive,
+    rowFilters,
+    pathFilterActive,
     filterActiveCount,
-    advancedFiltersForRows,
-    characterContextForRows,
-    rulesSourcesForRows,
+    pathEmptyListTitle,
   };
 }

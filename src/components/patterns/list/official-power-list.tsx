@@ -25,11 +25,7 @@ import {
 } from '@/lib/library/official-power-list';
 import { useOfficialPowerTechniqueBrowseFilters } from '@/hooks/use-official-power-technique-browse-filters';
 import { listInnateThresholdFilterOptions } from '@/lib/game/innate-eligibility';
-import {
-  libraryRowPathIds,
-  pathChipLabelsForEntity,
-  pathFilterEmptyTitle,
-} from '@/lib/game/path-recommendation-index';
+import { libraryRowPathIds, pathChipLabelsForEntity } from '@/lib/game/path-recommendation-index';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import type { CatalogListing } from '@/lib/library/catalog-listing';
 
@@ -92,12 +88,10 @@ export function OfficialPowerList({
     selectedPathIds,
     setSelectedPathIds,
     pathIndex,
-    pathRecommendedIds,
+    rowFilters,
     pathFilterActive,
     filterActiveCount,
-    advancedFiltersForRows,
-    characterContextForRows,
-    rulesSourcesForRows,
+    pathEmptyListTitle,
   } = browseFilters;
   const addToCharacter = useAddToCharacterFromLibrary('power', characterFilterId);
 
@@ -114,17 +108,14 @@ export function OfficialPowerList({
       search: string,
       sortItems: (items: OfficialPowerRow[]) => OfficialPowerRow[],
     ) =>
-      filterOfficialPowerTechniqueRows(
+      filterOfficialPowerTechniqueRows({
         rows,
         search,
         sortItems,
-        'power',
-        advancedFiltersForRows,
-        characterContextForRows,
-        pathRecommendedIds,
-        rulesSourcesForRows,
-      ),
-    [advancedFiltersForRows, characterContextForRows, pathRecommendedIds, rulesSourcesForRows],
+        kind: 'power',
+        rowFilters,
+      }),
+    [rowFilters],
   );
 
   return (
@@ -174,7 +165,7 @@ export function OfficialPowerList({
         emptyIcon={emptyIcon}
         emptyTitle={emptyTitle}
         emptyMessage={emptyMessage}
-        searchEmptyMessage={pathFilterActive ? pathFilterEmptyTitle('powers') : searchEmptyMessage}
+        searchEmptyMessage={pathEmptyListTitle ?? searchEmptyMessage}
         variant={variant}
         readOnly={readOnly}
         onAddRequest={onAddRequest}

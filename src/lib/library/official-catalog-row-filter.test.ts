@@ -33,47 +33,85 @@ describe('filterOfficialPowerTechniqueRows', () => {
 
   it('matches power rows on name, description, and category', () => {
     expect(
-      filterOfficialPowerTechniqueRows(rows, 'fire', identitySort, 'power').map((r) => r.id),
+      filterOfficialPowerTechniqueRows({
+        rows,
+        search: 'fire',
+        sortItems: identitySort,
+        kind: 'power',
+      }).map((r) => r.id),
     ).toEqual(['1']);
     expect(
-      filterOfficialPowerTechniqueRows(rows, 'damage', identitySort, 'power').map((r) => r.id),
+      filterOfficialPowerTechniqueRows({
+        rows,
+        search: 'damage',
+        sortItems: identitySort,
+        kind: 'power',
+      }).map((r) => r.id),
     ).toEqual(['1']);
   });
 
   it('matches technique rows on weapon as well as category', () => {
     expect(
-      filterOfficialPowerTechniqueRows(rows, 'unarmed', identitySort, 'technique').map((r) => r.id),
+      filterOfficialPowerTechniqueRows({
+        rows,
+        search: 'unarmed',
+        sortItems: identitySort,
+        kind: 'technique',
+      }).map((r) => r.id),
     ).toEqual(['p-attack']);
     expect(
-      filterOfficialPowerTechniqueRows(rows, 'attack', identitySort, 'technique').map((r) => r.id),
+      filterOfficialPowerTechniqueRows({
+        rows,
+        search: 'attack',
+        sortItems: identitySort,
+        kind: 'technique',
+      }).map((r) => r.id),
     ).toEqual(['p-attack']);
   });
 
   it('filters by path recommendation ids when provided', () => {
     expect(
-      filterOfficialPowerTechniqueRows(
+      filterOfficialPowerTechniqueRows({
         rows,
-        '',
-        identitySort,
-        'power',
-        undefined,
-        null,
-        new Set(['p-attack']) as ReadonlySet<string>,
-      ).map((r) => r.id),
+        search: '',
+        sortItems: identitySort,
+        kind: 'power',
+        rowFilters: { pathRecommendedIds: new Set(['p-attack']) as ReadonlySet<string> },
+      }).map((r) => r.id),
     ).toEqual(['p-attack']);
+  });
+
+  it('omits path filtering when rowFilters is null', () => {
+    expect(
+      filterOfficialPowerTechniqueRows({
+        rows,
+        search: '',
+        sortItems: identitySort,
+        kind: 'power',
+        rowFilters: null,
+      }).map((r) => r.id),
+    ).toEqual(['1', 'p-attack']);
   });
 
   it('filters by rules sources after advanced filters (master order)', () => {
     const advanced = { ...EMPTY_POWER_TECHNIQUE_FILTERS, categories: ['Attack'] };
     expect(
-      filterOfficialPowerTechniqueRows(rows, '', identitySort, 'power', advanced, null, null, [
-        'Core',
-      ]).map((r) => r.id),
+      filterOfficialPowerTechniqueRows({
+        rows,
+        search: '',
+        sortItems: identitySort,
+        kind: 'power',
+        rowFilters: { advanced, rulesSources: ['Core'] },
+      }).map((r) => r.id),
     ).toEqual([]);
     expect(
-      filterOfficialPowerTechniqueRows(rows, '', identitySort, 'power', advanced, null, null, [
-        'Crafting',
-      ]).map((r) => r.id),
+      filterOfficialPowerTechniqueRows({
+        rows,
+        search: '',
+        sortItems: identitySort,
+        kind: 'power',
+        rowFilters: { advanced, rulesSources: ['Crafting'] },
+      }).map((r) => r.id),
     ).toEqual(['p-attack']);
   });
 });
@@ -84,10 +122,16 @@ describe('filterOfficialArmamentRows', () => {
       { id: 'a', name: 'Longsword', description: 'Steel blade' },
       { id: 'b', name: 'Buckler', description: 'Small shield' },
     ];
-    expect(filterOfficialArmamentRows(rows, 'steel', identitySort).map((r) => r.id)).toEqual(['a']);
-    expect(filterOfficialArmamentRows(rows, 'buckler', identitySort).map((r) => r.id)).toEqual([
-      'b',
-    ]);
+    expect(
+      filterOfficialArmamentRows({ rows, search: 'steel', sortItems: identitySort }).map(
+        (r) => r.id,
+      ),
+    ).toEqual(['a']);
+    expect(
+      filterOfficialArmamentRows({ rows, search: 'buckler', sortItems: identitySort }).map(
+        (r) => r.id,
+      ),
+    ).toEqual(['b']);
   });
 
   it('filters by rules sources after armament filters', () => {
@@ -96,9 +140,12 @@ describe('filterOfficialArmamentRows', () => {
       { id: 'b', name: 'Spear', description: 'Reach', sources: ['Crafting'], raw: { id: 'b' } },
     ];
     expect(
-      filterOfficialArmamentRows(rows, '', identitySort, undefined, null, null, ['Core']).map(
-        (r) => r.id,
-      ),
+      filterOfficialArmamentRows({
+        rows,
+        search: '',
+        sortItems: identitySort,
+        rowFilters: { rulesSources: ['Core'] },
+      }).map((r) => r.id),
     ).toEqual(['a']);
   });
 });

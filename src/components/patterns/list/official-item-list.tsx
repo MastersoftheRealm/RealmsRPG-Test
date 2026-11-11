@@ -110,15 +110,20 @@ export function OfficialItemList({
       search: string,
       sortItems: (items: OfficialItemRow[]) => OfficialItemRow[],
     ) =>
-      filterOfficialArmamentRows(
+      filterOfficialArmamentRows({
         rows,
         search,
         sortItems,
-        advancedFilters,
-        characterContext,
-        variant === 'library' ? pathRecommendedIds : null,
-        rulesSources,
-      ),
+        rowFilters:
+          variant === 'library'
+            ? {
+                pathRecommendedIds,
+                armament: advancedFilters,
+                character: characterContext,
+                rulesSources,
+              }
+            : { armament: advancedFilters, character: characterContext, rulesSources },
+      }),
     [advancedFilters, characterContext, pathRecommendedIds, variant, rulesSources],
   );
 

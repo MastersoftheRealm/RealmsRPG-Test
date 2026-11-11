@@ -26,11 +26,7 @@ import { useOfficialPowerTechniqueBrowseFilters } from '@/hooks/use-official-pow
 import { empoweredTechniquePartsSection } from '@/lib/library/empowered-technique-display';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import type { CatalogListing } from '@/lib/library/catalog-listing';
-import {
-  libraryRowPathIds,
-  pathChipLabelsForEntity,
-  pathFilterEmptyTitle,
-} from '@/lib/game/path-recommendation-index';
+import { libraryRowPathIds, pathChipLabelsForEntity } from '@/lib/game/path-recommendation-index';
 
 export type { OfficialTechniqueRow };
 
@@ -97,12 +93,10 @@ export function OfficialTechniqueList({
     selectedPathIds,
     setSelectedPathIds,
     pathIndex,
-    pathRecommendedIds,
+    rowFilters,
     pathFilterActive,
     filterActiveCount,
-    advancedFiltersForRows,
-    characterContextForRows,
-    rulesSourcesForRows,
+    pathEmptyListTitle,
   } = browseFilters;
   const addToCharacter = useAddToCharacterFromLibrary('technique', characterFilterId);
 
@@ -117,17 +111,14 @@ export function OfficialTechniqueList({
       search: string,
       sortItems: (items: OfficialTechniqueRow[]) => OfficialTechniqueRow[],
     ) =>
-      filterOfficialPowerTechniqueRows(
+      filterOfficialPowerTechniqueRows({
         rows,
         search,
         sortItems,
-        'technique',
-        advancedFiltersForRows,
-        characterContextForRows,
-        pathRecommendedIds,
-        rulesSourcesForRows,
-      ),
-    [advancedFiltersForRows, characterContextForRows, pathRecommendedIds, rulesSourcesForRows],
+        kind: 'technique',
+        rowFilters,
+      }),
+    [rowFilters],
   );
 
   return (
@@ -161,13 +152,10 @@ export function OfficialTechniqueList({
           )
         }
         filterActiveCount={filterActiveCount}
-        getNameChipLabels={
-          empowered
-            ? undefined
-            : (t) =>
-                pathFilterActive
-                  ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(t), selectedPathIds)
-                  : undefined
+        getNameChipLabels={(t) =>
+          pathFilterActive
+            ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(t), selectedPathIds)
+            : undefined
         }
         getColumns={(t) => officialTechniqueRowColumns(t)}
         getDetailSections={(t) => {
@@ -193,12 +181,11 @@ export function OfficialTechniqueList({
         emptyTitle={emptyTitle}
         emptyMessage={emptyMessage}
         searchEmptyMessage={
-          !empowered && pathFilterActive
-            ? pathFilterEmptyTitle('techniques')
-            : (searchEmptyMessage ??
-              (empowered
-                ? 'No empowered techniques match your search.'
-                : 'No techniques match your search.'))
+          pathEmptyListTitle ??
+          searchEmptyMessage ??
+          (empowered
+            ? 'No empowered techniques match your search.'
+            : 'No techniques match your search.')
         }
         variant={variant}
         readOnly={readOnly}

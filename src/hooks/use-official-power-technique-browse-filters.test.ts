@@ -3,19 +3,12 @@ import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { useOfficialPowerTechniqueBrowseFilters } from './use-official-power-technique-browse-filters';
 
-vi.mock('./use-path-recommendation-index', () => ({
-  usePathListFilter: vi.fn(() => ({
-    selectedPathIds: [],
-    setSelectedPathIds: vi.fn(),
-    pathIndex: null,
-    pathRecommendedIds: null,
-    pathFilterActive: false,
-  })),
-  POWER_LIST_PATH_KINDS: ['powers', 'innatePowers'],
+vi.mock('@/hooks/use-codex', () => ({
+  useCodexArchetypes: () => ({ data: [] }),
 }));
 
 describe('useOfficialPowerTechniqueBrowseFilters', () => {
-  it('omits row filter inputs when rowFiltersEnabled is false', () => {
+  it('omits rowFilters when rowFiltersEnabled is false (empowered tab parity)', () => {
     const { result } = renderHook(() =>
       useOfficialPowerTechniqueBrowseFilters({
         kind: 'technique',
@@ -26,10 +19,8 @@ describe('useOfficialPowerTechniqueBrowseFilters', () => {
     act(() => {
       result.current.setRulesSources(['Core']);
     });
-    expect(result.current.pathRecommendedIds).toBeNull();
-    expect(result.current.advancedFiltersForRows).toBeUndefined();
-    expect(result.current.characterContextForRows).toBeNull();
-    expect(result.current.rulesSourcesForRows).toBeUndefined();
+    expect(result.current.rowFilters).toBeNull();
+    expect(result.current.pathFilterActive).toBe(false);
     expect(result.current.filterActiveCount).toBeUndefined();
   });
 
@@ -49,5 +40,38 @@ describe('useOfficialPowerTechniqueBrowseFilters', () => {
       result.current.setAdvancedFilters((prev) => ({ ...prev, categories: ['Damage'] }));
     });
     expect(result.current.filterActiveCount).toBe(2);
+  });
+
+  it('counts path and character filter terms via real usePathListFilter', () => {
+    const { result } = renderHook(() =>
+      useOfficialPowerTechniqueBrowseFilters({
+        kind: 'technique',
+        entities: [{ id: '1', name: 'T', pathIds: ['p1'] }],
+      }),
+    );
+    act(() => {
+      result.current.setSelectedPathIds(['martial']);
+    });
+    expect(result.current.pathFilterActive).toBe(true);
+    expect(result.current.filterActiveCount).toBe(1);
+
+    act(() => {
+      result.current.setCharacterFilterId('char-42');
+    });
+    expect(result.current.filterActiveCount).toBe(2);
+  });
+
+  it('exposes pathRecommendedIds only inside rowFilters when enabled', () => {
+    const { result } = renderHook(() =>
+      useOfficialPowerTechniqueBrowseFilters({
+        kind: 'power',
+        entities: [{ id: 'x', name: 'X', pathIds: [] }],
+      }),
+    );
+    act(() => {
+      result.current.setSelectedPathIds(['innate']);
+    });
+    expect(result.current.rowFilters).not.toBeNull();
+    expect(result.current.rowFilters?.rulesSources).toEqual([]);
   });
 });

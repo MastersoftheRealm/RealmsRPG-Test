@@ -29,11 +29,7 @@ import {
   OFFICIAL_POWER_HEADER_COLUMNS,
 } from '@/lib/library/official-power-list';
 import { listInnateThresholdFilterOptions } from '@/lib/game/innate-eligibility';
-import {
-  libraryRowPathIds,
-  pathChipLabelsForEntity,
-  pathFilterEmptyTitle,
-} from '@/lib/game/path-recommendation-index';
+import { libraryRowPathIds, pathChipLabelsForEntity } from '@/lib/game/path-recommendation-index';
 import { useOfficialPowerTechniqueBrowseFilters } from '@/hooks/use-official-power-technique-browse-filters';
 import {
   LibrarySyncRowAction,
@@ -73,12 +69,10 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
     selectedPathIds,
     setSelectedPathIds,
     pathIndex,
-    pathRecommendedIds,
+    rowFilters,
     pathFilterActive,
     filterActiveCount,
-    advancedFiltersForRows,
-    characterContextForRows,
-    rulesSourcesForRows,
+    pathEmptyListTitle,
   } = useOfficialPowerTechniqueBrowseFilters({ kind: 'power', entities: powers });
   const addToCharacter = useAddToCharacterFromLibrary('power', characterFilterId);
   const { sortState, handleSort, sortItems } = useSort('name');
@@ -127,25 +121,14 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
 
   const filteredData = useMemo(
     () =>
-      filterOfficialPowerTechniqueRows(
-        cardData,
+      filterOfficialPowerTechniqueRows({
+        rows: cardData,
         search,
         sortItems,
-        'power',
-        advancedFiltersForRows,
-        characterContextForRows,
-        pathRecommendedIds,
-        rulesSourcesForRows,
-      ),
-    [
-      cardData,
-      search,
-      sortItems,
-      advancedFiltersForRows,
-      characterContextForRows,
-      pathRecommendedIds,
-      rulesSourcesForRows,
-    ],
+        kind: 'power',
+        rowFilters,
+      }),
+    [cardData, search, sortItems, rowFilters],
   );
 
   return (
@@ -198,7 +181,7 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
           />
         }
         filterActiveCount={filterActiveCount}
-        filterEmptyTitle={pathFilterActive ? pathFilterEmptyTitle('powers') : undefined}
+        filterEmptyTitle={pathEmptyListTitle}
       >
         {filteredData.map((power) => {
           const detailSections = officialPowerDetailSections(power);

@@ -18,6 +18,7 @@ import {
 } from '@/lib/library/power-technique-filters';
 import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 import type { AbilityRequirement, WeaponPropertyRef } from '@/lib/game/weapon-attack-ability';
+
 type CatalogRowWithPath = {
   id?: string | number | undefined;
   raw?:
@@ -68,16 +69,27 @@ export type OfficialPowerTechniqueFilterableRow = CatalogRowWithPath & {
   weapon?: string | undefined;
 };
 
-export function filterOfficialPowerTechniqueRows<T extends OfficialPowerTechniqueFilterableRow>(
-  rows: T[],
-  search: string,
-  sortItems: (items: T[]) => T[],
-  kind: 'power' | 'technique',
-  advanced?: PowerTechniqueFilterState,
-  character?: PowerTechniqueCharacterContext | null,
-  pathRecommendedIds?: ReadonlySet<string> | null,
-  rulesSources?: readonly string[],
-): T[] {
+export type OfficialPowerTechniqueRowFilters = {
+  pathRecommendedIds?: ReadonlySet<string> | null;
+  advanced?: PowerTechniqueFilterState;
+  character?: PowerTechniqueCharacterContext | null;
+  rulesSources?: readonly string[];
+};
+
+export function filterOfficialPowerTechniqueRows<T extends OfficialPowerTechniqueFilterableRow>({
+  rows,
+  search,
+  sortItems,
+  kind,
+  rowFilters,
+}: {
+  rows: T[];
+  search: string;
+  sortItems: (items: T[]) => T[];
+  kind: 'power' | 'technique';
+  rowFilters?: OfficialPowerTechniqueRowFilters | null;
+}): T[] {
+  const pathRecommendedIds = rowFilters?.pathRecommendedIds ?? null;
   let result = applyOfficialCatalogCommonFilters(
     rows,
     search,
@@ -92,9 +104,12 @@ export function filterOfficialPowerTechniqueRows<T extends OfficialPowerTechniqu
             .includes(s)
         : false),
   );
+  const advanced = rowFilters?.advanced;
+  const character = rowFilters?.character;
   if (advanced) {
-    result = applyPowerTechniqueFilters(result, advanced, kind, character);
+    result = applyPowerTechniqueFilters(result, advanced, kind, character ?? null);
   }
+  const rulesSources = rowFilters?.rulesSources;
   if (rulesSources && rulesSources.length > 0) {
     result = filterRowsByCodexRulesSources(result, rulesSources, readRowRulesSources);
   }
@@ -109,19 +124,32 @@ export type OfficialArmamentFilterableRow = CatalogRowWithPath & {
   properties?: WeaponPropertyRef[] | undefined;
 };
 
-export function filterOfficialArmamentRows<T extends OfficialArmamentFilterableRow>(
-  rows: T[],
-  search: string,
-  sortItems: (items: T[]) => T[],
-  filters?: ArmamentFilterState,
-  characterContext?: ArmamentCharacterContext | null,
-  pathRecommendedIds?: ReadonlySet<string> | null,
-  rulesSources?: readonly string[],
-): T[] {
+export type OfficialArmamentRowFilters = {
+  pathRecommendedIds?: ReadonlySet<string> | null;
+  armament?: ArmamentFilterState;
+  character?: ArmamentCharacterContext | null;
+  rulesSources?: readonly string[];
+};
+
+export function filterOfficialArmamentRows<T extends OfficialArmamentFilterableRow>({
+  rows,
+  search,
+  sortItems,
+  rowFilters,
+}: {
+  rows: T[];
+  search: string;
+  sortItems: (items: T[]) => T[];
+  rowFilters?: OfficialArmamentRowFilters | null;
+}): T[] {
+  const pathRecommendedIds = rowFilters?.pathRecommendedIds ?? null;
   let result = applyOfficialCatalogCommonFilters(rows, search, pathRecommendedIds);
+  const filters = rowFilters?.armament;
+  const characterContext = rowFilters?.character;
   if (filters) {
     result = applyArmamentFilters(result, filters, characterContext ?? null);
   }
+  const rulesSources = rowFilters?.rulesSources;
   if (rulesSources && rulesSources.length > 0) {
     result = filterRowsByCodexRulesSources(result, rulesSources, readRowRulesSources);
   }

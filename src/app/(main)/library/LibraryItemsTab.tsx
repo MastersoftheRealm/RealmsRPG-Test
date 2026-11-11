@@ -134,15 +134,17 @@ export function LibraryItemsTab({ armamentKind, onDelete }: LibraryItemsTabProps
 
   const filteredData = useMemo(
     () =>
-      filterOfficialArmamentRows(
-        cardData,
+      filterOfficialArmamentRows({
+        rows: cardData,
         search,
         sortItems,
-        advancedFilters,
-        characterContext,
-        pathRecommendedIds,
-        rulesSources,
-      ),
+        rowFilters: {
+          pathRecommendedIds,
+          armament: advancedFilters,
+          character: characterContext,
+          rulesSources,
+        },
+      }),
     [
       cardData,
       search,
