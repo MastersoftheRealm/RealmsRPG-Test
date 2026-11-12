@@ -299,36 +299,29 @@ const MATH_DISAGREEMENT_INTENTIONAL_IDS = [
 
 const MATH_DISAGREEMENT_BUG_IDS = ['innate-remaining-uses-stored-cost'];
 
-const SKILL_MATH_DISAGREEMENT_COPY_IDS = [
-  'feat-skill-req-first-ability-vs-sheet-highest',
-  'guided-skill-total-omits-rules-on-getTotalSkillPoints',
-];
+const SKILL_MATH_BUG_IDS = ['feat-skill-req-first-ability-vs-sheet-highest'];
 
-const CHARACTER_PATH_MATH_UNCLASSIFIED_IDS = [
-  'legality-skill-spent-floor-vs-allocation-spent',
-];
+const SKILL_MATH_UNCLASSIFIED_IDS = ['guided-skill-total-omits-rules-on-getTotalSkillPoints'];
+
+const CHARACTER_PATH_MATH_BUG_IDS = ['legality-skill-spent-floor-vs-allocation-spent'];
 
 const CREATURE_BUDGET_MATH_UNCLASSIFIED_IDS = [
   'creature-training-stored-tp-without-parts',
 ];
 
-const PROFICIENCY_TRAINING_MATH_UNCLASSIFIED_IDS = [
-  'guided-tp-bar-max-of-dedupe-vs-listed',
-];
+const PROFICIENCY_TRAINING_MATH_BUG_IDS = ['guided-tp-bar-max-of-dedupe-vs-listed'];
 
-const DEFENSE_WEAPON_MATH_UNCLASSIFIED_IDS = [
-  'weapon-derive-utilized-vs-get-attack-ability',
-];
+const DEFENSE_WEAPON_MATH_BUG_IDS = ['weapon-derive-utilized-vs-get-attack-ability'];
 
-const CRAFTING_COST_MATH_UNCLASSIFIED_IDS = [
+const CRAFTING_COST_MATH_BUG_IDS = ['official-armament-codex-stored-currency-vs-item-calc'];
+
+const CRAFTING_COST_MATH_DEFERRED_IDS = [
   'crafting-codex-stored-currency-vs-library-resolve-market',
   'crafting-codex-currency-vs-persist-equipment-cost',
   'crafting-hub-currency-column-vs-requirements-market-price',
 ];
 
-const SIZE_PATH_MATH_UNCLASSIFIED_IDS = [
-  'size-hardcoded-carry-vs-core-rules-sizes',
-];
+const SIZE_PATH_MATH_BUG_IDS = ['size-hardcoded-carry-vs-core-rules-sizes'];
 
 function mathSectionSlice(text, heading) {
   const start = text.indexOf(heading);
@@ -396,11 +389,12 @@ if (!skillDisagreements) {
   console.error('FEATURE_INDEX skill math section has no ### Disagreements body.');
   process.exit(2);
 }
+requireDisagreementTokens(skillDisagreements, 'math-disagree-bug', SKILL_MATH_BUG_IDS, 'skill bug');
 requireDisagreementTokens(
   skillDisagreements,
-  'math-disagree-copy',
-  SKILL_MATH_DISAGREEMENT_COPY_IDS,
-  'skill copy',
+  'math-disagree-unclassified',
+  SKILL_MATH_UNCLASSIFIED_IDS,
+  'skill unclassified',
 );
 
 const characterMathSection = mathSectionSlice(indexText, '## Character-check and path math');
@@ -419,9 +413,9 @@ if (!characterDisagreements) {
 }
 requireDisagreementTokens(
   characterDisagreements,
-  'math-disagree-unclassified',
-  CHARACTER_PATH_MATH_UNCLASSIFIED_IDS,
-  'character/path unclassified',
+  'math-disagree-bug',
+  CHARACTER_PATH_MATH_BUG_IDS,
+  'character/path bug',
 );
 
 const creatureBudgetSection = mathSectionSlice(indexText, '## Creature creator budget math');
@@ -466,9 +460,9 @@ if (!proficiencyDisagreements) {
 }
 requireDisagreementTokens(
   proficiencyDisagreements,
-  'math-disagree-unclassified',
-  PROFICIENCY_TRAINING_MATH_UNCLASSIFIED_IDS,
-  'proficiency/training unclassified',
+  'math-disagree-bug',
+  PROFICIENCY_TRAINING_MATH_BUG_IDS,
+  'proficiency/training bug',
 );
 
 const defenseWeaponSection = mathSectionSlice(
@@ -490,9 +484,9 @@ if (!defenseWeaponDisagreements) {
 }
 requireDisagreementTokens(
   defenseWeaponDisagreements,
-  'math-disagree-unclassified',
-  DEFENSE_WEAPON_MATH_UNCLASSIFIED_IDS,
-  'defense/weapon unclassified',
+  'math-disagree-bug',
+  DEFENSE_WEAPON_MATH_BUG_IDS,
+  'defense/weapon bug',
 );
 
 const craftingCostSection = mathSectionSlice(indexText, '## Crafting cost math');
@@ -515,9 +509,15 @@ if (!craftingCostDisagreements) {
 }
 requireDisagreementTokens(
   craftingCostDisagreements,
-  'math-disagree-unclassified',
-  CRAFTING_COST_MATH_UNCLASSIFIED_IDS,
-  'crafting cost unclassified',
+  'math-disagree-bug',
+  CRAFTING_COST_MATH_BUG_IDS,
+  'crafting cost bug',
+);
+requireDisagreementTokens(
+  craftingCostDisagreements,
+  'math-disagree-deferred',
+  CRAFTING_COST_MATH_DEFERRED_IDS,
+  'crafting cost deferred',
 );
 
 const sizePathSection = mathSectionSlice(
@@ -543,21 +543,23 @@ if (!sizePathDisagreements) {
 }
 requireDisagreementTokens(
   sizePathDisagreements,
-  'math-disagree-unclassified',
-  SIZE_PATH_MATH_UNCLASSIFIED_IDS,
-  'size/path unclassified',
+  'math-disagree-bug',
+  SIZE_PATH_MATH_BUG_IDS,
+  'size/path bug',
 );
 
 const mathDisagreementCount =
   MATH_DISAGREEMENT_INTENTIONAL_IDS.length +
   MATH_DISAGREEMENT_BUG_IDS.length +
-  SKILL_MATH_DISAGREEMENT_COPY_IDS.length +
-  CHARACTER_PATH_MATH_UNCLASSIFIED_IDS.length +
+  SKILL_MATH_BUG_IDS.length +
+  SKILL_MATH_UNCLASSIFIED_IDS.length +
+  CHARACTER_PATH_MATH_BUG_IDS.length +
   CREATURE_BUDGET_MATH_UNCLASSIFIED_IDS.length +
-  PROFICIENCY_TRAINING_MATH_UNCLASSIFIED_IDS.length +
-  DEFENSE_WEAPON_MATH_UNCLASSIFIED_IDS.length +
-  CRAFTING_COST_MATH_UNCLASSIFIED_IDS.length +
-  SIZE_PATH_MATH_UNCLASSIFIED_IDS.length;
+  PROFICIENCY_TRAINING_MATH_BUG_IDS.length +
+  DEFENSE_WEAPON_MATH_BUG_IDS.length +
+  CRAFTING_COST_MATH_BUG_IDS.length +
+  CRAFTING_COST_MATH_DEFERRED_IDS.length +
+  SIZE_PATH_MATH_BUG_IDS.length;
 console.log(`FEATURE_INDEX math-disagreement check OK (${mathDisagreementCount} guarded lines).`);
 
 const gen = spawnSync(

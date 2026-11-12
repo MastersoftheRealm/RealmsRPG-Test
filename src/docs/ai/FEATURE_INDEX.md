@@ -30,7 +30,7 @@ Not checked, so silence here is not "it does not exist" and not "there is no for
 
 Export **names** for patterns, ui, hooks, and services are in [`FEATURE_INDEX_BARRELS.generated.md`](FEATURE_INDEX_BARRELS.generated.md). That generated file is not a list of what is used, and it does not read the other barrels.
 
-`scripts/validate-feature-index.js` checks that backticked `src/...` paths in this file exist. The same script fails if an app entry, a `src` barrel, a sibling missing from the six barrels above, a loose file directly under `src/lib`, or a non-test source file in the folders listed in that script is absent from this file. It also fails if the unused-export section does not match a production-import scan, or if a guarded `math-disagree-intentional`, `math-disagree-bug`, `math-disagree-copy`, or `math-disagree-unclassified` line is dropped from a formula math section below.
+`scripts/validate-feature-index.js` checks that backticked `src/...` paths in this file exist. The same script fails if an app entry, a `src` barrel, a sibling missing from the six barrels above, a loose file directly under `src/lib`, or a non-test source file in the folders listed in that script is absent from this file. It also fails if the unused-export section does not match a production-import scan, or if a guarded `math-disagree-intentional`, `math-disagree-bug`, `math-disagree-deferred`, or `math-disagree-unclassified` line is dropped from a formula math section below.
 
 ---
 
@@ -2194,7 +2194,7 @@ This pass read the health, energy, and currency formulas in the code through the
 
 ### Disagreements
 
-These IDs are required; dropping a line makes `scripts/validate-feature-index.js` exit 2. Prefix marks intent: `math-disagree-intentional` (by design), `math-disagree-bug` (code bug).
+These IDs are required; dropping a line makes `scripts/validate-feature-index.js` exit 2. Prefix marks intent: `math-disagree-intentional` (by design), `math-disagree-bug` (code bug), `math-disagree-deferred` (known gap; fix later), `math-disagree-unclassified` (not yet classified).
 
 **Intentional (player vs creature, power vs technique, formatting, composition display)**
 
@@ -2238,10 +2238,8 @@ Skill bonus, skill point totals, and allocation spend in `src/lib/game/formulas.
 
 ### Disagreements
 
-`math-disagree-copy` marks a second implementation that does not match the primary helper. Dropping a line fails the validator.
-
-- math-disagree-copy:feat-skill-req-first-ability-vs-sheet-highest: **Second copy.** `getSkillBonusForFeatRequirement` uses only the first codex ability string. `calculateSkillBonusWithProficiency` and `calculateSubSkillBonusWithProficiency` use `getLinkedAbilityMod` (chosen key if valid, else highest). Multi-ability skills can show a higher bonus on the sheet than feat requirement checks see (or the reverse if the first listed ability is higher).
-- math-disagree-copy:guided-skill-total-omits-rules-on-getTotalSkillPoints: **Second copy.** `calculateGuidedSkillPointBudget` passes `rules` into `resolveSkillAllocationRules` and `calculateSimpleSkillPointsSpent` but calls `getTotalSkillPoints(1, 'character')` with no `rules` argument. `skills-allocation-page.tsx` and `character-legality.ts` pass rules into `getTotalSkillPoints`. If `PROGRESSION_PLAYER` overrides change skill points per level, guided remaining budget can disagree with the rest of the app while spend costs still honor `SKILLS_AND_DEFENSES`.
+- math-disagree-bug:feat-skill-req-first-ability-vs-sheet-highest: **Bug (Kadin).** Feat skill requirements must match the sheet: chosen linked ability when set, else highest, with the full skill bonus including proficiency. `getSkillBonusForFeatRequirement` still uses only the first codex ability string and its inline bonus path. `calculateSkillBonusWithProficiency` / `calculateSubSkillBonusWithProficiency` use `getLinkedAbilityMod` (chosen or highest). Not intentional.
+- math-disagree-unclassified:guided-skill-total-omits-rules-on-getTotalSkillPoints: **Unclassified (Kadin).** `calculateGuidedSkillPointBudget` calls `getTotalSkillPoints(1, 'character')` without the `rules` argument while spend uses `resolveSkillAllocationRules(rules)`. Kadin: guided remaining points should ignore a **custom skills-per-level rules override** only; the guided creator still uses the normal per-level amount. The species skill choice that grants one extra spendable point is a separate bonus and is **not** this finding.
 
 ### Same math, separate copies
 
@@ -2270,7 +2268,7 @@ Save legality budgets, feat requirement checks, path publish validation, innate 
 
 ### Disagreements
 
-- math-disagree-unclassified:legality-skill-spent-floor-vs-allocation-spent: **Unclassified (product not confirmed).** `skillPointsSpentFloor` adds nonnegative skill rank values and defense skill totals × `defenseIncreaseCost`. `calculateSimpleSkillPointsSpent` walks proficiency purchases, value steps via `getSkillValueIncreaseCost`, and species rules. The legality path is a lower estimate; the sheet path reflects actual purchases. Warnings can disagree between the two.
+- math-disagree-bug:legality-skill-spent-floor-vs-allocation-spent: **Bug (Kadin).** Available and remaining skill points must use exact math. `skillPointsSpentFloor` is a lower estimate (nonnegative rank sums plus defense totals × `defenseIncreaseCost`). `calculateSimpleSkillPointsSpent` reflects real proficiency and step costs. Legality warnings can under-report spend. Not intentional.
 
 ### Same math, separate copies
 
@@ -2300,7 +2298,7 @@ Creature point budgets, spend totals, and training-point aggregation for the cre
 
 `math-disagree-unclassified` marks a difference that is not labelled intentional or bug. Dropping a line fails the validator.
 
-- math-disagree-unclassified:creature-training-stored-tp-without-parts: **Second copy.** When codex DB is present, `computeCreatureTrainingSpent` uses `sumRequiredProficiencyTrainingPoints` for rows with parts but adds saved `power.tp` / `technique.tp` / `armament.tp` for rows without resolvable parts or properties. Those stored fields can disagree with live `calculateProficiencyTP` on the same loadout. Full legacy mode (no DB) uses only stored `tp` sums.
+- math-disagree-unclassified:creature-training-stored-tp-without-parts: **Unclassified until fix (Kadin intent recorded).** Intended rule: prefer live parts through `sumRequiredProficiencyTrainingPoints` when parts exist; saved `tp` is acceptable only when parts cannot be found (may be stale). Today `computeCreatureTrainingSpent` still adds stored `power.tp` / `technique.tp` / `armament.tp` on the without-parts path while live rows use parts. Legacy no-DB mode uses stored sums only.
 
 ### Same math, separate copies
 
@@ -2327,7 +2325,7 @@ Archetype proficiency caps on level change, player Training Point pool formula, 
 
 ### Disagreements
 
-- math-disagree-unclassified:guided-tp-bar-max-of-dedupe-vs-listed: **Second copy for the warn bar.** `computeGuidedRequiredTrainingSpent` walks parts/properties through `sumRequiredProficiencyTrainingPoints`. `computeGuidedTrainingPointsBudgetSpent` returns `Math.max` of that and `loadoutEquipmentTpSpent + sumGuidedListedCombatTrainingPoints` (item `calculateItemCosts` TP plus chip/catalog `tpCostOf` totals). The UI counter can exceed the deduped proficiency walk or show a higher number when catalog TP disagrees with part breakdown.
+- math-disagree-bug:guided-tp-bar-max-of-dedupe-vs-listed: **Bug (Kadin).** Training-point cost has one source of truth: the cleaned-up proficiency list used on the character sheet (`computeGuidedRequiredTrainingSpent` / `sumRequiredProficiencyTrainingPoints`). `computeGuidedTrainingPointsBudgetSpent` takes the `Math.max` of that walk and item/catalog chip TP (`loadoutEquipmentTpSpent + sumGuidedListedCombatTrainingPoints`), so the guided bar can over-count. Not intentional.
 
 ### Same math, separate copies
 
@@ -2352,7 +2350,7 @@ Power/technique “can target” defense lists and weapon attack ability / bonus
 
 ### Disagreements
 
-- math-disagree-unclassified:weapon-derive-utilized-vs-get-attack-ability: **Second copy.** `deriveWeaponAbilityUtilized` (item creator “Ability utilized”) ignores Thrown and Reach, and applies Heavy only on ranged. `getWeaponAttackAbility` (sheet rolls, compact facts, attack bonus) treats Thrown, Reach, and Heavy (any range) before range display. The same property list can pick different abilities between creator dropdown default and sheet attack math.
+- math-disagree-bug:weapon-derive-utilized-vs-get-attack-ability: **Bug in item creator (Kadin rules vs code).** Stated rules: Thrown → Strength; ranged default → Acuity; Heavy overrides range → Strength even at range; Finesse → Agility (overrides Acuity on ranged or Strength elsewhere). `getWeaponAttackAbility` on the sheet matches that order (Finesse, Thrown, Reach, Heavy, then non-Melee → Acuity). `deriveWeaponAbilityUtilized` in the item creator omits Thrown and Reach and only applies Heavy when `rangeType === 'ranged'`, so the creator default can disagree while the sheet matches the rules.
 
 ### Same math, separate copies
 
@@ -2384,9 +2382,10 @@ General, enhanced, consumable-enhanced, and upgrade crafting requirements; succe
 
 ### Disagreements
 
-- math-disagree-unclassified:crafting-codex-stored-currency-vs-library-resolve-market: **Second copy for crafting market price.** `getCodexEquipmentMarketPrice` uses `equipmentCurrency` (stored `currency` / `gold_cost` on the codex row). `getLibraryItemMarketPrice` uses `resolveItemMarketPricing` from property rows and stored cost sums. The item picker uses both for the same “market price” column depending on source, so two items with the same properties can disagree if codex storage and item-calc diverge.
-- math-disagree-unclassified:crafting-codex-currency-vs-persist-equipment-cost: **Second copy for codex equipment currency.** `getCodexEquipmentMarketPrice` stops at `equipmentCurrency`. `persistEquipmentCost` (sheet/catalog persist) falls back to a positive `cost` field when catalog currency is zero. Crafting can show **0** currency for a codex row that still carries a nonzero `cost` elsewhere.
-- math-disagree-unclassified:crafting-hub-currency-column-vs-requirements-market-price: **Second copy for “session cost” on the hub vs table inputs.** `toSummary` and `currency_cost` on create/update use `materialCost ?? marketPrice`, but `??` keeps an explicit **0** `materialCost` (default on new sessions) instead of the item’s `marketPrice`. `computeCraftingRequirements` / `getCraftingRequirements` always read `item.marketPrice` (or custom base price). The hub can show **0** while requirements use a positive market price.
+- math-disagree-bug:official-armament-codex-stored-currency-vs-item-calc: **Bug (Kadin).** Official armaments site-wide should use calculated currency from properties (`resolveItemMarketPricing` / `calculateItemCosts`), not a stored catalog `currency` / `gold_cost` column. `getCodexEquipmentMarketPrice` and `equipmentCurrency` still read stored values for codex equipment rows. Library and creator paths already use item-calc. Not intentional.
+- math-disagree-deferred:crafting-codex-stored-currency-vs-library-resolve-market: **Deferred (Kadin).** Crafting still needs stored currency for now; crafter work is deferred. The picker still pairs `getCodexEquipmentMarketPrice` (stored) with `getLibraryItemMarketPrice` (calculated). Do not treat this crafting path as the immediate official-armament fix (see bug above).
+- math-disagree-deferred:crafting-codex-currency-vs-persist-equipment-cost: **Deferred (Kadin).** Same crafter deferral: crafting codex rows use `equipmentCurrency` only while `persistEquipmentCost` can read a `cost` fallback elsewhere. Not scheduled for this fix pass.
+- math-disagree-deferred:crafting-hub-currency-column-vs-requirements-market-price: **Deferred (Kadin).** The crafting hub list can show **0** when `materialCost` is defaulted while requirements use `item.marketPrice`. Fix with crafter work, not now.
 
 ### Same math, separate copies
 
@@ -2420,7 +2419,7 @@ Creature size table, carrying-capacity kg formula, and archetype-path browse fil
 
 ### Disagreements
 
-- math-disagree-unclassified:size-hardcoded-carry-vs-core-rules-sizes: **Second copy for carrying coefficients.** `calculateCarryingCapacityKg` always reads `CREATURE_SIZES` baked into `size-table.ts`. `useGameRules` can serve admin-edited `SIZES.categories` (`baseCarry`, `perStrCarry`, `minCarry`) from `core_rules`. The sheet notes tab uses the hardcoded function, so live DB size edits can disagree with displayed capacity.
+- math-disagree-bug:size-hardcoded-carry-vs-core-rules-sizes: **Bug (Kadin).** Carrying capacity must use edited rules sizes from `core_rules` / `useGameRules`, not the hardcoded `CREATURE_SIZES` chart in `size-table.ts`. `calculateCarryingCapacityKg` on the notes tab ignores live `SIZES.categories`. Not intentional.
 
 ### Same math, separate copies
 
