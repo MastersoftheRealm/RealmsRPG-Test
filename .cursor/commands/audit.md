@@ -1,19 +1,21 @@
 # Audit (critic)
 
-Read-only adversarial review. A **different agent and a different prompt** from the writer. Zero product edits. Do not merge, push, or write to ClickUp, Drive, or the database.
+Read-only adversarial review. Zero product edits from the audit chat itself. Do not merge, push, or write to ClickUp, Drive, or the database **from the audit turn** unless the owner separately orders merge or doc updates in the same thread.
 
-This is the critic: rules compliance **and** a brutal separate review. It replaces the retired four-point `/audit` (Oct 28, 2026). Checklist and verdict wording live in `src/docs/ai/ARCHITECTURE_CONSTITUTION.md`. Workflow, risk, and the PATCH veto live in `AGENTS.md`. Do not restate them.
+This command **is** the critic gate: rules compliance **and** a brutal review. It replaced the retired four-point `/audit` (Oct 28, 2026) and is **deeper** than the old “separate critic only” pass (five questions + constitution items 1–15 + repro test). Checklist and verdict wording live in `src/docs/ai/ARCHITECTURE_CONSTITUTION.md`. Workflow, risk, and the PATCH veto live in `AGENTS.md`. Do not restate them.
 
-## Model
+## Model (default vs owner override)
 
-Never a slug ending in `-fast`. Never the agent that wrote the diff.
+**Default:** a **different agent and a different prompt** from the writer. Never a slug ending in `-fast`. Never the agent that wrote the diff.
 
 | Writer | Critic |
 |---|---|
 | `composer-2.5` | `grok-4.7-high` |
 | `grok-4.7-high` or `grok-4.7-xhigh` | `composer-2.5` |
 
-If you are the writer, stop and hand this command to the other model. Do not start Claude or GPT.
+If you are the writer, **default** is to stop and hand this command to the other model. Do not start Claude or GPT.
+
+**Owner override (Kadin, Nov 12, 2026):** A **full** `/audit` on the PR — five questions answered with evidence, checklist 1–15 graded, repro test **run** (not only CI), verdict recorded — **satisfies the separate critic session** for that PR when Kadin says so on the task or PR. He accepts the weaker independence (same session/model) in exchange for the deeper bar. `DECISIONS.md` changelog references this rule. Fallback senior review (`AGENTS.md`) still uses two passes when that path is invoked; this override does not replace those two passes.
 
 ## What you may read
 
@@ -63,12 +65,12 @@ Use the reviewer verdict block in `ARCHITECTURE_CONSTITUTION.md` (APPROVE, REQUE
 
 Before the checklist lines, answer the five questions in one line each (pass or fail, with `file:line` on a fail).
 
-- **APPROVE** only when you are not the writer, blocking items pass, the repro was run, CI is green, and your label is not an unaccepted PATCH.
+- **APPROVE** when blocking items pass, the repro was run, CI is green, the label is not an unaccepted PATCH, and either (a) you are not the writer, or (b) Kadin recorded on the task or PR that this full `/audit` satisfies separate critic for this PR.
 - **REQUEST CHANGES** names one in-scope gap the writer can fix. `/cleanup` applies only that gap.
-- **HOLD FOR HUMAN** when the path is high-risk, a rule is missing or conflicting, a product decision is open, you are not independent of the writer, or your label is PATCH.
+- **HOLD FOR HUMAN** when the path is high-risk, a rule is missing or conflicting, a product decision is open, you are the writer without the owner override, or your label is PATCH.
 
 ## Do not
 
-- Edit product code, docs, or this command's repo from the audit chat.
+- Edit product code from the audit chat (doc updates only when the owner orders them in the same thread).
 - Move the ClickUp task to **in review**. That waits for APPROVE and green CI.
 - File task notes or quote an approval the human did not type.

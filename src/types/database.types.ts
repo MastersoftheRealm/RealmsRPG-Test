@@ -1435,6 +1435,7 @@ export type Database = {
       };
       codex_creature_feats: {
         Row: {
+          base_feat_id: string | null
           description: string | null
           feat_lvl: number | null
           feat_points: number | null
@@ -1447,6 +1448,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          base_feat_id?: string | null
           description?: string | null
           feat_lvl?: number | null
           feat_points?: number | null
@@ -1459,6 +1461,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          base_feat_id?: string | null
           description?: string | null
           feat_lvl?: number | null
           feat_points?: number | null

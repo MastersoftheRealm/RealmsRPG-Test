@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { Layers } from 'lucide-react';
 import { CodexRulesSourceFilter } from '@/components/patterns/filters';
 import {
   countActiveCodexRulesSourceFilters,
@@ -22,7 +23,14 @@ import {
   EMPTY_CREATURE_FEAT_FORM,
   type CreatureFeatFormState,
 } from './admin-creature-feat-edit-modal';
+import { IconButton } from '@/components/ui';
 import { formatCreatureLevel } from '@/lib/game';
+import {
+  buildFeatLevelChips,
+  computeNextLeveledFeatFields,
+  formatFeatName,
+  groupFeatFamilies,
+} from '@/lib/leveled-feats';
 
 export function AdminCreatureFeatsTab() {
   const {
@@ -66,6 +74,8 @@ export function AdminCreatureFeatsTab() {
     }),
   );
 
+  const groupedFeats = useMemo(() => groupFeatFamilies(filtered), [filtered]);
+
   const toOptNum = (v: unknown): number | undefined => {
     if (v == null || v === '') return undefined;
     const n = Number(v);
@@ -81,6 +91,7 @@ export function AdminCreatureFeatsTab() {
         description: f.description || '',
         points: toOptNum(f.points),
         feat_lvl: toOptNum(f.feat_lvl),
+        base_feat_id: f.base_feat_id?.trim() ?? '',
         lvl_req: toOptNum(f.lvl_req),
         mechanic: f.mechanic === true,
         sources: codexSourcesOrCore(f.sources),
@@ -94,11 +105,31 @@ export function AdminCreatureFeatsTab() {
         description: f.description || '',
         points: toOptNum(f.points),
         feat_lvl: toOptNum(f.feat_lvl),
+        base_feat_id: f.base_feat_id?.trim() ?? '',
         lvl_req: toOptNum(f.lvl_req),
         mechanic: f.mechanic === true,
         sources: codexSourcesOrCore(f.sources),
       }),
     );
+
+  const openAddLevel = (sourceFeat: CreatureFeat) =>
+    beginAdd(() => {
+      const next = computeNextLeveledFeatFields({
+        sourceFeatLvl: sourceFeat.feat_lvl,
+        sourceBaseFeatId: sourceFeat.base_feat_id,
+        sourceDbFeatId: String(sourceFeat.id),
+      });
+      setForm({
+        name: sourceFeat.name,
+        description: sourceFeat.description || '',
+        points: toOptNum(sourceFeat.points),
+        feat_lvl: next.feat_lvl,
+        base_feat_id: next.base_feat_id,
+        lvl_req: toOptNum(sourceFeat.lvl_req),
+        mechanic: sourceFeat.mechanic === true,
+        sources: codexSourcesOrCore(sourceFeat.sources),
+      });
+    });
 
   const handleSave = async () => {
     if (!form.name.trim()) return;
@@ -108,6 +139,7 @@ export function AdminCreatureFeatsTab() {
         description: form.description.trim(),
         feat_points: form.points ?? undefined,
         feat_lvl: form.feat_lvl ?? undefined,
+        base_feat_id: form.base_feat_id.trim() || undefined,
         lvl_req: form.lvl_req ?? undefined,
         mechanic: form.mechanic,
         sources: codexSourcesOrCore(form.sources),
@@ -152,34 +184,55 @@ export function AdminCreatureFeatsTab() {
         sortState={sortState}
         onSort={handleSort}
         isLoading={isLoading}
-        isEmpty={filtered.length === 0}
+        isEmpty={groupedFeats.length === 0}
         emptyTitle="No creature feats found"
         emptyMessage="Add one to get started."
         emptyAction={{ label: 'Add Creature Feat', onClick: openAdd }}
       >
-        {filtered.map((f: CreatureFeat) => (
-          <GridListRow
-            key={f.id}
-            id={f.id}
-            name={f.name}
-            description={f.description || ''}
-            gridColumns="1.5fr 0.5fr 0.5fr 0.5fr"
-            columns={[
-              { key: 'Pts', value: String(f.points ?? '-') },
-              { key: 'Feat Lvl', value: f.feat_lvl != null ? String(f.feat_lvl) : '-' },
-              { key: 'Req. Lvl', value: f.lvl_req != null ? formatCreatureLevel(f.lvl_req) : '-' },
-            ]}
-            rightSlotWidth={ADMIN_CODEX_ROW_ACTIONS_WIDTH}
-            rightSlot={
-              <AdminCodexRowActions
-                entity={f}
-                onEdit={openEdit}
-                onDuplicate={openDuplicate}
-                onDelete={askDelete}
-              />
-            }
-          />
-        ))}
+        {groupedFeats.map(({ main: f, levels: familyLevels }) => {
+          const levelChips = buildFeatLevelChips(familyLevels, f.id);
+          const detailSections =
+            levelChips.length > 0 ? [{ label: 'Feat Levels', chips: levelChips }] : undefined;
+          return (
+            <GridListRow
+              key={f.id}
+              id={f.id}
+              name={formatFeatName(f)}
+              description={f.description || ''}
+              gridColumns="1.5fr 0.5fr 0.5fr 0.5fr"
+              columns={[
+                { key: 'Pts', value: String(f.points ?? '-') },
+                { key: 'Feat Lvl', value: f.feat_lvl != null ? String(f.feat_lvl) : '-' },
+                {
+                  key: 'Req. Lvl',
+                  value: f.lvl_req != null ? formatCreatureLevel(f.lvl_req) : '-',
+                },
+              ]}
+              detailSections={detailSections}
+              rightSlotWidth={ADMIN_CODEX_ROW_ACTIONS_WIDTH}
+              rightSlot={
+                <AdminCodexRowActions
+                  entity={f}
+                  onEdit={openEdit}
+                  onDuplicate={openDuplicate}
+                  onDelete={askDelete}
+                  extraBefore={
+                    !f.base_feat_id && (f.feat_lvl == null || f.feat_lvl === 1) ? (
+                      <IconButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openAddLevel(f)}
+                        label="Add level"
+                      >
+                        <Layers className="h-4 w-4" />
+                      </IconButton>
+                    ) : null
+                  }
+                />
+              }
+            />
+          );
+        })}
       </CodexBrowseListShell>
 
       <AdminCreatureFeatEditModal

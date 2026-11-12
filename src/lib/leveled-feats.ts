@@ -162,6 +162,127 @@ export type BuildFeatLevelChipsOptions<T extends LeveledFeatLike = LeveledFeatLi
   select?: FeatLevelChipSelect<T> | undefined;
 };
 
+export type LeveledFeatSourceType =
+  | 'creature'
+  | 'character'
+  | 'archetype'
+  | 'trait'
+  | 'flaw'
+  | 'characteristic';
+
+export type MergeFeatRow = {
+  id: string;
+  name?: string | undefined;
+  featSourceType?: LeveledFeatSourceType | undefined;
+};
+
+function namesMatchSavedName(saved: string | undefined, def: LeveledFeatLike | undefined): boolean {
+  if (!def || saved == null) return false;
+  const trimmed = saved.trim();
+  if (!trimmed) return false;
+  if (trimmed === (def.name ?? '').trim()) return true;
+  if (trimmed === formatFeatName(def).trim()) return true;
+  return false;
+}
+
+type FeatCatalog = 'creature' | 'character';
+
+function resolveRowCatalog(
+  row: MergeFeatRow,
+  creatureDefsById: Map<string, LeveledFeatLike>,
+  characterDefsById: Map<string, LeveledFeatLike>,
+): FeatCatalog | null {
+  const st = row.featSourceType;
+  if (st === 'creature') return 'creature';
+  if (st === 'character' || st === 'archetype') return 'character';
+  if (st === 'trait' || st === 'flaw' || st === 'characteristic') return null;
+
+  const id = String(row.id);
+  const matchesCreature = namesMatchSavedName(row.name, creatureDefsById.get(id));
+  const matchesCharacter = namesMatchSavedName(row.name, characterDefsById.get(id));
+  if (matchesCreature && !matchesCharacter) return 'creature';
+  if (matchesCharacter && !matchesCreature) return 'character';
+  return null;
+}
+
+function defsForCatalog(
+  catalog: FeatCatalog,
+  creatureDefsById: Map<string, LeveledFeatLike>,
+  characterDefsById: Map<string, LeveledFeatLike>,
+): Map<string, LeveledFeatLike> {
+  return catalog === 'creature' ? creatureDefsById : characterDefsById;
+}
+
+function getFamilyAndLevel(
+  id: string,
+  defsById: Map<string, LeveledFeatLike>,
+): { familyId: string; level: number } | null {
+  const def = defsById.get(id);
+  if (!def) return null;
+  return { familyId: getFeatFamilyId(def), level: getFeatLevel(def) };
+}
+
+export type MergeFeatsInFamilyOnAddArgs<T extends MergeFeatRow> = {
+  existing: T[];
+  added: T[];
+  creatureDefsById: Map<string, LeveledFeatLike>;
+  characterDefsById: Map<string, LeveledFeatLike>;
+};
+
+/** Replace lower ranks in the same catalog family when adding leveled feats (creature vs character maps stay separate). */
+export function mergeFeatsInFamilyOnAdd<T extends MergeFeatRow>({
+  existing,
+  added,
+  creatureDefsById,
+  characterDefsById,
+}: MergeFeatsInFamilyOnAddArgs<T>): T[] {
+  return added.reduce<T[]>(
+    (acc, nextFeat) => {
+      const addedCatalog = resolveRowCatalog(nextFeat, creatureDefsById, characterDefsById);
+      if (addedCatalog == null) {
+        return [...acc, nextFeat];
+      }
+
+      const addedDefs = defsForCatalog(addedCatalog, creatureDefsById, characterDefsById);
+      const nextMeta = getFamilyAndLevel(String(nextFeat.id), addedDefs);
+      if (!nextMeta) {
+        return [...acc, nextFeat];
+      }
+
+      const filtered = acc.filter((existingRow) => {
+        const existingCatalog = resolveRowCatalog(existingRow, creatureDefsById, characterDefsById);
+        if (existingCatalog !== addedCatalog) return true;
+
+        const existingDefs = defsForCatalog(existingCatalog, creatureDefsById, characterDefsById);
+        const existingMeta = getFamilyAndLevel(String(existingRow.id), existingDefs);
+        if (!existingMeta || existingMeta.familyId !== nextMeta.familyId) return true;
+
+        return existingMeta.level >= nextMeta.level;
+      });
+
+      return [...filtered, nextFeat];
+    },
+    [...existing],
+  );
+}
+
+export type ComputeNextLeveledFeatFieldsInput = {
+  sourceFeatLvl: number | undefined;
+  sourceBaseFeatId: string | undefined;
+  sourceDbFeatId: string;
+};
+
+/** Shared level + base id for admin “add level” (character and creature). */
+export function computeNextLeveledFeatFields(input: ComputeNextLeveledFeatFieldsInput): {
+  feat_lvl: number;
+  base_feat_id: string;
+} {
+  const curLvl = input.sourceFeatLvl != null && input.sourceFeatLvl > 0 ? input.sourceFeatLvl : 1;
+  const newLvl = curLvl + 1;
+  const baseId = input.sourceBaseFeatId?.trim() || input.sourceDbFeatId;
+  return { feat_lvl: newLvl, base_feat_id: baseId };
+}
+
 export function buildFeatLevelChips<T extends LeveledFeatLike>(
   familyLevels: T[],
   currentId: string | number,

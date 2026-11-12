@@ -69,7 +69,7 @@ import {
 import { normalizeCreatureInventoryType } from '@/lib/game/creature-inventory';
 import { mergeLibraryBySource } from '@/lib/library/source-scope';
 import { mergeCreatureFeatsOnAdd } from './creature-feat-utils';
-import { replaceTieredCreatureTrait } from './creature-trait-tiers';
+import { replaceTieredCreatureChipValue } from '@/lib/creature-chip-tier';
 import { canAddDamageModifier } from './creature-damage-modifiers';
 import {
   buildArmamentLibraryList,
@@ -339,6 +339,22 @@ export function useCreatureCreatorWorkspace() {
     [codexFeatsData],
   );
 
+  const codexCreatureFeatsById = useMemo(
+    () => new Map(creatureFeatsData.map((f: CodexCreatureFeatRow) => [String(f.id), f])),
+    [creatureFeatsData],
+  );
+
+  const creatureFeatLevelsByFamily = useMemo(
+    () => buildFeatLevelsByFamilyMap(creatureFeatsData),
+    [creatureFeatsData],
+  );
+
+  const mergeCreatureFeatsOnAddBound = useCallback(
+    (existing: CreatureState['feats'], added: CreatureState['feats']) =>
+      mergeCreatureFeatsOnAdd(existing, added, codexFeatsById, codexCreatureFeatsById),
+    [codexFeatsById, codexCreatureFeatsById],
+  );
+
   const {
     sortState: featSort,
     handleSort: handleFeatSort,
@@ -357,6 +373,8 @@ export function useCreatureCreatorWorkspace() {
         creatureFeatSourceLookup,
         codexFeatsById,
         featLevelsByFamily,
+        codexCreatureFeatsById,
+        creatureFeatLevelsByFamily,
         skillsData,
         codexFeatsData as Feat[],
       ),
@@ -365,6 +383,8 @@ export function useCreatureCreatorWorkspace() {
       creatureFeatSourceLookup,
       codexFeatsById,
       featLevelsByFamily,
+      codexCreatureFeatsById,
+      creatureFeatLevelsByFamily,
       skillsData,
       codexFeatsData,
     ],
@@ -380,12 +400,22 @@ export function useCreatureCreatorWorkspace() {
           creatureFeatSourceLookup,
           codexFeatsById,
           featLevelsByFamily,
+          codexCreatureFeatsById,
+          creatureFeatLevelsByFamily,
           skillsData,
           codexFeatsData as Feat[],
         ),
       );
     },
-    [codexFeatsById, featLevelsByFamily, creatureFeatSourceLookup, skillsData, codexFeatsData],
+    [
+      codexFeatsById,
+      featLevelsByFamily,
+      codexCreatureFeatsById,
+      creatureFeatLevelsByFamily,
+      creatureFeatSourceLookup,
+      skillsData,
+      codexFeatsData,
+    ],
   );
 
   const sortedFeats = useMemo(
@@ -417,22 +447,31 @@ export function useCreatureCreatorWorkspace() {
     }));
   }, []);
 
-  const addToArray = useCallback((field: keyof CreatureState, item: string) => {
-    setCreature((prev) => {
-      if (
-        (field === 'resistances' || field === 'weaknesses' || field === 'immunities') &&
-        !canAddDamageModifier(prev, item)
-      ) {
-        return prev;
-      }
-      const current = prev[field] as string[];
-      const next =
-        field === 'senses' || field === 'movementTypes'
-          ? replaceTieredCreatureTrait(current, item)
-          : [...current, item];
-      return { ...prev, [field]: next };
-    });
-  }, []);
+  const addToArray = useCallback(
+    (field: keyof CreatureState, item: string) => {
+      setCreature((prev) => {
+        if (
+          (field === 'resistances' || field === 'weaknesses' || field === 'immunities') &&
+          !canAddDamageModifier(prev, item)
+        ) {
+          return prev;
+        }
+        const current = prev[field] as string[];
+        const chipMap =
+          field === 'senses'
+            ? SENSE_TO_FEAT_ID
+            : field === 'movementTypes'
+              ? MOVEMENT_TO_FEAT_ID
+              : null;
+        const next =
+          chipMap != null
+            ? replaceTieredCreatureChipValue(current, item, chipMap, codexCreatureFeatsById)
+            : [...current, item];
+        return { ...prev, [field]: next };
+      });
+    },
+    [codexCreatureFeatsById],
+  );
 
   const removeFromArray = useCallback((field: keyof CreatureState, item: string) => {
     setCreature((prev) => ({
@@ -598,7 +637,7 @@ export function useCreatureCreatorWorkspace() {
     displayItemToCreaturePower,
     displayItemToCreatureTechnique,
     displayItemToCreatureArmament,
-    mergeCreatureFeatsOnAdd,
+    mergeCreatureFeatsOnAdd: mergeCreatureFeatsOnAddBound,
     initialState,
     clearSessionDraftCache,
   };

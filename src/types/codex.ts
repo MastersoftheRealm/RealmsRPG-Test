@@ -217,6 +217,7 @@ interface CodexCreatureFeatFields extends CodexRowVersion {
   points: number;
   feat_points?: number | undefined;
   feat_lvl?: number | undefined;
+  base_feat_id?: string | undefined;
   lvl_req?: number | undefined;
   mechanic?: boolean | undefined;
   tiers?: number | undefined;

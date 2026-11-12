@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { groupFeatFamilies } from '@/lib/leveled-feats';
 import {
   mapCodexCreatureFeat,
   mapCodexEquipment,
@@ -189,5 +190,15 @@ describe('mapCodexCreatureFeat', () => {
     const feat = mapCodexCreatureFeat({ id: 'cf-1', name: 'Pounce', feat_points: 2 });
     expect(feat.points).toBe(2);
     expect(feat.feat_points).toBe(2);
+  });
+
+  it('86e3nwaru: Slow family groups after mapping base_feat_id', () => {
+    const rows = [
+      { id: '39', name: 'Slow', feat_lvl: 1, base_feat_id: null },
+      { id: '40', name: 'Slow II', feat_lvl: 2, base_feat_id: '39' },
+      { id: '41', name: 'Slow III', feat_lvl: 3, base_feat_id: '39' },
+    ].map(mapCodexCreatureFeat);
+    expect(groupFeatFamilies(rows)).toHaveLength(1);
+    expect(groupFeatFamilies(rows)[0]?.levels).toHaveLength(3);
   });
 });
