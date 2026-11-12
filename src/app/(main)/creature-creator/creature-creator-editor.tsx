@@ -27,6 +27,7 @@ import { CREATURE_LEVEL_SELECT_OPTIONS } from '@/lib/game';
 import { CREATURE_SIZES } from '@/lib/game/creator-constants';
 import { CreatureCreatorEditorTraitsSection } from './creature-creator-editor-traits-section';
 import { CreatureCreatorMovementSection } from './creature-creator-movement-section';
+import { CreatureCreatorSensesSection } from './creature-creator-senses-section';
 import { CreatureCreatorEditorLoadoutSections } from './creature-creator-editor-loadout-sections';
 
 const EMPTY_SPECIES_SKILL_IDS = new Set<string>();
@@ -274,6 +275,11 @@ export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {
         catalog={props.creatureFeatsCatalog}
         updateCreature={props.updateCreature}
         onAddMovementFeat={props.onAddMovementFeat}
+      />
+      <CreatureCreatorSensesSection
+        creature={creature}
+        catalog={props.creatureFeatsCatalog}
+        updateCreature={props.updateCreature}
       />
       <CreatureCreatorEditorLoadoutSections {...props} />
     </div>

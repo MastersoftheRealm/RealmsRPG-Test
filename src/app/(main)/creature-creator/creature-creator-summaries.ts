@@ -5,7 +5,7 @@
 import type { CreatureState } from './creature-creator-types';
 import { collectCreatureInventoryItems } from '@/lib/game/creature-inventory';
 import type { CreatureFeat as CodexCreatureFeat } from '@/hooks';
-import { isCreatureMovementEffectFeat } from './creature-movement';
+import { isCreatureCreatorHiddenFeat } from './creature-creator-hidden-feats';
 
 function summarizeNamedItems(
   items: Array<{ name?: string | undefined }>,
@@ -22,7 +22,7 @@ export function buildCreatureFeatsSummary(
   catalogById: ReadonlyMap<string, CodexCreatureFeat> = new Map(),
 ): string {
   const listed = creature.feats.filter(
-    (feat) => !isCreatureMovementEffectFeat(feat, catalogById.get(String(feat.id)) ?? null),
+    (feat) => !isCreatureCreatorHiddenFeat(feat, catalogById.get(String(feat.id)) ?? null),
   );
   return summarizeNamedItems(listed, 'No feats');
 }

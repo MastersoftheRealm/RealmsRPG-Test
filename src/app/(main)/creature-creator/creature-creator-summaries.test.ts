@@ -8,6 +8,12 @@ describe('creature creator summaries', () => {
     const summary = buildCreatureFeatsSummary({
       ...initialState,
       feats: [
+        {
+          id: String(CREATURE_FEAT_IDS.DARKVISION),
+          name: 'Darkvision',
+          points: 1,
+          featSourceType: 'creature',
+        },
         { id: String(CREATURE_FEAT_IDS.SPEEDY), name: 'Speedy', points: 0.5, featSourceType: 'creature' },
         { id: String(CREATURE_FEAT_IDS.BOUNDING), name: 'Bounding', points: 1.5, featSourceType: 'creature' },
       ],

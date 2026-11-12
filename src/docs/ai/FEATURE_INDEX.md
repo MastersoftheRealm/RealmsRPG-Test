@@ -37,7 +37,6 @@ Export **names** for patterns, ui, hooks, and services are in [`FEATURE_INDEX_BA
 ## Routes with no page file
 
 `next.config.ts` `redirects()`:
-
 | From | To |
 |------|----|
 | `/browse` | `/library` |

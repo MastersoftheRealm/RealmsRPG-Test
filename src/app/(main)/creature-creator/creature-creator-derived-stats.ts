@@ -28,6 +28,7 @@ import {
 import { creatureArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import type { CoreRulesMap } from '@/types/core-rules';
 import { movementControlFeatIdsFromNames } from './creature-movement';
+import { sensesControlFeatIdsFromNames } from './creature-senses';
 import type { CreatureFeat as CodexCreatureFeat } from '@/hooks';
 import type { CreatureState } from './creature-creator-types';
 import {
@@ -131,7 +132,11 @@ export function calculateCreatureCreatorStats(
     (sum, id) => (featIdsOnCreature.has(id) ? sum : sum + (featPointsMap.get(id) ?? 0)),
     0,
   );
-  const featSpent = manualFeatSpent + mechanicalFeatPoints + impliedMovementPoints;
+  const impliedSensePoints = sensesControlFeatIdsFromNames(creature.senses, creatureFeatsCatalog).reduce(
+    (sum, id) => (featIdsOnCreature.has(id) ? sum : sum + (featPointsMap.get(id) ?? 0)),
+    0,
+  );
+  const featSpent = manualFeatSpent + mechanicalFeatPoints + impliedMovementPoints + impliedSensePoints;
   const inventory = collectCreatureInventoryItems(creatureLoadoutForBudget(creature));
   const trainingSpent = computeCreatureTrainingSpent(creature, proficiencyCtx);
   const currencySpent = inventory.reduce((sum, armament) => {

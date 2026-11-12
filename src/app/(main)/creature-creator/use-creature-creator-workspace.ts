@@ -62,9 +62,8 @@ import {
 import { normalizeCreatureInventoryType } from '@/lib/game/creature-inventory';
 import { mergeLibraryBySource } from '@/lib/library/source-scope';
 import { codexCreatureFeatToCreatureFeat, mergeCreatureFeatsOnAdd } from './creature-feat-utils';
-import {
-  isCreatureMovementEffectFeat,
-} from './creature-movement';
+import { isCreatureCreatorHiddenFeat } from './creature-creator-hidden-feats';
+import { migrateLegacySenseNames, needsLegacySenseMigration } from './creature-senses';
 import { canAddDamageModifier } from './creature-damage-modifiers';
 import {
   buildArmamentLibraryList,
@@ -137,6 +136,13 @@ export function useCreatureCreatorWorkspace() {
   const load = useLoadModalLibrary('creature', { prefetch: !!editCreatureId });
 
   const [creature, setCreature] = useState<CreatureState>(initialState);
+  useEffect(() => {
+    if (!creatureFeatsData.length) return;
+    setCreature((prev) => {
+      if (!needsLegacySenseMigration(prev)) return prev;
+      return migrateLegacySenseNames(prev, creatureFeatsData as CodexCreatureFeatRow[]);
+    });
+  }, [creatureFeatsData]);
   const creatureLevel = Math.max(1, Math.floor(creature.level));
   const skillPointsHelp = useMemo(
     () => getSkillPointsHelp(creatureLevel, rules, 'creature'),
@@ -383,7 +389,7 @@ export function useCreatureCreatorWorkspace() {
       sortFeatItems(
         featsWithTypeLabel.filter((feat) => {
           const row = codexCreatureFeatsById.get(String(feat.id));
-          return !isCreatureMovementEffectFeat(feat, row ?? null);
+          return !isCreatureCreatorHiddenFeat(feat, row ?? null);
         }),
       ),
     [codexCreatureFeatsById, featsWithTypeLabel, sortFeatItems],
