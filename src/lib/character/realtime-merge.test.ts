@@ -198,6 +198,58 @@ describe('mergeSheetRealtimePayload (TASK-747)', () => {
     expect(baselineGrapple?.quantity).not.toBe(2);
   });
 
+  it('keeps a local gear add dirty until PATCH after a remote qty change', () => {
+    const saved = sheetCharacter({
+      equipment: {
+        weapons: [],
+        armor: [],
+        shields: [],
+        items: [{ id: 'bed-roll', name: 'Bed Roll', quantity: 1 }],
+      },
+    });
+    const baseline = cleanForSave(saved) as Record<string, unknown>;
+    const local = sheetCharacter({
+      equipment: {
+        weapons: [],
+        armor: [],
+        shields: [],
+        items: [
+          { id: 'bed-roll', name: 'Bed Roll', quantity: 1 },
+          { id: 'torch', name: 'Torch', quantity: 1 },
+        ],
+      },
+    });
+    const remote = {
+      ...(cleanForSave(saved) as Record<string, unknown>),
+      equipment: {
+        weapons: [],
+        armor: [],
+        shields: [],
+        items: [{ id: 'bed-roll', name: 'Bed Roll', quantity: 2 }],
+      },
+    };
+
+    const { character: next, nextBaseline } = mergeSheetRealtimePayload(local, remote, baseline, {
+      updatedAt: 'T1',
+    });
+    const shownIds = ((next.equipment?.items ?? []) as Array<{ id: string }>).map((row) => row.id);
+    expect(shownIds).toEqual(['bed-roll', 'torch']);
+    const stillDirty = pickDirtyCharacterFields(
+      cleanForSave(next) as Record<string, unknown>,
+      nextBaseline,
+    );
+    expect(stillDirty.equipment).toBeDefined();
+    const baselineIds = (
+      nextBaseline?.equipment as { items: Array<{ id: string }> } | undefined
+    )?.items?.map((row) => row.id);
+    expect(baselineIds).not.toContain('torch');
+    expect(
+      (stillDirty.equipment as { items: Array<{ id: string }> } | undefined)?.items?.map(
+        (row) => row.id,
+      ),
+    ).toContain('torch');
+  });
+
   it('keeps a local gear row delete dirty until PATCH after a remote qty change', () => {
     const saved = sheetCharacter({
       equipment: {

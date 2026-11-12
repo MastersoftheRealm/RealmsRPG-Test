@@ -152,14 +152,34 @@ function findSheetEquipmentRow(
   return undefined;
 }
 
+function mergeEquipmentScalarBucket(
+  remoteValue: unknown,
+  localValue: unknown,
+  baselineValue: unknown,
+): unknown {
+  const localDirty =
+    baselineValue === undefined
+      ? !stableEqual(localValue, remoteValue)
+      : !stableEqual(localValue, baselineValue);
+  if (localDirty && localValue !== undefined) return localValue;
+  if (remoteValue !== undefined) return remoteValue;
+  return localValue;
+}
+
 function mergeEquipmentItemBucket(
   remoteList: unknown,
   localList: unknown,
   baselineList: unknown,
 ): unknown {
-  const remote = Array.isArray(remoteList) ? (remoteList as Record<string, unknown>[]) : [];
-  const local = Array.isArray(localList) ? (localList as Record<string, unknown>[]) : [];
-  const baseline = Array.isArray(baselineList) ? (baselineList as Record<string, unknown>[]) : [];
+  const remoteIsArray = Array.isArray(remoteList);
+  const localIsArray = Array.isArray(localList);
+  const baselineIsArray = Array.isArray(baselineList) || baselineList === undefined;
+  if (!remoteIsArray || !localIsArray || !baselineIsArray) {
+    return mergeEquipmentScalarBucket(remoteList, localList, baselineList);
+  }
+  const remote = remoteList as Record<string, unknown>[];
+  const local = localList as Record<string, unknown>[];
+  const baseline = baselineList ? (baselineList as Record<string, unknown>[]) : [];
   const merged: Record<string, unknown>[] = [];
   const usedLocal = new Set<number>();
 
@@ -264,9 +284,15 @@ function mergeEquipmentBucketAutosaveBaseline(
   savedList: unknown,
   localList: unknown,
 ): unknown {
-  const next = Array.isArray(nextList) ? (nextList as Record<string, unknown>[]) : [];
-  const saved = Array.isArray(savedList) ? (savedList as Record<string, unknown>[]) : [];
-  const local = Array.isArray(localList) ? (localList as Record<string, unknown>[]) : [];
+  const nextIsArray = Array.isArray(nextList);
+  const savedIsArray = Array.isArray(savedList) || savedList === undefined;
+  const localIsArray = Array.isArray(localList);
+  if (!nextIsArray || !savedIsArray || !localIsArray) {
+    return mergeEquipmentScalarBucket(nextList, localList, savedList);
+  }
+  const next = nextList as Record<string, unknown>[];
+  const saved = savedList ? (savedList as Record<string, unknown>[]) : [];
+  const local = localList as Record<string, unknown>[];
   const merged: Record<string, unknown>[] = [];
 
   const emitAnchor = (
@@ -279,8 +305,14 @@ function mergeEquipmentBucketAutosaveBaseline(
         merged.push(savedRow);
         return;
       }
-      if (savedRow) merged.push(savedRow);
-      else if (localRow) merged.push(localRow);
+      if (savedRow) {
+        merged.push(savedRow);
+        return;
+      }
+      if (localRow) {
+        return;
+      }
+      if (nextRow) merged.push(nextRow);
       return;
     }
     if (nextRow) merged.push(nextRow);
@@ -310,19 +342,6 @@ function mergeEquipmentBucketAutosaveBaseline(
       continue;
     }
     merged.push(savedRow);
-  }
-
-  for (let lIdx = 0; lIdx < local.length; lIdx++) {
-    const localRow = local[lIdx]!;
-    const inNext = next.some((row, nIdx) =>
-      matchesSheetEquipmentItem(
-        row as SheetEquipmentRow,
-        sheetEquipmentRowAnchorId(localRow, lIdx),
-        nIdx,
-      ),
-    );
-    if (inNext) continue;
-    if (!findSheetEquipmentRow(saved, localRow, lIdx)) merged.push(localRow);
   }
 
   return merged;
@@ -382,7 +401,7 @@ export function applySheetAutosaveConflictFields<T extends Record<string, unknow
 /**
  * Autosave baseline after realtime overlay: dirty non-equipment keys revert to
  * the saved snapshot; touched equipment rows (including a pending delete) stay
- * on the baseline until PATCHed.
+ * on the baseline until PATCHed. Local-only adds stay off the baseline.
  */
 export function mergeSheetAutosaveBaseline<T extends Record<string, unknown>>(
   nextClean: T,

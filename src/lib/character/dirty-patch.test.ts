@@ -167,6 +167,34 @@ describe('applyCharacterDirtyPatch / mergeRemotePreservingDirty', () => {
     });
   });
 
+  it('does not clear a single armor object while merging item quantity conflicts', () => {
+    const leather = { id: 'leather', name: 'Leather', type: 'armor', properties: [] };
+    const baseline = {
+      equipment: {
+        items: [{ id: 'bed-roll', name: 'Bed Roll', quantity: 1 }],
+        armor: leather,
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [{ id: 'bed-roll', name: 'Bed Roll', quantity: 2 }],
+        armor: leather,
+      },
+    };
+    const local = {
+      equipment: {
+        items: [{ id: 'bed-roll', name: 'Bed Roll', quantity: 1 }],
+        armor: leather,
+      },
+    };
+    expect(mergeRemotePreservingDirty(remote, local, ['equipment'], baseline)).toEqual({
+      equipment: {
+        items: [{ id: 'bed-roll', name: 'Bed Roll', quantity: 2 }],
+        armor: leather,
+      },
+    });
+  });
+
   it('does not restore a gear row the local sheet deleted during conflict merge', () => {
     const baseline = {
       equipment: {
