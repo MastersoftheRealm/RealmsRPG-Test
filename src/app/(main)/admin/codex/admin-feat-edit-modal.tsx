@@ -13,6 +13,7 @@ import { AdminCodexEditModalFooter } from './admin-codex-edit-modal-footer';
 import { codexFeatEditorIsDirty } from './admin-codex-unsaved-leave';
 import { useCodexEditorLeaveGuard } from './admin-codex-unsaved-leave-guard';
 import { useAdminLeveledFeatSession } from './use-admin-leveled-feat-session';
+import { getFeatLevel, peakFeatInFamily } from '@/lib/leveled-feats';
 
 export function AdminFeatEditModal({
   isOpen,
@@ -129,6 +130,13 @@ export function AdminFeatEditModal({
           onAddLevel={() => {
             const sourceId = hasLevels ? selectedEditId : initialEditId;
             if (!sourceId || !onAddLevel) return;
+            const peak = peakFeatInFamily(levelFeats);
+            const selectedLvl = form.feat_lvl != null && form.feat_lvl > 0 ? form.feat_lvl : 1;
+            if (peak != null && getFeatLevel(peak) > selectedLvl) {
+              const peakId = String(peak.id);
+              onAddLevel(peakId === sourceId ? form : featToFormState(peak), peakId);
+              return;
+            }
             onAddLevel(form, sourceId);
           }}
           selectClassName={ADMIN_FEAT_MODAL_SELECT_CLASS}

@@ -43,6 +43,16 @@ export function sortedFeatFamily<T extends LeveledFeatLike>(feats: readonly T[],
     .sort((a, b) => getFeatLevel(a) - getFeatLevel(b));
 }
 
+/** Highest `feat_lvl` in a family list sorted ascending (same order as `groupFeatFamilies().levels`). */
+export function peakFeatInFamily<T extends LeveledFeatLike>(levels: readonly T[]): T | undefined {
+  return levels.length > 0 ? levels[levels.length - 1] : undefined;
+}
+
+export function maxFeatLevelInFamily(levels: readonly LeveledFeatLike[]): number {
+  if (levels.length === 0) return 1;
+  return levels.reduce((max, row) => Math.max(max, getFeatLevel(row)), 1);
+}
+
 /** Roman suffixes on feat names (longest first for parsing). Matches codex migration pattern. */
 const FEAT_ROMAN_SUFFIXES = ['XI', 'X', 'IX', 'VIII', 'VII', 'VI', 'V', 'IV', 'III', 'II'] as const;
 
@@ -284,6 +294,8 @@ export type ComputeNextLeveledFeatFieldsInput = {
   sourceFeatLvl: number | undefined;
   sourceBaseFeatId: string | undefined;
   sourceDbFeatId: string;
+  /** When the UI row is below the highest tier already in the family (e.g. GLR add on the base row). */
+  existingFamilyMaxLevel?: number | undefined;
 };
 
 /** Shared level + base id for admin “add level” (character and creature). */
@@ -292,7 +304,9 @@ export function computeNextLeveledFeatFields(input: ComputeNextLeveledFeatFields
   base_feat_id: string;
 } {
   const curLvl = input.sourceFeatLvl != null && input.sourceFeatLvl > 0 ? input.sourceFeatLvl : 1;
-  const newLvl = curLvl + 1;
+  const familyPeak = input.existingFamilyMaxLevel;
+  const effectiveCur = familyPeak != null && familyPeak > curLvl ? familyPeak : curLvl;
+  const newLvl = effectiveCur + 1;
   const baseId = input.sourceBaseFeatId?.trim() || input.sourceDbFeatId;
   return { feat_lvl: newLvl, base_feat_id: baseId };
 }

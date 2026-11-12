@@ -20,6 +20,7 @@ import {
   formatFeatName,
   groupFeatFamilies,
   isFeatFamilyBase,
+  peakFeatInFamily,
   sortedFeatFamily,
 } from '@/lib/leveled-feats';
 import { formatCreatureLevel } from '@/lib/game';
@@ -128,12 +129,13 @@ export function AdminCreatureFeatsTab() {
       bumpModal();
     });
 
-  const openAddLevel = (sourceFeat: CreatureFeat) =>
+  const openAddLevel = (sourceFeat: CreatureFeat, familyLevels?: readonly CreatureFeat[]) =>
     beginAdd(() => {
       setModalInitialForm(
         computeNextCreatureFeatFormState(
           creatureFeatToFormState(sourceFeat),
           String(sourceFeat.id),
+          familyLevels,
         ),
       );
       setModalInitialEditId(null);
@@ -260,7 +262,9 @@ export function AdminCreatureFeatsTab() {
                       <IconButton
                         variant="ghost"
                         size="sm"
-                        onClick={() => openAddLevel(feat)}
+                        onClick={() =>
+                          openAddLevel(peakFeatInFamily(familyLevels) ?? feat, familyLevels)
+                        }
                         label="Add level"
                       >
                         <Layers className="h-4 w-4" />

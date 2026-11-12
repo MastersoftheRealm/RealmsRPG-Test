@@ -31,6 +31,7 @@ import {
   groupFeatFamilies,
   formatFeatName,
   isFeatFamilyBase,
+  peakFeatInFamily,
   sortedFeatFamily,
 } from '@/lib/leveled-feats';
 import {
@@ -149,10 +150,10 @@ export function AdminFeatsTab() {
       bumpModal();
     });
 
-  const openAddLevel = (sourceFeat: Feat) =>
+  const openAddLevel = (sourceFeat: Feat, familyLevels?: readonly Feat[]) =>
     beginAdd(() => {
       setModalInitialForm(
-        computeNextLevelFormState(featToFormState(sourceFeat), String(sourceFeat.id)),
+        computeNextLevelFormState(featToFormState(sourceFeat), String(sourceFeat.id), familyLevels),
       );
       setModalInitialEditId(null);
       setModalLevelFeats([]);
@@ -375,7 +376,9 @@ export function AdminFeatsTab() {
                     <IconButton
                       variant="ghost"
                       size="sm"
-                      onClick={() => openAddLevel(feat)}
+                      onClick={() =>
+                        openAddLevel(peakFeatInFamily(familyLevels) ?? feat, familyLevels)
+                      }
                       label="Add level"
                     >
                       <Layers className="h-4 w-4" />

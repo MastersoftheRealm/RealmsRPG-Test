@@ -13,6 +13,7 @@ import {
 import { codexFeatEditorIsDirty } from './admin-codex-unsaved-leave';
 import { useCodexEditorLeaveGuard } from './admin-codex-unsaved-leave-guard';
 import { useAdminLeveledFeatSession } from './use-admin-leveled-feat-session';
+import { getFeatLevel, peakFeatInFamily } from '@/lib/leveled-feats';
 import {
   creatureFeatToFormState,
   parseOptionalAdminDecimalInput,
@@ -127,6 +128,13 @@ export function AdminCreatureFeatEditModal({
           onAddLevel={() => {
             const sourceId = hasLevels ? selectedEditId : initialEditId;
             if (!sourceId || !onAddLevel) return;
+            const peak = peakFeatInFamily(levelFeats);
+            const selectedLvl = form.feat_lvl != null && form.feat_lvl > 0 ? form.feat_lvl : 1;
+            if (peak != null && getFeatLevel(peak) > selectedLvl) {
+              const peakId = String(peak.id);
+              onAddLevel(peakId === sourceId ? form : creatureFeatToFormState(peak), peakId);
+              return;
+            }
             onAddLevel(form, sourceId);
           }}
         />

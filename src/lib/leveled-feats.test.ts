@@ -2,10 +2,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { isGridListChipExpandable } from '@/lib/chip/grid-list-chip-utils';
 import {
   buildFeatLevelChips,
+  computeNextLeveledFeatFields,
   featLevelChipDescription,
   formatFeatName,
   isFeatFamilyBase,
   levelToRomanNumeral,
+  peakFeatInFamily,
   sortedFeatFamily,
   parseFeatNameRomanSuffix,
   type LeveledFeatLike,
@@ -163,6 +165,30 @@ describe('isFeatFamilyBase', () => {
     expect(isFeatFamilyBase({ id: '37', name: 'Speedy II', feat_lvl: 2, base_feat_id: '36' })).toBe(
       false,
     );
+  });
+});
+
+describe('peakFeatInFamily', () => {
+  it('returns the highest feat_lvl row from a sorted family list', () => {
+    const sorted = [
+      { id: '36', feat_lvl: 1 },
+      { id: '37', feat_lvl: 2, base_feat_id: '36' },
+      { id: '38', feat_lvl: 3, base_feat_id: '36' },
+    ];
+    expect(peakFeatInFamily(sorted)?.id).toBe('38');
+  });
+});
+
+describe('computeNextLeveledFeatFields', () => {
+  it('bumps from the family peak when the source row is still level 1', () => {
+    expect(
+      computeNextLeveledFeatFields({
+        sourceFeatLvl: 1,
+        sourceBaseFeatId: undefined,
+        sourceDbFeatId: '36',
+        existingFamilyMaxLevel: 2,
+      }),
+    ).toEqual({ feat_lvl: 3, base_feat_id: '36' });
   });
 });
 
