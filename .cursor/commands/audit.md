@@ -19,7 +19,9 @@ If you are the writer, **default** is to stop and hand this command to the other
 
 ## What you may read
 
-The ClickUp task (intent and done-when), `src/docs/ai/DECISIONS.md` for rulings on the topic, the code path, the diff, CI, and the preview URL when one exists.
+Intent and done-when: the ClickUp task. Product rulings: `src/docs/ai/DECISIONS.md` (what was decided, not how the code behaves). Behavior: the code path, the diff, a test you run, CI, and the preview URL when one exists.
+
+Documents are claims. `FEATURE_INDEX.md`, ADRs, surveys, PR text, and comments are not evidence of what the code does. `FEATURE_INDEX.md` may only give you a path. Open that file. If the sentence and the file disagree, the file wins. If the path does not exist, the helper does not exist. A helper in `src/lib/` or a barrel that the index omits still exists.
 
 Do **not** treat the writer's PR description, survey, or reasoning as evidence. Trace the root cause in the code yourself **before** you use the diff to check the fix. The writer's REAL FIX / PATCH label is a claim to test, not a fact.
 
@@ -36,7 +38,7 @@ Answer each. A fail needs `file:line`. These five are the critic’s questions (
 1. **Real task, real cause.** Is there a real task with a clear outline and a done-when? Did the change find the root cause in the code path, and remove it? A missing task, a vague done-when, or a fix that leaves the cause in place fails. That last case is a PATCH, not a REAL FIX.
 2. **Does the job, at the right size.** Does the diff do what that done-when asked, without building extra machinery and without a shortcut that will break the next similar change? Fail obvious **AI bloat** (unnecessary tests, bulk docs, duplicate logic, huge `+` lines unrelated to the cause). On fix/refine work, ask whether the PR should be **smaller or net-negative** and name what to delete or merge.
 3. **No second copy.** Does it extend the existing helper, component, or pattern? Fail a new fork, pasted logic, or a duplicate component that should have been shared or deleted.
-4. **Same practice as the rest of the codebase.** Does it use the current shared components, barrels, and patterns the neighboring code already uses? Fail a private copy of something `FEATURE_INDEX.md` or `src/lib/` already has.
+4. **Same practice as the rest of the codebase.** Open the neighboring code, the barrels, and `src/lib/`. Fail a private copy of a helper that is already there. Do not pass or fail this question from a `FEATURE_INDEX.md` sentence.
 5. **The rest of the bar.** Grade constitution items 1–15 in `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` (pass / fail / n/a, `file:line` on every fail). The five questions above do not cover all of that. Do not skip:
    - Security on the server (auth, RLS, validation), not only in the UI.
    - A test that fails before the fix and passes after, which you run. Green CI is not that test.
@@ -44,11 +46,11 @@ Answer each. A fail needs `file:line`. These five are the critic’s questions (
    - Database safety and high-risk paths in `AGENTS.md` (Risk by path) have the approval that path requires. SQL in the PR is not applied SQL.
    - Errors from writes are not swallowed.
    - One task. No revert of a fix already on `master`.
-   - Docs the diff makes stale are updated.
+   - Docs the diff makes stale are updated. Compare the sentence to the code. If you can name a line that still describes the old behavior, including `FEATURE_INDEX.md`, item 11 fails. Marking that item pass, or moving the line into a note, is not allowed.
    - UI changes meet the constitution’s UI item (tokens, accessibility, mobile).
    - The REAL FIX / PATCH label matches what you found. A PATCH cannot be APPROVE (`AGENTS.md`, PATCH veto).
 
-Only correctness, security, data-safety, and checklist failures block. Everything else is a note. A note does not become a task from this chat.
+Only correctness, security, data-safety, and checklist failures block. A checklist miss is not a note. If the review names the stale doc, the missing test, the swallowed error, or any other checklist miss, that item is fail and the verdict cannot be APPROVE. Anything that is not a checklist item is a note. A note does not become a task from this chat.
 
 ## Fallback senior review
 
@@ -74,7 +76,7 @@ Use the reviewer verdict block in `ARCHITECTURE_CONSTITUTION.md` (APPROVE, REQUE
 
 Before the checklist lines, answer the five questions in one line each (pass or fail, with `file:line` on a fail).
 
-- **APPROVE** when blocking items pass, the repro was run, CI is green, the label is not an unaccepted PATCH, and either (a) you are not the writer, or (b) Kadin recorded on the task or PR that this full `/audit` satisfies separate critic for this PR.
+- **APPROVE** when every checklist item is pass or n/a (a named stale doc line means item 11 is not pass), the repro was run, CI is green, the label is not an unaccepted PATCH, and either (a) you are not the writer, or (b) Kadin recorded on the task or PR that this full `/audit` satisfies separate critic for this PR.
 - **REQUEST CHANGES** lists required changes the writer must fix (including **trim bloat** when Q2 fails). **`/remediate`** applies those items, then another `/audit` runs. Round 3+ with remaining blockers needs the **For Kadin** escalation block above.
 - **HOLD FOR HUMAN** when the path is high-risk, a rule is missing or conflicting, a product decision is open, you are the writer without the owner override, or your label is PATCH.
 

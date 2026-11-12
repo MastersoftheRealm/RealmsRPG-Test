@@ -14,7 +14,7 @@ The single engineering checklist. The writer checks it before opening a PR, the 
 Each item says what to search and what a failure looks like. The reviewer reports every item as pass, fail or n/a, with `file:line` for each fail.
 
 1. **Rule values have one source.** Search `src/lib/game`, `src/components` and `src/app/api` for the same numbers or formulas. Fail: a rule number typed into code; a hardcoded fallback for a `core_rules` or codex value; an optional `rules` argument that silently defaults; code ignoring the database value because the database "looked wrong" (report it instead).
-2. **No forks or duplicates.** Search `src/docs/ai/FEATURE_INDEX.md`, the barrels and `src/lib/` for a helper, hook, component, parser or upload path that already does the job. Fail: a new parallel helper, duplicated math, "copied from X" logic, or copying from a `DEFERRED.md` area.
+2. **No forks or duplicates.** Search the barrels and `src/lib/` and open the file. `FEATURE_INDEX.md` may only supply a path; a sentence there is not proof. Fail: a new parallel helper, duplicated math, "copied from X" logic, or copying from a `DEFERRED.md` area.
 3. **Security is on the server.** For every UI gate, find the server or RLS check. Fail: a permission enforced only in the UI; a route without auth; service-role use from a user path; a route reading query, params or JSON without `validateQuery` / `validateRouteParams` / `validateJson` (`@/lib/api-validation`).
 4. **One role model.** Search for the existing role and permission helpers. Fail: an ad-hoc `role === ...` check or a new role list.
 5. **Tests prove behavior.** Fail: a bug fix without a test that fails before and passes after (unless the PR says why that was not feasible); a test that pins a known bug with no ruling or ticket cited; a test that reads source files as text.
@@ -23,7 +23,7 @@ Each item says what to search and what a failure looks like. The reviewer report
 8. **Comments are not narration.** Fail: new task-id comments, "keep in sync", "TODO remove later", or comments claiming more than the code does. Delete dead code; do not comment it out.
 9. **Legality is advisory.** Fail: hard-blocking "illegal" or homebrew characters. Expected: warnings, visible overrides, temporary modifiers. A missing written rule is a hold, not a guess.
 10. **Database safety.** Fail: any production write, migration, seed or reset without the approvals in `AGENTS.md`; SQL with `DROP`, force-delete or "verify" writes; a new `public` table without RLS, policies and GRANT in the same file.
-11. **Docs are current.** Search docs for text the PR makes stale. Fail: outdated text left in place, or a doc claiming "done/fixed" that the PR does not prove.
+11. **Docs are current.** Compare doc sentences to the code this PR changes. Fail: a line that still describes the old behavior, including `FEATURE_INDEX.md`. Naming that line and then marking pass, or calling it a note, is still a fail. Also fail a doc that claims "done/fixed" when the PR does not prove it.
 12. **Scope.** One task. Fail: unrelated edits, or reverting a fix already on `master`.
 13. **Honest label.** Fail: the PR says REAL FIX but the root cause is still there, or the survey findings in the PR body are missing.
 14. **UI standards** (when `.tsx` changes). Semantic tokens (prefer `*-fg`), no raw palette (`realms/no-raw-color`); WCAG 2.2 AA (labels, headings, modal titles, target size, focus not obscured); `fullScreenOnMobile` on large modals; tiered touch targets and the six-width contracts in `src/docs/MOBILE_UX.md` (`npm run verify:responsive`).
@@ -44,7 +44,7 @@ Route Handlers return `{ error: string }` on failure (4xx/5xx). Log raw Supabase
 
 - Prefer **deleting** the weaker of two parallel systems.
 - Prefer **extending** existing shared UI, hooks and lib over new parallel helpers, modals or parsers.
-- Cleanup removes clutter. Prefer a **net-negative diff** on cleanup, bug-fix, and refine work when the audit or task allows (not mandatory on every PR; **reject AI bloat** that pads a small fix).
+- Delete clutter. Prefer a **net-negative diff** on bug-fix and refine work when the audit or task allows (not mandatory on every PR; **reject AI bloat** that pads a small fix).
 - When consolidating, ship a first slice plus precise follow-up tasks, not aspirational prose.
 
 ## Reviewer verdict format

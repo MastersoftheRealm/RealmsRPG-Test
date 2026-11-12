@@ -22,7 +22,7 @@ Stack: Next.js App Router, React, Tailwind, Supabase (no Prisma), Vercel. Repo `
 ### Phase 1 — Survey (read-only, always)
 
 1. Read the ClickUp task, its latest comments, and `src/docs/ai/DECISIONS.md` for rulings on the topic. Writers and reviewers read the **same** sources.
-2. Read every file in the affected area, its callers and what it depends on. Search `src/docs/ai/FEATURE_INDEX.md`, the barrels and `src/lib/` for existing helpers before proposing anything new.
+2. Read every file in the affected area, its callers and what it depends on. Search the barrels and `src/lib/` and open the file before proposing anything new. `src/docs/ai/FEATURE_INDEX.md` may only give you a path. A sentence in that index is not proof the helper exists or behaves that way.
 3. Write the survey in plain English on the ClickUp task (or the draft PR):
    - **Root cause** (traced through the real code path, not guessed).
    - **Area health:** forks, duplicates, dead code, rule literals, missing tests, unclear done-when.
@@ -53,13 +53,13 @@ Commands carry this loop more reliably than prose alone. Default PR path:
 
 **Typical loop is two audit↔remediate cycles**; there is **no hard stop** at two. If a **third or later audit** still blocks, the audit **must** warn Kadin in plain language: likely bigger issue, options (split task, revert, one more remediate, stop), and whether another remediate is worthwhile. Pause a large third remediate until he chooses unless the audit says one narrow remediate should finish it. Collin still owns **how** when engineering approach is stuck.
 
-`/cleanup` in chat is an alias for **`/remediate`** (`.cursor/commands/cleanup.md` points here).
+`/cleanup` is removed. It is not an alias. The writer pass after **REQUEST CHANGES** is `/remediate` only.
 
 Additional rules:
 
 1. Default critic model routing and the owner override for a full `/audit` are in `.cursor/commands/audit.md`; this file does not restate them.
 2. The critic **runs** the repro test and checks CI; reading the diff alone is not enough.
-3. Only correctness, security, data-safety and checklist failures block. Anything else is a note; it becomes a ClickUp task only if Kadin or Collin chooses.
+3. Only correctness, security, data-safety and checklist failures block. A checklist miss is not a note: if the review names a stale doc line, a missing test, a swallowed error, or any other checklist miss, that item fails and the verdict cannot be APPROVE. Anything that is not a checklist item is a note; it becomes a ClickUp task only if Kadin or Collin chooses.
 4. **PATCH veto.** If the reviewer judges the change a PATCH (whatever the writer labelled it), it does not merge unless Kadin explicitly accepts it as a patch in his own comment on the PR ("I accept this as a PATCH because …"). An agent relaying his acceptance does not count.
 5. Rules-math or rules-value PRs also go to the Rules Balance Analyst for a ruling check before Kadin signs off.
 
@@ -136,7 +136,7 @@ One fact, one place. Other docs link; they do not restate.
 | Settled product rulings, open rule conflicts | `src/docs/ai/DECISIONS.md`. Coding agents follow the repo. The Editor copies new rulings to Drive. |
 | Game terms and formulas | `src/docs/GAME_RULES.md`; live values in the `core_rules` table. A newer ruling in `DECISIONS.md` wins. Drive rulebook text that still disagrees is flagged for the Editor, not followed over the repo. |
 | Schema | `src/docs/SUPABASE_SCHEMA.md` |
-| Does it already exist? | `src/docs/ai/FEATURE_INDEX.md` and the barrels |
+| Does it already exist? | The barrels and `src/lib/` (open the file). `src/docs/ai/FEATURE_INDEX.md` is a path map only. |
 | Areas not to copy from | `DEFERRED.md` |
 | UI, responsive, accessibility | `src/docs/MOBILE_UX.md`, `src/docs/DESIGN_SYSTEM.md`, `src/docs/ACCESSIBILITY.md` (UI rules attach automatically for `.tsx`) |
 | Component patterns | `src/docs/ai/AGENT_GUIDE.md` and its `guide/` appendices |
