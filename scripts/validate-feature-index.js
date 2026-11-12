@@ -117,6 +117,9 @@ const FOLDER_FILE_DIRS = [
   'src/app/(main)/encounters/[id]/skill',
   'src/app/api/upload/profile-picture',
   'src/app/dev/styleguide',
+  'src/hooks',
+  'src/services',
+  'src/stores',
 ];
 
 function walk(dir, acc = []) {

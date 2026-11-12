@@ -18,12 +18,12 @@ Checked on this pass:
 - Every non-test `.ts` / `.tsx` file under `src/lib/ancestry`, `api`, `chip`, `data-enrichment`, `detail-option`, `glr`, `observability`, `routes`, `security`, `server`, `supabase`, `tooltips`, and `ui`. The pairs in that section were opened. The files listed there as not read line by line were not.
 - The modules `src/lib/game/index.ts` and `src/lib/calculators/index.ts` re-export. The pairs in that section were opened. The files listed there as not read line by line were not. The sibling files those barrels do not re-export were already named and were not re-read in that section.
 - Every non-test `.ts` / `.tsx` file under public codex, library (including `components` and `hooks`), character detail, the characters list, the campaigns list (including the tabletop page), campaign detail outside `_components`, auth, encounter mixed and skill, the profile-picture upload route, and the styleguide. The pairs in that section were opened. The files listed there as not read line by line were not.
+- Every non-test `.ts` / `.tsx` file under `src/hooks`, `src/services`, and `src/stores`. The pairs in that section were opened. The files listed there as not read line by line were not. The barrel-gap names already in this index were not re-read.
 - A static import walk from app entries. A file loaded only by a variable `import()` would not show up. `knip` was not run, so unused exports inside a file that is imported were not measured.
 
 Not checked, so silence here is not "it does not exist" and not "there is no fork":
 
 - Behavior of calculators, saves, or admin editors.
-- `src/hooks`, `src/services`, and `src/stores` beyond the barrel-gap names.
 - The sibling files under `src/lib/game` and `src/lib/calculators` that the barrels do not re-export, except the snippets named above.
 - The calculator and formula files named as not read line by line.
 - Pairs of files that are not named in a fork section below.
@@ -2058,11 +2058,85 @@ Every non-test file in these folders has a production importer, or it is a page,
 - `src/app/dev/styleguide/styleguide-gate.ts`
 ---
 
+## Hooks, services, and stores the barrels re-export
+
+Every non-test file under `src/hooks`, `src/services`, and `src/stores` has a production importer, or it is a barrel. The barrel-gap names already listed above were not re-read. None of the files in this section were unused.
+
+### Second implementations
+
+- Name lookup. `findLibraryItemsByName` in `src/services/library-service.ts` asks the server with `?name=`. `findOfficialLibraryItemByName` in the same file loads the official list and compares trimmed lowercase names. They do not call each other.
+- Trait lookup. `findTraitByIdOrName` in `src/hooks/codex-types.ts` matches id, then lowercase name, then a sanitized name. `findByIdOrName` in `src/lib/id-constants.ts` matches id, then a trimmed lowercase name. They do not call each other.
+- Empowered rows. `useLoadModalLibrary` concatenates the user list and the public list and calls `buildEmpoweredPowerSelectableItem`. `loadEmpoweredRawItems` also merges those lists, then drops a repeated id, and the load modal does not call it.
+- Official enhanced items. `useCreateOfficialEnhancedItem` and `useDeleteOfficialEnhancedItem` call `apiFetch` on `/api/official/enhanced-items`. User enhanced items call `src/services/enhanced-items-service.ts`. The official mutations do not call that service.
+- Character reads. `getCharacter` uses `/api/characters`. `getCampaignCharacterForView` uses `/api/campaigns/.../characters/...`. `useCampaignCharacterView` calls the campaign function. It does not call `getCharacter`.
+
+### Calls a shared component
+
+- `useCraftingSessions`, `useCraftingSession`, `useCreateCraftingSession`, `useSaveCraftingSession`, and `useDeleteCraftingSession` call `src/services/crafting-service.ts`. That service is `createResourceClient('/api/crafting')`.
+- `useEncounters`, `useEncounter`, `useCreateEncounter`, and `useDeleteEncounter` call `src/services/encounter-service.ts`. `useSaveEncounter` calls `persistEncounterSave`. That service is `createResourceClient('/api/encounters')`.
+- `useCampaigns`, `useCampaignsFull`, `useCampaign`, `useCampaignCharacterView`, and `useCampaignCharacterEncounters` call `src/services/campaign-service.ts`.
+- `useCampaignRolls` calls `getCampaignRolls`.
+- `useCharacters` calls `getCharacters` and, when signed out or when guest sheets remain, `getGuestCharactersList`. `useCharacter`, `useSaveCharacter`, `useDeleteCharacter`, and `useDuplicateCharacter` call `src/services/character-service.ts`.
+- `useOfficialLibrary`, `useOfficialLibraryCounts`, and `useAddOfficialToLibrary` call `src/services/library-service.ts`. `useUserPowers`, `useUserTechniques`, `useUserEmpoweredTechniques`, `useUserItems`, `useUserCreatures`, and `useUserSpecies` call one private `useUserLibrary`. `useUserLibraryCounts` calls `fetchUserLibraryCounts`.
+- `useCodexFeats`, `useCodexSkills`, `useCodexSpecies`, `useCodexTraits`, `useCodexParts`, `useCodexItemProperties`, `useCodexEquipment`, `useCodexArchetypes`, and `useCodexCreatureFeats` call `useCodexCollection`. `useCodexPowerParts` and `useCodexTechniqueParts` call that same helper with the `parts` collection. `useCodexFull` calls `fetchCodex`.
+- `useProfile` and `useAccountProfile` share `userProfileQueryKey` and `fetchUserProfile`. Account profile keeps email and role. The header profile does not.
+- `useGuidedEquipmentL2Catalog` calls `buildGuidedEquipmentEligibilityContext`. It does not call `useGuidedEquipmentCatalog`.
+- `useCreatorSave` calls `saveToLibrary` and `saveToOfficialLibrary`.
+- `useTabletopScene`, `useActiveCampaignTabletop`, and `useTabletopMutations` import `src/services/tabletop-service.ts`.
+- `buildSelectableItem` in `src/hooks/add-library-item/build-selectable-item.ts` calls `buildEmpoweredPowerSelectableItem` for an empowered power and `buildSelectableItem` from `src/lib/library-selectable-builders.ts` for the other types. The load modal imports the library-builders function, not the add-library dispatcher.
+- `useAdmin` calls `useAuth` and `/api/admin/check`. `useCharacterResourceSync` calls `scheduleCharacterResourceSync`. `getGameRulesFallback` returns the fallback object built from `src/lib/game/constants.ts`. `useGameRules` uses that object when the query has no data.
+
+### Not read line by line
+
+- `src/hooks/use-auto-save.ts` past `flushDirtyAutosave`.
+- `src/hooks/use-creator-save.ts` past the two library save calls.
+- `src/hooks/use-game-rules.ts` past `mergeCoreRules` and `getGameRulesFallback`. The fallback object was not opened field by field.
+- `src/hooks/use-load-modal-library.ts` past the empowered branch.
+- `src/hooks/use-tabletop.ts` past its service imports.
+- `src/hooks/use-user-library.ts` past `userSpeciesToSpecies`.
+- `src/services/character-service.ts` past the start of `getCharacter`, and `src/services/tabletop-service.ts` past `updateTabletopScene`.
+- `src/hooks/add-library-item/load-raw-items.ts` past `loadEmpoweredRawItems`, and `src/hooks/add-library-item/map-library-to-character.ts`.
+- The barrel-gap files already named under hooks, services, and stores.
+- `src/lib/game/formulas.ts`, `src/lib/game/calculations.ts`, and the calculator files named as not read line by line. Those were not re-opened.
+
+### Files
+
+- `src/hooks/codex-types.ts`
+- `src/hooks/use-admin.ts`
+- `src/hooks/use-auto-save.ts`
+- `src/hooks/use-campaign-rolls.ts`
+- `src/hooks/use-campaigns.ts`
+- `src/hooks/use-character-resource-sync.ts`
+- `src/hooks/use-codex.ts`
+- `src/hooks/use-crafting.ts`
+- `src/hooks/use-creator-save.ts`
+- `src/hooks/use-encounters.ts`
+- `src/hooks/use-enhanced-items.ts`
+- `src/hooks/use-game-rules.ts`
+- `src/hooks/use-guided-equipment-catalog.ts`
+- `src/hooks/use-guided-equipment-l2-catalog.ts`
+- `src/hooks/use-is-client.ts`
+- `src/hooks/use-load-modal-library.ts`
+- `src/hooks/use-official-library.ts`
+- `src/hooks/use-profile.ts`
+- `src/hooks/use-tabletop.ts`
+- `src/hooks/use-user-library.ts`
+- `src/hooks/add-library-item/build-empowered-selectable-item.ts`
+- `src/hooks/add-library-item/build-selectable-item.ts`
+- `src/hooks/add-library-item/load-raw-items.ts`
+- `src/hooks/add-library-item/map-library-to-character.ts`
+- `src/hooks/add-library-item/normalize-public.ts`
+- `src/hooks/add-library-item/types.ts`
+- `src/services/character-service.ts`
+- `src/services/library-service.ts`
+- `src/services/tabletop-service.ts`
+
+---
+
 ## Left for a later pass
 
 This index is not finished. These were not opened file by file:
 
-- `src/hooks`, `src/services`, and `src/stores` beyond the barrel-gap names.
 - The sibling files under `src/lib/game` and `src/lib/calculators` that the barrels do not re-export, except the skill-allocation loops and `CONDITIONS`.
 - Unused exports inside files that something already imports.
-- The files named under "Not read line by line" in the earlier sections and in the section above.
+- The files named under "Not read line by line" in the earlier sections and in the section above. The barrel-gap files under `src/hooks`, `src/services`, and `src/stores` were already named and were not re-read.
