@@ -304,8 +304,12 @@ const SKILL_MATH_DISAGREEMENT_COPY_IDS = [
   'guided-skill-total-omits-rules-on-getTotalSkillPoints',
 ];
 
-const CHARACTER_PATH_MATH_INTENTIONAL_IDS = [
+const CHARACTER_PATH_MATH_UNCLASSIFIED_IDS = [
   'legality-skill-spent-floor-vs-allocation-spent',
+];
+
+const CREATURE_BUDGET_MATH_UNCLASSIFIED_IDS = [
+  'creature-training-stored-tp-without-parts',
 ];
 
 function mathSectionSlice(text, heading) {
@@ -397,16 +401,38 @@ if (!characterDisagreements) {
 }
 requireDisagreementTokens(
   characterDisagreements,
-  'math-disagree-intentional',
-  CHARACTER_PATH_MATH_INTENTIONAL_IDS,
-  'character/path intentional',
+  'math-disagree-unclassified',
+  CHARACTER_PATH_MATH_UNCLASSIFIED_IDS,
+  'character/path unclassified',
+);
+
+const creatureBudgetSection = mathSectionSlice(indexText, '## Creature creator budget math');
+if (!creatureBudgetSection) {
+  console.error('FEATURE_INDEX is missing the creature creator budget math section.');
+  process.exit(2);
+}
+if (!creatureBudgetSection.includes('### Disagreements')) {
+  console.error('FEATURE_INDEX creature budget section is missing ### Disagreements.');
+  process.exit(2);
+}
+const creatureBudgetDisagreements = disagreementsSubsection(creatureBudgetSection);
+if (!creatureBudgetDisagreements) {
+  console.error('FEATURE_INDEX creature budget section has no ### Disagreements body.');
+  process.exit(2);
+}
+requireDisagreementTokens(
+  creatureBudgetDisagreements,
+  'math-disagree-unclassified',
+  CREATURE_BUDGET_MATH_UNCLASSIFIED_IDS,
+  'creature budget unclassified',
 );
 
 const mathDisagreementCount =
   MATH_DISAGREEMENT_INTENTIONAL_IDS.length +
   MATH_DISAGREEMENT_BUG_IDS.length +
   SKILL_MATH_DISAGREEMENT_COPY_IDS.length +
-  CHARACTER_PATH_MATH_INTENTIONAL_IDS.length;
+  CHARACTER_PATH_MATH_UNCLASSIFIED_IDS.length +
+  CREATURE_BUDGET_MATH_UNCLASSIFIED_IDS.length;
 console.log(`FEATURE_INDEX math-disagreement check OK (${mathDisagreementCount} guarded lines).`);
 
 const gen = spawnSync(

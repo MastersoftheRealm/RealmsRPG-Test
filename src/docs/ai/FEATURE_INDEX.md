@@ -30,7 +30,7 @@ Not checked, so silence here is not "it does not exist" and not "there is no for
 
 Export **names** for patterns, ui, hooks, and services are in [`FEATURE_INDEX_BARRELS.generated.md`](FEATURE_INDEX_BARRELS.generated.md). That generated file is not a list of what is used, and it does not read the other barrels.
 
-`scripts/validate-feature-index.js` checks that backticked `src/...` paths in this file exist. The same script fails if an app entry, a `src` barrel, a sibling missing from the six barrels above, a loose file directly under `src/lib`, or a non-test source file in the folders listed in that script is absent from this file. It also fails if the unused-export section does not match a production-import scan, or if a guarded `math-disagree-intentional`, `math-disagree-bug`, or `math-disagree-copy` line is dropped from the health / energy / cost, skill / allocation, or character-check / path math sections.
+`scripts/validate-feature-index.js` checks that backticked `src/...` paths in this file exist. The same script fails if an app entry, a `src` barrel, a sibling missing from the six barrels above, a loose file directly under `src/lib`, or a non-test source file in the folders listed in that script is absent from this file. It also fails if the unused-export section does not match a production-import scan, or if a guarded `math-disagree-intentional`, `math-disagree-bug`, `math-disagree-copy`, or `math-disagree-unclassified` line is dropped from a formula math section below.
 
 ---
 
@@ -2154,7 +2154,7 @@ Every non-test file under `src/lib/game` and `src/lib/calculators` is already re
 ### Not read line by line
 
 - Health, energy, and cost formulas in the section above are read through that pass’s scope. Skill helpers in `formulas.ts` after innate energy and `skill-allocation.ts` cost helpers are in **Skill and allocation math** below.
-- Character-check and path math for `character-legality.ts`, `feat-requirements.ts`, `path-validation.ts`, `archetype-path.ts`, and `innate-eligibility.ts` is in **Character-check and path math** below. `crafting-utils.ts` past the four apply functions, `path-recommendation-index.ts`, `size-table.ts` past `calculateCarryingCapacityKg`, `targeted-defenses.ts` past `parseDefensesFromDescription`, `weapon-attack-ability.ts` past `meetsAbilityRequirement`, `archetype-display.ts` past `applyProficiencyLossForLevelDown`, and `creator-cache.ts`.
+- Character-check and path math is in **Character-check and path math** below. Creature creator budgets are in **Creature creator budget math**. Still unread: `crafting-utils.ts` past the four apply functions, `path-recommendation-index.ts`, `size-table.ts` past `calculateCarryingCapacityKg`, `targeted-defenses.ts` past `parseDefensesFromDescription`, `weapon-attack-ability.ts` past `meetsAbilityRequirement`, `archetype-display.ts` past `applyProficiencyLossForLevelDown`, and `creator-cache.ts`.
 
 ---
 
@@ -2270,7 +2270,7 @@ Save legality budgets, feat requirement checks, path publish validation, innate 
 
 ### Disagreements
 
-- math-disagree-intentional:legality-skill-spent-floor-vs-allocation-spent: **Intentional.** Server legality uses `skillPointsSpentFloor` (rank sums + defense spend). Creators and the sheet use `calculateSimpleSkillPointsSpent` (proficiency cost, past-cap steps, species rules). The file comment labels skill spend a deliberate **lower bound**; over-budget warnings can fire late compared to true allocation spend.
+- math-disagree-unclassified:legality-skill-spent-floor-vs-allocation-spent: **Unclassified (product not confirmed).** `skillPointsSpentFloor` adds nonnegative skill rank values and defense skill totals × `defenseIncreaseCost`. `calculateSimpleSkillPointsSpent` walks proficiency purchases, value steps via `getSkillValueIncreaseCost`, and species rules. The legality path is a lower estimate; the sheet path reflects actual purchases. Warnings can disagree between the two.
 
 ### Same math, separate copies
 
@@ -2280,6 +2280,34 @@ Save legality budgets, feat requirement checks, path publish validation, innate 
 - `checkFeatRequirements` is the single feat gate for legality, sheet, creator, and codex filter; `getMaxQualifiedFeatLevel` loops the same function.
 - Innate path validation energy uses live `derivePowerDisplay` / `resolvePowerComposition`, same family as `calculatePowerCosts` (contrast `math-disagree-bug:innate-remaining-uses-stored-cost` on the sheet budget field).
 - `validateLoadoutTrainingPoints` uses `flattenLoadoutEntries` only; no second TP sum formula in this slice.
+
+## Creature creator budget math (line-by-line pass)
+
+Creature point budgets, spend totals, and training-point aggregation for the creature creator. Not encounter play UI. Not a rules balance sign-off.
+
+### Read to the end
+
+- `calculateCreatureCreatorStats` and `isCreatureOverBudget` in `src/app/(main)/creature-creator/creature-creator-derived-stats.ts`. Budgets: `calculateCreatureTrainingPoints(level, highestNonVitality)`, `calculateCreatureCurrency`, `calculateHealthEnergyPool(..., 'CREATURE', allowSubLevel)`, `calculateProficiency(..., allowSubLevel)`, `calculateAbilityPoints(..., allowSubLevel)`, `calculateSkillPointsForEntity` as creature, `calculateCreatureFeatPoints(level, martialProficiency)`. Spend: sum `calculateAbilityScoreCost` on abilities; `hitPoints + energyPoints` vs HE pool; `calculateSimpleSkillPointsSpent` on mapped creature skills via `allocationValueFromPersistedSkill`; feat sum from manual `points` plus mechanical sense/movement/resistance lines from codex maps; `computeCreatureTrainingSpent`; inventory currency × quantity. `minEnergy` is `highestNonVitality × max(1, floor(level))` without allocated `energyPoints`; `maxEnergy` uses `calculateCreatureMaxEnergy` which adds `energyPoints` to that same ability×level piece. `getCreatureAbilityBounds` in `creature-ability-bounds.ts` returns code constants only (ignores stale rules max).
+- `computeCreatureTrainingSpent`, `creatureLoadoutForBudget`, and legacy fallbacks in `src/app/(main)/creature-creator/creature-creator-training-spent.ts`. With codex parts: rebuild power rows through `resolvePowerComposition` / `plainPowerProficiencyParts`, then `sumRequiredProficiencyTrainingPoints` on active loadout. Adds `storedTpWithoutParts` (rows with no `parts` use saved `tp`), equipment/armament stored TP when properties missing, plus full legacy path when no DB context. Without DB: sums stored `tp` on powers, techniques, and armaments only.
+- `calculateCreatureTrainingPoints` and `calculateCreatureFeatPoints` in `src/lib/game/formulas.ts`. Creature TP: `base + ability + (level−1)×(tpPerLevelMultiplier + ability)` at L1+; sub-level uses `ceil(base×level)+ability`. Creature feat points: `baseFeat + martial` at L1 plus `(level−1)×featPointsPerLevel`.
+- `calculateProficiencyTP`, `roundUpTrainingPoints`, `optionLevelForWholeTrainingPoints`, `buildRequiredProficiencies`, and `sumRequiredProficiencyTrainingPoints` in `src/lib/proficiencies.ts` through the return of `sumRequiredProficiencyTrainingPoints`. Per-row TP rounds base plus rated options (whole-number level bump via `optionLevelForWholeTrainingPoints`), then `roundUpTrainingPoints`. Loadout-wide sum dedupes identical parts before summing.
+
+### Still not read line by line (creature budget scope)
+
+- None in this slice. `archetype-display.ts` proficiency level-up helpers remain under **Not read line by line** until a separate pass.
+
+### Disagreements
+
+`math-disagree-unclassified` marks a difference that is not labelled intentional or bug. Dropping a line fails the validator.
+
+- math-disagree-unclassified:creature-training-stored-tp-without-parts: **Second copy.** When codex DB is present, `computeCreatureTrainingSpent` uses `sumRequiredProficiencyTrainingPoints` for rows with parts but adds saved `power.tp` / `technique.tp` / `armament.tp` for rows without resolvable parts or properties. Those stored fields can disagree with live `calculateProficiencyTP` on the same loadout. Full legacy mode (no DB) uses only stored `tp` sums.
+
+### Same math, separate copies
+
+- Creature skill spend uses the same `calculateSimpleSkillPointsSpent` as the character sheet; creature meta skips orphan sub-skills whose base is absent from the skill list.
+- Creature ability spend uses `calculateAbilityScoreCost`; same as character legality and suggested-ability builders.
+- `computeCreatureTrainingSpent` and guided character save both call `sumRequiredProficiencyTrainingPoints` when part/property codex is available.
+- Player training **cap** uses `calculateTrainingPoints` via `getTrainingPointLimit`; creature training **budget** uses `calculateCreatureTrainingPoints` (different formula, different entity).
 
 ## Unused exports outside game and calculators
 
