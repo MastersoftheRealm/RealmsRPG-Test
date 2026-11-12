@@ -2430,7 +2430,7 @@ Creature size table, carrying-capacity kg formula, and archetype-path browse fil
 
 ## Character creator screens (behavior pass)
 
-What a player can do on each **character** creator surface: guided (and custom entry), entry chooser, and creature creator. Item/power/technique/species/crafting creators are out of scope for this pass. Not a rules balance sign-off.
+What a player can do on each **character** creator surface: guided (and custom entry), entry chooser, and creature creator. Library entity creators (power, technique, item, species) are in **Library entity creator screens** below. Not a rules balance sign-off.
 
 ### Screens walked (read through save wiring)
 
@@ -2463,8 +2463,8 @@ What the screen exposes (via `creature-creator-editor.tsx` and child sections): 
 
 - **Legacy “standard” nine-step character wizard** — removed (`guided-creator-store` comment TASK-912); no route remains.
 - **Character sheet in-place editing** — post-create play on `/characters/[id]`; not a creator screen.
-- **Item, power, technique, empowered-technique, species creators** — separate `CreatorPageShell` tools; named only in the index elsewhere.
-- **Crafting tool** — out of scope.
+- **Crafting tool** — out of scope (see **Crafting cost math**).
+- **Library entity creators** — summarized in the sibling section below (not re-walked here).
 - Every file under `src/components/guided-creator/` and `creature-creator-editor-*` not opened line-by-line beyond the paths above (**partial pass**).
 
 ### Same job, different behavior
@@ -2477,6 +2477,56 @@ What the screen exposes (via `creature-creator-editor.tsx` and child sections): 
 ### Dead or unreachable paths (this scope)
 
 - screen-behavior-note:legacy-character-creator-store-removed: No `character-creator-store` or non-guided multi-step character route; chooser “Custom” still opens `/characters/new/guided`.
+
+## Library entity creator screens (behavior pass)
+
+My Library / Realms Library authoring for powers, techniques, empowered techniques, armaments, and species. All use **`CreatorPageShell`** + `useCreatorSave` (except where noted). Routes under `src/app/(main)/*-creator/page.tsx`. **Partial pass:** workspace hooks and editor facades read; not every section island line-by-line.
+
+### Screens walked (read through save wiring)
+
+**Power creator** — `/power-creator` → `bootstrapPowerCreatorFormState`, `usePowerCreatorWorkspace`, `PowerCreatorEditor` (`power-creator-editor-*.tsx` islands), `usePowerCreatorCostDerivation` → `calculatePowerCosts`.
+
+A person sets name/description/portrait and **targeted defenses** (`TargetedDefensesSection`). **Action profile** (action type, reaction, attack mode). **Range / area / duration** mechanic fields. **Power parts** and **advanced mechanic** parts from codex. **Damage** rows. **Composition band** (`PowerCreatorCompositionBand`): shared tab vs per-variant **Reverse** tabs — fields can inherit from shared (`power-creator-from-shared` override toggles). Summary: `AdvancedCalculationsPanel` + `CreatorSummaryPanel` (energy, TP, innate snapshot via `snapshotPowerCreatorForInnate` when applicable). Load: `useLoadModalLibrary('power')` + `LoadFromLibraryModal`. Save blocked when name empty, die/composition incomplete (`powerCreatorSaveBlockReason`), or power role quota (`formatRoleQuotaExceededMessage`).
+
+**Save:** `useCreatorSave({ type: 'powers' })`; payload `getPayload()` = `{ name, data: powerData }` with parts/damage/composition in workspace. Admin can publish to Realms Library. Session cache + `?edit=` via `creatorEditReplacesDraft`.
+
+**Technique creator** — `/technique-creator` → `bootstrapTechniqueCreatorFormState`, `useTechniqueCreatorWorkspace`, single **`TechniqueCreatorEditor`** file (inline `CollapsibleSection` sections, not split facades).
+
+Combat config (weapon attack mode), action/reaction, **technique parts**, **damage** dice, targeted defenses. Costs via workspace / `calculateTechniqueCosts` (no composition variants). Same shell pattern: summary panel, advanced calc, load modal for `technique` library type.
+
+**Save:** `useCreatorSave({ type: 'techniques' })`; `getPayload()` includes technique document + damage array shape from bootstrap comments.
+
+**Empowered technique creator** — **separate route** `/empowered-technique-creator` (not a tab inside power or technique). `bootstrapEmpoweredTechniqueFormState`, `useEmpoweredTechniqueCreatorWorkspace`, `EmpoweredTechniqueCreatorEditor` (parallel **power** + **technique** section facades), `useEmpoweredTechniqueCostDerivation` → `calculateEmpoweredTechniqueCosts`. Loads **both** `usePowerParts` and `useTechniqueParts`. Attack mode picks cheaper Add Weapon part (`pickCheaperEnPart`) or technique No Attack. Single combined name/description/defenses; power damage + power parts + technique damage + technique parts.
+
+**Save:** `useCreatorSave({ type: 'empowered-techniques' })`; one library row linking both sides in `getPayload()`.
+
+**Item (armament) creator** — `/item-creator` (optional `?type=weapon|armor|shield` on new drafts; `?edit=` ignores type). `bootstrapItemCreatorFormState`, `useItemCreatorWorkspace`, `ItemCreatorEditor` switches **Weapon / Armor / Shield** panels. Property picks, weapon range/damage, armor DR, shield block/damage; `useItemCreatorCostDerivation` → `resolveItemMarketPricing` / `calculateItemCosts`. Summary shows currency, IP, TP, rarity (`RarityReferenceTable`). Load modal `useLoadModalLibrary('item', { itemKind })` with kind tied to armament type.
+
+**Save:** `useCreatorSave({ type: 'items' })`; properties + mechanic fields in payload. Changing `?type=` on a draft does not remount session (`sessionKey` = edit id or `'draft'`) — workspace warns instead of silent wipe.
+
+**Species creator** — `/species-creator` → `useSpeciesCreatorWorkspace`, `SpeciesCreatorEditor`, trait pickers via `TraitListModal` / `UnifiedSelectionModal`.
+
+A person sets species name, type, image, description, height/weight/lifespan, **sizes** (`SIZE_OPTIONS`), two **base skills** (base skills only; `"Any"` id `0` allowed), **languages**, and trait buckets (species / ancestry / characteristic / flaw) with caps from `species-creator-bootstrap`. **No** energy/TP advanced calc panel on this page. Load works **without login** (`requireAuthToLoad: false` on `CreatorPageShell` auth).
+
+**Save:** `useCreatorSave({ type: 'species' })`; payload is species codex shape (`species_traits`, `skills`, `sizes`, etc.) to **My Codex**; admin publish targets **Realms Codex** species.
+
+### Screens not walked in this pass
+
+- Every `power-creator-editor-*`, `empowered-technique-editor-*`, and `item-creator-editor-*` island beyond the facade list (**partial**).
+- Admin-only codex spreadsheet editors for the same entities (different screens).
+- **Crafting**, **encounters**, hub **Library** browser pages.
+
+### Same job, different behavior
+
+- screen-behavior-note:empowered-technique-separate-screen: **Empowered technique** is its own URL and `useCreatorSave` type `empowered-techniques`, not a mode inside power or technique creators. It merges two part databases in one form.
+- screen-behavior-note:power-composition-variants-vs-technique-single-flow: **Power** alone has `PowerCreatorCompositionBand` (shared + reverse variant tabs, inheritance overrides, `hidePartsAndDamage` on shared randomize). **Technique** and **item** creators are a single form state with no variant tab strip.
+- screen-behavior-note:power-facade-sections-vs-technique-monolith-editor: **Power** (and **empowered** power half) use thin `power-creator-editor.tsx` facades into many files. **Technique** keeps sections in one `technique-creator-editor.tsx` with `CollapsibleSection` + `PowerPartCard` reused for technique parts.
+- screen-behavior-note:species-creator-guest-load: **Species** sets `requireAuthToLoad: false` so Load opens without `LoginPromptModal`; other entity creators default to requiring auth for load (power page uses standard auth config).
+- screen-behavior-note:item-creator-type-query-vs-session-key: New item drafts can start from `?type=`, but `sessionKey` stays `'draft'` so switching type in the URL does not auto-reset; item workspace shows a type-mismatch warning instead of remounting like `?edit=` sessions do.
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:no-empowered-mode-on-power-or-technique-routes: There is no empowered-technique editor inside `/power-creator` or `/technique-creator`; only `/empowered-technique-creator`.
 
 ## Unused exports outside game and calculators
 

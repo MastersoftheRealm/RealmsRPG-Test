@@ -599,6 +599,58 @@ console.log(
   `FEATURE_INDEX character-creator screen check OK (${CHARACTER_CREATOR_SCREEN_NOTE_IDS.length} notes).`,
 );
 
+const LIBRARY_ENTITY_CREATOR_SCREEN_NOTE_IDS = [
+  'empowered-technique-separate-screen',
+  'power-composition-variants-vs-technique-single-flow',
+  'power-facade-sections-vs-technique-monolith-editor',
+  'species-creator-guest-load',
+  'item-creator-type-query-vs-session-key',
+  'no-empowered-mode-on-power-or-technique-routes',
+];
+
+const libraryEntityCreatorScreensSection = mathSectionSlice(
+  indexText,
+  '## Library entity creator screens',
+);
+if (!libraryEntityCreatorScreensSection) {
+  console.error('FEATURE_INDEX is missing the library entity creator screens section.');
+  process.exit(2);
+}
+if (!libraryEntityCreatorScreensSection.includes('### Same job, different behavior')) {
+  console.error(
+    'FEATURE_INDEX library entity creator section is missing ### Same job, different behavior.',
+  );
+  process.exit(2);
+}
+const entityScreenBehaviorStart = libraryEntityCreatorScreensSection.indexOf(
+  '### Same job, different behavior',
+);
+const entityScreenDeadStart = libraryEntityCreatorScreensSection.indexOf(
+  '### Dead or unreachable paths',
+);
+if (entityScreenBehaviorStart < 0 || entityScreenDeadStart < 0) {
+  console.error(
+    'FEATURE_INDEX library entity creator section missing behavior or dead-path headings.',
+  );
+  process.exit(2);
+}
+const entityScreenBehaviorBody = libraryEntityCreatorScreensSection.slice(
+  entityScreenBehaviorStart,
+  entityScreenDeadStart,
+);
+const entityScreenDeadBody = libraryEntityCreatorScreensSection.slice(entityScreenDeadStart);
+for (const id of LIBRARY_ENTITY_CREATOR_SCREEN_NOTE_IDS) {
+  const inBehavior = entityScreenBehaviorBody.includes(`screen-behavior-note:${id}:`);
+  const inDead = entityScreenDeadBody.includes(`screen-behavior-note:${id}:`);
+  if (!inBehavior && !inDead) {
+    console.error('FEATURE_INDEX missing required library-entity-creator screen note:', id);
+    process.exit(2);
+  }
+}
+console.log(
+  `FEATURE_INDEX library-entity-creator screen check OK (${LIBRARY_ENTITY_CREATOR_SCREEN_NOTE_IDS.length} notes).`,
+);
+
 const gen = spawnSync(
   process.execPath,
   [path.join(__dirname, 'generate-feature-index-barrels.js'), '--check'],
