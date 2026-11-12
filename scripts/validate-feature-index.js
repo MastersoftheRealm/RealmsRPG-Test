@@ -294,6 +294,8 @@ const MATH_DISAGREEMENT_IDS = [
   'player-vs-creature-max-energy',
   'power-energy-vs-technique-energy',
   'format-energy-intermediate-vs-format-energy-number',
+  'modify-variant-ceil-vs-composition-finalize',
+  'innate-remaining-uses-stored-cost',
 ];
 
 function mathDisagreementSection(text) {

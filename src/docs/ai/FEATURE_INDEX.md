@@ -2153,7 +2153,7 @@ Every non-test file under `src/lib/game` and `src/lib/calculators` is already re
 
 ### Not read line by line
 
-- Health, energy, and cost formulas read in the section above. Remaining unread lines there name `buildPowerPartsPayloadForCost`, composed-power display helpers, and weapon range ladders not needed for market currency.
+- Health, energy, and cost formulas in the section above are read through that pass’s scope. Skill helpers in `formulas.ts` after innate energy are not in that scope.
 - `src/lib/game/archetype-path.ts`, `character-legality.ts` past `abilityPointsSpent`, `innate-eligibility.ts`, `feat-requirements.ts` past the defense and speed calls, `crafting-utils.ts` past the four apply functions, `path-recommendation-index.ts`, `path-validation.ts` past `validatePathDataForPublish`, `size-table.ts` past `calculateCarryingCapacityKg`, `targeted-defenses.ts` past `parseDefensesFromDescription`, `weapon-attack-ability.ts` past `meetsAbilityRequirement`, `archetype-display.ts` past `applyProficiencyLossForLevelDown`, and `creator-cache.ts`.
 
 ---
@@ -2161,7 +2161,7 @@ Every non-test file under `src/lib/game` and `src/lib/calculators` is already re
 
 ## Health, energy, and cost math (line-by-line pass)
 
-This pass read the health, energy, and currency formulas in the code. It is still a partial read: some cost helpers that only build part lists or only format UI text were not opened line by line. This is a map of what the code does, not a rules balance sign-off.
+This pass read the health, energy, and currency formulas in the code through the remainder named below. Skill bonus helpers in `src/lib/game/formulas.ts` after innate energy were not opened (out of this pass). This is a map of what the code does, not a rules balance sign-off.
 
 ### Read to the end
 
@@ -2179,15 +2179,18 @@ This pass read the health, energy, and currency formulas in the code. It is stil
 - `calculateItemCosts`, `analyzeItemMarketCurrency`, `resolveItemMarketPricing`, and `deriveItemDisplay` in `src/lib/calculators/item-calc.ts`. Item points and property currency sum base plus option × level per property. Market currency picks a rarity band from total IP, then `band_low × (1 + 0.125 × property currency sum)`, clamps to the band min and max, then floors for display.
 - `analyzeItemCosts` and `buildItemAdvancedCalculationGroups` in `src/lib/calculators/item-cost-breakdown.ts`. Breakdown lines repeat the same per-property IP and currency sums as `calculateItemCosts`; totals add rarity and rounded-down market currency.
 - `getSkillBonusForFeatRequirement` and `calculateArchetypeProgression` in `src/lib/game/formulas.ts` through their returns. Feat skill checks rebuild sub-skill and base-skill bonuses from codex rows. Archetype progression sets innate pools, thresholds, and bonus feat slots from proficiencies and milestone choices.
-- `buildMechanicParts` in `src/lib/calculators/mechanic-builder.ts` through the action-type branch. It builds mechanic part payloads; energy math still runs through `analyzePowerEnergy` on those payloads.
+- `buildMechanicParts` and `calculateDamageOptionLevel` in `src/lib/calculators/mechanic-builder.ts` through the return. Damage uses `floor((dice × size − 4) / 2)` for option 1. Range uses `steps − 1` for Power Range. Duration maps UI values to codex option levels (including minute/hour/day index tables). Split dice calls `computeSplits` in `dice-splits.ts`. Technique attack mode adds No Attack or Add Weapon at level 0.
+- `buildPowerPartsPayloadForCost` in `src/lib/calculators/power-calc.ts`. Without creator-style fields it maps saved parts and rebuilds weapon attack from `attackMode`. With creator fields it keeps user/advanced saved parts, rebuilds mechanics via `buildMechanicParts`, keeps legacy auto-mechanic rows only when the rebuild missed that name, then appends weapon attack. Every cost path uses the merged payload in `calculatePowerCosts`.
+- `rawEnergyOf`, `beneficialTabExtra`, `ownRangeEnergy`, and `reverseDrawbackEnergy` in `src/lib/calculators/power-composition.ts`. Tab energy is the difference of two `calculatePowerCosts` runs on footprints (not a hand-written delta). Range extra charges the full tab range, not a refund when shorter than Shared.
+- `powerCompositionEnergyLines`, `deriveComposedPowerDisplay`, and `formatPowerCompositionSummary` in `src/lib/calculators/power-composition.ts`. They format `resolvePowerComposition` results; published `energy` and `tp` on the display come from that resolution, not a second calculator.
+- `weaponRangeSpaceLadder`, `weaponRangeSpacesFromOpLevel`, `deriveWeaponRangeConfig`, `formatRange`, and `resolveWeaponRangeDisplay` in `src/lib/calculators/item-calc.ts`. Thrown, reach, and ranged use fixed space ladders from `ITEM_PROPERTY_CONSTANTS`; option level picks the ladder index (clamped). Legacy `rangeLevel` is 1-based and maps to ranged option `level − 1`. Bare stored integers without properties are treated as corrupt and show Melee.
+- `sumInnatePowerEnergyCosts` and `calculateRemainingInnateEnergy` in `src/lib/game/formulas.ts`. Remaining innate budget is `maxInnateEnergy` minus the sum of `cost` on innate powers. It does not call `calculatePowerCosts`.
 - `computePartTrainingPoints` in `src/lib/calculators/part-training-points.ts`. Training points round base plus option products up once per part; power and technique share the same function.
+- `computeSplits` in `src/lib/calculators/dice-splits.ts`. One split formula shared by mechanic builder and calculators.
 
 ### Still not read line by line (health / energy / cost scope)
 
-- `buildPowerPartsPayloadForCost` in `src/lib/calculators/power-calc.ts`. It decides which saved parts feed `calculatePowerCosts`.
-- `powerCompositionEnergyLines`, `deriveComposedPowerDisplay`, and `formatPowerCompositionSummary` in `src/lib/calculators/power-composition.ts`. Display text after `resolvePowerComposition`.
-- Weapon range ladder helpers in `src/lib/calculators/item-calc.ts` after `deriveAgilityReductionFromProperties` except where `deriveItemDisplay` calls market pricing.
-- Innate energy summing helpers at the end of `src/lib/game/formulas.ts` past `calculateArchetypeProgression` except where already named above.
+- None. Skill helpers in `src/lib/game/formulas.ts` after `calculateRemainingInnateEnergy` were not opened; they are outside this pass.
 
 ### Disagreements
 
@@ -2197,12 +2200,16 @@ Two copies doing the same job. These IDs are required; dropping a line makes `sc
 - math-disagree:player-vs-creature-max-energy: `calculateMaxEnergyForArchetype` picks the path’s archetype ability (or the higher of two on Powered-Martial). `calculateCreatureMaxEnergy` uses the highest non-vitality primary score only. A creature with high vitality but lower other scores can get a different max energy than a player with the same numbers.
 - math-disagree:power-energy-vs-technique-energy: `analyzePowerEnergy` splits flat, percentage, and duration parts with the duration extra equation. `analyzeTechniqueEnergy` only does flat sum × percentage product with no duration branch. They are not interchangeable: the same part list would not yield the same energy on both sides.
 - math-disagree:format-energy-intermediate-vs-format-energy-number: `formatEnergyIntermediate` rounds to two decimals and builds its own minus sign. `formatEnergyNumber` uses `formatCost`, which rounds to three decimals and strips trailing zeros. The same number can show different text in composition notes versus creator breakdowns.
+- math-disagree:modify-variant-ceil-vs-composition-finalize: On a Modify power, each variant’s displayed `energy` is `publishContribution(energyRaw)` (round up each tab). The power’s published total uses `finalizeCompositionEnergy` once on the sum of raw tab energies (plus Shared). Adding the per-tab rounded numbers can be higher than the published total.
+- math-disagree:innate-remaining-uses-stored-cost: `calculateRemainingInnateEnergy` subtracts each innate power’s saved `cost` field. `buildPowerPartsPayloadForCost` and `calculatePowerCosts` recompute energy from parts. If `cost` on the save is stale, remaining innate budget does not match live part math.
 
 ### Same math, separate copies
 
 - `calculateItemCosts` and `analyzeItemCosts` sum the same IP and property currency per row. Breakdown does not add training points; chip TP still comes from `trainingPointsForItemPropertyRef`.
 - `getTechniquePartEnergyContribution`, the loop inside `calculateTechniqueCosts`, and `partEnergyContribution` in `technique-energy-breakdown.ts` use the same base-plus-three-options energy product.
 - `calculateCreatureCurrency` and `computeStartingCurrency` use the same growth formula and the same 200 / 1.45 defaults, stored in different constant imports.
+- `rawEnergyOf` and `derivePlainPowerDisplay` both feed `buildPowerPartsPayloadForCost` into `calculatePowerCosts`. Composed-power totals use the same path through `rawEnergyOf`.
+- `computeSplits` in `dice-splits.ts` is the only split-dice formula; `buildMechanicParts` calls it for power and technique damage.
 
 ## Unused exports outside game and calculators
 
