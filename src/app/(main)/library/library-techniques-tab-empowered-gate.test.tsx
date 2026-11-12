@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { useOfficialPowerTechniqueBrowseFilters } from '@/hooks/use-official-power-technique-browse-filters';
 import { LibraryTechniquesTab } from './LibraryTechniquesTab';
 
@@ -76,7 +76,6 @@ vi.mock('next/navigation', () => ({
 }));
 
 afterEach(() => {
-  cleanup();
   vi.mocked(useOfficialPowerTechniqueBrowseFilters).mockClear();
 });
 

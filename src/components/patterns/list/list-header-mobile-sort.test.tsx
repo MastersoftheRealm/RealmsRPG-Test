@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
-import { cleanup, render } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { render } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import { ListHeader } from './list-header';
 
 const columns = [
@@ -9,10 +9,6 @@ const columns = [
 ];
 const sortState = { col: 'name', dir: 1 as const };
 const onSort = vi.fn();
-
-afterEach(() => {
-  cleanup();
-});
 
 function mobileSortButton(container: HTMLElement): HTMLButtonElement {
   const btn = container.querySelector(

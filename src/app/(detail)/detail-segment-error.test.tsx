@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
 import DetailSegmentError from './error';
 import {
   RESOURCE_ACCESS_UNAVAILABLE_DIGEST,
@@ -9,10 +9,6 @@ import {
 } from '@/lib/server/resource-access-unavailable';
 
 describe('DetailSegmentError recovery', () => {
-  afterEach(() => {
-    cleanup();
-  });
-
   it('invokes retry (router refresh + boundary reset), not reset alone', () => {
     const retry = vi.fn();
     const reset = vi.fn();
