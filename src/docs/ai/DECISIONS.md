@@ -21,7 +21,7 @@ Game runner = **RM (Realm Master)** — never GM.
 - QA Tester checks the Vercel preview before merge or shortly after. Post-merge human QA: QA Tester; assign Bob (James Owenby) only for high-importance or obvious visual-issue tasks (Oct 13, 2026).
 - WCAG **2.2 AA** everywhere.
 - Keep branch name **`master`**; ban direct pushes.
-- Clickup Manager is the only Grok bot that writes to ClickUp (Kadin personal token). Cursor agents may write to ClickUp on Kadin's orders.
+- ClickUp Manager (Grok) owns duplicate filing and Editor-driven queue hygiene (Kadin personal token). **Cursor and Cloud coding agents must write** to the linked ClickUp task they implement: status moves and workflow comments per root `AGENTS.md` (**ClickUp**) and `.cursor/rules/realms-tasks.mdc` (Kadin, Nov 12, 2026).
 - No bot starts sweeps/checks/runs without Kadin or a bot he delegated.
 - Duplicates go to Clickup Manager (dated section in existing task description), not a comment from the finder.
 - Rules-math / rules-value PRs: PR Reviewer routes to **Rules Balance Analyst** for a ruling check before Kadin signs off (Kadin, Oct 13, 2026).
