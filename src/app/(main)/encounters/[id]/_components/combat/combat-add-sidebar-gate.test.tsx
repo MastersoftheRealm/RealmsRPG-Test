@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { createDefaultEncounter } from '@/types/encounter';
 import { CombatAddSidebar } from './combat-add-sidebar';
 import { createEmptyNewCombatantForm } from './combat-encounter-helpers';
@@ -15,7 +15,6 @@ vi.mock('../EncounterCampaignRosterSection', () => ({
 }));
 
 afterEach(() => {
-  cleanup();
   rosterProps = null;
 });
 

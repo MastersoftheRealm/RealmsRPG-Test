@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 
 import type { ImgHTMLAttributes } from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
 import type { Character } from '@/types';
 import { CharacterSheetProvider, type CharacterSheetContextValue } from './character-sheet-context';
 import { buildReadOnlySheetContextValue } from './read-only-sheet';
@@ -70,10 +70,6 @@ function renderHeader(isOwner: boolean) {
 }
 
 describe('SheetHeaderIdentity ownership (COMP1-048)', () => {
-  afterEach(() => {
-    cleanup();
-  });
-
   it('hides owner-only header pencils for a viewer when parent passes handlers', () => {
     renderHeader(false);
 

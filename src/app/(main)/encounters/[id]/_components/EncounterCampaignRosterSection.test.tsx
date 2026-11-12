@@ -1,11 +1,9 @@
 // @vitest-environment happy-dom
-import { cleanup, fireEvent, render } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import { createDefaultEncounter } from '@/types/encounter';
 import type { Campaign } from '@/types/campaign';
 import { EncounterCampaignRosterSection } from './EncounterCampaignRosterSection';
-
-afterEach(() => cleanup());
 
 describe('EncounterCampaignRosterSection', () => {
   const campaigns: Campaign[] = [

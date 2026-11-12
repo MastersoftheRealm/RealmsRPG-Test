@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { useOfficialPowerTechniqueBrowseFilters } from '@/hooks/use-official-power-technique-browse-filters';
 import { usePathListFilter } from '@/hooks';
 import { OfficialTechniqueList } from './official-technique-list';
@@ -50,7 +50,6 @@ vi.mock('@/components/patterns/list/official-entity-list', () => ({
 }));
 
 afterEach(() => {
-  cleanup();
   vi.mocked(useOfficialPowerTechniqueBrowseFilters).mockClear();
   vi.mocked(usePathListFilter).mockClear();
 });

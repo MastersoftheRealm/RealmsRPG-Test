@@ -1,9 +1,9 @@
 // @vitest-environment happy-dom
 
 import type { ReactNode } from 'react';
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 import type { CoreRulesMap } from '@/types/core-rules';
 import { getGameRulesFallback } from '@/hooks';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
@@ -139,10 +139,6 @@ vi.mock('@/hooks', async (importOriginal) => {
       pathFilterActive: false,
     }),
   };
-});
-
-afterEach(() => {
-  cleanup();
 });
 
 function footerContinueButton() {

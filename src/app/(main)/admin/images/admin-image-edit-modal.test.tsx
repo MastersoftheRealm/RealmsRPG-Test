@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import type { ReactNode } from 'react';
-import { cleanup, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RealmsImage } from '@/lib/realms-images';
@@ -116,7 +116,6 @@ describe('AdminImageEditModal local preview object URLs (PAGES2-020)', () => {
   afterEach(() => {
     createObjectURLSpy.mockRestore();
     revokeObjectURLSpy.mockRestore();
-    cleanup();
   });
 
   it('revokes the blob preview when the modal closes', async () => {
