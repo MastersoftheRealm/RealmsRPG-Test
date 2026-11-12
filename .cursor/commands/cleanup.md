@@ -1,6 +1,6 @@
 # Cleanup
 
-Apply only the in-scope gap the latest reviewer **REQUEST CHANGES** verdict named. Doc nits are not a cleanup. Review is limited to two rounds (`AGENTS.md`, Review): if this is the round-two verdict and the gap cannot be closed properly, stop and escalate to Collin instead.
+Apply only the in-scope gap the latest `/audit` **REQUEST CHANGES** verdict named (`.cursor/commands/audit.md`). Doc nits are not a cleanup. Review is limited to two rounds (`AGENTS.md`, Review): if this is the round-two verdict and the gap cannot be closed properly, stop and escalate to Collin instead.
 
 ## Scope
 
