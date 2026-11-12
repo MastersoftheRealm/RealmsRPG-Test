@@ -409,7 +409,7 @@ export function sensesControlFeatIdsFromNames(
   return ids;
 }
 
-export function activeSenseControlFeat(
+function activeSenseControlFeat(
   senses: readonly string[],
   kind: BuiltInSenseKind,
   catalog: readonly CodexCreatureFeat[],
