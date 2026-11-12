@@ -67,6 +67,8 @@ const FOLDER_FILE_DIRS = [
   'src/components/onboarding',
   'src/components/providers',
   'src/app/(main)/my-account/_components',
+  'src/components/ui',
+  'src/app/(main)/admin/codex',
 ];
 
 function walk(dir, acc = []) {

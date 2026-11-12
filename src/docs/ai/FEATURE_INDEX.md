@@ -12,13 +12,12 @@ Checked on this pass:
 - Every non-test `.ts` / `.tsx` file under `src/components/creator`, `src/components/crafting`, `src/components/encounters`, and the creator and crafting page folders named in that section. The pairs in that section were opened. The files listed there as not read line by line were not.
 - Every non-test `.ts` / `.tsx` file under `src/components/character`, `src/components/codex`, `src/app/(main)/encounters/[id]/_components`, and `src/app/(detail)/campaigns/[id]/_components`. The pairs in that section were opened. The files listed there as not read line by line were not.
 - Every non-test `.ts` / `.tsx` file under `src/components/rolls`, `rules`, `tabletop`, `layout`, `landing`, `about`, `auth`, `legal`, `onboarding`, `providers`, and `src/app/(main)/my-account/_components`. The pairs in that section were opened. The files listed there as not read line by line were not.
+- Every non-test `.ts` / `.tsx` file under `src/components/ui` and `src/app/(main)/admin/codex`. The pairs in that section were opened. The files listed there as not read line by line were not.
 - A static import walk from app entries. A file loaded only by a variable `import()` would not show up. `knip` was not run, so unused exports inside a file that is imported were not measured.
 
 Not checked, so silence here is not "it does not exist" and not "there is no fork":
 
 - Behavior of calculators, saves, or admin editors.
-- Admin codex screens beyond the feat and skill row renders.
-- `src/components/ui` beyond the files its barrel does not re-export.
 - Loose modules under `src/lib/` outside `game/` and `calculators/`.
 - Pairs of files that are not named in a fork section below.
 
@@ -1197,13 +1196,148 @@ Every path below is a non-test source file. The checker fails if one is missing 
 
 ---
 
+## UI kit and admin codex
+
+88 non-test `.ts` / `.tsx` files. `src/app/(main)/admin/codex/page.tsx` has no TypeScript importer because Next loads it. Every other file in these two folders has a production importer. None are unused files.
+
+`src/components/ui/index.ts` re-exports every sibling except `src/components/ui/chip-options-panel.tsx`. That panel is imported by `expandable-chip.tsx`.
+
+### Second implementations
+
+- Buttons. `src/components/ui/button.tsx` and `src/components/ui/icon-button.tsx` each have their own `cva` map and render a `<button>` or a Slot. `IconButton` does not render `Button`. `Button` has a size named `icon`. `TabNavOverflowScroller` in `src/components/ui/tab-navigation.tsx` renders its own chevron `<button>` elements. It does not render `IconButton`.
+- Labeled fields. `Input`, `Textarea`, and `Select` each render their own control, the same label class (`mb-1.5 block text-sm font-medium text-text-primary`), and the same focus and error border classes. None renders another. `Input`'s error paragraph has `role="alert"`. `Textarea`'s does not. `SearchInput` renders a raw `<input>` with a search icon and a clear button. It does not render `Input`.
+- Chips. `DescriptorChip` in `src/components/ui/chip.tsx` renders `Chip`. `ExpandableChip` renders `DescriptorChip` only when `descriptor` is set. Otherwise it draws its own shell from `expandableChipShellClass` and, when options are open, `ChipOptionsPanel`. That shell does not render `Chip`.
+- Feedback. `Alert` and `ToastItem` in `src/components/ui/toast.tsx` each use `role="alert"`, a status icon, and `IconButton` to dismiss. `ToastItem` does not render `Alert`. Toasts are portaled. Alerts are inline.
+- Cards. `SelectionCard` and `SelectionCardSurface` call `cardVariants` from `src/components/ui/card.tsx`. They do not render `Card`. `SelectionCard` is a `<button>`. `Card` and `SelectionCardSurface` are `div`s.
+- Copy suffix. `src/app/(main)/admin/codex/admin-codex-copy-suffix.ts` exports `COPY_NAME_SUFFIX`. `src/app/(main)/admin/codex/use-codex-spreadsheet.ts` declares its own `COPY_NAME_SUFFIX` and does not import that file. Both values are the same characters. The spreadsheet `copyRow` appends that local constant.
+- Archetype list. `src/app/(main)/admin/codex/AdminArchetypesTab.tsx` renders `SearchInput` and `GridListRow`. It does not render `CodexBrowseListShell`. The other eight entity tabs do.
+- Spreadsheet find bar. `src/app/(main)/admin/codex/codex-spreadsheet-toolbar.tsx` renders a raw text `<input>`, a raw checkbox, and a raw `<select>`. It does not render `SearchInput`, `Checkbox`, or `Select`.
+- Feat editors. `src/app/(main)/admin/codex/admin-feat-edit-modal.tsx` renders `AdminFeatEditModalFields`. `src/app/(main)/admin/codex/admin-creature-feat-edit-modal.tsx` renders its own `Input` and `Textarea`. Neither modal renders the other. Both call `useAdminLeveledFeatSession`, `AdminFeatLevelControls`, and `codexFeatEditorIsDirty`.
+
+### Calls a shared component
+
+- `LoadingState` renders `Spinner`. `EmptyState` renders `Button` when its action is an object with `label` and `onClick`. `Alert`, `ToastItem`, and the modal close control render `IconButton`. `Modal` portals into `document.body`.
+- The admin codex page renders `TabNavigation`, `TabContentPanel`, and either `CodexSpreadsheetView` or one of the nine tab components.
+- Eight entity tabs call `useAdminCodexEntity` and render `CodexBrowseListShell` and `AdminCodexRowActions`. Feats also render `CodexFeatRow`. Skills also render `CodexSkillRow`.
+- The edit modals for creature feats, equipment, parts, properties, skills, species, and traits each render `AdminCodexEditModalFooter`, `AdminCodexCopySourceBanner`, and `AdminCodexSourceField`. The feat modal renders the footer and the banner. `AdminFeatEditModalFields` renders `AdminCodexSourceField`. The archetype tab renders the footer. `admin-archetype-editor-meta.tsx` renders the banner and the source field.
+- `useAdminCodexDelete` renders `DeleteConfirmModal` and `ConfirmActionModal`. `useCodexEditorLeaveGuard` renders `ConfirmActionModal`. `codexEditorDraftIsDirty` calls `creatorDraftIsDirty`.
+- `CodexSpreadsheetView` renders `CodexSpreadsheetToolbar`, `CodexSpreadsheetTable`, and `Modal`. The table renders `CodexSpreadsheetTableRow`. `AdminArchetypeEditor` renders the meta, level-1, guided, and progression sections.
+
+### Not read line by line
+
+- `src/components/ui/modal.tsx` past the scroll-lock helpers and the portal, dialog, and close button.
+- `src/components/ui/tab-navigation.tsx` past `TabContentPanel`, the overflow chevrons, and the start of `TabNavigation`.
+- `ChipHeaderContent` and the cost lines above the descriptor return in `src/components/ui/expandable-chip.tsx`.
+- The floating-ui setup in `src/components/ui/tooltip.tsx` between the early return and `FloatingHelpPanel`. The file does call `useFloatingHelpPopover` and `FloatingHelpPanel`.
+- `src/app/(main)/admin/codex/actions.ts`.
+- The eight `CodexBrowseListShell` tab files past the shared hook, shell, and row-action imports. `AdminArchetypesTab.tsx` past the workspace hook and the error return.
+- The edit-modal bodies past the shared footer, banner, and source field. `admin-feat-edit-modal-fields.tsx`, `admin-codex-feat-level-fields.tsx`, and `admin-part-edit-modal-options.tsx`.
+- The archetype editor sections past `AdminArchetypeEditor`'s composition, and the archetype workspace, path form, and write files.
+- `use-codex-spreadsheet.ts` past `copyRow`. `codex-spreadsheet-config.ts`, `codex-spreadsheet-helpers.ts`, `codex-spreadsheet-table-row.tsx`, and `codex-column-map.ts`.
+- The `*-form.ts` files.
+
+### `src/components/ui`
+
+- `src/components/ui/alert.tsx`
+- `src/components/ui/button.tsx`
+- `src/components/ui/card.tsx`
+- `src/components/ui/checkbox.tsx`
+- `src/components/ui/chip-options-panel.tsx`
+- `src/components/ui/chip.tsx`
+- `src/components/ui/empty-state.tsx`
+- `src/components/ui/expandable-chip.tsx`
+- `src/components/ui/icon-button.tsx`
+- `src/components/ui/index.ts`
+- `src/components/ui/input.tsx`
+- `src/components/ui/modal.tsx`
+- `src/components/ui/page-container.tsx`
+- `src/components/ui/page-header.tsx`
+- `src/components/ui/search-input.tsx`
+- `src/components/ui/select.tsx`
+- `src/components/ui/selection-card.tsx`
+- `src/components/ui/spinner.tsx`
+- `src/components/ui/tab-navigation.tsx`
+- `src/components/ui/table-scroll.tsx`
+- `src/components/ui/textarea.tsx`
+- `src/components/ui/toast.tsx`
+- `src/components/ui/tooltip.tsx`
+
+### `src/app/(main)/admin/codex`
+
+- `src/app/(main)/admin/codex/AdminArchetypesTab.tsx`
+- `src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx`
+- `src/app/(main)/admin/codex/AdminEquipmentTab.tsx`
+- `src/app/(main)/admin/codex/AdminFeatsTab.tsx`
+- `src/app/(main)/admin/codex/AdminPartsTab.tsx`
+- `src/app/(main)/admin/codex/AdminPropertiesTab.tsx`
+- `src/app/(main)/admin/codex/AdminSkillsTab.tsx`
+- `src/app/(main)/admin/codex/AdminSpeciesTab.tsx`
+- `src/app/(main)/admin/codex/AdminTraitsTab.tsx`
+- `src/app/(main)/admin/codex/CodexSpreadsheetView.tsx`
+- `src/app/(main)/admin/codex/actions.ts`
+- `src/app/(main)/admin/codex/admin-archetype-editor-config.ts`
+- `src/app/(main)/admin/codex/admin-archetype-editor-guided.tsx`
+- `src/app/(main)/admin/codex/admin-archetype-editor-level1.tsx`
+- `src/app/(main)/admin/codex/admin-archetype-editor-meta.tsx`
+- `src/app/(main)/admin/codex/admin-archetype-editor-progression.tsx`
+- `src/app/(main)/admin/codex/admin-archetype-editor.tsx`
+- `src/app/(main)/admin/codex/admin-archetype-path-form.ts`
+- `src/app/(main)/admin/codex/admin-archetype-path-rows.tsx`
+- `src/app/(main)/admin/codex/admin-archetype-workspace-mutators.ts`
+- `src/app/(main)/admin/codex/admin-archetype-workspace-open.ts`
+- `src/app/(main)/admin/codex/admin-archetype-workspace-save.ts`
+- `src/app/(main)/admin/codex/admin-archetype-workspace-unknown-selections.ts`
+- `src/app/(main)/admin/codex/admin-codex-copy-source-banner.tsx`
+- `src/app/(main)/admin/codex/admin-codex-copy-suffix.ts`
+- `src/app/(main)/admin/codex/admin-codex-edit-modal-footer.tsx`
+- `src/app/(main)/admin/codex/admin-codex-feat-level-fields.tsx`
+- `src/app/(main)/admin/codex/admin-codex-level-save.ts`
+- `src/app/(main)/admin/codex/admin-codex-row-actions.tsx`
+- `src/app/(main)/admin/codex/admin-codex-save-target.ts`
+- `src/app/(main)/admin/codex/admin-codex-source-field.tsx`
+- `src/app/(main)/admin/codex/admin-codex-unsaved-leave-guard.tsx`
+- `src/app/(main)/admin/codex/admin-codex-unsaved-leave.ts`
+- `src/app/(main)/admin/codex/admin-creature-feat-edit-modal.tsx`
+- `src/app/(main)/admin/codex/admin-creature-feat-form.ts`
+- `src/app/(main)/admin/codex/admin-equipment-edit-modal.tsx`
+- `src/app/(main)/admin/codex/admin-feat-edit-modal-fields.tsx`
+- `src/app/(main)/admin/codex/admin-feat-edit-modal.tsx`
+- `src/app/(main)/admin/codex/admin-feat-form.ts`
+- `src/app/(main)/admin/codex/admin-part-edit-modal-options.tsx`
+- `src/app/(main)/admin/codex/admin-part-edit-modal.tsx`
+- `src/app/(main)/admin/codex/admin-part-form.ts`
+- `src/app/(main)/admin/codex/admin-property-edit-modal.tsx`
+- `src/app/(main)/admin/codex/admin-property-form.ts`
+- `src/app/(main)/admin/codex/admin-skill-edit-modal.tsx`
+- `src/app/(main)/admin/codex/admin-species-edit-modal.tsx`
+- `src/app/(main)/admin/codex/admin-species-form.ts`
+- `src/app/(main)/admin/codex/admin-trait-edit-modal.tsx`
+- `src/app/(main)/admin/codex/admin-trait-form.ts`
+- `src/app/(main)/admin/codex/codex-archetype-write.ts`
+- `src/app/(main)/admin/codex/codex-column-map.ts`
+- `src/app/(main)/admin/codex/codex-spreadsheet-config.ts`
+- `src/app/(main)/admin/codex/codex-spreadsheet-helpers.ts`
+- `src/app/(main)/admin/codex/codex-spreadsheet-table-row.tsx`
+- `src/app/(main)/admin/codex/codex-spreadsheet-table.tsx`
+- `src/app/(main)/admin/codex/codex-spreadsheet-toolbar.tsx`
+- `src/app/(main)/admin/codex/codex-spreadsheet-virtualization.ts`
+- `src/app/(main)/admin/codex/page.tsx`
+- `src/app/(main)/admin/codex/source-catalog-action.ts`
+- `src/app/(main)/admin/codex/use-admin-archetype-selection-options.ts`
+- `src/app/(main)/admin/codex/use-admin-archetype-workspace.ts`
+- `src/app/(main)/admin/codex/use-admin-codex-delete.tsx`
+- `src/app/(main)/admin/codex/use-admin-codex-entity.tsx`
+- `src/app/(main)/admin/codex/use-admin-leveled-feat-session.ts`
+- `src/app/(main)/admin/codex/use-codex-spreadsheet.ts`
+
+---
+
 ## Left for a later pass
 
 Still not opened file by file:
 
-- `src/components/ui` beyond the files its barrel does not re-export.
-- Admin codex screens beyond the feat and skill tabs that render `CodexFeatRow` and `CodexSkillRow`.
-- Modules under `src/lib/` other than the `game/` and `calculators/` sibling lists above. `src/lib/game/creator-constants.ts` was opened only for `CONDITIONS`. `src/lib/password-policy.ts` was not opened; the account check only imports `PASSWORD_MIN_LENGTH`.
+- Modules under `src/lib/` other than the `game/` and `calculators/` sibling lists above. `src/lib/game/creator-constants.ts` was opened only for `CONDITIONS`. `src/lib/password-policy.ts` was not opened. The admin source field imports `@/lib/codex/sources` and was not a read of that module.
 - Unused exports inside files that something already imports.
 - Line-by-line comparison of files in `src/components/patterns`, `src/components/character-sheet`, and `src/components/guided-creator` that are not named in that fork section.
 - The files named under "Not read line by line" in the earlier sections and in the section above.
+- Admin screens outside `src/app/(main)/admin/codex` (users, images, roles, sources, public library, core rules).
