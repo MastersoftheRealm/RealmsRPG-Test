@@ -13,9 +13,8 @@ import { Swords, Brain } from 'lucide-react';
 import { PageContainer } from '@/components/ui';
 import { CloudSyncOfflineBanner, SegmentedControl } from '@/components/patterns';
 import { RollProvider, RollLog } from '@/components/rolls';
-import type { Encounter } from '@/types/encounter';
-import { defaultSkillEncounterState } from '@/types/encounter';
 import CombatEncounterView from '../_components/CombatEncounterView';
+import { prepareMixedEncounter } from './prepare-mixed-encounter';
 import SkillEncounterView from '../_components/SkillEncounterView';
 import { EncounterPageHeader } from '../_components/EncounterPageHeader';
 import { OpenTabletopButton } from '../_components/OpenTabletopButton';
@@ -33,31 +32,6 @@ type ViewTab = MixedEncounterViewTab;
 
 interface PageParams {
   params: Promise<{ id: string }>;
-}
-
-function prepareMixedEncounter(encounter: Encounter): Encounter {
-  if (!encounter.skillEncounter) {
-    // Mixed encounter: default to initiative so turn order can sync with combat.
-    return {
-      ...encounter,
-      skillEncounter: { ...defaultSkillEncounterState(), useInitiative: true },
-    };
-  }
-
-  const skill = encounter.skillEncounter;
-  const participants = skill.participants ?? [];
-  return {
-    ...encounter,
-    skillEncounter: {
-      ...skill,
-      participants,
-      additionalSuccesses: skill.additionalSuccesses ?? 0,
-      additionalFailures: skill.additionalFailures ?? 0,
-      requiredSuccesses: skill.requiredSuccesses ?? Math.max(1, participants.length + 1),
-      maxFailures: skill.maxFailures ?? 3,
-      useInitiative: skill.useInitiative ?? true,
-    },
-  };
 }
 
 export default function MixedEncounterPage({ params }: PageParams) {
