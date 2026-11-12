@@ -41,12 +41,27 @@ Stack: Next.js App Router, React, Tailwind, Supabase (no Prisma), Vercel. Repo `
 
 ### Review
 
-1. The reviewer runs `/audit` (`.cursor/commands/audit.md`): a different agent and prompt from the writer. Rules compliance is the checklist in `src/docs/ai/ARCHITECTURE_CONSTITUTION.md`. The command is the critic procedure; this file does not restate it.
-2. The reviewer **runs** the repro test and checks CI; reading the diff alone is not enough.
+Commands carry this loop more reliably than prose alone. Default PR path:
+
+| Step | Command / phase | Role |
+|------|-----------------|------|
+| 1 | Phase 2 build | **Writer** (implementer) |
+| 2 | `/audit` (round 1) | **Critic** — `.cursor/commands/audit.md`; checklist in `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` |
+| 3 | `/remediate` if **REQUEST CHANGES** | **Writer** again — `.cursor/commands/remediate.md`; only audit **Required changes** |
+| 4 | `/audit` (round 2+) | **Critic** — prior gaps, then whole diff (incl. AI bloat / net-negative lean on fix/refine PRs) |
+| 5 | **APPROVE** + green CI | Merge per [Merge](#merge) |
+
+**Typical loop is two audit↔remediate cycles**; there is **no hard stop** at two. If a **third or later audit** still blocks, the audit **must** warn Kadin in plain language: likely bigger issue, options (split task, revert, one more remediate, stop), and whether another remediate is worthwhile. Pause a large third remediate until he chooses unless the audit says one narrow remediate should finish it. Collin still owns **how** when engineering approach is stuck.
+
+`/cleanup` in chat is an alias for **`/remediate`** (`.cursor/commands/cleanup.md` points here).
+
+Additional rules:
+
+1. Default critic model routing and the owner override for a full `/audit` are in `.cursor/commands/audit.md`; this file does not restate them.
+2. The critic **runs** the repro test and checks CI; reading the diff alone is not enough.
 3. Only correctness, security, data-safety and checklist failures block. Anything else is a note; it becomes a ClickUp task only if Kadin or Collin chooses.
 4. **PATCH veto.** If the reviewer judges the change a PATCH (whatever the writer labelled it), it does not merge unless Kadin explicitly accepts it as a patch in his own comment on the PR ("I accept this as a PATCH because …"). An agent relaying his acceptance does not count.
-5. **Two review rounds at most.** If blocking issues remain after round two, stop and escalate to Collin (or, under the fallback, to Kadin with the senior reviewer's summary). Do not keep iterating.
-6. Rules-math or rules-value PRs also go to the Rules Balance Analyst for a ruling check before Kadin signs off.
+5. Rules-math or rules-value PRs also go to the Rules Balance Analyst for a ruling check before Kadin signs off.
 
 ### Fallback when Collin is unavailable
 

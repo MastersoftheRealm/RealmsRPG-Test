@@ -44,16 +44,16 @@ Route Handlers return `{ error: string }` on failure (4xx/5xx). Log raw Supabase
 
 - Prefer **deleting** the weaker of two parallel systems.
 - Prefer **extending** existing shared UI, hooks and lib over new parallel helpers, modals or parsers.
-- Cleanup removes clutter. Prefer a net-negative diff on cleanup work.
+- Cleanup removes clutter. Prefer a **net-negative diff** on cleanup, bug-fix, and refine work when the audit or task allows (not mandatory on every PR; **reject AI bloat** that pads a small fix).
 - When consolidating, ship a first slice plus precise follow-up tasks, not aspirational prose.
 
 ## Reviewer verdict format
 
-`/audit` (`.cursor/commands/audit.md`) is the critic that fills this block. Do not copy the checklist into the command.
+`/audit` (`.cursor/commands/audit.md`) is the critic that fills this block; `/remediate` (`.cursor/commands/remediate.md`) is the writer pass after **REQUEST CHANGES**. Loop, AI-bloat checks, and round-3+ Kadin escalation: `AGENTS.md` (Review) and `audit.md`. Do not copy the checklist into the command.
 
 ```
 ## PR Reviewer verdict: APPROVE | REQUEST CHANGES | HOLD FOR HUMAN
-Round: 1 | 2
+Round: 1 | 2 | 3+ (3+ must include For Kadin escalation if still blocking)
 Risk: standard | high (paths)
 Label check: REAL FIX | PATCH — agrees with the writer? (why)
 Repro test: ran <command> — failed before / passes after
