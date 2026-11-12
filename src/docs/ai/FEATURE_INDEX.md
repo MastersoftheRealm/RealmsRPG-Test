@@ -10,13 +10,14 @@ Checked on this pass:
 - Same-name modules and the two help widgets, by opening those files.
 - Every non-test `.ts` / `.tsx` file under `src/components/patterns`, `src/components/character-sheet`, and `src/components/guided-creator`: static imports, plus the pairs named in that section, which were opened. The other files in those folders were not read line by line.
 - Every non-test `.ts` / `.tsx` file under `src/components/creator`, `src/components/crafting`, `src/components/encounters`, and the creator and crafting page folders named in that section. The pairs in that section were opened. The files listed there as not read line by line were not.
+- Every non-test `.ts` / `.tsx` file under `src/components/character`, `src/components/codex`, `src/app/(main)/encounters/[id]/_components`, and `src/app/(detail)/campaigns/[id]/_components`. The pairs in that section were opened. The files listed there as not read line by line were not.
 - A static import walk from app entries. A file loaded only by a variable `import()` would not show up. `knip` was not run, so unused exports inside a file that is imported were not measured.
 
 Not checked, so silence here is not "it does not exist" and not "there is no fork":
 
 - Behavior of calculators, saves, or admin editors.
-- Encounter play, campaign, admin codex, and my-account folders under `src/app` beyond the page file each route imports.
-- `src/components/about`, `auth`, `character`, `codex`, `landing`, `layout`, `legal`, `onboarding`, `providers`, `rolls`, `rules`, and `tabletop`.
+- Admin codex and my-account folders under `src/app` beyond the page file each route imports.
+- `src/components/about`, `auth`, `landing`, `layout`, `legal`, `onboarding`, `providers`, `rolls`, `rules`, and `tabletop`.
 - Loose modules under `src/lib/` outside `game/` and `calculators/`.
 - Pairs of files that are not named in a fork section below.
 
@@ -953,14 +954,123 @@ Every path below is a non-test source file. The checker fails if one is missing 
 
 ---
 
+## Character, codex, encounter play, and campaign detail
+
+40 non-test `.ts` / `.tsx` files. Each one has a production importer. None are unused files.
+
+`src/components/character/index.ts` exports `CharacterCard` and `AddCharacterCard`. It does not export `PortraitThumb`. Callers import `src/components/character/portrait-thumb.tsx` by path.
+
+### Second implementations
+
+- Portraits. `src/components/character/character-card.tsx` draws the portrait with `next/image`. `src/components/character/portrait-thumb.tsx` and `src/app/(detail)/campaigns/[id]/_components/character-chip.tsx` each draw an `img`. All three call `useEffectivePortrait` and `usePortraitFallbackUrl`. The card and the chip do not render `PortraitThumb`. `src/app/(detail)/campaigns/[id]/_components/add-character-modal.tsx` does.
+- Editable titles. `src/app/(main)/encounters/[id]/_components/EncounterPageHeader.tsx` and `src/app/(detail)/campaigns/[id]/_components/campaign-detail-header.tsx` each render `PageHeader` while not editing, and a text `input` while editing. Enter commits and Escape cancels in both. Neither renders the other. The class strings differ.
+- Initiative roll. `rollInitiative` in `src/app/(main)/encounters/[id]/_components/encounter-view-helpers.ts` and the private `rollInitiative` in `src/components/encounters/add-combatant-modal.tsx` are the same expression. The modal does not import the helper. Combat helpers and the skill view hook import the helper.
+- Participant cards. `src/app/(main)/encounters/[id]/_components/combat/combat-combatant-list.tsx` renders `CombatantCard`. `src/app/(main)/encounters/[id]/_components/skill/skill-participant-list.tsx` renders `ParticipantCard` from `skill-participant-card.tsx`. `getParticipantBorderColor` in that card and `getCombatantBorderColor` in `src/components/encounters/combatant-card-helpers.ts` are separate functions. Both can return `border-l-ally` and `border-l-enemy`.
+- Sort initiative buttons. `src/app/(main)/encounters/[id]/_components/combat/combat-round-controls.tsx` and `src/app/(main)/encounters/[id]/_components/skill/skill-sidebar.tsx` each render their own Sort Initiative button.
+- Condition names on the combat sidebar. `src/app/(main)/encounters/[id]/_components/combat/combat-add-sidebar.tsx` maps `CONDITION_OPTIONS` into its own spans. It does not render the combatant card condition chips.
+
+### Calls a shared component
+
+- `src/components/codex/codex-feat-row.tsx` and `src/components/codex/codex-skill-row.tsx` each render `GridListRow`. They do not render each other. Codex and admin feat tabs render `CodexFeatRow`. Codex and admin skill tabs render `CodexSkillRow`. The sheet `SkillRow` does not render `CodexSkillRow`.
+- `src/app/(main)/encounters/[id]/_components/CombatEncounterView.tsx` renders `CombatRoundControls`, `CombatCombatantList`, `CombatAddSidebar`, `AddCombatantModal`, and `RollLog`. `src/app/(main)/encounters/[id]/_components/SkillEncounterView.tsx` renders `SkillTrackersSection`, `SkillParticipantList`, `SkillSidebar`, `AddCombatantModal`, and `RollLog`. `src/app/(main)/encounters/[id]/mixed/page.tsx` renders both views.
+- `src/app/(main)/encounters/[id]/_components/combat/combat-add-sidebar.tsx` and `src/app/(main)/encounters/[id]/_components/skill/skill-sidebar.tsx` both render `EncounterCampaignRosterSection`. That section is a campaign select and add-all button. `src/app/(detail)/campaigns/[id]/_components/campaign-roster-section.tsx` renders `CharacterChip`. Those two roster files do different jobs.
+- `src/app/(main)/encounters/[id]/_components/skill/skill-trackers-section.tsx` renders `SuccessFailureTracker`.
+- `src/app/(detail)/campaigns/[id]/_components/campaign-roll-log-section.tsx` renders `RollEntryCard` from `@/components/rolls`.
+- `src/app/(main)/encounters/[id]/_components/hooks/use-reorderable-list-drag.ts` is the drag state used by the combat roster actions and the skill view hook.
+- `src/app/(detail)/campaigns/[id]/_components/add-character-modal.tsx` renders `Modal` and `PortraitThumb`. It does not render `UnifiedSelectionModal`.
+- Combat, skill, and mixed encounter pages render `useEncounterPlayPage`, `EncounterPlayPageGate`, and `EncounterPageHeader`. Combat and mixed also render `OpenTabletopButton`.
+
+### Not read line by line
+
+- `src/app/(main)/encounters/[id]/_components/skill/use-skill-encounter-view.ts`
+- `src/app/(main)/encounters/[id]/_components/combat/use-combat-encounter-view.ts`
+- `src/app/(main)/encounters/[id]/_components/combat/use-combat-roster-actions.ts`
+- `src/app/(main)/encounters/[id]/_components/combat/use-combat-linked-character-sync.ts`
+- `src/app/(main)/encounters/[id]/_components/combat/use-combat-round-actions.ts`
+- `src/app/(main)/encounters/[id]/_components/combat/combat-encounter-helpers.ts` past the `rollInitiative` import
+- `src/app/(main)/encounters/[id]/_components/encounter-play-page-shell.tsx` past the exported types
+- `src/app/(main)/encounters/[id]/_components/skill/skill-participant-card.tsx` past `getParticipantBorderColor` and its props
+- `src/app/(main)/encounters/[id]/_components/skill/skill-success-failure-tracker.tsx` past the total and net lines
+- `src/app/(main)/encounters/[id]/_components/skill/skill-sidebar.tsx` past the initiative checkbox, the sort button, the roster section, and the quick-reference card
+- `src/app/(detail)/campaigns/[id]/_components/use-campaign-detail-page.ts`
+- `src/app/(detail)/campaigns/[id]/_components/campaign-detail-header.tsx` past the name and description editors
+
+### Files
+
+Every path below is a non-test source file. The checker fails if one is missing from this document.
+
+### `src/app/(detail)/campaigns/[id]/_components`
+
+- `src/app/(detail)/campaigns/[id]/_components/add-character-modal.tsx`
+- `src/app/(detail)/campaigns/[id]/_components/campaign-detail-header.tsx`
+- `src/app/(detail)/campaigns/[id]/_components/campaign-invite-section.tsx`
+- `src/app/(detail)/campaigns/[id]/_components/campaign-roll-log-scroll.ts`
+- `src/app/(detail)/campaigns/[id]/_components/campaign-roll-log-section.tsx`
+- `src/app/(detail)/campaigns/[id]/_components/campaign-roster-section.tsx`
+- `src/app/(detail)/campaigns/[id]/_components/character-chip.tsx`
+- `src/app/(detail)/campaigns/[id]/_components/use-campaign-detail-page.ts`
+
+### `src/app/(main)/encounters/[id]/_components`
+
+- `src/app/(main)/encounters/[id]/_components/CombatEncounterView.tsx`
+- `src/app/(main)/encounters/[id]/_components/EncounterCampaignRosterSection.tsx`
+- `src/app/(main)/encounters/[id]/_components/EncounterPageHeader.tsx`
+- `src/app/(main)/encounters/[id]/_components/OpenTabletopButton.tsx`
+- `src/app/(main)/encounters/[id]/_components/SkillEncounterView.tsx`
+- `src/app/(main)/encounters/[id]/_components/encounter-play-page-shell.tsx`
+- `src/app/(main)/encounters/[id]/_components/encounter-view-helpers.ts`
+
+### `src/app/(main)/encounters/[id]/_components/combat`
+
+- `src/app/(main)/encounters/[id]/_components/combat/combat-add-sidebar.tsx`
+- `src/app/(main)/encounters/[id]/_components/combat/combat-combatant-list.tsx`
+- `src/app/(main)/encounters/[id]/_components/combat/combat-encounter-helpers.ts`
+- `src/app/(main)/encounters/[id]/_components/combat/combat-encounter-layout.ts`
+- `src/app/(main)/encounters/[id]/_components/combat/combat-encounter-view-props.ts`
+- `src/app/(main)/encounters/[id]/_components/combat/combat-round-controls.tsx`
+- `src/app/(main)/encounters/[id]/_components/combat/use-combat-encounter-view.ts`
+- `src/app/(main)/encounters/[id]/_components/combat/use-combat-linked-character-sync.ts`
+- `src/app/(main)/encounters/[id]/_components/combat/use-combat-roster-actions.ts`
+- `src/app/(main)/encounters/[id]/_components/combat/use-combat-round-actions.ts`
+
+### `src/app/(main)/encounters/[id]/_components/hooks`
+
+- `src/app/(main)/encounters/[id]/_components/hooks/use-linked-campaign-characters.ts`
+- `src/app/(main)/encounters/[id]/_components/hooks/use-reorderable-list-drag.ts`
+
+### `src/app/(main)/encounters/[id]/_components/skill`
+
+- `src/app/(main)/encounters/[id]/_components/skill/skill-encounter-view-props.ts`
+- `src/app/(main)/encounters/[id]/_components/skill/skill-participant-card.tsx`
+- `src/app/(main)/encounters/[id]/_components/skill/skill-participant-list.tsx`
+- `src/app/(main)/encounters/[id]/_components/skill/skill-sidebar.tsx`
+- `src/app/(main)/encounters/[id]/_components/skill/skill-success-failure-tracker.tsx`
+- `src/app/(main)/encounters/[id]/_components/skill/skill-trackers-section.tsx`
+- `src/app/(main)/encounters/[id]/_components/skill/use-skill-encounter-view.ts`
+
+### `src/components/character`
+
+- `src/components/character/character-card.tsx`
+- `src/components/character/index.ts`
+- `src/components/character/portrait-thumb.tsx`
+
+### `src/components/codex`
+
+- `src/components/codex/codex-feat-row.tsx`
+- `src/components/codex/codex-skill-row.tsx`
+- `src/components/codex/index.ts`
+
+
+---
+
 ## Left for a later pass
 
 Still not opened file by file:
 
-- `src/components/about`, `auth`, `character`, `codex`, `landing`, `layout`, `legal`, `onboarding`, `providers`, `rolls`, `rules`, and `tabletop`.
+- `src/components/about`, `auth`, `landing`, `layout`, `legal`, `onboarding`, `providers`, `rolls`, `rules`, and `tabletop`. `src/components/rolls` was seen only where encounter play and the campaign roll log render `RollLog` or `RollEntryCard`.
 - `src/components/ui` beyond the files its barrel does not re-export.
-- `src/app/(main)/encounters/[id]/_components`, `src/app/(detail)/campaigns/[id]/_components`, `src/app/(main)/my-account/_components`, and admin codex screens beyond the page file each route imports.
+- `src/app/(main)/my-account/_components`, and admin codex screens beyond the page file each route imports. Admin feat and skill tabs were seen only where they render `CodexFeatRow` and `CodexSkillRow`.
 - Modules under `src/lib/` other than the `game/` and `calculators/` sibling lists above (`codex`, `character`, `library`, `guided-creator`, `auth`, and the rest). `src/lib/game/creator-constants.ts` was opened only for `CONDITIONS`.
 - Unused exports inside files that something already imports.
 - Line-by-line comparison of files in `src/components/patterns`, `src/components/character-sheet`, and `src/components/guided-creator` that are not named in that fork section.
-- The files named under "Not read line by line" in the creator section above.
+- The files named under "Not read line by line" in the creator section and in the section above.

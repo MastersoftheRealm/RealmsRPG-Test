@@ -52,6 +52,10 @@ const FOLDER_FILE_DIRS = [
   'src/app/(main)/species-creator',
   'src/app/(main)/creature-creator',
   'src/app/(main)/crafting',
+  'src/components/character',
+  'src/components/codex',
+  'src/app/(main)/encounters/[id]/_components',
+  'src/app/(detail)/campaigns/[id]/_components',
 ];
 
 function walk(dir, acc = []) {
