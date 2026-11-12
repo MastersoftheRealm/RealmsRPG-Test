@@ -49,7 +49,7 @@ Route Handlers return `{ error: string }` on failure (4xx/5xx). Log raw Supabase
 
 ## Reviewer verdict format
 
-`/audit` (`.cursor/commands/audit.md`) is the critic that fills this block. Do not copy the checklist into the command.
+`/audit` (`.cursor/commands/audit.md`) is the critic that fills this block; `/remediate` (`.cursor/commands/remediate.md`) is the writer pass after **REQUEST CHANGES**. Loop and two-cycle limit: `AGENTS.md` (Review). Do not copy the checklist into the command.
 
 ```
 ## PR Reviewer verdict: APPROVE | REQUEST CHANGES | HOLD FOR HUMAN

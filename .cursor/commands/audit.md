@@ -57,7 +57,7 @@ When Kadin has invoked the Collin-unavailable fallback (`AGENTS.md`), run this c
 
 If the task crosses systems, stop and say to split it. Do not jump to a bigger model to finish a wide task.
 
-A second `/audit` checks only the gap the previous REQUEST CHANGES named. Two rounds maximum (`AGENTS.md`, Review).
+After **`/remediate`**, a second `/audit` checks only the prior **Required changes**. Two audit↔remediate cycles maximum (`AGENTS.md`, Review); then escalate.
 
 ## Verdict
 
@@ -66,7 +66,7 @@ Use the reviewer verdict block in `ARCHITECTURE_CONSTITUTION.md` (APPROVE, REQUE
 Before the checklist lines, answer the five questions in one line each (pass or fail, with `file:line` on a fail).
 
 - **APPROVE** when blocking items pass, the repro was run, CI is green, the label is not an unaccepted PATCH, and either (a) you are not the writer, or (b) Kadin recorded on the task or PR that this full `/audit` satisfies separate critic for this PR.
-- **REQUEST CHANGES** names one in-scope gap the writer can fix. `/cleanup` applies only that gap.
+- **REQUEST CHANGES** lists required changes the writer must fix. **`/remediate`** (`.cursor/commands/remediate.md`) applies only those items, then another `/audit` runs (max two audit↔remediate cycles per PR; then escalate — `AGENTS.md`).
 - **HOLD FOR HUMAN** when the path is high-risk, a rule is missing or conflicting, a product decision is open, you are the writer without the owner override, or your label is PATCH.
 
 ## Do not
