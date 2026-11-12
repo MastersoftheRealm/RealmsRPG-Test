@@ -2528,6 +2528,56 @@ A person sets species name, type, image, description, height/weight/lifespan, **
 
 - screen-behavior-note:no-empowered-mode-on-power-or-technique-routes: There is no empowered-technique editor inside `/power-creator` or `/technique-creator`; only `/empowered-technique-creator`.
 
+## Encounter screens (behavior pass)
+
+RM-facing encounter hub and play routes: list/create, type-specific play pages, shared play shell, combat/skill views, add-participant modal, roll log, initiative, and combat conditions. **Partial pass:** play hooks and main panels read; `add-combatant-modal` picker tabs and tabletop sync not line-by-line.
+
+### Screens walked (read through save wiring)
+
+**Encounters list** — `/encounters` → `EncountersContent` in `encounters/page.tsx`.
+
+A person searches and filters (tabs All / Active / Completed, type chips combat/skill/mixed), opens a row (`handleOpen` → `/encounters/{id}/{type}`), creates via `CreateEncounterModal` (`createDefaultEncounter` + `useCreateEncounter`), marks complete (`useSaveEncounter` patches `status: 'completed'`, `isActive: false`, `currentTurnIndex: -1`), or deletes (`useDeleteEncounter`). Guests see a sign-in banner; `useEncounters` falls back to **localStorage** guest encounters (`use-encounters.ts`, `guest-encounter-storage`).
+
+**Encounter type redirect** — `/encounters/[id]/page.tsx` loads `useEncounter` then `router.replace` to `/encounters/{id}/{encounter.type}`. No play UI on this URL.
+
+**Combat play** — `/encounters/[id]/combat/page.tsx` → `useEncounterPlayPage` + `RollProvider` + `CombatEncounterView` (`showRollLog` default **true**).
+
+**Skill play** — `/encounters/[id]/skill/page.tsx` → `useEncounterPlayPage({ keepaliveOnUnload: true, requireSkillEncounter: true, prepareLoaded: prepareSkillEncounter })` + `SkillEncounterView`.
+
+**Mixed play** — `/encounters/[id]/mixed/page.tsx` → same play shell with `prepareMixedEncounter`; `SegmentedControl` switches Combat vs Skill; last tab per encounter id in **`sessionStorage`** (`readMixedEncounterViewTab` / `writeMixedEncounterViewTab`). Both `CombatEncounterView` and `SkillEncounterView` mount (CSS `hidden` on inactive tab) with `showRollLog={false}`; one shared **`RollLog`** at page bottom.
+
+**Shared play shell** — `useEncounterPlayPage` in `encounter-play-page-shell.tsx`: hydrates encounter once per id (`prepareLoaded` optional), local `encounter` state, `useAutoSave` (1.5s debounce) → `encounterAutosaveBody` → `useSaveEncounter` or guest `persistEncounterSave` with **keepalive** only when `keepaliveOnUnload` (skill route). Header: `EncounterPageHeader` (inline name edit). Combat/mixed also expose `OpenTabletopButton` (`saveNow` before open).
+
+**What saves:** The whole `Encounter` document (combatants, round/turn fields, `skillEncounter` blob, campaign link, status). Autosave on play pages; list “mark complete” patches status fields only. Signed-in → `/api/encounters/[id]`; guest ids → localStorage merge.
+
+**Add combatant / participant** — `AddCombatantModal` (`add-combatant-modal.tsx`): Library creatures + campaign characters; `mode="combat"` on combat view (`onAdd` → `addCombatantsFromModal` as `TrackedCombatant[]`) or `mode="skill"` on skill view (`onAddParticipants` → `SkillParticipant[]`, plus `onAdd` for copying combatants in mixed). Not `UnifiedSelectionModal`. Initiative on add uses local `rollInitiative` in the modal (duplicate of `encounter-view-helpers.rollInitiative`).
+
+**Initiative** — Combat: `CombatRoundControls` **Sort Initiative** → `useCombatRoundActions.sortInitiative`; per-card edit/drag on `CombatantCardInitiative`; manual reorder on `CombatCombatantList`. Skill (optional `useInitiative`): `SkillSidebar` duplicate **Sort Initiative** + sync with combat order / copy combatants to skill when `isMixedEncounter`; participant initiative via `rollInitiativeForParticipant` on `ParticipantCard`.
+
+**Conditions** — Combat only on `CombatantCard`: `CombatantCardConditionChips` + `CombatantCardConditionsPanel` (`CONDITION_OPTIONS` from `encounter-constants.ts`); leveled conditions via chip click / context menu. Skill participants have **no** condition panel on `ParticipantCard`.
+
+**Roll log** — `RollLog` in `components/rolls/roll-log.tsx` inside `RollProvider`; `viewOnlyCampaignId={encounter.campaignId}` when linked. Personal vs campaign log modes in-component; rolls from sheet/cards elsewhere also land in context. Mixed page: single docked log for both tabs; standalone combat/skill attach log to view and apply `ENCOUNTER_TRACKER_DOCK_FRAME_CLASS` on the grid when `showRollLog`.
+
+### Screens not walked in this pass
+
+- VTT / tabletop page opened by `OpenTabletopButton` (separate route).
+- `EncounterCampaignRosterSection` campaign link UI beyond props wiring.
+- Full `add-combatant-modal` library/campaign picker bodies.
+- `/encounters/[id]/combat` is walked; **library hub** and **crafting** not started (per scope).
+
+### Same job, different behavior
+
+- screen-behavior-note:mixed-one-roll-log-vs-view-embedded-log: **Mixed** hides per-view `RollLog` and renders one page-level `RollLog`. **Combat** and **skill** standalone pages pass `showRollLog` so the log sits in the view layout with dock framing.
+- screen-behavior-note:skill-unload-keepalive-autosave: Only the **skill** play route sets `keepaliveOnUnload: true` on `useEncounterPlayPage`, so tab-close/refresh can flush via `persistEncounterSave(..., { keepalive: true })`. Combat and mixed use the mutation path only on autosave.
+- screen-behavior-note:add-combatant-modal-combat-vs-skill-mode: Same modal component; **`mode="combat"`** confirms `TrackedCombatant` payloads through `onAdd`. **`mode="skill"`** confirms `SkillParticipant` through `onAddParticipants` (and can still wire `onAdd` for combatant-shaped copies in mixed).
+- screen-behavior-note:combatant-card-vs-skill-participant-card: **Combat** list renders `CombatantCard` (HP/EN/AP, conditions, initiative column). **Skill** list renders `ParticipantCard` (DS roll, successes/failures, helping); conditions UI does not exist on skill cards.
+- screen-behavior-note:duplicate-sort-initiative-in-combat-and-skill-sidebars: **Sort Initiative** appears in `CombatRoundControls` and again in `SkillSidebar` when skill initiative mode is on — separate handlers (`sortInitiative` vs `sortByInitiative`), same user-facing label.
+- screen-behavior-note:mixed-view-tab-session-only: Mixed Combat/Skill tab choice is stored in **browser sessionStorage**, not on the `Encounter` row; refresh within the session restores tab, other devices do not.
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:encounter-id-redirect-no-type-page: `/encounters/[id]` never renders play; only redirects or error. A stored `encounter.type` with no matching play route file would `replace` to a missing page (redirect does not validate against known types).
+
 ## Unused exports outside game and calculators
 
 No production file imports these names. A test import does not count. The file that exports the name may still call it. This is not a dead function unless nothing in that file calls it either. Next.js page, layout, route, proxy, and MDX conventions are not listed. `src/lib/game` and `src/lib/calculators` were not part of this search. The hook, service, and store files the barrels omit are imported by their own paths. The names below are the extra exports in those trees, not unused files.

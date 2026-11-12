@@ -651,6 +651,50 @@ console.log(
   `FEATURE_INDEX library-entity-creator screen check OK (${LIBRARY_ENTITY_CREATOR_SCREEN_NOTE_IDS.length} notes).`,
 );
 
+const ENCOUNTER_SCREEN_NOTE_IDS = [
+  'mixed-one-roll-log-vs-view-embedded-log',
+  'skill-unload-keepalive-autosave',
+  'add-combatant-modal-combat-vs-skill-mode',
+  'combatant-card-vs-skill-participant-card',
+  'duplicate-sort-initiative-in-combat-and-skill-sidebars',
+  'mixed-view-tab-session-only',
+  'encounter-id-redirect-no-type-page',
+];
+
+const encounterScreensSection = mathSectionSlice(indexText, '## Encounter screens');
+if (!encounterScreensSection) {
+  console.error('FEATURE_INDEX is missing the encounter screens section.');
+  process.exit(2);
+}
+if (!encounterScreensSection.includes('### Same job, different behavior')) {
+  console.error('FEATURE_INDEX encounter section is missing ### Same job, different behavior.');
+  process.exit(2);
+}
+const encounterScreenBehaviorStart = encounterScreensSection.indexOf(
+  '### Same job, different behavior',
+);
+const encounterScreenDeadStart = encounterScreensSection.indexOf('### Dead or unreachable paths');
+if (encounterScreenBehaviorStart < 0 || encounterScreenDeadStart < 0) {
+  console.error('FEATURE_INDEX encounter section missing behavior or dead-path headings.');
+  process.exit(2);
+}
+const encounterScreenBehaviorBody = encounterScreensSection.slice(
+  encounterScreenBehaviorStart,
+  encounterScreenDeadStart,
+);
+const encounterScreenDeadBody = encounterScreensSection.slice(encounterScreenDeadStart);
+for (const id of ENCOUNTER_SCREEN_NOTE_IDS) {
+  const inBehavior = encounterScreenBehaviorBody.includes(`screen-behavior-note:${id}:`);
+  const inDead = encounterScreenDeadBody.includes(`screen-behavior-note:${id}:`);
+  if (!inBehavior && !inDead) {
+    console.error('FEATURE_INDEX missing required encounter screen note:', id);
+    process.exit(2);
+  }
+}
+console.log(
+  `FEATURE_INDEX encounter screen check OK (${ENCOUNTER_SCREEN_NOTE_IDS.length} notes).`,
+);
+
 const gen = spawnSync(
   process.execPath,
   [path.join(__dirname, 'generate-feature-index-barrels.js'), '--check'],
