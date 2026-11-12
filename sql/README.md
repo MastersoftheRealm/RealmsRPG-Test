@@ -14,6 +14,7 @@
 | [`vtt-v1-tabletop.sql`](vtt-v1-tabletop.sql) | Virtual tabletop schema for branch-local development. Verify target state and obtain approval before applying outside the branch's local database. |
 | [`codex-rename-source.sql`](codex-rename-source.sql) | Admin utility: replaces `public.rename_codex_source` only. Safe to re-run on non-prod when Kadin approves; first real rename is a live data change and needs a backup. |
 | [`codex-category-offense-to-offensive.sql`](codex-category-offense-to-offensive.sql) | One-time data fix: `codex_feats` / `codex_parts` category `Offense` → `Offensive`. **Apply before** deploying app code that drops the feat category rewrite. Not applied from CI. |
+| [`codex-creature-feats-assign-categories.sql`](codex-creature-feats-assign-categories.sql) | Sets `category` on existing movement and senses creature feats. Uses the stored word `Movement` and `Senses`. **Not applied.** Apply only after a named backup and Kadin's OK. Rollback is in the file as a comment. |
 | [`role-quota-atomic.sql`](role-quota-atomic.sql) | `user_profiles` row lock + `assert_account_create_quota`, quota-aware `create_character_relational` and `insert_user_library_row_with_quota`. Apply after explicit OK and backup. |
 | [`schema/0000_baseline_2026-08-13.sql`](schema/0000_baseline_2026-08-13.sql) | Committed `pg_dump --schema-only` snapshot (**stale** vs live — regenerate before relying on it). |
 
