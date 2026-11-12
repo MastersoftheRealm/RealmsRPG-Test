@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui';
 import { TempModifierToggle } from '@/components/patterns';
@@ -22,6 +23,7 @@ export function LargeStatBlock({
   onTempDeltaChange,
   formatTempDelta,
   tempStep,
+  footer,
 }: {
   label: string;
   value: number | string;
@@ -33,6 +35,8 @@ export function LargeStatBlock({
   onTempDeltaChange?: ((delta: number) => void) | undefined;
   formatTempDelta?: ((delta: number, deltaFormat: 'temp-label' | 'signed') => string) | undefined;
   tempStep?: number | undefined;
+  /** Extra controls under the value. The character sheet uses its temp stepper instead. */
+  footer?: ReactNode | undefined;
 }) {
   const { tempActive, setTempActive, canTemp, showTempControls } = useTempModifierActive(
     isTempModifierMode,
@@ -83,6 +87,7 @@ export function LargeStatBlock({
           className="mt-2"
         />
       )}
+      {footer}
     </Card>
   );
 }

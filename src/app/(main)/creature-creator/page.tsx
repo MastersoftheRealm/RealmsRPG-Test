@@ -125,6 +125,8 @@ function CreatureCreatorContent() {
     displayItemToCreatureTechnique,
     displayItemToCreatureArmament,
     mergeCreatureFeatsOnAdd,
+    creatureFeatsCatalog,
+    addMovementDropdownFeat,
     initialState,
     clearSessionDraftCache,
   } = ws;
@@ -508,6 +510,8 @@ function CreatureCreatorContent() {
           if (tab) setInventoryTab(tab);
           setShowArmamentModal(true);
         }}
+        creatureFeatsCatalog={creatureFeatsCatalog}
+        onAddMovementFeat={addMovementDropdownFeat}
       />
     </CreatorPageShell>
   );

@@ -89,11 +89,19 @@ export function calculateSpeed(agility: number, speedBase?: number, rules?: Rule
   return base + Math.ceil(agility / 2);
 }
 
-/** Walking-speed spaces from the Speedy and Slow movement traits. A higher Speedy tier replaces a lower one. */
+/**
+ * Walking-speed spaces from the Speedy and Slow families.
+ * Each feat level is 1 space (Speedy +1/+2/+3, Slow −1/−2/−3). A higher level replaces a lower one in that family.
+ */
 const SPEEDY_WALK_SPACES: Record<string, number> = {
-  Speedy: 2,
-  'Speedy II': 4,
-  'Speedy III': 6,
+  Speedy: 1,
+  'Speedy II': 2,
+  'Speedy III': 3,
+};
+const SLOW_WALK_SPACES: Record<string, number> = {
+  Slow: 1,
+  'Slow II': 2,
+  'Slow III': 3,
 };
 
 function creatureWalkingSpeedAdjustment(
@@ -104,7 +112,8 @@ function creatureWalkingSpeedAdjustment(
   for (const name of movementTypes ?? []) {
     const bonus = SPEEDY_WALK_SPACES[name];
     if (bonus != null && bonus > speedy) speedy = bonus;
-    if (name === 'Slow') slow = 2;
+    const penalty = SLOW_WALK_SPACES[name];
+    if (penalty != null && penalty > slow) slow = penalty;
   }
   return speedy - slow;
 }

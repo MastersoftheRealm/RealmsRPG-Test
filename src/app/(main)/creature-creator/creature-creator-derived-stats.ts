@@ -27,6 +27,7 @@ import {
 } from '@/lib/game/creature-inventory';
 import { creatureArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import type { CoreRulesMap } from '@/types/core-rules';
+import { movementControlFeatIdsFromNames } from './creature-movement';
 import type { CreatureState } from './creature-creator-types';
 import {
   computeCreatureTrainingSpent,
@@ -120,7 +121,12 @@ export function calculateCreatureCreatorStats(
     creature.conditionImmunities.length * conditionImmunityFeatCost;
 
   const manualFeatSpent = creature.feats.reduce((sum, f) => sum + (f.points ?? 1), 0);
-  const featSpent = manualFeatSpent + mechanicalFeatPoints;
+  const featIdsOnCreature = new Set(creature.feats.map((feat) => String(feat.id)));
+  const impliedMovementPoints = movementControlFeatIdsFromNames(creature.movementTypes).reduce(
+    (sum, id) => (featIdsOnCreature.has(id) ? sum : sum + (featPointsMap.get(id) ?? 0)),
+    0,
+  );
+  const featSpent = manualFeatSpent + mechanicalFeatPoints + impliedMovementPoints;
   const inventory = collectCreatureInventoryItems(creatureLoadoutForBudget(creature));
   const trainingSpent = computeCreatureTrainingSpent(creature, proficiencyCtx);
   const currencySpent = inventory.reduce((sum, armament) => {

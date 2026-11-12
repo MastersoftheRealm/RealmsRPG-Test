@@ -17,6 +17,7 @@ import {
   useGameRules,
 } from '@/hooks';
 import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
+import { isCreatureMovementControlFeatId } from '@/app/(main)/creature-creator/creature-movement';
 import { calculateCreatureSpeed, calculateEvasion } from '@/lib/game/calculations';
 import { CREATURE_STAT_BLOCK_GRID } from '@/lib/library/official-creature-list';
 import { formatCreatureLevel, formatCreatureLevelLabel } from '@/lib/game';
@@ -133,7 +134,12 @@ export function CreatureStatBlock({
       proficient: true,
     }));
   }, [creature.skills]);
-  const hasFeats = (creature.feats ?? []).length > 0;
+  const hasFeats = (creature.feats ?? []).some((feat) => {
+    const rawId = 'id' in feat ? feat.id : undefined;
+    const id =
+      typeof rawId === 'string' || typeof rawId === 'number' ? String(rawId) : undefined;
+    return id == null || !isCreatureMovementControlFeatId(id);
+  });
   const hasWeapons = weapons.length > 0;
   const hasShields = shields.length > 0;
   const hasArmor = armor.length > 0;

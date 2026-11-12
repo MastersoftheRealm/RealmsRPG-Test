@@ -29,13 +29,13 @@ describe('calculateCreatureCreatorStats', () => {
       new Set(),
       undefined,
     );
-    expect(speedy.speed).toBe(base.speed + 2);
-    expect(slow.speed).toBe(base.speed - 2);
+    expect(speedy.speed).toBe(base.speed + 1);
+    expect(slow.speed).toBe(base.speed - 1);
   });
 
-  it('stored movement names do not spend feat points', () => {
+  it('a Speedy name spends the Speedy feat cost once', () => {
     const map = new Map(featPointsMap);
-    map.set(String(CREATURE_FEAT_IDS.SPEEDY), 3);
+    map.set(String(CREATURE_FEAT_IDS.SPEEDY), 0.5);
     const base = calculateCreatureCreatorStats(initialState, map, new Set(), undefined);
     const speedy = calculateCreatureCreatorStats(
       { ...initialState, movementTypes: ['Speedy'] },
@@ -43,8 +43,26 @@ describe('calculateCreatureCreatorStats', () => {
       new Set(),
       undefined,
     );
-    expect(speedy.speed).toBe(base.speed + 2);
-    expect(speedy.featSpent).toBe(base.featSpent);
+    const alsoOnFeats = calculateCreatureCreatorStats(
+      {
+        ...initialState,
+        movementTypes: ['Speedy'],
+        feats: [
+          {
+            id: String(CREATURE_FEAT_IDS.SPEEDY),
+            name: 'Speedy',
+            points: 0.5,
+            featSourceType: 'creature',
+          },
+        ],
+      },
+      map,
+      new Set(),
+      undefined,
+    );
+    expect(speedy.speed).toBe(base.speed + 1);
+    expect(speedy.featSpent).toBe(base.featSpent + 0.5);
+    expect(alsoOnFeats.featSpent).toBe(base.featSpent + 0.5);
   });
 
   it('returns positive remaining budgets for a fresh level-1 creature', () => {

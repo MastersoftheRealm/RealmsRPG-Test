@@ -26,6 +26,7 @@ import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-red
 import { normalizeRangeDisplay } from '@/lib/utils';
 import type { Abilities } from '@/types';
 import type { CreatureData, CreatureStatBlockArmament } from './creature-stat-block-types';
+import { isCreatureMovementControlFeatId } from '@/app/(main)/creature-creator/creature-movement';
 import { StatBlockSection } from './creature-stat-block-section';
 import {
   REALMS_ABILITY_ORDER,
@@ -339,13 +340,22 @@ export function CreatureStatBlockExpandedContent({
                 showListHeader
                 compactRows
                 showTitle={false}
-                items={(creature.feats ?? []).map(
-                  (f, idx): EntityFeatRow => ({
-                    id: `${creature.id}-feat-${idx}`,
-                    name: f.name,
-                    description: f.description,
-                  }),
-                )}
+                items={(creature.feats ?? [])
+                  .filter((f) => {
+                    const rawId = 'id' in f ? f.id : undefined;
+                    const id =
+                      typeof rawId === 'string' || typeof rawId === 'number'
+                        ? String(rawId)
+                        : undefined;
+                    return id == null || !isCreatureMovementControlFeatId(id);
+                  })
+                  .map(
+                    (f, idx): EntityFeatRow => ({
+                      id: `${creature.id}-feat-${idx}`,
+                      name: f.name,
+                      description: f.description,
+                    }),
+                  )}
               />
             </StatBlockSection>
           )}
