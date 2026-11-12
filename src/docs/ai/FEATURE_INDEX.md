@@ -770,7 +770,7 @@ Every path below is a non-test source file. The checker fails if one is missing 
 - `src/app/(main)/creature-creator/creature-creator-editor.tsx` renders `ArchetypeSelector`, `HealthEnergyAllocator`, `AbilityScoreEditor`, and `SkillsAllocationPage`.
 - `src/app/(main)/power-creator/power-creator-editor.tsx`, `src/app/(main)/empowered-technique-creator/empowered-technique-creator-editor.tsx`, and `src/app/(main)/item-creator/item-creator-editor.tsx` only compose their section files.
 - `src/app/(main)/empowered-technique-creator/use-empowered-technique-creator-workspace.ts` imports `EXCLUDED_PARTS` from `src/app/(main)/power-creator/power-creator-constants.ts`. That constant is `POWER_AUTO_MECHANIC_PART_NAMES`.
-- `src/app/(main)/power-creator/power-creator-cost-derivation.ts` imports `calculatePowerCosts` from `@/lib/calculators`. `src/app/(main)/empowered-technique-creator/empowered-technique-cost-derivation.ts` imports `calculatePowerCosts`, `calculateTechniqueCosts`, and `calculateEmpoweredTechniqueCosts`. `src/app/(main)/item-creator/item-creator-cost-derivation.ts` imports `calculateItemCosts`. Those function bodies were not read.
+- `src/app/(main)/power-creator/power-creator-cost-derivation.ts`, `empowered-technique-cost-derivation.ts`, and `item-creator-cost-derivation.ts` were read through their cost hooks in **Crafting cost math** (they delegate to `@/lib/calculators`; calculator bodies are not re-summarized here).
 - Species base skills in `src/app/(main)/species-creator/species-creator-editor.tsx` are two `select` elements. They do not render `SkillRow`.
 - `src/components/encounters/CombatantCard.tsx` renders `CombatantCardInitiative`, `CombatantCardHeader`, `CombatantCardResources`, `CombatantCardConditionChips`, `CombatantCardResourceQuickActions`, and `CombatantCardConditionsPanel`.
 - `src/components/encounters/add-combatant-modal.tsx` renders `Modal`. It does not render `UnifiedSelectionModal`. The picker body was not read.
@@ -2372,23 +2372,30 @@ General, enhanced, consumable-enhanced, and upgrade crafting requirements; succe
 - `computeCraftingRequirements`, `computeRequirementsBreakdown`, optional-modifier max-step helpers, multiple-use index/energy wrappers, and `getEffectiveCraftingEnergy` in `src/app/(main)/crafting/[id]/_components/crafting-tool-helpers.ts`. This file applies bulk quantity multipliers, stacks optional modifiers, and merges base-item + enhancement requirements when `craftBaseItemAlso` (combined time in hours/days, summed successes and material, `Math.max` DS).
 - `buildRequirementsSyncPatch`, `computeLiveCraftingOutcome`, `computeBaseOutcomeForDisplay`, session tallies, and roll DS routing in `src/app/(main)/crafting/[id]/_components/crafting-tool-derived.ts` (calls `computeSkillRollResult` from encounter-utils for roll parsing only).
 - `handleComplete` in `use-crafting-tool-page.ts` was read only for whether it duplicates outcome math (it calls the same `calculateCraftingOutcome` path as `computeLiveCraftingOutcome`).
+- `crafting-session-persist.ts` (full): Zod defaults and `min(0)` on `marketPrice`, `materialCost`, `enhancementMaterialCost`, `energyCost`, and `craftingOutcomeSchema` numeric fields. No formulas; `projectCraftingSessionPatch` only strips UI keys.
+- `GET`/`POST` `src/app/api/crafting/route.ts` and `GET`/`PATCH` `src/app/api/crafting/[id]/route.ts` (cost paths only): `toSummary` sets hub `currencyCost` from `currency_cost` column, then `data.materialCost`, then `item.marketPrice`. `POST`/`PATCH` write `currency_cost` as `materialCost ?? item.marketPrice` (nullish coalescing only — **0** material cost does not fall through to market price). No requirement math on the API.
+- `crafting-bootstrap.ts` (full): no price, cost, currency, or point math (uses-type migration from `multipleUseTableIndex` only).
+- `CraftingItemSelectModal.tsx` (full for cost): every list row calls `getLibraryItemMarketPrice` (my/public armaments and equipment) or `getCodexEquipmentMarketPrice` (codex equipment tab); no other currency math.
+- Creator cost-derivation hooks: `usePowerCreatorCostDerivation` builds `partsPayload` and calls `calculatePowerCosts` / `calculatePowerSectionContribution` for totals and section slices. `useItemCreatorCostDerivation` builds `propertiesPayload` (including weapon damage level `(amount×size−4)/2`, split-dice op levels, armor DR op levels) then `resolveItemMarketPricing` and `calculateItemCosts` per UI section via `combineItemSectionCosts`. `useEmpoweredTechniqueCostDerivation` calls `calculateEmpoweredTechniqueCosts` and per-section `calculatePowerCosts` / `calculateTechniqueCosts`. Crafting enhanced energy uses `derivePowerDisplay` in `buildCraftingPowerOptions`, which routes through `calculatePowerCosts` in `power-calc` for the same saved parts.
 
 ### Still not read line by line (crafting cost scope)
 
-- `src/lib/crafting/crafting-session-persist.ts`, crafting API routes, and `crafting-bootstrap.ts` (persistence, not requirement math).
-- `src/components/crafting/CraftingItemSelectModal.tsx` beyond confirming it calls the market-price helpers (UI wiring).
-- Creator **cost-derivation** wrappers under power/technique/item creators listed elsewhere in this file.
+- None for this pass (calculator implementations behind the hooks remain in **Health, energy, and cost math** and item-calc summaries elsewhere).
 
 ### Disagreements
 
 - math-disagree-unclassified:crafting-codex-stored-currency-vs-library-resolve-market: **Second copy for crafting market price.** `getCodexEquipmentMarketPrice` uses `equipmentCurrency` (stored `currency` / `gold_cost` on the codex row). `getLibraryItemMarketPrice` uses `resolveItemMarketPricing` from property rows and stored cost sums. The item picker uses both for the same “market price” column depending on source, so two items with the same properties can disagree if codex storage and item-calc diverge.
 - math-disagree-unclassified:crafting-codex-currency-vs-persist-equipment-cost: **Second copy for codex equipment currency.** `getCodexEquipmentMarketPrice` stops at `equipmentCurrency`. `persistEquipmentCost` (sheet/catalog persist) falls back to a positive `cost` field when catalog currency is zero. Crafting can show **0** currency for a codex row that still carries a nonzero `cost` elsewhere.
+- math-disagree-unclassified:crafting-hub-currency-column-vs-requirements-market-price: **Second copy for “session cost” on the hub vs table inputs.** `toSummary` and `currency_cost` on create/update use `materialCost ?? marketPrice`, but `??` keeps an explicit **0** `materialCost` (default on new sessions) instead of the item’s `marketPrice`. `computeCraftingRequirements` / `getCraftingRequirements` always read `item.marketPrice` (or custom base price). The hub can show **0** while requirements use a positive market price.
 
 ### Same math, separate copies
 
 - `crafting-tool-helpers` and `crafting-utils` share one implementation for table lookup, upgrade, enhanced/consumable enhanced reqs, multiple-use energy, and optional modifiers; the tool file only orchestrates session state and bulk/merge.
 - `computeLiveCraftingOutcome`, `computeBaseOutcomeForDisplay`, and `handleComplete` all call `calculateCraftingOutcome` with the same market-price rules (`getEnhancedMarketPrice` when enhanced, else stored session item price).
 - Enhanced save UI in `crafting-outcome-card.tsx` uses the same `getEnhancedMarketPrice(materialCost)` as live outcome for enhanced items (not a second multiplier formula).
+- `getLibraryItemMarketPrice`, item creator `useItemCreatorCostDerivation` pricing, and crafting picker rows all call `resolveItemMarketPricing` when properties are available (same item-calc path).
+- `buildCraftingPowerOptions` energy matches power creator totals for the same parts because `derivePowerDisplay` uses `calculatePowerCosts` internally.
+- Creator section-cost hooks slice payloads then call the same calculator functions as their totals; they do not reimplement point formulas in the page files.
 
 ## Unused exports outside game and calculators
 

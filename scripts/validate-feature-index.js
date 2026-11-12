@@ -323,6 +323,7 @@ const DEFENSE_WEAPON_MATH_UNCLASSIFIED_IDS = [
 const CRAFTING_COST_MATH_UNCLASSIFIED_IDS = [
   'crafting-codex-stored-currency-vs-library-resolve-market',
   'crafting-codex-currency-vs-persist-equipment-cost',
+  'crafting-hub-currency-column-vs-requirements-market-price',
 ];
 
 function mathSectionSlice(text, heading) {
