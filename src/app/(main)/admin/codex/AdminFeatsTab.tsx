@@ -23,16 +23,15 @@ import {
   type Skill,
 } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
-import { patchAdminCodexCollectionRow } from '@/hooks/use-codex';
 import { useAdminCodexEntity } from './use-admin-codex-entity';
 import { AdminCodexRowActions, ADMIN_CODEX_ROW_ACTIONS_WIDTH } from './admin-codex-row-actions';
-import { updateCodexDoc } from './actions';
+import { persistCodexLevelEdits } from './admin-codex-level-save';
 import { Layers } from 'lucide-react';
 import {
   groupFeatFamilies,
   formatFeatName,
-  getFeatFamilyId,
-  getFeatLevel,
+  isFeatFamilyBase,
+  sortedFeatFamily,
 } from '@/lib/leveled-feats';
 import {
   CODEX_FEAT_HEADER_COLUMNS,
@@ -146,10 +145,7 @@ export function AdminFeatsTab() {
     beginEdit(feat, () => {
       setModalInitialForm(featToFormState(feat));
       setModalInitialEditId(String(feat.id));
-      const familyId = getFeatFamilyId(feat);
-      const familyFeats = (feats ?? []).filter((f) => getFeatFamilyId(f) === familyId);
-      familyFeats.sort((a, b) => getFeatLevel(a) - getFeatLevel(b));
-      setModalLevelFeats(familyFeats);
+      setModalLevelFeats(sortedFeatFamily(feats ?? [], feat));
       bumpModal();
     });
 
@@ -186,42 +182,21 @@ export function AdminFeatsTab() {
   };
 
   const handleSaveAllLevels = async (editsById: Record<string, FeatFormState>) => {
-    const ids = Object.keys(editsById);
-    if (ids.length === 0) return;
+    if (Object.keys(editsById).length === 0) return;
     setSaving(true);
-    const errors: string[] = [];
-
-    for (const id of ids) {
-      const form = editsById[id];
-      if (!form?.name?.trim()) {
-        errors.push(`Level ${id}: name is required`);
-        continue;
-      }
-
-      const result = await updateCodexDoc('codex_feats', id, featFormToSavePayload(form), {
-        expectedUpdatedAt: (feats ?? []).find((f) => String(f.id) === id)?.updated_at,
-      });
-      if (!result.success) {
-        errors.push(`Update ${id}: ${result.error}`);
-        continue;
-      }
-      if (result.updatedAt) {
-        patchAdminCodexCollectionRow(queryClient, 'codex_feats', id, {
-          updated_at: result.updatedAt,
-        });
-      }
-    }
-
+    const error = await persistCodexLevelEdits({
+      collection: 'codex_feats',
+      editsById,
+      updatedAtForId: (id) => (feats ?? []).find((f) => String(f.id) === id)?.updated_at,
+      toPayload: featFormToSavePayload,
+      invalidMessage: (id, form) => (form?.name?.trim() ? null : `Level ${id}: name is required`),
+      queryClient,
+    });
     setSaving(false);
-    if (errors.length > 0) {
-      showToast(
-        errors.slice(0, 6).join('; ') +
-          (errors.length > 6 ? `; ... and ${errors.length - 6} more` : ''),
-        'error',
-      );
+    if (error) {
+      showToast(error, 'error');
       return;
     }
-
     await refreshCodex();
     closeModal();
   };
@@ -396,8 +371,7 @@ export function AdminFeatsTab() {
                 onDuplicate={openDuplicate}
                 onDelete={askDelete}
                 extraBefore={
-                  !(feat as Feat & { base_feat_id?: string | undefined }).base_feat_id &&
-                  (feat.feat_lvl == null || feat.feat_lvl === 1) ? (
+                  isFeatFamilyBase(feat) ? (
                     <IconButton
                       variant="ghost"
                       size="sm"

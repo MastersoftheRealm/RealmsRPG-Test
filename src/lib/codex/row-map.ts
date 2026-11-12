@@ -256,6 +256,7 @@ export function mapCodexCreatureFeat(r: CodexDbRow): CodexCreatureFeat {
     id: asString(r.id),
     name: asString(r.name),
     description: asString(r.description),
+    category: optionalString(r.category),
     sources: mapCodexSources(r.sources, r.source),
     points: pointsVal as number,
     feat_points: pointsVal,

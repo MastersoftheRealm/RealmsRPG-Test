@@ -213,6 +213,8 @@ interface CodexCreatureFeatFields extends CodexRowVersion {
   id: string;
   name: string;
   description: string;
+  /** Stored group label, same kind of field as codex_feats.category. */
+  category?: string | undefined;
   sources?: string[] | undefined;
   points: number;
   feat_points?: number | undefined;

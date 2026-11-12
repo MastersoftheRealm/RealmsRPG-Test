@@ -1,72 +1,93 @@
 'use client';
 
-import type { Dispatch, SetStateAction } from 'react';
-import { DEFAULT_CODEX_SOURCES } from '@/lib/codex/sources';
 import { Modal, Input, Textarea } from '@/components/ui';
+import type { CreatureFeat } from '@/hooks';
 import { AdminCodexCopySourceBanner } from './admin-codex-copy-source-banner';
 import { AdminCodexEditModalFooter } from './admin-codex-edit-modal-footer';
 import { AdminCodexSourceField } from './admin-codex-source-field';
 import {
-  useCodexEditorDraftDirty,
-  useCodexEditorLeaveGuard,
-} from './admin-codex-unsaved-leave-guard';
+  AdminBaseFeatSelect,
+  AdminFeatLevelControls,
+  AdminStoredCategoryField,
+} from './admin-codex-feat-level-fields';
+import { codexFeatEditorIsDirty } from './admin-codex-unsaved-leave';
+import { useCodexEditorLeaveGuard } from './admin-codex-unsaved-leave-guard';
+import { useAdminLeveledFeatSession } from './use-admin-leveled-feat-session';
+import {
+  creatureFeatToFormState,
+  parseOptionalAdminDecimalInput,
+  type CreatureFeatFormState,
+} from './admin-creature-feat-form';
 
-export type CreatureFeatFormState = {
-  name: string;
-  description: string;
-  points: number | undefined;
-  feat_lvl: number | undefined;
-  base_feat_id: string;
-  lvl_req: number | undefined;
-  mechanic: boolean;
-  sources: string[];
-};
-
-export const EMPTY_CREATURE_FEAT_FORM: CreatureFeatFormState = {
-  name: '',
-  description: '',
-  points: undefined,
-  feat_lvl: undefined,
-  base_feat_id: '',
-  lvl_req: undefined,
-  mechanic: false,
-  sources: [...DEFAULT_CODEX_SOURCES],
-};
-
-/** Parse admin number inputs that may be fractional (e.g. feat point cost 0.5 or -0.5). */
-export function parseOptionalAdminDecimalInput(raw: string): number | undefined {
-  if (raw === '') return undefined;
-  const n = parseFloat(raw);
-  return Number.isNaN(n) ? undefined : n;
-}
-
-type AdminCreatureFeatEditModalProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  title: string;
-  copySourceName: string | null;
-  editingId: string | null;
-  form: CreatureFeatFormState;
-  setForm: Dispatch<SetStateAction<CreatureFeatFormState>>;
-  saving: boolean;
-  onDelete?: (() => void) | undefined;
-  onSave: () => void;
-};
+export type { CreatureFeatFormState } from './admin-creature-feat-form';
+export {
+  EMPTY_CREATURE_FEAT_FORM,
+  parseOptionalAdminDecimalInput,
+} from './admin-creature-feat-form';
 
 export function AdminCreatureFeatEditModal({
   isOpen,
   onClose,
   title,
   copySourceName,
-  editingId,
-  form,
-  setForm,
+  creatureFeats,
+  levelFeats,
+  categories,
   saving,
+  canDelete,
   onDelete,
   onSave,
-}: AdminCreatureFeatEditModalProps) {
-  const dirty = useCodexEditorDraftDirty(form, isOpen);
-  const leave = useCodexEditorLeaveGuard(dirty, onClose);
+  onSaveAll,
+  initialForm,
+  initialEditId,
+  enableAddLevel,
+  onAddLevel,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  copySourceName: string | null;
+  creatureFeats: CreatureFeat[];
+  levelFeats: CreatureFeat[];
+  categories: readonly string[];
+  saving: boolean;
+  canDelete: boolean;
+  onDelete?: (() => void) | undefined;
+  onSave: (id: string | null, form: CreatureFeatFormState) => void;
+  onSaveAll: (editsById: Record<string, CreatureFeatFormState>) => void;
+  initialForm: CreatureFeatFormState;
+  initialEditId: string | null;
+  enableAddLevel: boolean;
+  onAddLevel?: ((form: CreatureFeatFormState, sourceDbFeatId: string) => void) | undefined;
+}) {
+  const session = useAdminLeveledFeatSession({
+    initialForm,
+    initialEditId,
+    levelFeats,
+    toForm: creatureFeatToFormState,
+  });
+  const {
+    form,
+    setFormField,
+    selectedEditId,
+    hasLevels,
+    levelOptions,
+    dirtyLevelLabels,
+    dirtyIds,
+    handleSelectLevel,
+    dirtyPayload,
+  } = session;
+
+  const leave = useCodexEditorLeaveGuard(
+    codexFeatEditorIsDirty({
+      hasLevels,
+      dirtyLevelCount: dirtyIds.size,
+      form,
+      initialForm,
+    }),
+    onClose,
+  );
+
   return (
     <Modal
       isOpen={isOpen}
@@ -76,21 +97,45 @@ export function AdminCreatureFeatEditModal({
       fullScreenOnMobile
       footer={
         <AdminCodexEditModalFooter
-          onDelete={editingId ? onDelete : undefined}
+          onDelete={canDelete ? onDelete : undefined}
           onClose={leave.requestClose}
-          onSave={onSave}
-          saveDisabled={saving || !form.name.trim()}
+          onSave={() => {
+            if (hasLevels) {
+              const payload = dirtyPayload();
+              if (Object.keys(payload).length === 0) return;
+              onSaveAll(payload);
+              return;
+            }
+            onSave(selectedEditId, form);
+          }}
+          saveDisabled={saving || !form.name.trim() || (hasLevels && dirtyIds.size === 0)}
           saving={saving}
         />
       }
     >
       <div className="space-y-4">
+        <AdminFeatLevelControls
+          hasLevels={hasLevels}
+          enableAddLevel={enableAddLevel && Boolean(onAddLevel)}
+          saving={saving}
+          selectedEditId={selectedEditId}
+          canAddFromSingle={Boolean(initialEditId)}
+          levelOptions={levelOptions}
+          dirtyLevelLabels={dirtyLevelLabels}
+          addLevelHelp="Save a new row for the next creature-feat tier. Feat level is one higher, and the base feat is the level-1 creature feat. Required level is copied."
+          onSelectLevel={handleSelectLevel}
+          onAddLevel={() => {
+            const sourceId = hasLevels ? selectedEditId : initialEditId;
+            if (!sourceId || !onAddLevel) return;
+            onAddLevel(form, sourceId);
+          }}
+        />
         <AdminCodexCopySourceBanner copySourceName={copySourceName} entityLabel="creature feat" />
         <div>
           <label className="mb-1 block text-sm font-medium text-text-secondary">Name *</label>
           <Input
             value={form.name}
-            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+            onChange={(e) => setFormField('name', e.target.value)}
             placeholder="Creature feat name"
           />
         </div>
@@ -98,7 +143,7 @@ export function AdminCreatureFeatEditModal({
           <label className="mb-1 block text-sm font-medium text-text-secondary">Description</label>
           <Textarea
             value={form.description}
-            onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+            onChange={(e) => setFormField('description', e.target.value)}
             placeholder="Feat description"
             className="min-h-[80px] resize-y"
             rows={3}
@@ -106,9 +151,16 @@ export function AdminCreatureFeatEditModal({
         </div>
         <AdminCodexSourceField
           value={form.sources}
-          onChange={(sources) => setForm((f) => ({ ...f, sources }))}
+          onChange={(sources) => setFormField('sources', sources)}
         />
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4">
+          <AdminStoredCategoryField
+            label="Category"
+            ariaLabel="Creature feat category"
+            value={form.category}
+            categories={categories}
+            onChange={(category) => setFormField('category', category)}
+          />
           <div>
             <label className="mb-1 block text-sm font-medium text-text-secondary">
               Feat Points
@@ -118,10 +170,7 @@ export function AdminCreatureFeatEditModal({
               step="any"
               value={form.points ?? ''}
               onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  points: parseOptionalAdminDecimalInput(e.target.value),
-                }))
+                setFormField('points', parseOptionalAdminDecimalInput(e.target.value))
               }
               placeholder="No value"
             />
@@ -133,11 +182,10 @@ export function AdminCreatureFeatEditModal({
               min={0}
               value={form.feat_lvl ?? ''}
               onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  feat_lvl:
-                    e.target.value === '' ? undefined : (parseInt(e.target.value, 10) ?? undefined),
-                }))
+                setFormField(
+                  'feat_lvl',
+                  e.target.value === '' ? undefined : (parseInt(e.target.value, 10) ?? undefined),
+                )
               }
               placeholder="No value"
             />
@@ -151,21 +199,27 @@ export function AdminCreatureFeatEditModal({
               min={0}
               value={form.lvl_req ?? ''}
               onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  lvl_req:
-                    e.target.value === '' ? undefined : (parseInt(e.target.value, 10) ?? undefined),
-                }))
+                setFormField(
+                  'lvl_req',
+                  e.target.value === '' ? undefined : (parseInt(e.target.value, 10) ?? undefined),
+                )
               }
               placeholder="No value"
             />
           </div>
+          <AdminBaseFeatSelect
+            id="admin-creature-feat-base-feat-id"
+            value={form.base_feat_id}
+            onChange={(baseFeatId) => setFormField('base_feat_id', baseFeatId)}
+            feats={creatureFeats}
+            hint="For level 2+ creature feats, select the level-1 creature feat in this family."
+          />
         </div>
         <label className="mt-2 flex items-center gap-2">
           <input
             type="checkbox"
             checked={form.mechanic}
-            onChange={(e) => setForm((f) => ({ ...f, mechanic: e.target.checked }))}
+            onChange={(e) => setFormField('mechanic', e.target.checked)}
           />
           <span className="text-sm text-text-secondary">
             Mechanic-only feat (not a normal selectable feat)

@@ -6,6 +6,7 @@ import type { Feat, Skill } from '@/hooks';
 import { Plus, X } from 'lucide-react';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
 import type { FeatFormState } from './admin-feat-form';
+import { AdminBaseFeatSelect, AdminStoredCategoryField } from './admin-codex-feat-level-fields';
 import { AdminCodexSourceField } from './admin-codex-source-field';
 import { cn } from '@/lib/utils';
 
@@ -73,79 +74,20 @@ export function AdminFeatEditModalFields({
         />
       </div>
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="mb-1 block text-sm font-medium text-text-secondary">Category</label>
-          <select
-            value={
-              form.category && filterOptions.categories.includes(form.category)
-                ? form.category
-                : form.category
-                  ? '__new__'
-                  : ''
-            }
-            onChange={(e) => {
-              const v = e.target.value;
-              if (v === '__new__') setFormUpdater((f) => ({ ...f, category: f.category || '' }));
-              else setFormField('category', v);
-            }}
-            className={ADMIN_FEAT_MODAL_SELECT_CLASS}
-            aria-label="Feat category"
-          >
-            <option value="">None</option>
-            {filterOptions.categories.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-            <option value="__new__">Add new category...</option>
-          </select>
-          {form.category && !filterOptions.categories.includes(form.category) && (
-            <Input
-              value={form.category}
-              onChange={(e) => setFormField('category', e.target.value)}
-              placeholder="Type new category"
-              className="mt-2"
-            />
-          )}
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium text-text-secondary">
-            Feat Category Required (feat_cat_req)
-          </label>
-          <select
-            value={
-              form.feat_cat_req && filterOptions.categories.includes(form.feat_cat_req)
-                ? form.feat_cat_req
-                : form.feat_cat_req
-                  ? '__new__'
-                  : ''
-            }
-            onChange={(e) => {
-              const v = e.target.value;
-              if (v === '__new__')
-                setFormUpdater((f) => ({ ...f, feat_cat_req: f.feat_cat_req || '' }));
-              else setFormField('feat_cat_req', v);
-            }}
-            className={ADMIN_FEAT_MODAL_SELECT_CLASS}
-            aria-label="Feat category required"
-          >
-            <option value="">None</option>
-            {filterOptions.categories.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-            <option value="__new__">Add new category...</option>
-          </select>
-          {form.feat_cat_req && !filterOptions.categories.includes(form.feat_cat_req) && (
-            <Input
-              value={form.feat_cat_req}
-              onChange={(e) => setFormField('feat_cat_req', e.target.value)}
-              placeholder="Type new category"
-              className="mt-2"
-            />
-          )}
-        </div>
+        <AdminStoredCategoryField
+          label="Category"
+          ariaLabel="Feat category"
+          value={form.category}
+          categories={filterOptions.categories}
+          onChange={(category) => setFormField('category', category)}
+        />
+        <AdminStoredCategoryField
+          label="Feat Category Required (feat_cat_req)"
+          ariaLabel="Feat category required"
+          value={form.feat_cat_req}
+          categories={filterOptions.categories}
+          onChange={(featCatReq) => setFormField('feat_cat_req', featCatReq)}
+        />
         <div>
           <label className="mb-1 block text-sm font-medium text-text-secondary">
             Character Level Required (lvl_req)
@@ -180,38 +122,13 @@ export function AdminFeatEditModalFields({
             placeholder="No value"
           />
         </div>
-        <div>
-          <label
-            htmlFor="admin-feat-base-feat-id"
-            className="mb-1 block text-sm font-medium text-text-secondary"
-          >
-            Base feat (level 1)
-          </label>
-          <select
-            id="admin-feat-base-feat-id"
-            value={form.base_feat_id}
-            onChange={(e) => setFormField('base_feat_id', e.target.value)}
-            className={ADMIN_FEAT_MODAL_SELECT_CLASS}
-            aria-label="Base feat (level 1) (leave empty for level 1 feats)"
-          >
-            <option value="">None (this is level 1)</option>
-            {(feats ?? [])
-              .filter(
-                (f) =>
-                  !(f as Feat & { base_feat_id?: string | undefined }).base_feat_id &&
-                  ((f as Feat).feat_lvl == null || (f as Feat).feat_lvl === 1),
-              )
-              .map((f) => (
-                <option key={f.id} value={String(f.id)}>
-                  {f.name} (id: {f.id})
-                </option>
-              ))}
-          </select>
-          <p className="mt-1 text-xs text-text-muted">
-            For level 2+ feats, select the level-1 feat. Same name as base; ids differentiate
-            levels.
-          </p>
-        </div>
+        <AdminBaseFeatSelect
+          id="admin-feat-base-feat-id"
+          value={form.base_feat_id}
+          onChange={(baseFeatId) => setFormField('base_feat_id', baseFeatId)}
+          feats={feats ?? []}
+          hint="For level 2+ feats, select the level-1 feat. Same name as base; ids differentiate levels."
+        />
       </div>
       <div>
         <ChipSelect

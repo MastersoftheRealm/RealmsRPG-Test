@@ -295,6 +295,8 @@ export function codexPersistedFieldShapeError(
     return null;
   }
 
+  if (camel === 'category' && value === null) return null;
+
   if (
     camel.endsWith('Desc') ||
     camel === 'type' ||

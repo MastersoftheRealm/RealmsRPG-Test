@@ -34,6 +34,24 @@ export function storedFeatCategoryLabel(category: string | undefined | null): st
   return String(category ?? '').trim();
 }
 
+/**
+ * Unique stored category labels. Options come from the rows, not a fixed membership list.
+ * Character feats, archetype feats, and creature feats all use this.
+ */
+export function collectStoredCategoryLabels(
+  categories: ReadonlyArray<string | null | undefined>,
+): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of categories) {
+    const label = storedFeatCategoryLabel(raw);
+    if (!label || seen.has(label)) continue;
+    seen.add(label);
+    out.push(label);
+  }
+  return out.sort((a, b) => a.localeCompare(b));
+}
+
 /** Data columns only — admin action chrome uses CodexBrowseListShell `rowChrome`. */
 export const FEAT_GRID_COLUMNS = codexFeatChrome.grid;
 

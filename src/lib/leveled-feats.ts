@@ -29,6 +29,20 @@ export function getFeatFamilyId(feat: LeveledFeatLike): string {
   return feat.base_feat_id ? String(feat.base_feat_id) : String(feat.id);
 }
 
+/** Level-1 row with no parent. Admin “add level” and the base-feat picker use this. */
+export function isFeatFamilyBase(feat: LeveledFeatLike): boolean {
+  if (feat.base_feat_id) return false;
+  return feat.feat_lvl == null || feat.feat_lvl === 1;
+}
+
+/** Every row in `feat`'s family, lowest level first. */
+export function sortedFeatFamily<T extends LeveledFeatLike>(feats: readonly T[], feat: T): T[] {
+  const familyId = getFeatFamilyId(feat);
+  return feats
+    .filter((row) => getFeatFamilyId(row) === familyId)
+    .sort((a, b) => getFeatLevel(a) - getFeatLevel(b));
+}
+
 /** Roman suffixes on feat names (longest first for parsing). Matches codex migration pattern. */
 const FEAT_ROMAN_SUFFIXES = ['XI', 'X', 'IX', 'VIII', 'VII', 'VI', 'V', 'IV', 'III', 'II'] as const;
 

@@ -186,10 +186,16 @@ describe('mapCodexTrait / mapCodexPart / mapCodexProperty / mapCodexEquipment', 
 });
 
 describe('mapCodexCreatureFeat', () => {
-  it('mirrors feat_points onto points', () => {
-    const feat = mapCodexCreatureFeat({ id: 'cf-1', name: 'Pounce', feat_points: 2 });
+  it('mirrors feat_points onto points and keeps the stored category', () => {
+    const feat = mapCodexCreatureFeat({
+      id: 'cf-1',
+      name: 'Pounce',
+      feat_points: 2,
+      category: ' Movement ',
+    });
     expect(feat.points).toBe(2);
     expect(feat.feat_points).toBe(2);
+    expect(feat.category).toBe(' Movement ');
   });
 
   it('86e3nwaru: Slow family groups after mapping base_feat_id', () => {
