@@ -17,13 +17,15 @@ Checked on this pass:
 - Every non-test `.ts` / `.tsx` file under `src/lib/character-sheet`, `crafting`, `creator`, `encounter`, `rolls`, `rules`, `tabletop`, `validation`, `constants`, and `utils`, plus `src/lib/admin.ts` and the other loose files directly under `src/lib/`. The pairs in that section were opened. The files listed there as not read line by line were not.
 - Every non-test `.ts` / `.tsx` file under `src/lib/ancestry`, `api`, `chip`, `data-enrichment`, `detail-option`, `glr`, `observability`, `routes`, `security`, `server`, `supabase`, `tooltips`, and `ui`. The pairs in that section were opened. The files listed there as not read line by line were not.
 - The modules `src/lib/game/index.ts` and `src/lib/calculators/index.ts` re-export. The pairs in that section were opened. The files listed there as not read line by line were not. The sibling files those barrels do not re-export were already named and were not re-read in that section.
+- Every non-test `.ts` / `.tsx` file under public codex, library (including `components` and `hooks`), character detail, the characters list, the campaigns list (including the tabletop page), campaign detail outside `_components`, auth, encounter mixed and skill, the profile-picture upload route, and the styleguide. The pairs in that section were opened. The files listed there as not read line by line were not.
 - A static import walk from app entries. A file loaded only by a variable `import()` would not show up. `knip` was not run, so unused exports inside a file that is imported were not measured.
 
 Not checked, so silence here is not "it does not exist" and not "there is no fork":
 
 - Behavior of calculators, saves, or admin editors.
-- App folders that still have source files which were not opened file by file, named at the bottom of this index.
+- `src/hooks`, `src/services`, and `src/stores` beyond the barrel-gap names.
 - The sibling files under `src/lib/game` and `src/lib/calculators` that the barrels do not re-export, except the snippets named above.
+- The calculator and formula files named as not read line by line.
 - Pairs of files that are not named in a fork section below.
 
 Export **names** for patterns, ui, hooks, and services are in [`FEATURE_INDEX_BARRELS.generated.md`](FEATURE_INDEX_BARRELS.generated.md). That generated file is not a list of what is used, and it does not read the other barrels.
@@ -1999,12 +2001,68 @@ Every path below is a non-test source file. The checker fails if one is missing 
 
 ---
 
+## Public codex, library, sheets, campaigns, auth, and the styleguide
+
+Every non-test file in these folders has a production importer, or it is a page, layout, or route that Next loads. None of these files were unused.
+
+### Second implementations
+
+- My Codex. Seven tabs return `CodexMyCodexEmpty`. `CodexEquipmentTab` returns its own `EmptyState` when `codexMode` is `my`. `CodexSpeciesTab` loads `useUserSpecies` in that mode and does not render `CodexMyCodexEmpty`.
+- Create links. `src/app/(main)/library/page.tsx` keeps a `TABS` list of create hrefs and labels. `src/app/(main)/library/components/library-entity-tab.types.ts` keeps another. The enhanced label is `From Crafting` on the page and `Go to Crafting` in `ENHANCED_LIBRARY_LABELS`. They do not import each other.
+- Character cap alert. `src/app/(main)/characters/page.tsx` renders an `Alert` titled `Character limit reached` from `useCharacterQuota`. `CharacterQuotaAlert` in `src/app/(main)/characters/use-character-quota.tsx` renders that same title. The characters page does not render `CharacterQuotaAlert`. The new-character chooser does.
+- Power cap. The library page calls `isAtRoleQuota` and renders its own `Alert` titled `Power limit reached`. It does not call `useCharacterQuota`.
+- Password length. `changeAccountPasswordAction` in `src/app/(auth)/actions.ts` rejects `newPassword.length < 6`. `resetPasswordSchema` in `src/app/(auth)/reset-password/page.tsx` uses `.min(8)`. `loginWithPasswordAction` in `src/app/(auth)/auth-actions.ts` rejects only an empty password, then calls `signInWithPassword`. Login and register import `loginSchema` and `registerSchema`.
+- Upload size. `src/app/api/upload/profile-picture/route.ts` and `src/app/api/upload/portrait/route.ts` each set `MAX_SIZE` to `5 * 1024 * 1024` and call `detectImageMime`. Neither imports the other's constant.
+- Skill defaults. `prepareMixedEncounter` and `prepareSkillEncounter` each fill missing skill fields. Mixed does not call the skill function. Mixed sets `useInitiative` to true. Skill fills missing success and failure counts through `computeSkillRollResult`.
+- Library tab clamp. `useCharacterSheetPage` and the campaign character view page each call `resolveLibraryActiveTab` and then `setLibraryActiveTab` when the resolved tab differs. The view page does not call `useCharacterSheetPage`.
+- Campaign character cap. `joinCampaignAction` and `addCharacterToCampaignAction` each compare the roster length to `MAX_CAMPAIGN_CHARACTERS` before their own later work. They do not call each other. The constants live in `src/app/(main)/campaigns/constants.ts`.
+
+### Calls a shared component
+
+- The nine public codex tabs render `CodexBrowseListShell`. Feats render `CodexFeatRow`. Skills render `CodexSkillRow`. The other tabs render `GridListRow`.
+- `src/app/(main)/codex/page.tsx` renders those nine tabs twice, once for each `codexMode`.
+- Library powers, techniques, items, creatures, and enhanced items render `UserLibraryEntityTabShell`. Powers, techniques, items, and creatures also call `useLibraryEntitySync` and `useLibraryDuplicateConfirm`.
+- `LibraryPublicContent` has one `useAddToLibraryFlow`. Powers, techniques, items, and creatures each render the matching `Official*List`.
+- `src/app/(detail)/characters/[id]/page.tsx` renders `CharacterSheetRoute`. That route calls `useCharacterSheetPage`, which calls `useCharacterSheetPageData`, `useCharacterSheetPageUi`, and `useCharacterSheetActions`. `calculateStats` in `src/app/(detail)/characters/[id]/character-sheet-utils.ts` returns `calculateAllStats`. `CharacterSheetModals` renders the sheet modals from context.
+- `src/app/(detail)/campaigns/[id]/page.tsx` renders `campaign-detail-route.tsx`, which renders the campaign detail components. The campaign character view page calls `useCharacterSheetDerived` and `CharacterSheetBody`. It does not render `CharacterSheetModals`.
+- Mixed encounter renders `CombatEncounterView` and `SkillEncounterView` and one `RollLog`. The skill page renders `SkillEncounterView` with `showRollLog`. Both call `useEncounterPlayPage`.
+- The campaigns page calls `createCampaignAction` and `joinCampaignAction`. The join button uses `isValidInviteCodeFormat`, and the action calls that same function.
+- `isStyleguideServed` returns the opposite of `isProductionIndexingEnabled`. The styleguide layout calls it and then `notFound`.
+
+### Not read line by line
+
+- Codex tab bodies past the My Codex branch: `CodexFeatsTab.tsx`, `CodexSkillsTab.tsx`, `CodexSpeciesTab.tsx`, `CodexArchetypesTab.tsx`, `CodexEquipmentTab.tsx`, `CodexPartsTab.tsx`, `CodexPropertiesTab.tsx`, `CodexTraitsTab.tsx`, `CodexCreatureFeatsTab.tsx`.
+- Library tab bodies past the shell: `LibraryPowersTab.tsx`, `LibraryTechniquesTab.tsx`, `LibraryItemsTab.tsx`, `LibraryCreaturesTab.tsx`, `LibraryEnhancedTab.tsx`, and `UserLibraryEntityTabShell.tsx`.
+- `use-character-sheet-page-data.ts`, `use-character-sheet-page.ts` past the hook calls, `use-character-sheet-page-ui.ts` past the visibility save, `character-sheet-route.tsx` past the model fields, and `CharacterSheetModals.tsx` past the context read.
+- The campaign character view page past `useCharacterSheetDerived`, and `campaign-detail-route.tsx` past the roster.
+- `src/app/(main)/campaigns/page.tsx` past the join handler, `src/app/(main)/campaigns/actions.ts` past the two roster-length checks, and `src/app/(main)/campaigns/[id]/tabletop/page.tsx` past its imports.
+- `src/app/(auth)/actions.ts` past the new-password length check, `src/app/(auth)/auth-actions.ts` past the empty-password check, and the login, register, and reset-password form bodies.
+- `src/app/api/upload/profile-picture/route.ts` past the size check, and `src/app/dev/styleguide/page.tsx` past its imports.
+- `src/lib/game/formulas.ts`, `src/lib/game/calculations.ts`, and the calculator files named as not read line by line in the section above. Those were not re-opened.
+
+### Files that were missing from this index
+
+- `src/app/(main)/library/components/UserLibraryEntityTabShell.tsx`
+- `src/app/(main)/library/components/library-entity-tab.types.ts`
+- `src/app/(main)/library/hooks/use-library-entity-sync.ts`
+- `src/app/(main)/library/hooks/use-library-duplicate-confirm.ts`
+- `src/app/(detail)/characters/[id]/CharacterSheetModals.tsx`
+- `src/app/(detail)/characters/[id]/character-sheet-utils.ts`
+- `src/app/(main)/characters/use-character-quota.tsx`
+- `src/app/(main)/campaigns/constants.ts`
+- `src/app/(auth)/forgot-password/forgot-password-action-result.ts`
+- `src/app/(auth)/login/login-action-result.ts`
+- `src/app/(main)/encounters/[id]/mixed/prepare-mixed-encounter.ts`
+- `src/app/(main)/encounters/[id]/skill/prepare-skill-encounter.ts`
+- `src/app/api/upload/profile-picture/profile-picture-storage.ts`
+- `src/app/dev/styleguide/styleguide-gate.ts`
+---
+
 ## Left for a later pass
 
 This index is not finished. These were not opened file by file:
 
-- App folders that still have source files outside the page and route entries: `src/app/(main)/codex`, `src/app/(main)/library` (including `components` and `hooks`), `src/app/(detail)/characters/[id]`, `src/app/(main)/characters`, `src/app/(main)/campaigns`, the file in `src/app/(detail)/campaigns/[id]` outside `_components`, `src/app/(auth)`, `src/app/(main)/encounters/[id]/mixed`, `src/app/(main)/encounters/[id]/skill`, `src/app/api/upload/profile-picture`, and `src/app/dev/styleguide`. The public codex and library tab files are named where a page imports them. They were not opened.
-- The sibling files under `src/lib/game` and `src/lib/calculators` that the barrels do not re-export, except the skill-allocation loops and `CONDITIONS`.
 - `src/hooks`, `src/services`, and `src/stores` beyond the barrel-gap names.
+- The sibling files under `src/lib/game` and `src/lib/calculators` that the barrels do not re-export, except the skill-allocation loops and `CONDITIONS`.
 - Unused exports inside files that something already imports.
 - The files named under "Not read line by line" in the earlier sections and in the section above.

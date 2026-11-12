@@ -106,6 +106,17 @@ const FOLDER_FILE_DIRS = [
   'src/lib/ui',
   'src/lib/game',
   'src/lib/calculators',
+  'src/app/(main)/codex',
+  'src/app/(main)/library',
+  'src/app/(detail)/characters',
+  'src/app/(main)/characters',
+  'src/app/(main)/campaigns',
+  'src/app/(detail)/campaigns/[id]',
+  'src/app/(auth)',
+  'src/app/(main)/encounters/[id]/mixed',
+  'src/app/(main)/encounters/[id]/skill',
+  'src/app/api/upload/profile-picture',
+  'src/app/dev/styleguide',
 ];
 
 function walk(dir, acc = []) {
