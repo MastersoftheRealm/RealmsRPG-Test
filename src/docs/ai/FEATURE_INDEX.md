@@ -2680,6 +2680,49 @@ Signed-in users see account characters (`useCharacters`), delete, duplicate (`us
 
 - screen-behavior-note:sheet-no-standalone-empowered-library-tab: `LIBRARY_TAB_DEFS` has no `empowered-techniques` entry; empowered content is only via add-power modal mode.
 
+## Campaign screens (behavior pass)
+
+Signed-in **campaign** hub, detail, roster, shared roll log, and Realm Master (RM) **embedded read-only sheet**. Server actions in `campaigns/actions.ts` persist roster and metadata. **Partial pass:** API/SQL behind actions not opened; **VTT tabletop** route (`/campaigns/[id]/tabletop`) not walked.
+
+### Screens walked (read through save wiring)
+
+**Campaign list** — `/campaigns` → `campaigns/page.tsx`.
+
+**Guests** see a sign-in wall only (no list). Signed-in users get tabs **My Campaigns**, **Create Campaign**, **Join Campaign** (`?tab=create|join` syncs tab). **Create** calls `createCampaignAction` → new row + **invite code** display. **Join** calls `joinCampaignAction` with invite code + selected character (guest characters filtered out); may set character **visibility** to campaign-wide so others can view the sheet. **My Campaigns** links to `/campaigns/{id}`.
+
+**Campaign detail** — `/campaigns/[id]` → `campaign-detail-route.tsx` inside `ProtectedRoute` + `useCampaignDetailPage`.
+
+**RM** (`campaign.ownerId === user.uid`): edit name/description via `updateCampaignAction`, delete campaign, copy invite (`CampaignInviteSection`), add own characters through **`AddCharacterModal`** (`addCharacterToCampaignAction`, capped by `OWNER_MAX_CHARACTERS` and `MAX_CAMPAIGN_CHARACTERS`), remove any roster entry. **Players:** view roster; remove **only their own** character; no invite section; cannot use RM add-character modal (they joined from the list **Join** tab).
+
+**Roster** — `CampaignRosterSection`: RM block (owner’s characters + optional Add) and **Players** block. `CharacterChip` remove rules: `canRemove = isRealmMaster || userId === currentUserId`. **View sheet** link (`/campaigns/{id}/view/{userId}/{characterId}`) is passed only for **other players’** chips when the viewer is the RM (`onViewSheet`); opens in new tab. RM’s own chips have no external view link (use `/characters/{id}` for play).
+
+**Campaign roll log** — `CampaignRollLogSection` + `useCampaignRolls`: read-only, scrollable feed of `RollEntryCard` rows (newest at bottom); realtime/refetch from campaign rolls API. This is **not** the interactive `RollLog` FAB—it's an audit trail on the detail page.
+
+**Embedded character view (RM)** — `/campaigns/[id]/view/[userId]/[characterId]` → `useCampaignCharacterView` (roster + RM auth), **not** `useCharacter` / `/api/characters/[id]` alone. Renders `SheetHeader` + `CharacterSheetBody` with `buildReadOnlySheetContextValue` / `buildReadOnlyLibraryHandlers` (no edit toolbar, `isEditMode` false). `RollProvider` sets `campaignContext` so rolls can post to the campaign log; page-level `RollLog` for local history.
+
+**What saves:** Campaign name/description (RM update actions); roster membership add/remove; join/create/delete campaign; rolls appended via `addCampaignRoll` when a sheet in campaign context rolls (feeds detail log). Character sheet data still saves on the owner’s `/characters/[id]` route—not on the campaign view URL.
+
+### Screens not walked in this pass
+
+- `/campaigns/[id]/tabletop` (encounter/tabletop play).
+- Campaign server actions and Supabase policies line-by-line.
+- Admin, crafting, marketing (per scope).
+
+### Same job, different behavior
+
+- screen-behavior-note:campaigns-guest-sign-in-wall: **`/campaigns`** is entirely gated for guests; unlike `/library`, there is no read-only campaign browse without signing in.
+- screen-behavior-note:campaign-join-list-tab-vs-rm-detail-add: **Players** enter via **Join** tab + invite code. **RM** adds characters on **detail** via `AddCharacterModal` (`addCharacterToCampaignAction`); non-RM never get the detail add flow for another player’s slot.
+- screen-behavior-note:campaign-detail-roll-feed-vs-sheet-roll-log: **Detail** shows a static **Campaign Roll Log** section (`useCampaignRolls`). **Character sheets** use interactive `RollLog` + `RollProvider`; when `campaignContext` is set, `addRoll` also persists to the campaign feed.
+- screen-behavior-note:campaign-embedded-sheet-campaign-view-hook: RM **view** route loads **`useCampaignCharacterView`** (campaign-scoped authorization), not the owner sheet’s `useCharacter` query path.
+- screen-behavior-note:campaign-view-sheet-link-rm-other-players-only: **`CharacterChip`** `onViewSheet` is set only for **other** players when viewer is RM; player chips never get view links for peers on the roster UI.
+- screen-behavior-note:campaign-remove-rm-or-own-character: Remove is allowed for **RM (any)** or **the owning player (self only)**—not for a player removing someone else.
+- screen-behavior-note:campaign-visibility-bump-on-join: **Join** and **add-to-campaign** actions can set character visibility to **campaign** (toast when `visibilityUpdated`) so RM/peers can open the sheet view.
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:campaign-player-no-peer-sheet-from-roster: The roster UI does not offer “view sheet” for fellow **players**—only the RM gets the external view link on other players’ chips.
+- screen-behavior-note:campaign-tabletop-not-on-detail-page: **Tabletop/VTT** is a separate route under the campaign id, not a section on the detail page walked here.
+
 ## Unused exports outside game and calculators
 
 No production file imports these names. A test import does not count. The file that exports the name may still call it. This is not a dead function unless nothing in that file calls it either. Next.js page, layout, route, proxy, and MDX conventions are not listed. `src/lib/game` and `src/lib/calculators` were not part of this search. The hook, service, and store files the barrels omit are imported by their own paths. The names below are the extra exports in those trees, not unused files.

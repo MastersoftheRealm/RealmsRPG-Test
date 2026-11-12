@@ -785,6 +785,50 @@ console.log(
   `FEATURE_INDEX character-sheet screen check OK (${CHARACTER_SHEET_SCREEN_NOTE_IDS.length} notes).`,
 );
 
+const CAMPAIGN_SCREEN_NOTE_IDS = [
+  'campaigns-guest-sign-in-wall',
+  'campaign-join-list-tab-vs-rm-detail-add',
+  'campaign-detail-roll-feed-vs-sheet-roll-log',
+  'campaign-embedded-sheet-campaign-view-hook',
+  'campaign-view-sheet-link-rm-other-players-only',
+  'campaign-remove-rm-or-own-character',
+  'campaign-visibility-bump-on-join',
+  'campaign-player-no-peer-sheet-from-roster',
+  'campaign-tabletop-not-on-detail-page',
+];
+
+const campaignScreensSection = mathSectionSlice(indexText, '## Campaign screens');
+if (!campaignScreensSection) {
+  console.error('FEATURE_INDEX is missing the campaign screens section.');
+  process.exit(2);
+}
+if (!campaignScreensSection.includes('### Same job, different behavior')) {
+  console.error('FEATURE_INDEX campaign section is missing ### Same job, different behavior.');
+  process.exit(2);
+}
+const campaignScreenBehaviorStart = campaignScreensSection.indexOf('### Same job, different behavior');
+const campaignScreenDeadStart = campaignScreensSection.indexOf('### Dead or unreachable paths');
+if (campaignScreenBehaviorStart < 0 || campaignScreenDeadStart < 0) {
+  console.error('FEATURE_INDEX campaign section missing behavior or dead-path headings.');
+  process.exit(2);
+}
+const campaignScreenBehaviorBody = campaignScreensSection.slice(
+  campaignScreenBehaviorStart,
+  campaignScreenDeadStart,
+);
+const campaignScreenDeadBody = campaignScreensSection.slice(campaignScreenDeadStart);
+for (const id of CAMPAIGN_SCREEN_NOTE_IDS) {
+  const inBehavior = campaignScreenBehaviorBody.includes(`screen-behavior-note:${id}:`);
+  const inDead = campaignScreenDeadBody.includes(`screen-behavior-note:${id}:`);
+  if (!inBehavior && !inDead) {
+    console.error('FEATURE_INDEX missing required campaign screen note:', id);
+    process.exit(2);
+  }
+}
+console.log(
+  `FEATURE_INDEX campaign screen check OK (${CAMPAIGN_SCREEN_NOTE_IDS.length} notes).`,
+);
+
 const gen = spawnSync(
   process.execPath,
   [path.join(__dirname, 'generate-feature-index-barrels.js'), '--check'],
