@@ -2764,6 +2764,54 @@ Shared: token list sidebar, `RollProvider` + `RollLog` with `viewOnlyCampaignId=
 - screen-behavior-note:tabletop-direct-url-without-active-scene: Visiting `/campaigns/[id]/tabletop` with no active scene and no valid `?scene=` shows empty state — no create flow on this page alone.
 - screen-behavior-note:tabletop-encounter-without-campaign-id: `OpenTabletopButton` blocks when `campaignId` missing; API returns 400 without campaign link.
 
+## Admin screens (behavior pass)
+
+Admin hub at **`/admin`** (`admin/page.tsx`) links every tool below. **`admin/layout.tsx`** runs `requireAdminSession`: signed-out users → `/login?returnTo=/admin`; signed-in non-admins → `/`. All routes under `(main)/admin/` share that gate. **Partial pass:** Codex spreadsheet grid cell semantics and per-tab modal fields not walked line-by-line; Sources batch-merge edge cases skimmed; Image Library upload/storage API not fully traced.
+
+### Screens walked (from admin home links)
+
+**Admin home** — Cards only; no data writes. Opens Codex Editor, Sources, Official Library Editor, User Management, Role Policies, Core Rules, Image Library, Changelogs.
+
+**Codex Editor** — `/admin/codex` (`admin/codex/page.tsx`). Category tabs: feats, skills, species, traits, power & technique **parts**, armament **properties**, equipment, **archetypes**, creature feats. **List** view: browse list + edit modals (`useAdminCodexEntity`, `createCodexDoc` / `updateCodexDoc` / `deleteCodexDoc` in `codex/actions.ts`) → `codex_*` tables. **Spreadsheet** view (`CodexSpreadsheetView`, `useCodexSpreadsheet`): same collections, bulk edit, find/replace, save-all with optimistic concurrency (`expectedUpdatedAt`). Species tab also supports catalog listing patch (`usePatchOfficialCatalogListing('species')`) on `codex_species` rows.
+
+**Official Library Editor** — `/admin/public-library`. Tabs: powers, techniques, empowered techniques, armaments, creatures, species, enhanced items. Lists mirror Library UI (`OfficialPowerList`, `OfficialEntityList`, `variant="admin"`). **Edit** navigates to player creator routes with `?edit=` (e.g. `/power-creator?edit=`). **Save** happens on the creator via `saveToOfficialLibrary` / official APIs (`official_*` tables). Row **delete** and catalog listing toggles stay on the admin list (`apiFetch` DELETE, `usePatchOfficialCatalogListing`). Empty official tabs mean empty `official_*` data, not missing codex rows.
+
+**Sources** — `/admin/sources`. Manages **rules source names** and which catalog rows reference them (`fetchAdminCodexSourceCatalog`, `fetchAdminCodexSourceRows`, membership add/remove/rename in `sources/actions.ts`). Does not replace the Codex row editors; it tags membership across configured `codex_*` / core_rules sections (`ADMIN_CODEX_SOURCE_SECTIONS`).
+
+**Core Rules Editor** — `/admin/core-rules`. One tab per `core_rules` category id (`core-rules-tabs.ts`: progression, combat, archetypes, abilities, skills & defenses, conditions, sizes, rarities, damage, recovery, experience, armament proficiency, crafting). `CategoryEditor` + unsaved leave guard; **Save** → `saveCategory` → `updateCodexDoc('core_rules', …)` with create-if-missing fallback. Uses `useGameRules({ admin: true })`.
+
+**User Management** — `/admin/users`. Paginated search (`/api/admin/users`), **Change role** per user → `POST /api/admin/users/update-role`. Shows **Effective limits** from loaded role policies (read-only on this page).
+
+**Role Policies** — `/admin/roles`. Edits per-role numeric quotas and `can_upload_profile_picture` → `PATCH /api/admin/role-policies`. Per-role **Save** button; does not assign roles to users.
+
+**Realms Image Library** — `/admin/images`. Infinite list of shared card art; upload/rename/retag/replace/delete via modals (`listRealmsImagesPage`, `deleteRealmsImage`, edit modal). Delete blocked or warned when `RealmsImageUsageRef` references exist.
+
+**Changelogs** — `/admin/changelogs`. Read-only audit by category (each codex table + core_rules). Fetches `/api/admin/changelogs` (or equivalent `apiFetch` path in page); shows actor, operation, field diffs. No revert action on this screen.
+
+### Screens not walked in this pass
+
+- Every cell/column in Codex **spreadsheet** view.
+- Field-by-field validation inside each Codex list modal (feats, traits, archetype workspace, etc.).
+- Full Sources rename/merge batch failure matrix.
+- Crafting and marketing routes (out of scope).
+- Non-admin navigation chrome (whether Admin link appears in header).
+
+### Same job, different behavior
+
+- screen-behavior-note:admin-layout-blocks-non-admin: **`requireAdminSession`** in `admin/layout.tsx` keeps the whole admin tree off-limits without an admin role—unlike Library, which allows guest read on Realms content.
+- screen-behavior-note:admin-codex-list-modal-vs-spreadsheet: **Codex Editor** offers **List** (per-row modals) and **Spreadsheet** (grid + save all) over the **same** `codex_*` collections—different UX, same `updateCodexDoc` path.
+- screen-behavior-note:admin-codex-vs-official-library-data-split: **Codex Editor** owns reference/catalog tables (feats, skills, parts, properties, equipment, codex archetypes, etc.). **Official Library Editor** owns published **powers, techniques, armaments, creatures, species, enhanced items** in `official_*` tables—not the same tabs as `/library` My content.
+- screen-behavior-note:admin-official-library-edit-via-creator-routes: Official Library **Edit** leaves admin for **`/power-creator`**, **`/technique-creator`**, **`/item-creator`**, **`/creature-creator`**, **`/species-creator`**, etc., with `?edit=`—save target is official library (`canSaveToOfficial` / `saveToOfficialLibrary`), not an in-place admin modal.
+- screen-behavior-note:admin-species-codex-tab-vs-official-species-tab: **Species** appears twice: **Codex Editor** species tab edits **`codex_species`** in modals; **Official Library** species tab opens **Species Creator** for **`official_species`** rows—different tables and UX.
+- screen-behavior-note:admin-core-rules-archetypes-vs-codex-archetypes-tab: **Core Rules** “Archetypes” tab edits the **`ARCHETYPES`** document in **`core_rules`**; **Codex Editor** “Archetypes” tab edits **`codex_archetypes`** rows (feat paths, etc.)—same word, different stores.
+- screen-behavior-note:admin-users-role-assign-vs-roles-quotas: **User Management** assigns **which role** a user has; **Role Policies** edits **limits and permissions** for each role. Users page shows effective limits but does not save policy numbers.
+- screen-behavior-note:admin-sources-membership-vs-codex-row-editor: **Sources** adds/removes/renames source **tags** on existing catalog rows across types; **Codex Editor** edits row **content**—complementary, not interchangeable.
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:admin-non-admin-direct-url-redirect: A signed-in **non-admin** who opens `/admin` or any child route is **redirected to `/`** by layout—no read-only admin preview.
+- screen-behavior-note:admin-changelogs-no-undo: **Changelogs** is audit-only; there is no “revert this edit” control on that page (fixes happen back in Codex, Official Library, or Core Rules).
+
 ## Unused exports outside game and calculators
 
 No production file imports these names. A test import does not count. The file that exports the name may still call it. This is not a dead function unless nothing in that file calls it either. Next.js page, layout, route, proxy, and MDX conventions are not listed. `src/lib/game` and `src/lib/calculators` were not part of this search. The hook, service, and store files the barrels omit are imported by their own paths. The names below are the extra exports in those trees, not unused files.

@@ -884,6 +884,51 @@ console.log(
   `FEATURE_INDEX campaign-tabletop screen check OK (${CAMPAIGN_TABLETOP_SCREEN_NOTE_IDS.length} notes).`,
 );
 
+const ADMIN_SCREEN_NOTE_IDS = [
+  'admin-layout-blocks-non-admin',
+  'admin-codex-list-modal-vs-spreadsheet',
+  'admin-codex-vs-official-library-data-split',
+  'admin-official-library-edit-via-creator-routes',
+  'admin-species-codex-tab-vs-official-species-tab',
+  'admin-core-rules-archetypes-vs-codex-archetypes-tab',
+  'admin-users-role-assign-vs-roles-quotas',
+  'admin-sources-membership-vs-codex-row-editor',
+  'admin-non-admin-direct-url-redirect',
+  'admin-changelogs-no-undo',
+];
+
+const adminScreensSection = mathSectionSlice(indexText, '## Admin screens');
+if (!adminScreensSection) {
+  console.error('FEATURE_INDEX is missing the admin screens section.');
+  process.exit(2);
+}
+if (!adminScreensSection.includes('### Same job, different behavior')) {
+  console.error('FEATURE_INDEX admin section is missing ### Same job, different behavior.');
+  process.exit(2);
+}
+const adminScreenBehaviorStart = adminScreensSection.indexOf('### Same job, different behavior');
+const adminScreenDeadStart = adminScreensSection.indexOf('### Dead or unreachable paths');
+if (adminScreenBehaviorStart < 0 || adminScreenDeadStart < 0) {
+  console.error('FEATURE_INDEX admin section missing behavior or dead-path headings.');
+  process.exit(2);
+}
+const adminScreenBehaviorBody = adminScreensSection.slice(
+  adminScreenBehaviorStart,
+  adminScreenDeadStart,
+);
+const adminScreenDeadBody = adminScreensSection.slice(adminScreenDeadStart);
+for (const id of ADMIN_SCREEN_NOTE_IDS) {
+  const inBehavior = adminScreenBehaviorBody.includes(`screen-behavior-note:${id}:`);
+  const inDead = adminScreenDeadBody.includes(`screen-behavior-note:${id}:`);
+  if (!inBehavior && !inDead) {
+    console.error('FEATURE_INDEX missing required admin screen note:', id);
+    process.exit(2);
+  }
+}
+console.log(
+  `FEATURE_INDEX admin screen check OK (${ADMIN_SCREEN_NOTE_IDS.length} notes).`,
+);
+
 const gen = spawnSync(
   process.execPath,
   [path.join(__dirname, 'generate-feature-index-barrels.js'), '--check'],
