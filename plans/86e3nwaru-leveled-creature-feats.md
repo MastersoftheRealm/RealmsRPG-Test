@@ -83,10 +83,11 @@ Saved creatures reference feats by **id** in JSON only. The same numeric id can 
 
 ---
 
-## 3. Proposed SQL (not executed in Stage 1)
+## 3. SQL (applied)
 
-**Live census:** 161 total; 49 child updates; 26 bases with `base_feat_id IS NULL`; 86 singletons.  
-**One-shot:** Header on `sql/codex-creature-feats-base-feat-id.sql` must state “run once per environment; re-run overwrites admin edits.”
+Kadin applied this script on RealmsRPG-Test on Nov 12, 2026. A read-only check afterward showed `base_feat_id` present, 49 linked children, and no duplicate level inside a family. The file `sql/codex-creature-feats-base-feat-id.sql` was removed from the pull request so it cannot be run again. The text below is the record of what was applied.
+
+**Live census at draft time:** 161 total; 49 child updates; 26 bases with `base_feat_id IS NULL`; 86 singletons.
 
 ### 3.1 DDL (executed inside §3.3 `BEGIN`)
 
