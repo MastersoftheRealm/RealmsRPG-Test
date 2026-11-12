@@ -2916,6 +2916,50 @@ Public marketing copy and account sign-in under `(main)/` (with site header/foot
 - screen-behavior-note:marketing-rules-welcome-slug-redirects-index: Visiting **`/rules/welcome-to-realms`** **permanent-redirects** to **`/rules`**—welcome exists only on the index URL, not as a separate chapter route.
 - screen-behavior-note:marketing-reset-password-without-session: **`/reset-password`** without a valid recovery session shows **Reset Link Expired**—form is unreachable until the user completes the email flow from **`/forgot-password`**.
 
+## My Account screen (behavior pass)
+
+Signed-in settings at **`/my-account`** (`my-account/page.tsx` → `ProtectedRoute` → `useMyAccountPage` + section cards). **Partial pass:** server actions in `(auth)/actions` and upload API policies not line-by-line.
+
+### Walked
+
+| Section | What a person can do | What saves |
+|---------|----------------------|------------|
+| **Role & limits** | Read role + quotas (`AccountRoleLimitsCard`, `useAccountProfile`) | Nothing (display only) |
+| **Profile** | View username/email/provider/member since; change/remove photo | Upload: `POST /api/upload/profile-picture` + `supabase.auth.updateUser` avatar; bank: `setProfilePhotoFromLibraryAction`; remove: `DELETE` upload + auth avatar |
+| **Tutorials** | Toggle onboarding tips (`AccountTutorialsCard`) | `localStorage` via `setTutorialsEnabled` (not server profile) |
+| **Username** | Submit new username (weekly limit copy) | `changeUsernameAction` → profile row; `patchProfile` cache |
+| **Email / password** (password provider only) | Change email with current password; change password in-page; **Send reset email** | `changeAccountEmailAction`, `changeAccountPasswordAction`; reset email via `supabase.auth.resetPasswordForEmail` |
+| **OAuth notice** (Google-only, etc.) | Read-only explanation (`AccountOauthNoticeCard`) | N/A — email/password cards hidden |
+| **Danger zone** | Delete account (type DELETE; password or OAuth reauth) | `deleteAccountAction`; Google delete may use `beginGoogleDeleteReauthAction` + `?deleteReauth=1` return |
+
+Profile load: `useAccountProfile` → `fetchUserProfile` (includes `rolePolicy` e.g. `canUploadProfilePicture`). Upload allowed opens `ImageUploadModal`; otherwise **Change Picture** opens `RealmsImagePicker` (portrait categories) only.
+
+### Not walked
+
+- Every branch inside `deleteAccountAction` / email change confirmation flows.
+- Admin **Role Policies** editor (cross-reference only).
+
+### Same job, different behavior
+
+- screen-behavior-note:account-protected-route-login-returnTo: **`ProtectedRoute`** sends guests to **login** with **returnTo** for `/my-account`—unlike marketing pages that render signed-out.
+- screen-behavior-note:account-oauth-hides-email-password-cards: Users **without** a password provider see **`AccountOauthNoticeCard`** instead of change-email/change-password forms (Google sign-in cannot use those inline forms).
+- screen-behavior-note:account-send-reset-email-vs-forgot-password-page: **Password card → Send reset email** uses the same **`resetPasswordForEmail`** pattern as **`/forgot-password`**—duplicate recovery entry while already signed in.
+- screen-behavior-note:account-change-password-vs-reset-password-route: **Change password** on this page uses **`changeAccountPasswordAction`** (current password required); **`/reset-password`** sets a new password via **recovery session** after email—same outcome, different paths.
+- screen-behavior-note:account-picture-upload-gated-by-role-policy: **`canUploadProfilePicture`** from role policy controls **file upload modal** vs **image library picker only** (no custom upload).
+- screen-behavior-note:account-role-limits-read-only-vs-admin-roles: **Role & limits** is **read-only** here; changing quotas is **`/admin/roles`** (admin only)—this page only shows effective limits for the signed-in user.
+- screen-behavior-note:account-tutorials-toggle-local-not-profile: Tutorial preference is **`localStorage`**, not saved on the user profile row or API.
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:account-guest-cannot-open-settings: **`/my-account`** never renders for signed-out users—the settings UI is unreachable without login (`ProtectedRoute`).
+
+### App routes still without a dedicated behavior-pass section
+
+Other passes already cover: home/marketing, auth entry, character creators (`/characters/new`, guided, creature), library hub, entity creators, character sheet, campaigns, tabletop, encounters, admin, crafting. **No dedicated behavior-pass section yet** for:
+
+- **`/codex`** — public rules reference browser (tabs; guest vs signed-in read patterns not walked as its own pass).
+- **`dev/styleguide`** — internal UI reference (not a player surface).
+
 ## Unused exports outside game and calculators
 
 No production file imports these names. A test import does not count. The file that exports the name may still call it. This is not a dead function unless nothing in that file calls it either. Next.js page, layout, route, proxy, and MDX conventions are not listed. `src/lib/game` and `src/lib/calculators` were not part of this search. The hook, service, and store files the barrels omit are imported by their own paths. The names below are the extra exports in those trees, not unused files.

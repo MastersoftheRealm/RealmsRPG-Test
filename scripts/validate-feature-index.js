@@ -1025,6 +1025,51 @@ console.log(
   `FEATURE_INDEX marketing screen check OK (${MARKETING_SCREEN_NOTE_IDS.length} notes).`,
 );
 
+const ACCOUNT_SCREEN_NOTE_IDS = [
+  'account-protected-route-login-returnTo',
+  'account-oauth-hides-email-password-cards',
+  'account-send-reset-email-vs-forgot-password-page',
+  'account-change-password-vs-reset-password-route',
+  'account-picture-upload-gated-by-role-policy',
+  'account-role-limits-read-only-vs-admin-roles',
+  'account-tutorials-toggle-local-not-profile',
+  'account-guest-cannot-open-settings',
+];
+
+const accountScreensSection = mathSectionSlice(indexText, '## My Account screen');
+if (!accountScreensSection) {
+  console.error('FEATURE_INDEX is missing the My Account screen section.');
+  process.exit(2);
+}
+if (!accountScreensSection.includes('### Same job, different behavior')) {
+  console.error('FEATURE_INDEX My Account section is missing ### Same job, different behavior.');
+  process.exit(2);
+}
+const accountScreenBehaviorStart = accountScreensSection.indexOf(
+  '### Same job, different behavior',
+);
+const accountScreenDeadStart = accountScreensSection.indexOf('### Dead or unreachable paths');
+if (accountScreenBehaviorStart < 0 || accountScreenDeadStart < 0) {
+  console.error('FEATURE_INDEX My Account section missing behavior or dead-path headings.');
+  process.exit(2);
+}
+const accountScreenBehaviorBody = accountScreensSection.slice(
+  accountScreenBehaviorStart,
+  accountScreenDeadStart,
+);
+const accountScreenDeadBody = accountScreensSection.slice(accountScreenDeadStart);
+for (const id of ACCOUNT_SCREEN_NOTE_IDS) {
+  const inBehavior = accountScreenBehaviorBody.includes(`screen-behavior-note:${id}:`);
+  const inDead = accountScreenDeadBody.includes(`screen-behavior-note:${id}:`);
+  if (!inBehavior && !inDead) {
+    console.error('FEATURE_INDEX missing required My Account screen note:', id);
+    process.exit(2);
+  }
+}
+console.log(
+  `FEATURE_INDEX My Account screen check OK (${ACCOUNT_SCREEN_NOTE_IDS.length} notes).`,
+);
+
 const gen = spawnSync(
   process.execPath,
   [path.join(__dirname, 'generate-feature-index-barrels.js'), '--check'],
