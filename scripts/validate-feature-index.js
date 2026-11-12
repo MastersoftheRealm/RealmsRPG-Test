@@ -312,6 +312,10 @@ const CREATURE_BUDGET_MATH_UNCLASSIFIED_IDS = [
   'creature-training-stored-tp-without-parts',
 ];
 
+const PROFICIENCY_TRAINING_MATH_UNCLASSIFIED_IDS = [
+  'guided-tp-bar-max-of-dedupe-vs-listed',
+];
+
 function mathSectionSlice(text, heading) {
   const start = text.indexOf(heading);
   if (start < 0) return null;
@@ -427,12 +431,39 @@ requireDisagreementTokens(
   'creature budget unclassified',
 );
 
+const proficiencyMathSection = mathSectionSlice(
+  indexText,
+  '## Player proficiency and training math',
+);
+if (!proficiencyMathSection) {
+  console.error('FEATURE_INDEX is missing the player proficiency and training math section.');
+  process.exit(2);
+}
+if (!proficiencyMathSection.includes('### Disagreements')) {
+  console.error('FEATURE_INDEX proficiency/training section is missing ### Disagreements.');
+  process.exit(2);
+}
+const proficiencyDisagreements = disagreementsSubsection(proficiencyMathSection);
+if (!proficiencyDisagreements) {
+  console.error(
+    'FEATURE_INDEX proficiency/training section has no ### Disagreements body.',
+  );
+  process.exit(2);
+}
+requireDisagreementTokens(
+  proficiencyDisagreements,
+  'math-disagree-unclassified',
+  PROFICIENCY_TRAINING_MATH_UNCLASSIFIED_IDS,
+  'proficiency/training unclassified',
+);
+
 const mathDisagreementCount =
   MATH_DISAGREEMENT_INTENTIONAL_IDS.length +
   MATH_DISAGREEMENT_BUG_IDS.length +
   SKILL_MATH_DISAGREEMENT_COPY_IDS.length +
   CHARACTER_PATH_MATH_UNCLASSIFIED_IDS.length +
-  CREATURE_BUDGET_MATH_UNCLASSIFIED_IDS.length;
+  CREATURE_BUDGET_MATH_UNCLASSIFIED_IDS.length +
+  PROFICIENCY_TRAINING_MATH_UNCLASSIFIED_IDS.length;
 console.log(`FEATURE_INDEX math-disagreement check OK (${mathDisagreementCount} guarded lines).`);
 
 const gen = spawnSync(

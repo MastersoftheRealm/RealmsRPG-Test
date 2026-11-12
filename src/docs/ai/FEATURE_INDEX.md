@@ -2154,7 +2154,7 @@ Every non-test file under `src/lib/game` and `src/lib/calculators` is already re
 ### Not read line by line
 
 - Health, energy, and cost formulas in the section above are read through that pass’s scope. Skill helpers in `formulas.ts` after innate energy and `skill-allocation.ts` cost helpers are in **Skill and allocation math** below.
-- Character-check and path math is in **Character-check and path math** below. Creature creator budgets are in **Creature creator budget math**. Still unread: `crafting-utils.ts` past the four apply functions, `path-recommendation-index.ts`, `size-table.ts` past `calculateCarryingCapacityKg`, `targeted-defenses.ts` past `parseDefensesFromDescription`, `weapon-attack-ability.ts` past `meetsAbilityRequirement`, `archetype-display.ts` past `applyProficiencyLossForLevelDown`, and `creator-cache.ts`.
+- Character-check and path math is in **Character-check and path math** below. Creature creator budgets are in **Creature creator budget math**. Player proficiency caps and guided TP wiring are in **Player proficiency and training math**. Still unread: `crafting-utils.ts` past the four apply functions, `path-recommendation-index.ts`, `size-table.ts` past `calculateCarryingCapacityKg`, `targeted-defenses.ts` past `parseDefensesFromDescription`, `weapon-attack-ability.ts` past `meetsAbilityRequirement`, and `creator-cache.ts`.
 
 ---
 
@@ -2294,7 +2294,7 @@ Creature point budgets, spend totals, and training-point aggregation for the cre
 
 ### Still not read line by line (creature budget scope)
 
-- None in this slice. `archetype-display.ts` proficiency level-up helpers remain under **Not read line by line** until a separate pass.
+- None in this slice.
 
 ### Disagreements
 
@@ -2308,6 +2308,33 @@ Creature point budgets, spend totals, and training-point aggregation for the cre
 - Creature ability spend uses `calculateAbilityScoreCost`; same as character legality and suggested-ability builders.
 - `computeCreatureTrainingSpent` and guided character save both call `sumRequiredProficiencyTrainingPoints` when part/property codex is available.
 - Player training **cap** uses `calculateTrainingPoints` via `getTrainingPointLimit`; creature training **budget** uses `calculateCreatureTrainingPoints` (different formula, different entity).
+
+## Player proficiency and training math (line-by-line pass)
+
+Archetype proficiency caps on level change, player Training Point pool formula, and guided creator proficiency / TP spend wiring. Not creator screen UI. Not a rules balance sign-off.
+
+### Read to the end
+
+- `applyProficiencyGainForLevelUp`, `applyProficiencyLossForLevelDown`, `applyLevelUpProficiencyUpdates`, `applyLevelDownProficiencyUpdates`, and `applyPathProficiencyForLevel` in `src/lib/game/archetype-display.ts`. Milestone gain/loss uses `calculateProficiency(oldLevel)` and `calculateProficiency(newLevel)`; pure-side auto-assign adds or removes the cap delta on the side that holds all spent points (mixed splits return null). Level 5+ path floors use `Math.max(current, path power_prof_level5 / martial_prof_level5)` when `archetypePathId` is set. Codex fetch helpers in the same file are display/merge only.
+- `calculateProficiency` and `calculateTrainingPoints` in `src/lib/game/formulas.ts`. Proficiency cap: base at low levels, then +1 per `proficiencyEveryNLevels` (default 5) via `floor(level / interval) × proficiencyPerIncrease`; sub-level can `ceil(base × level)`. Player TP pool: `base + archetypeAbility + (tpPerLevelMultiplier + archetypeAbility) × (level − 1)` from `PROGRESSION_PLAYER` defaults. `resolveArchetypeProficiencyStart` sets starting `pow_prof` / `mart_prof` from path columns or type defaults (power 2/0, martial 0/2, mixed 1/1).
+- `getTrainingPointLimit` in `src/lib/proficiencies.ts` delegates to `calculateTrainingPoints(level, archetypeAbility, rules)`.
+- Guided proficiency and TP in `src/lib/guided-creator/build-character.ts`: `resolvePowersForProficiency` (composition → `composedPowerProficiencyParts`), `resolveTechniquesForProficiency`, `resolveArmamentsForProficiency`, `buildGuidedProficiencyInput`, `computeGuidedRequiredTrainingSpent` (`sumRequiredProficiencyTrainingPoints`), and `computeGuidedTrainingPointsBudgetSpent` (`Math.max` of deduped proficiency spend vs listed loadout + combat TP). Save payload builds `proficiencies` via `buildRequiredProficiencies` and starting `pow_prof` / `mart_prof` via `resolveArchetypeProficiencyStart` (does not call level-up auto-assign).
+- `computeGuidedLoadoutTpSummary`, `resolveItemTrainingPoints`, `combineGuidedTpBudgets`, and `sumGuidedListedCombatTrainingPoints` in `src/lib/guided-creator/loadout-tp.ts`. Loadout spend sums `Math.round(calculateItemCosts(...).totalTP)` per selected ref × quantity. Limit at guided L1 uses `getTrainingPointLimit(1, archetypeAbility, rules)` where archetype ability is max of pow/mart picks and all six scores. Listed combat TP sums catalog `tpCostOf(id)` for unique power/technique/innate ids.
+
+### Still not read line by line (proficiency / training scope)
+
+- None in this slice.
+
+### Disagreements
+
+- math-disagree-unclassified:guided-tp-bar-max-of-dedupe-vs-listed: **Second copy for the warn bar.** `computeGuidedRequiredTrainingSpent` walks parts/properties through `sumRequiredProficiencyTrainingPoints`. `computeGuidedTrainingPointsBudgetSpent` returns `Math.max` of that and `loadoutEquipmentTpSpent + sumGuidedListedCombatTrainingPoints` (item `calculateItemCosts` TP plus chip/catalog `tpCostOf` totals). The UI counter can exceed the deduped proficiency walk or show a higher number when catalog TP disagrees with part breakdown.
+
+### Same math, separate copies
+
+- `getTrainingPointLimit`, `computeGuidedLoadoutTpSummary`, and path admin `trainingPointLimit` all use `calculateTrainingPoints` for the pool size when rules match.
+- `buildGuidedCharacterPayload` and `computeGuidedRequiredTrainingSpent` share `buildGuidedProficiencyInput`; save persists `buildRequiredProficiencies` rows, not the budget counter max.
+- `applyProficiencyGainForLevelUp` and `applyProficiencyLossForLevelDown` use the same `calculateProficiency` cap function the sheet uses for proficiency **pools** (points spent are separate fields on the character).
+- `resolveItemTrainingPoints` and path `validateLoadoutTrainingPoints` both use `calculateItemCosts` property TP; path validation sums the same way with quantity.
 
 ## Unused exports outside game and calculators
 
