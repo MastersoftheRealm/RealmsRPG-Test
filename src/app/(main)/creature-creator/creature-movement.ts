@@ -124,7 +124,7 @@ export function readWalkLevel(movementTypes: readonly string[]): number {
   return speedy - slow;
 }
 
-export function readSpeedMode(
+function readSpeedMode(
   movementTypes: readonly string[],
   names: readonly string[],
 ): 0 | 1 | 2 {
