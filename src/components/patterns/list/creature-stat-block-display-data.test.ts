@@ -5,7 +5,12 @@ import { loadRepoCodexParts } from '@/lib/calculators/power-composition.fixture'
 import { libraryItemToPowerDocument } from '@/lib/library-selectable-builders';
 import type { CreatureData } from './creature-stat-block-types';
 import { isListedSavedCreatureSkill } from './creature-stat-block-helpers';
-import { buildPowersForDisplay, buildSkillRows } from './creature-stat-block-display-data';
+import {
+  buildPowersForDisplay,
+  buildSkillRows,
+  buildTechniquesForDisplay,
+} from './creature-stat-block-display-data';
+import type { LibraryTechnique } from '@/types/library';
 
 describe('buildPowersForDisplay energy', () => {
   it('prices Shared apply-to-duration through the same document as the library', () => {
@@ -176,6 +181,248 @@ describe('buildPowersForDisplay energy', () => {
     expect(row?.energyCost).toBe(9);
     expect(row?.actionType).toBe('Quick');
     expect(row?.duration).toBe('2 Rounds');
+  });
+});
+
+const SAVED_TECHNIQUE_ROWS = [
+  { creature: 'Goblin', name: 'Power Shot', energy: 6, weapon: 'Weapon', tp: 1 },
+  { creature: 'Lvl. 1 Human Melee Martial', name: 'Clash', energy: 8, weapon: 'Weapon', tp: 3 },
+  {
+    creature: 'Lvl. 1 Human Melee Martial',
+    name: 'saved snapshot',
+    energy: 6,
+    weapon: 'Weapon',
+    tp: 1,
+  },
+  { creature: 'Rat', name: 'Expose', energy: 3, weapon: 'Unarmed', tp: 3 },
+  { creature: 'Shambling Thorn', name: 'Block', energy: 4, weapon: 'Unarmed', tp: 3 },
+  { creature: 'Shambling Thorn', name: 'Thorn Prick', energy: 4, weapon: 'Unarmed', tp: 2 },
+] as const;
+
+function creatureWithTechnique(
+  creatureName: string,
+  technique: {
+    name: string;
+    energy: number;
+    weapon: string;
+    tp: number;
+    parts?: NonNullable<CreatureData['techniques']>[number]['parts'];
+  },
+): CreatureData {
+  return {
+    id: 'creature',
+    name: creatureName,
+    techniques: [
+      {
+        id: technique.name,
+        name: technique.name,
+        energy: technique.energy,
+        weapon: technique.weapon,
+        tp: technique.tp,
+        action: 'Action',
+        ...(technique.parts ? { parts: technique.parts } : {}),
+      },
+    ],
+  };
+}
+
+describe('buildTechniquesForDisplay saved snapshots', () => {
+  it('uses saved Energy, Attack, and Training Pts when the viewer has no matching technique and the row has no parts', () => {
+    for (const row of SAVED_TECHNIQUE_ROWS) {
+      const displayed = buildTechniquesForDisplay(
+        creatureWithTechnique(row.creature, row),
+        [],
+        [],
+        [],
+      )[0];
+      expect(displayed?.energyCost, row.name).toBe(row.energy);
+      expect(displayed?.weaponName, row.name).toBe(row.weapon);
+      expect(displayed?.tp, row.name).toBe(row.tp);
+    }
+  });
+
+  it('still prices a technique that matches an official library row', () => {
+    const official = {
+      id: 'disarm',
+      docId: 'disarm',
+      name: 'Disarm',
+      parts: [],
+    } satisfies LibraryTechnique;
+    const displayed = buildTechniquesForDisplay(
+      creatureWithTechnique('Goblin', {
+        name: 'Disarm',
+        energy: 6,
+        weapon: 'Weapon',
+        tp: 1,
+      }),
+      [],
+      [{ ...official, id: 'disarm' }],
+      [],
+    )[0];
+    expect(displayed?.energyCost).toBe(0);
+    expect(displayed?.weaponName).toBe('Unarmed');
+    expect(displayed?.tp).toBe(0);
+  });
+
+  it('prices a snapshot that has parts instead of keeping a stale stored total', () => {
+    const displayed = buildTechniquesForDisplay(
+      creatureWithTechnique('Rat', {
+        name: 'Expose',
+        energy: 99,
+        weapon: 'Weapon',
+        tp: 9,
+        parts: [{ id: 1, name: 'Missing Part', op_1_lvl: 1 }],
+      }),
+      [],
+      [],
+      [],
+    )[0];
+    expect(displayed?.energyCost).toBe(0);
+    expect(displayed?.tp).toBe(0);
+    expect(displayed?.weaponName).toBe('Unarmed');
+  });
+});
+
+describe('library ref resolution (powers)', () => {
+  const creatureBase = { id: 'c-match', name: 'Matcher', powers: [] } satisfies CreatureData;
+
+  it('prefers user library over official when both share the same id', () => {
+    const user = {
+      id: 'bolt-1',
+      docId: 'bolt-1',
+      name: 'User Bolt',
+      description: 'from user library',
+      parts: [],
+    } satisfies LibraryPower;
+    const official = {
+      id: 'bolt-1',
+      docId: 'bolt-1',
+      name: 'Official Bolt',
+      description: 'from codex',
+      parts: [],
+    } satisfies LibraryPower;
+    const creature = {
+      ...creatureBase,
+      powers: [{ id: 'bolt-1', name: 'User Bolt' }],
+    } satisfies CreatureData;
+    const row = buildPowersForDisplay(creature, [user], [official], [])[0];
+    expect(row?.description).toBe('from user library');
+  });
+
+  it('resolves user rows by docId when the creature ref id is the docId (name differs)', () => {
+    const user = {
+      id: 'internal-9',
+      docId: 'doc-facing-9',
+      name: 'Doc Bolt',
+      description: 'docId hit',
+      parts: [],
+    } satisfies LibraryPower;
+    const creature = {
+      ...creatureBase,
+      powers: [{ id: 'doc-facing-9', name: 'Unrelated Snapshot Name' }],
+    } satisfies CreatureData;
+    const row = buildPowersForDisplay(creature, [user], [], [])[0];
+    expect(row?.description).toBe('docId hit');
+  });
+
+  it('resolves user rows by internal id when docId differs and name differs', () => {
+    const user = {
+      id: 'surface-77',
+      docId: 'vault-77',
+      name: 'Vault Bolt',
+      description: 'internal id hit',
+      parts: [],
+    } satisfies LibraryPower;
+    const creature = {
+      ...creatureBase,
+      powers: [{ id: 'surface-77', name: 'Wrong Label' }],
+    } satisfies CreatureData;
+    const row = buildPowersForDisplay(creature, [user], [], [])[0];
+    expect(row?.description).toBe('internal id hit');
+  });
+
+  it('falls back to a case-insensitive trimmed name match', () => {
+    const user = {
+      id: 'n1',
+      docId: 'n1',
+      name: 'Fire Bolt',
+      description: 'name match',
+      parts: [],
+    } satisfies LibraryPower;
+    const creature = {
+      ...creatureBase,
+      powers: [{ name: '  fire bolt  ' }],
+    } satisfies CreatureData;
+    const row = buildPowersForDisplay(creature, [user], [], [])[0];
+    expect(row?.description).toBe('name match');
+  });
+
+  it('indexes official numeric id 0 and matches ref id "0" without name fallback', () => {
+    const official = {
+      id: 0,
+      name: 'Catalog Zero',
+      description: 'official zero via id',
+      parts: [],
+    } as unknown as LibraryPower;
+    const creature = {
+      ...creatureBase,
+      powers: [{ id: '0', name: 'Creature Ref Unrelated' }],
+    } satisfies CreatureData;
+    const row = buildPowersForDisplay(creature, [], [official], [])[0];
+    expect(row?.description).toBe('official zero via id');
+  });
+
+  it('uses library image_url ahead of the creature snapshot ref (names differ)', () => {
+    const user = {
+      id: 'img-1',
+      docId: 'img-1',
+      name: 'Imaged',
+      description: '',
+      parts: [],
+      image_url: 'https://library/cover.png',
+    } satisfies LibraryPower;
+    const creature = {
+      ...creatureBase,
+      powers: [{ id: 'img-1', name: 'Snapshot Label', image_url: 'https://snapshot/old.png' }],
+    } satisfies CreatureData;
+    const row = buildPowersForDisplay(creature, [user], [], [])[0];
+    expect(row?.thumbnail?.src).toContain('library/cover.png');
+    expect(String(row?.thumbnail?.src ?? '')).not.toContain('snapshot/old');
+  });
+
+  it('does not look up by ref id zero (master truthy refId)', () => {
+    const official = {
+      id: '0',
+      docId: '0',
+      name: 'Zero Id Power',
+      description: 'should not match via ref 0',
+      parts: [],
+    } satisfies LibraryPower;
+    const creature = {
+      ...creatureBase,
+      powers: [{ id: 0 as unknown as string, name: 'Other' }],
+    } satisfies CreatureData;
+    const row = buildPowersForDisplay(creature, [], [official], [])[0];
+    expect(row?.description).not.toBe('should not match via ref 0');
+  });
+});
+
+describe('library ref resolution (techniques)', () => {
+  it('indexes official numeric id 0 without name fallback', () => {
+    const official = {
+      id: 0,
+      name: 'Official Slash',
+      parts: [],
+    } as unknown as LibraryTechnique;
+    const creature = {
+      id: 'c-tech',
+      name: 'Fighter',
+      techniques: [
+        { id: '0', name: 'Wrong Name', energy: 5, weapon: 'Weapon', tp: 1, action: 'Action' },
+      ],
+    } satisfies CreatureData;
+    const row = buildTechniquesForDisplay(creature, [], [official], [])[0];
+    expect(row?.name).toBe('Official Slash');
   });
 });
 
