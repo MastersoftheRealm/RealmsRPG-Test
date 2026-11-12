@@ -1,12 +1,12 @@
 # Feature Index — "Does this already exist?"
 
-**Purpose:** The anti-re-implementation guardrail. Before building a new component, hook, service, route, or util, scan this index first. Most accidental duplication in this repo came from agents not knowing a feature already existed.
+**Purpose:** A path map. Use a row to find a file, then open that file. A sentence in this index is not proof the helper exists or behaves that way.
 
 **Also check:** generated barrel inventory [`FEATURE_INDEX_BARRELS.generated.md`](FEATURE_INDEX_BARRELS.generated.md) (`npm run tasks:generate-index` after changing barrel exports). CI fails if that file is stale.
 
 **How to use:** Find your topic below → open the listed file/barrel → extend it (add a prop/variant) rather than forking a parallel copy. If you add a new top-level feature/hook/shared component, add a line here **and** regenerate the barrel file if you changed an index.ts export.
 
-> This is a map, not the source of truth for behavior. For schema use `SUPABASE_SCHEMA.md`, for formulas `GAME_RULES.md`, for data flow `ARCHITECTURE.md`.
+> This is a map of paths, not evidence of behavior. Writers and audits open the listed file. For schema use `SUPABASE_SCHEMA.md`, for formulas `GAME_RULES.md`, for data flow `ARCHITECTURE.md`.
 
 ---
 
