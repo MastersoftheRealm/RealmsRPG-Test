@@ -11,13 +11,14 @@ Checked on this pass:
 - Every non-test `.ts` / `.tsx` file under `src/components/patterns`, `src/components/character-sheet`, and `src/components/guided-creator`: static imports, plus the pairs named in that section, which were opened. The other files in those folders were not read line by line.
 - Every non-test `.ts` / `.tsx` file under `src/components/creator`, `src/components/crafting`, `src/components/encounters`, and the creator and crafting page folders named in that section. The pairs in that section were opened. The files listed there as not read line by line were not.
 - Every non-test `.ts` / `.tsx` file under `src/components/character`, `src/components/codex`, `src/app/(main)/encounters/[id]/_components`, and `src/app/(detail)/campaigns/[id]/_components`. The pairs in that section were opened. The files listed there as not read line by line were not.
+- Every non-test `.ts` / `.tsx` file under `src/components/rolls`, `rules`, `tabletop`, `layout`, `landing`, `about`, `auth`, `legal`, `onboarding`, `providers`, and `src/app/(main)/my-account/_components`. The pairs in that section were opened. The files listed there as not read line by line were not.
 - A static import walk from app entries. A file loaded only by a variable `import()` would not show up. `knip` was not run, so unused exports inside a file that is imported were not measured.
 
 Not checked, so silence here is not "it does not exist" and not "there is no fork":
 
 - Behavior of calculators, saves, or admin editors.
-- Admin codex and my-account folders under `src/app` beyond the page file each route imports.
-- `src/components/about`, `auth`, `landing`, `layout`, `legal`, `onboarding`, `providers`, `rolls`, `rules`, and `tabletop`.
+- Admin codex screens beyond the feat and skill row renders.
+- `src/components/ui` beyond the files its barrel does not re-export.
 - Loose modules under `src/lib/` outside `game/` and `calculators/`.
 - Pairs of files that are not named in a fork section below.
 
@@ -1063,14 +1064,146 @@ Every path below is a non-test source file. The checker fails if one is missing 
 
 ---
 
+## Rolls, rules, tabletop, chrome, marketing, auth, and account cards
+
+56 non-test `.ts` / `.tsx` files. Each one has a production importer. None are unused files.
+
+`src/components/landing/index.ts` exports `HeroSection`, `UniquenessSection`, `HowItWorksSection`, `SecondaryDiscoverySection`, `CommunitySection`, `MarketingLinkButton`, and `CreatorFunnelHero`. It does not export `MarketingExternalButton`, `LandingArtFrame`, `LandingDiceDecor`, or `LandingGradientBackdrop`. Callers import those by path.
+
+`src/components/layout/index.ts` exports `Header`, `Footer`, `ProtectedRoute`, and `SelectionGuard`. It does not export `MainAppChrome` or `MainContentBoundary`.
+
+### Second implementations
+
+- Labeled inputs. `src/components/auth/form-input.tsx` and `src/components/auth/password-input.tsx` each render a raw `<input>`, the same label class (`block text-sm font-medium text-text-primary`), and the same border and focus class string. `PasswordInput` adds `pr-12` and a show/hide button. It does not render `FormInput`. `showStrength` is on `PasswordInputProps` and is not read before the remaining props are spread onto the input.
+- Account password fields. `src/app/(main)/my-account/_components/account-security-cards.tsx` and `src/app/(main)/my-account/_components/account-danger-zone-card.tsx` each render `Input` from `@/components/ui` with `type="password"` and their own `<label>`. Neither renders `PasswordInput` or `FormInput`. `src/app/(main)/my-account/_components/account-password-validation.ts` checks length against `PASSWORD_MIN_LENGTH` from `@/lib/password-policy`. It does not restate a number.
+- Heroes. `src/components/landing/hero-section.tsx` and `src/components/landing/creator-funnel-hero.tsx` both render `LandingGradientBackdrop` and `LandingDiceDecor` with `variant="hero"`, and both use the same light and dark gradient class string. Neither renders the other. The funnel hero skips the dice when `compact` is set.
+- Header menus. In `src/components/layout/header.tsx`, `NavDropdown` and `MobileDropdown` each map `item.dropdown` into links. `NavDropdown` uses `useDisclosureMenu`. `MobileDropdown` uses its own `useState` for open. Neither renders the other.
+- Document bodies. `src/components/rules/rulebook-article.tsx` is a class string around MDX children. `src/components/legal/legal-document-body.tsx` walks a copy object and emits headings, paragraphs, and lists. Neither renders the other.
+- Auth chrome. `src/components/auth/auth-card.tsx` renders a `div`. It does not render `Card`. `src/components/auth/social-button.tsx` renders a `<button>`. It does not render `Button`.
+
+### Calls a shared component
+
+- `MarketingLinkButton` and `MarketingExternalButton` in `src/components/landing/marketing-button.tsx` each render `Button` from `@/components/ui/button`. The link button uses `next/link`. The external button uses an `<a>`.
+- `src/components/rules/rulebook-shell.tsx` renders `RulebookNav`. `RulebookNav` renders `RulebookSearch`. `RulebookSearch` renders `SearchInput`.
+- `src/components/layout/main-app-chrome.tsx` renders `Header`, `Footer`, and `MainContentBoundary`. On a minimal chrome route it skips `Header` and `Footer`. `MainContentBoundary` renders `ErrorBoundary`.
+- `src/components/layout/protected-route.tsx` reads `useAuthStore` and renders `LoadingState` while loading or logged out. `src/components/layout/selection-guard.tsx` listens for mouseup and clears a detached selection. It returns null. Those two files do different jobs.
+- `src/components/providers/auth-provider.tsx` calls `useAuth()` and returns its children. `src/components/providers/theme-provider.tsx` renders `NextThemesProvider`. `src/components/providers/query-provider.tsx` renders `QueryClientProvider`.
+- `src/components/tabletop/add-monster-token-modal.tsx` renders `UnifiedSelectionModal` and `SourceFilter`. It does not render `AddCombatantModal`.
+- `RollLog` in `src/components/rolls/roll-log.tsx` renders `RollEntryCard` from the same file. The campaign roll log also renders `RollEntryCard`.
+- `src/components/about/about-carousel-section.tsx` renders `AboutDiceCarousel`. `src/components/about/about-slide-body.tsx` renders `MarketingExternalButton` and `MarketingLinkButton`. The about page passes that slide body into the carousel as slide content.
+- `src/components/onboarding/play-together-modal.tsx` and `src/components/onboarding/sheet-tour-offer-modal.tsx` each render `Modal`. They do not render each other.
+
+### Not read line by line
+
+- `src/components/rolls/roll-context.tsx` past the `RollProvider`, `useRolls`, and `useRollsOptional` exports.
+- `src/components/rolls/roll-log.tsx` past `RollLog` rendering `RollEntryCard`, and past the opening markup of `RollEntryCard`.
+- `src/components/tabletop/tabletop-canvas.tsx` past the Konva imports, the tool-mode type, and the size and image hooks.
+- `src/components/layout/header.tsx` past `NavDropdown` and `MobileDropdown`.
+- `src/components/layout/footer.tsx` past the four `FOOTER_COPY` groups and the `MarketingExternalButton` import.
+- `src/components/landing/uniqueness-section.tsx`, `how-it-works-section.tsx`, `secondary-discovery-section.tsx`, and `community-section.tsx` past the external-button import in the community file.
+- `src/components/landing/landing-art-frame.tsx` past the aspect constant, and `landing-dice-decor.tsx` past the hero and auth opacity strings.
+- `src/components/about/about-dice-carousel.tsx` past `getDisplaySlot`, `about-carousel-section.tsx` past the `AboutDiceCarousel` render, and `about-slide-body.tsx` past the two marketing-button renders.
+- `src/components/rules/rulebook-nav.tsx` past `ChapterLink` and the `RulebookSearch` render. The rest of the class string in `rulebook-article.tsx` was not read.
+- `src/components/onboarding/play-together-modal.tsx` past the persist handlers, `sheet-tour.tsx` past the highlight imports, and `level-up-guide-card.tsx` past the floating-card start.
+- `src/app/(main)/my-account/_components/account-profile-card.tsx`, `account-preferences-cards.tsx`, `account-role-limits-card.tsx`, and `use-my-account-page.ts` past the `validateNewAccountPassword` call. `account-helpers.ts` past `usernameCharsetError` and `hasPasswordProvider`. `account-security-cards.tsx` past the password `Input`s.
+
+### `src/components/rolls`
+
+- `src/components/rolls/index.ts`
+- `src/components/rolls/roll-log.tsx`
+
+### `src/components/rules`
+
+- `src/components/rules/rulebook-article.tsx`
+- `src/components/rules/rulebook-nav.tsx`
+- `src/components/rules/rulebook-pager.tsx`
+- `src/components/rules/rulebook-search.tsx`
+- `src/components/rules/rulebook-shell.tsx`
+
+### `src/components/tabletop`
+
+- `src/components/tabletop/add-monster-token-modal.tsx`
+- `src/components/tabletop/tabletop-canvas.tsx`
+
+### `src/components/layout`
+
+- `src/components/layout/footer.tsx`
+- `src/components/layout/header.tsx`
+- `src/components/layout/index.ts`
+- `src/components/layout/main-app-chrome.tsx`
+- `src/components/layout/main-content-boundary.tsx`
+- `src/components/layout/protected-route.tsx`
+- `src/components/layout/selection-guard.tsx`
+
+### `src/components/landing`
+
+- `src/components/landing/community-section.tsx`
+- `src/components/landing/creator-funnel-hero.tsx`
+- `src/components/landing/hero-section.tsx`
+- `src/components/landing/how-it-works-section.tsx`
+- `src/components/landing/index.ts`
+- `src/components/landing/landing-art-frame.tsx`
+- `src/components/landing/landing-dice-decor.tsx`
+- `src/components/landing/landing-gradient-backdrop.tsx`
+- `src/components/landing/marketing-button.tsx`
+- `src/components/landing/secondary-discovery-section.tsx`
+- `src/components/landing/uniqueness-section.tsx`
+
+### `src/components/about`
+
+- `src/components/about/about-carousel-section.tsx`
+- `src/components/about/about-dice-carousel.tsx`
+- `src/components/about/about-slide-body.tsx`
+
+### `src/components/auth`
+
+- `src/components/auth/auth-card.tsx`
+- `src/components/auth/auth-google-terms-notice.tsx`
+- `src/components/auth/auth-turnstile.tsx`
+- `src/components/auth/form-input.tsx`
+- `src/components/auth/index.ts`
+- `src/components/auth/password-input.tsx`
+- `src/components/auth/social-button.tsx`
+
+### `src/components/legal`
+
+- `src/components/legal/legal-document-body.tsx`
+
+### `src/components/onboarding`
+
+- `src/components/onboarding/index.ts`
+- `src/components/onboarding/level-up-guide-card.tsx`
+- `src/components/onboarding/play-together-modal.tsx`
+- `src/components/onboarding/sheet-tour-offer-modal.tsx`
+- `src/components/onboarding/sheet-tour.tsx`
+
+### `src/components/providers`
+
+- `src/components/providers/auth-provider.tsx`
+- `src/components/providers/index.ts`
+- `src/components/providers/query-provider.tsx`
+- `src/components/providers/theme-provider.tsx`
+
+### `src/app/(main)/my-account/_components`
+
+- `src/app/(main)/my-account/_components/account-danger-zone-card.tsx`
+- `src/app/(main)/my-account/_components/account-helpers.ts`
+- `src/app/(main)/my-account/_components/account-password-validation.ts`
+- `src/app/(main)/my-account/_components/account-preferences-cards.tsx`
+- `src/app/(main)/my-account/_components/account-profile-card.tsx`
+- `src/app/(main)/my-account/_components/account-role-limits-card.tsx`
+- `src/app/(main)/my-account/_components/account-security-cards.tsx`
+- `src/app/(main)/my-account/_components/use-my-account-page.ts`
+
+---
+
 ## Left for a later pass
 
 Still not opened file by file:
 
-- `src/components/about`, `auth`, `landing`, `layout`, `legal`, `onboarding`, `providers`, `rolls`, `rules`, and `tabletop`. `src/components/rolls` was seen only where encounter play and the campaign roll log render `RollLog` or `RollEntryCard`.
 - `src/components/ui` beyond the files its barrel does not re-export.
-- `src/app/(main)/my-account/_components`, and admin codex screens beyond the page file each route imports. Admin feat and skill tabs were seen only where they render `CodexFeatRow` and `CodexSkillRow`.
-- Modules under `src/lib/` other than the `game/` and `calculators/` sibling lists above (`codex`, `character`, `library`, `guided-creator`, `auth`, and the rest). `src/lib/game/creator-constants.ts` was opened only for `CONDITIONS`.
+- Admin codex screens beyond the feat and skill tabs that render `CodexFeatRow` and `CodexSkillRow`.
+- Modules under `src/lib/` other than the `game/` and `calculators/` sibling lists above. `src/lib/game/creator-constants.ts` was opened only for `CONDITIONS`. `src/lib/password-policy.ts` was not opened; the account check only imports `PASSWORD_MIN_LENGTH`.
 - Unused exports inside files that something already imports.
 - Line-by-line comparison of files in `src/components/patterns`, `src/components/character-sheet`, and `src/components/guided-creator` that are not named in that fork section.
-- The files named under "Not read line by line" in the creator section and in the section above.
+- The files named under "Not read line by line" in the earlier sections and in the section above.

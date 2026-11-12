@@ -56,6 +56,17 @@ const FOLDER_FILE_DIRS = [
   'src/components/codex',
   'src/app/(main)/encounters/[id]/_components',
   'src/app/(detail)/campaigns/[id]/_components',
+  'src/components/rolls',
+  'src/components/rules',
+  'src/components/tabletop',
+  'src/components/layout',
+  'src/components/landing',
+  'src/components/about',
+  'src/components/auth',
+  'src/components/legal',
+  'src/components/onboarding',
+  'src/components/providers',
+  'src/app/(main)/my-account/_components',
 ];
 
 function walk(dir, acc = []) {
