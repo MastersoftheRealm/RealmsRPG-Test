@@ -1112,6 +1112,59 @@ for (const id of CODEX_SCREEN_NOTE_IDS) {
 }
 console.log(`FEATURE_INDEX Codex screen check OK (${CODEX_SCREEN_NOTE_IDS.length} notes).`);
 
+const CREATOR_SECTION_ISLAND_NOTE_IDS = [
+  'creator-islands-workspace-not-autosave',
+  'power-editor-facade-files-vs-technique-inline-sections',
+  'power-parts-vs-mechanics-two-collapsibles',
+  'technique-parts-no-apply-duration-on-card',
+  'item-armor-only-armor-island',
+  'empowered-damage-before-parts-order',
+  'empowered-technique-damage-labeled-separate',
+  'power-hide-parts-damage-shared-randomize',
+  'item-weapon-fields-hidden-on-armor-type',
+];
+
+const creatorSectionIslandsSection = mathSectionSlice(
+  indexText,
+  '## Creator editor section islands',
+);
+if (!creatorSectionIslandsSection) {
+  console.error('FEATURE_INDEX is missing the Creator editor section islands section.');
+  process.exit(2);
+}
+if (!creatorSectionIslandsSection.includes('### Same job, different behavior')) {
+  console.error(
+    'FEATURE_INDEX creator section islands missing ### Same job, different behavior.',
+  );
+  process.exit(2);
+}
+const creatorIslandsBehaviorStart = creatorSectionIslandsSection.indexOf(
+  '### Same job, different behavior',
+);
+const creatorIslandsDeadStart = creatorSectionIslandsSection.indexOf('### Dead or unreachable paths');
+if (creatorIslandsBehaviorStart < 0 || creatorIslandsDeadStart < 0) {
+  console.error(
+    'FEATURE_INDEX creator section islands missing behavior or dead-path headings.',
+  );
+  process.exit(2);
+}
+const creatorIslandsBehaviorBody = creatorSectionIslandsSection.slice(
+  creatorIslandsBehaviorStart,
+  creatorIslandsDeadStart,
+);
+const creatorIslandsDeadBody = creatorSectionIslandsSection.slice(creatorIslandsDeadStart);
+for (const id of CREATOR_SECTION_ISLAND_NOTE_IDS) {
+  const inBehavior = creatorIslandsBehaviorBody.includes(`screen-behavior-note:${id}:`);
+  const inDead = creatorIslandsDeadBody.includes(`screen-behavior-note:${id}:`);
+  if (!inBehavior && !inDead) {
+    console.error('FEATURE_INDEX missing required creator section island note:', id);
+    process.exit(2);
+  }
+}
+console.log(
+  `FEATURE_INDEX creator section islands check OK (${CREATOR_SECTION_ISLAND_NOTE_IDS.length} notes).`,
+);
+
 const gen = spawnSync(
   process.execPath,
   [path.join(__dirname, 'generate-feature-index-barrels.js'), '--check'],

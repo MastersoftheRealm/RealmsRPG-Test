@@ -2512,7 +2512,7 @@ A person sets species name, type, image, description, height/weight/lifespan, **
 
 ### Screens not walked in this pass
 
-- Every `power-creator-editor-*`, `empowered-technique-editor-*`, and `item-creator-editor-*` island beyond the facade list (**partial**).
+- Section-island internals are documented in **Creator editor section islands** below (this page pass remains route/save level).
 - Admin-only codex spreadsheet editors for the same entities (different screens).
 - **Crafting**, **encounters**, hub **Library** browser pages.
 
@@ -2527,6 +2527,65 @@ A person sets species name, type, image, description, height/weight/lifespan, **
 ### Dead or unreachable paths (this scope)
 
 - screen-behavior-note:no-empowered-mode-on-power-or-technique-routes: There is no empowered-technique editor inside `/power-creator` or `/technique-creator`; only `/empowered-technique-creator`.
+
+## Creator editor section islands (behavior pass)
+
+**Partial pass** inside the four library entity creators only (not species/creature). Islands are presentational: handlers mutate workspace state; **`useCreatorSave` on the page** persists the whole document. No island saves by itself.
+
+### Power (`power-creator-editor.tsx` → `power-creator-editor-*.tsx`)
+
+| Island | Person changes | In saved payload (via workspace) |
+|--------|----------------|--------------------------------|
+| **Meta** (`power-creator-editor-meta.tsx`) | Name, description, admin **RealmsImageField**; embeds **`TargetedDefensesSection`** | Identity, image refs, targeted defenses |
+| **Action profile** | Action type, reaction checkbox, attack mode; inheritance notices on variants | Action + attack fields |
+| **Power config** | Range, area, duration mechanic controls | Mechanic columns on power doc |
+| **Power parts** | Two collapsibles: **Power Parts** + **Power Mechanics** (`PowerPartCard` lists) | `parts` / advanced mechanic arrays |
+| **Power damage** | Damage rows | `damage` array |
+
+When composition **shared** tab is in **randomize shared unpriced** mode, `hidePartsAndDamage` on the editor **omits** parts + damage islands entirely (shared piece only).
+
+### Technique (`technique-creator-editor.tsx` — inline sections)
+
+| Section | Person changes | Saved via workspace |
+|---------|----------------|---------------------|
+| Meta **Card** | Name, description, admin image, **`TargetedDefensesSection`** | Same families as power meta |
+| **Combat Configuration** `CollapsibleSection` | Attack mode, action type, reaction | Combat + action costs fields |
+| **Technique Parts** | `PowerPartCard` rows (`showApplyDuration={false}`) | Technique parts list |
+| **Additional Damage** | Extra dice stepper (weapon damage type copy) | Technique damage blob |
+
+### Item (`item-creator-editor.tsx` → `item-creator-editor-*.tsx`)
+
+| Island | When visible | Person changes |
+|--------|--------------|----------------|
+| **Meta** | Always | Name, description, image category, **armament type** toggle |
+| **Weapon/shield** (`item-creator-editor-weapon-shield.tsx`) | **Weapon** or **Shield** only | Handedness; weapon range/ability; **Base Damage** collapsible (**Weapon** only) |
+| **Armor** | `armamentType === 'Armor'` | DR, agility penalty, crit range |
+| **Shield panels** | `armamentType === 'Shield'` | Block DR, optional shield damage |
+| **Ability + properties** | Always | Ability requirement + `PropertyCard` rows |
+
+### Empowered (`empowered-technique-creator-editor.tsx` → `empowered-technique-editor-*.tsx`)
+
+Parallel to **power** islands (meta + action + power config + **power damage** + **power parts**) plus **technique parts** island that also contains **Additional Damage (Technique)** collapsible (technique dice separate label from power damage). Section **order** differs from standalone power creator (**damage before parts** on the power side).
+
+### Not walked
+
+- Every `PowerPartCard` field and property option matrix inside item properties.
+- `power-creator-from-shared` override toggles line-by-line.
+
+### Same job, different behavior
+
+- screen-behavior-note:creator-islands-workspace-not-autosave: Section islands only call `onXChange` props; **save** is always the page **Creator save** toolbar (`useCreatorSave`), not per-collapsible.
+- screen-behavior-note:power-editor-facade-files-vs-technique-inline-sections: **Power** splits islands across `power-creator-editor-*.tsx`; **technique** keeps all **`CollapsibleSection`** blocks in one `technique-creator-editor.tsx`.
+- screen-behavior-note:power-parts-vs-mechanics-two-collapsibles: **Power parts** island renders **two** collapsibles (regular parts vs **Power Mechanics** advanced parts)—technique has a single **Technique Parts** collapsible.
+- screen-behavior-note:technique-parts-no-apply-duration-on-card: **Technique** (and empowered technique) pass **`showApplyDuration={false}`** on `PowerPartCard`; default power part cards allow duration apply on power creator.
+- screen-behavior-note:item-armor-only-armor-island: **Armor** type shows **Armor** + **Ability/properties** islands only—no **Weapon Configuration** / **Base Damage** collapsibles.
+- screen-behavior-note:empowered-damage-before-parts-order: **Empowered** editor renders **power damage** island **before** **power parts**; standalone **power** editor renders **parts** then **damage**.
+- screen-behavior-note:empowered-technique-damage-labeled-separate: **Empowered** technique side uses collapsible **Additional Damage (Technique)** explicitly separate from **power** damage island—mirrors technique creator wording.
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:power-hide-parts-damage-shared-randomize: On power **shared** composition with `hidePartsAndDamage`, **parts** and **damage** islands are **not mounted**—editing those fields on that tab is unreachable until leaving that mode/tab.
+- screen-behavior-note:item-weapon-fields-hidden-on-armor-type: **Weapon** range, ability utilized, and **Base Damage** UI inside `item-creator-editor-weapon-shield.tsx` render only for **`armamentType === 'Weapon'`**—Armor never sees them.
 
 ## Encounter screens (behavior pass)
 
