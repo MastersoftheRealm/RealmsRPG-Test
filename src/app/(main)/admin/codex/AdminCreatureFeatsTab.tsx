@@ -1,7 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { Layers } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
 import { CodexRulesSourceFilter } from '@/components/patterns/filters';
 import {
   countActiveCodexRulesSourceFilters,
@@ -12,27 +11,36 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
 } from '@/components/patterns';
+import { IconButton, useToast } from '@/components/ui';
 import { ADMIN_CODEX_QUERY_OPTIONS, useCreatureFeats, type CreatureFeat } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
-import { codexSourcesOrCore } from '@/lib/codex/sources';
+import { collectStoredCategoryLabels } from '@/lib/codex/feat-list';
+import {
+  buildFeatLevelChips,
+  formatFeatName,
+  groupFeatFamilies,
+  isFeatFamilyBase,
+  sortedFeatFamily,
+} from '@/lib/leveled-feats';
+import { formatCreatureLevel } from '@/lib/game';
+import { Layers } from 'lucide-react';
 import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
 import { useAdminCodexEntity } from './use-admin-codex-entity';
 import { AdminCodexRowActions, ADMIN_CODEX_ROW_ACTIONS_WIDTH } from './admin-codex-row-actions';
+import { persistCodexLevelEdits } from './admin-codex-level-save';
 import {
   AdminCreatureFeatEditModal,
   EMPTY_CREATURE_FEAT_FORM,
-  type CreatureFeatFormState,
 } from './admin-creature-feat-edit-modal';
-import { IconButton } from '@/components/ui';
-import { formatCreatureLevel } from '@/lib/game';
 import {
-  buildFeatLevelChips,
-  computeNextLeveledFeatFields,
-  formatFeatName,
-  groupFeatFamilies,
-} from '@/lib/leveled-feats';
+  computeNextCreatureFeatFormState,
+  creatureFeatFormToSavePayload,
+  creatureFeatToFormState,
+  type CreatureFeatFormState,
+} from './admin-creature-feat-form';
 
 export function AdminCreatureFeatsTab() {
+  const { showToast } = useToast();
   const {
     data: creatureFeats,
     isLoading,
@@ -49,6 +57,9 @@ export function AdminCreatureFeatsTab() {
     openEdit: beginEdit,
     closeModal,
     save,
+    refreshCodex,
+    queryClient,
+    setSaving,
     askDelete,
     deleteModals,
   } = useAdminCodexEntity<CreatureFeat>({
@@ -58,94 +69,120 @@ export function AdminCreatureFeatsTab() {
   const [search, setSearch] = useState('');
   const [rulesSources, setRulesSources] = useState<string[]>([]);
   const { sortState, handleSort, sortItems } = useSort('name');
+  const [modalInitialForm, setModalInitialForm] =
+    useState<CreatureFeatFormState>(EMPTY_CREATURE_FEAT_FORM);
+  const [modalInitialEditId, setModalInitialEditId] = useState<string | null>(null);
+  const [modalLevelFeats, setModalLevelFeats] = useState<CreatureFeat[]>([]);
+  const [modalSessionKey, setModalSessionKey] = useState(0);
 
-  const [form, setForm] = useState<CreatureFeatFormState>(EMPTY_CREATURE_FEAT_FORM);
+  const bumpModal = () => setModalSessionKey((key) => key + 1);
 
-  const filtered = sortItems<CreatureFeat>(
-    (creatureFeats || []).filter((f: CreatureFeat) => {
-      if (
-        search &&
-        !f.name.toLowerCase().includes(search.toLowerCase()) &&
-        !f.description?.toLowerCase().includes(search.toLowerCase())
-      ) {
-        return false;
-      }
-      return rowMatchesCodexRulesSourceFilter(f.sources, rulesSources);
-    }),
+  const categories = useMemo(
+    () => collectStoredCategoryLabels((creatureFeats ?? []).map((feat) => feat.category)),
+    [creatureFeats],
   );
 
+  const filtered = useMemo(
+    () =>
+      sortItems<CreatureFeat>(
+        (creatureFeats || []).filter((feat: CreatureFeat) => {
+          if (
+            search &&
+            !feat.name.toLowerCase().includes(search.toLowerCase()) &&
+            !feat.description?.toLowerCase().includes(search.toLowerCase()) &&
+            !(feat.category ?? '').toLowerCase().includes(search.toLowerCase())
+          ) {
+            return false;
+          }
+          return rowMatchesCodexRulesSourceFilter(feat.sources, rulesSources);
+        }),
+      ),
+    [creatureFeats, rulesSources, search, sortItems],
+  );
   const groupedFeats = useMemo(() => groupFeatFamilies(filtered), [filtered]);
 
-  const toOptNum = (v: unknown): number | undefined => {
-    if (v == null || v === '') return undefined;
-    const n = Number(v);
-    return Number.isNaN(n) ? undefined : n;
-  };
+  const openAdd = () =>
+    beginAdd(() => {
+      setModalInitialForm(EMPTY_CREATURE_FEAT_FORM);
+      setModalInitialEditId(null);
+      setModalLevelFeats([]);
+      bumpModal();
+    });
 
-  const openAdd = () => beginAdd(() => setForm(EMPTY_CREATURE_FEAT_FORM));
+  const openDuplicate = (feat: CreatureFeat) =>
+    beginDuplicate(feat, () => {
+      setModalInitialForm({
+        ...creatureFeatToFormState(feat),
+        name: (feat.name || '').trim() + COPY_NAME_SUFFIX,
+      });
+      setModalInitialEditId(null);
+      setModalLevelFeats([]);
+      bumpModal();
+    });
 
-  const openDuplicate = (f: CreatureFeat) =>
-    beginDuplicate(f, () =>
-      setForm({
-        name: (f.name || '').trim() + COPY_NAME_SUFFIX,
-        description: f.description || '',
-        points: toOptNum(f.points),
-        feat_lvl: toOptNum(f.feat_lvl),
-        base_feat_id: f.base_feat_id?.trim() ?? '',
-        lvl_req: toOptNum(f.lvl_req),
-        mechanic: f.mechanic === true,
-        sources: codexSourcesOrCore(f.sources),
-      }),
-    );
-
-  const openEdit = (f: CreatureFeat) =>
-    beginEdit(f, () =>
-      setForm({
-        name: f.name,
-        description: f.description || '',
-        points: toOptNum(f.points),
-        feat_lvl: toOptNum(f.feat_lvl),
-        base_feat_id: f.base_feat_id?.trim() ?? '',
-        lvl_req: toOptNum(f.lvl_req),
-        mechanic: f.mechanic === true,
-        sources: codexSourcesOrCore(f.sources),
-      }),
-    );
+  const openEdit = (feat: CreatureFeat) =>
+    beginEdit(feat, () => {
+      setModalInitialForm(creatureFeatToFormState(feat));
+      setModalInitialEditId(String(feat.id));
+      setModalLevelFeats(sortedFeatFamily(creatureFeats ?? [], feat));
+      bumpModal();
+    });
 
   const openAddLevel = (sourceFeat: CreatureFeat) =>
     beginAdd(() => {
-      const next = computeNextLeveledFeatFields({
-        sourceFeatLvl: sourceFeat.feat_lvl,
-        sourceBaseFeatId: sourceFeat.base_feat_id,
-        sourceDbFeatId: String(sourceFeat.id),
-      });
-      setForm({
-        name: sourceFeat.name,
-        description: sourceFeat.description || '',
-        points: toOptNum(sourceFeat.points),
-        feat_lvl: next.feat_lvl,
-        base_feat_id: next.base_feat_id,
-        lvl_req: toOptNum(sourceFeat.lvl_req),
-        mechanic: sourceFeat.mechanic === true,
-        sources: codexSourcesOrCore(sourceFeat.sources),
-      });
+      setModalInitialForm(
+        computeNextCreatureFeatFormState(
+          creatureFeatToFormState(sourceFeat),
+          String(sourceFeat.id),
+        ),
+      );
+      setModalInitialEditId(null);
+      setModalLevelFeats([]);
+      bumpModal();
     });
 
-  const handleSave = async () => {
+  const openAddLevelFromEditModal = useCallback(
+    (sourceForm: CreatureFeatFormState, sourceDbFeatId: string) => {
+      beginAdd(() => {
+        setModalInitialForm(computeNextCreatureFeatFormState(sourceForm, sourceDbFeatId));
+        setModalInitialEditId(null);
+        setModalLevelFeats([]);
+        bumpModal();
+      });
+    },
+    [beginAdd],
+  );
+
+  const handleSave = async (editId: string | null, form: CreatureFeatFormState) => {
     if (!form.name.trim()) return;
+    const savingId = editing ? (editId ?? editing.id) : null;
     await save({
-      payload: {
-        name: form.name.trim(),
-        description: form.description.trim(),
-        feat_points: form.points ?? undefined,
-        feat_lvl: form.feat_lvl ?? undefined,
-        base_feat_id: form.base_feat_id.trim() || undefined,
-        lvl_req: form.lvl_req ?? undefined,
-        mechanic: form.mechanic,
-        sources: codexSourcesOrCore(form.sources),
-      },
-      expectedUpdatedAt: editing?.updated_at,
+      payload: creatureFeatFormToSavePayload(form),
+      editId: savingId,
+      expectedUpdatedAt: (creatureFeats ?? []).find((feat) => String(feat.id) === String(savingId))
+        ?.updated_at,
     });
+  };
+
+  const handleSaveAllLevels = async (editsById: Record<string, CreatureFeatFormState>) => {
+    if (Object.keys(editsById).length === 0) return;
+    setSaving(true);
+    const errorMessage = await persistCodexLevelEdits({
+      collection: 'codex_creature_feats',
+      editsById,
+      updatedAtForId: (id) =>
+        (creatureFeats ?? []).find((feat) => String(feat.id) === id)?.updated_at,
+      toPayload: creatureFeatFormToSavePayload,
+      invalidMessage: (id, form) => (form?.name?.trim() ? null : `Level ${id}: name is required`),
+      queryClient,
+    });
+    setSaving(false);
+    if (errorMessage) {
+      showToast(errorMessage, 'error');
+      return;
+    }
+    await refreshCodex();
+    closeModal();
   };
 
   if (error)
@@ -174,11 +211,12 @@ export function AdminCreatureFeatsTab() {
         }
         headerColumns={[
           { key: 'name', label: 'NAME' },
+          { key: 'category', label: 'CATEGORY' },
           { key: 'points', label: 'PTS' },
           { key: 'feat_lvl', label: 'FEAT LVL' },
           { key: 'lvl_req', label: 'REQ. LVL' },
         ]}
-        gridColumns="1.5fr 0.5fr 0.5fr 0.5fr"
+        gridColumns="1.4fr 0.8fr 0.45fr 0.5fr 0.5fr"
         rowChrome={{ rightSlot: true }}
         rightSlotWidth={ADMIN_CODEX_ROW_ACTIONS_WIDTH}
         sortState={sortState}
@@ -189,39 +227,40 @@ export function AdminCreatureFeatsTab() {
         emptyMessage="Add one to get started."
         emptyAction={{ label: 'Add Creature Feat', onClick: openAdd }}
       >
-        {groupedFeats.map(({ main: f, levels: familyLevels }) => {
-          const levelChips = buildFeatLevelChips(familyLevels, f.id);
+        {groupedFeats.map(({ main: feat, levels: familyLevels }) => {
+          const levelChips = buildFeatLevelChips(familyLevels, feat.id);
           const detailSections =
             levelChips.length > 0 ? [{ label: 'Feat Levels', chips: levelChips }] : undefined;
           return (
             <GridListRow
-              key={f.id}
-              id={f.id}
-              name={formatFeatName(f)}
-              description={f.description || ''}
-              gridColumns="1.5fr 0.5fr 0.5fr 0.5fr"
+              key={feat.id}
+              id={feat.id}
+              name={formatFeatName(feat)}
+              description={feat.description || ''}
+              gridColumns="1.4fr 0.8fr 0.45fr 0.5fr 0.5fr"
               columns={[
-                { key: 'Pts', value: String(f.points ?? '-') },
-                { key: 'Feat Lvl', value: f.feat_lvl != null ? String(f.feat_lvl) : '-' },
+                { key: 'Category', value: feat.category || '-' },
+                { key: 'Pts', value: String(feat.points ?? '-') },
+                { key: 'Feat Lvl', value: feat.feat_lvl != null ? String(feat.feat_lvl) : '-' },
                 {
                   key: 'Req. Lvl',
-                  value: f.lvl_req != null ? formatCreatureLevel(f.lvl_req) : '-',
+                  value: feat.lvl_req != null ? formatCreatureLevel(feat.lvl_req) : '-',
                 },
               ]}
               detailSections={detailSections}
               rightSlotWidth={ADMIN_CODEX_ROW_ACTIONS_WIDTH}
               rightSlot={
                 <AdminCodexRowActions
-                  entity={f}
+                  entity={feat}
                   onEdit={openEdit}
                   onDuplicate={openDuplicate}
                   onDelete={askDelete}
                   extraBefore={
-                    !f.base_feat_id && (f.feat_lvl == null || f.feat_lvl === 1) ? (
+                    isFeatFamilyBase(feat) ? (
                       <IconButton
                         variant="ghost"
                         size="sm"
-                        onClick={() => openAddLevel(f)}
+                        onClick={() => openAddLevel(feat)}
                         label="Add level"
                       >
                         <Layers className="h-4 w-4" />
@@ -235,18 +274,27 @@ export function AdminCreatureFeatsTab() {
         })}
       </CodexBrowseListShell>
 
-      <AdminCreatureFeatEditModal
-        isOpen={modalOpen}
-        onClose={closeModal}
-        title={editing ? 'Edit Creature Feat' : 'Add Creature Feat'}
-        copySourceName={copySourceName}
-        editingId={editing?.id ?? null}
-        form={form}
-        setForm={setForm}
-        saving={saving}
-        onDelete={editing ? () => askDelete(editing) : undefined}
-        onSave={handleSave}
-      />
+      {modalOpen ? (
+        <AdminCreatureFeatEditModal
+          key={modalSessionKey}
+          isOpen
+          onClose={closeModal}
+          title={editing ? 'Edit Creature Feat' : 'Add Creature Feat'}
+          copySourceName={copySourceName}
+          creatureFeats={creatureFeats ?? []}
+          levelFeats={editing ? modalLevelFeats : []}
+          categories={categories}
+          saving={saving}
+          canDelete={Boolean(editing)}
+          onDelete={editing ? () => askDelete(editing) : undefined}
+          onSave={handleSave}
+          onSaveAll={handleSaveAllLevels}
+          initialForm={modalInitialForm}
+          initialEditId={modalInitialEditId}
+          enableAddLevel
+          onAddLevel={openAddLevelFromEditModal}
+        />
+      ) : null}
 
       {deleteModals}
     </div>

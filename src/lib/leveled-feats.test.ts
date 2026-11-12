@@ -4,7 +4,9 @@ import {
   buildFeatLevelChips,
   featLevelChipDescription,
   formatFeatName,
+  isFeatFamilyBase,
   levelToRomanNumeral,
+  sortedFeatFamily,
   parseFeatNameRomanSuffix,
   type LeveledFeatLike,
 } from './leveled-feats';
@@ -150,6 +152,29 @@ describe('formatFeatName', () => {
 
   it('replaces a mismatched Roman suffix with the feat level', () => {
     expect(formatFeatName({ id: '3', name: 'Amplify II', feat_lvl: 3 })).toBe('Amplify III');
+  });
+});
+
+describe('isFeatFamilyBase', () => {
+  it('treats an unset or level-1 row with no parent as the family base', () => {
+    expect(isFeatFamilyBase({ id: '36', name: 'Speedy' })).toBe(true);
+    expect(isFeatFamilyBase({ id: '36', name: 'Speedy', feat_lvl: 1 })).toBe(true);
+    expect(isFeatFamilyBase({ id: '36', name: 'Speedy', feat_lvl: 0 })).toBe(false);
+    expect(isFeatFamilyBase({ id: '37', name: 'Speedy II', feat_lvl: 2, base_feat_id: '36' })).toBe(
+      false,
+    );
+  });
+});
+
+describe('sortedFeatFamily', () => {
+  it('returns the family in level order', () => {
+    const speedy = { id: '36', name: 'Speedy', feat_lvl: 1 };
+    const speedyIi = { id: '37', name: 'Speedy II', feat_lvl: 2, base_feat_id: '36' };
+    expect(
+      sortedFeatFamily([speedyIi, speedy, { id: '1', name: 'Other' }], speedyIi).map(
+        (row) => row.id,
+      ),
+    ).toEqual(['36', '37']);
   });
 });
 

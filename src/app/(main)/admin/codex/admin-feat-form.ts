@@ -127,7 +127,7 @@ export function featFormToSavePayload(form: FeatFormState): Record<string, unkno
     name: form.name.trim(),
     description: form.description.trim(),
     req_desc: form.req_desc.trim() || undefined,
-    category: form.category.trim() || undefined,
+    category: form.category.trim() || null,
     sources: codexSourcesOrCore(form.sources),
     ability: form.ability.length > 0 ? form.ability : undefined,
     ability_req: form.ability_req,

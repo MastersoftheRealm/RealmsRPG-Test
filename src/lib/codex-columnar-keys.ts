@@ -162,6 +162,7 @@ export const CODEX_COLUMNAR_FIELDS: Record<CodexCollection, readonly string[]> =
     'featLvl',
     'baseFeatId',
     'lvlReq',
+    'category',
     'mechanic',
     'sources',
   ],
