@@ -33,7 +33,9 @@ separate `version int` column.
    `updated_at` so later sheet saves can lock.
 3. **Success** `{ ok: true, updatedAt }` (column ISO). Client stores that token for the next PATCH.
 4. **409 handling.** Caller refetches, keeps local dirty keys, retries once with the remote token.
-   Same-key conflicts: local dirty value wins on the retry (last writer of that key).
+   Same-key conflicts: local dirty value wins on the retry (last writer of that key). Sheet
+   `equipment` merges per inventory row against the autosave baseline so two tabs can change
+   different gear quantities without dropping either edit.
 5. **Character React Query keys** include the signed-in user id (same pattern as user-library).
 
 ## Consequences

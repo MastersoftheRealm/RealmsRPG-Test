@@ -4,6 +4,7 @@ import { prepareCharacterForSave } from '@/lib/character-save';
 import { cleanForSave } from '@/lib/data-enrichment/clean-for-save';
 import {
   applyCharacterDirtyPatch,
+  applySheetAutosaveConflictFields,
   characterLockToken,
   characterTimestampsMatch,
   isStaleCharacterWrite,
@@ -129,6 +130,148 @@ describe('applyCharacterDirtyPatch / mergeRemotePreservingDirty', () => {
       currentHealth: 4,
       level: 3,
     });
+  });
+
+  it('merges concurrent inventory quantity edits instead of dropping a row', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          { id: 'bed-roll', name: 'Bed Roll', quantity: 1 },
+          { id: 'grapple-rope', name: 'Grapple Rope', quantity: 1 },
+        ],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [
+          { id: 'bed-roll', name: 'Bed Roll', quantity: 2 },
+          { id: 'grapple-rope', name: 'Grapple Rope', quantity: 1 },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [
+          { id: 'bed-roll', name: 'Bed Roll', quantity: 1 },
+          { id: 'grapple-rope', name: 'Grapple Rope', quantity: 2 },
+        ],
+      },
+    };
+    expect(mergeRemotePreservingDirty(remote, local, ['equipment'], baseline)).toEqual({
+      equipment: {
+        items: [
+          { id: 'bed-roll', name: 'Bed Roll', quantity: 2 },
+          { id: 'grapple-rope', name: 'Grapple Rope', quantity: 2 },
+        ],
+      },
+    });
+  });
+
+  it('does not clear a single armor object while merging item quantity conflicts', () => {
+    const leather = { id: 'leather', name: 'Leather', type: 'armor', properties: [] };
+    const baseline = {
+      equipment: {
+        items: [{ id: 'bed-roll', name: 'Bed Roll', quantity: 1 }],
+        armor: leather,
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [{ id: 'bed-roll', name: 'Bed Roll', quantity: 2 }],
+        armor: leather,
+      },
+    };
+    const local = {
+      equipment: {
+        items: [{ id: 'bed-roll', name: 'Bed Roll', quantity: 1 }],
+        armor: leather,
+      },
+    };
+    expect(mergeRemotePreservingDirty(remote, local, ['equipment'], baseline)).toEqual({
+      equipment: {
+        items: [{ id: 'bed-roll', name: 'Bed Roll', quantity: 2 }],
+        armor: leather,
+      },
+    });
+  });
+
+  it('does not restore a gear row the local sheet deleted during conflict merge', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          { id: 'bed-roll', name: 'Bed Roll', quantity: 1 },
+          { id: 'grapple-rope', name: 'Grapple Rope', quantity: 1 },
+        ],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [
+          { id: 'bed-roll', name: 'Bed Roll', quantity: 2 },
+          { id: 'grapple-rope', name: 'Grapple Rope', quantity: 1 },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [{ id: 'bed-roll', name: 'Bed Roll', quantity: 1 }],
+      },
+    };
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    const ids = (merged.equipment as { items: Array<{ id: string }> }).items.map((row) => row.id);
+    expect(ids).toEqual(['bed-roll']);
+    expect((merged.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(
+      2,
+    );
+  });
+
+  it('does not queue a follow-up save that drops the other tab quantity after 409 merge', () => {
+    const savedBaseline = {
+      equipment: {
+        items: [
+          { id: 'bed-roll', name: 'Bed Roll', quantity: 1 },
+          { id: 'grapple-rope', name: 'Grapple Rope', quantity: 1 },
+        ],
+      },
+    };
+    const remoteClean = {
+      equipment: {
+        items: [
+          { id: 'bed-roll', name: 'Bed Roll', quantity: 2 },
+          { id: 'grapple-rope', name: 'Grapple Rope', quantity: 1 },
+        ],
+      },
+    };
+    const localClean = {
+      equipment: {
+        items: [
+          { id: 'bed-roll', name: 'Bed Roll', quantity: 1 },
+          { id: 'grapple-rope', name: 'Grapple Rope', quantity: 2 },
+        ],
+      },
+    };
+    const dirty = pickDirtyCharacterFields(localClean, savedBaseline);
+    const dirtyKeys = Object.keys(dirty);
+    const mergedClean = mergeRemotePreservingDirty(
+      remoteClean,
+      localClean,
+      dirtyKeys,
+      savedBaseline,
+    );
+    const sheetWithLocalBlob = applySheetAutosaveConflictFields(
+      remoteClean,
+      remoteClean,
+      localClean,
+      dirty,
+    );
+    expect(pickDirtyCharacterFields(sheetWithLocalBlob, mergedClean).equipment).toBeDefined();
+    const sheetAfter409 = applySheetAutosaveConflictFields(
+      remoteClean,
+      remoteClean,
+      mergedClean,
+      dirty,
+    );
+    expect(pickDirtyCharacterFields(sheetAfter409, mergedClean)).not.toHaveProperty('equipment');
   });
 
   it('deletes a stored key when the patch value is null', () => {

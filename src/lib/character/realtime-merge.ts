@@ -9,6 +9,7 @@ import { cleanForSave } from '@/lib/data-enrichment/clean-for-save';
 import {
   characterLockToken,
   mergeRemotePreservingDirty,
+  mergeSheetAutosaveBaseline,
   pickDirtyCharacterFields,
   withDirtyClears,
 } from '@/lib/character/dirty-patch';
@@ -40,6 +41,7 @@ function overlayRemoteNonResource(
   remoteData: Record<string, unknown>,
   dirtyKeys: readonly string[],
   updatedAt?: string | Date | null | undefined,
+  baseline?: Record<string, unknown> | null,
 ): Record<string, unknown> {
   const dirtySet = new Set(dirtyKeys);
   const stripped: Record<string, unknown> = {};
@@ -70,7 +72,7 @@ function overlayRemoteNonResource(
     ...stripped,
     ...(stamp && token ? { updatedAt: token } : {}),
   };
-  return mergeRemotePreservingDirty(remoteDoc, prev, dirtyKeys);
+  return mergeRemotePreservingDirty(remoteDoc, prev, dirtyKeys, baseline);
 }
 
 export type SheetRealtimeMerge = {
@@ -93,7 +95,13 @@ export function mergeSheetRealtimePayload(
   const dirty = pickDirtyCharacterFields(cleaned, baseline);
   const dirtyKeys = Object.keys(dirty);
   const localPrev = withDirtyClears(prevRecord, dirty);
-  const overlaid = overlayRemoteNonResource(localPrev, remoteData, dirtyKeys, options?.updatedAt);
+  const overlaid = overlayRemoteNonResource(
+    localPrev,
+    remoteData,
+    dirtyKeys,
+    options?.updatedAt,
+    baseline,
+  );
   let next = overlaid as unknown as Character;
   if (!options?.suppressResources) {
     next = mergeResourceUpdatesIntoCharacter(next, remoteData) ?? next;
@@ -106,6 +114,6 @@ export function mergeSheetRealtimePayload(
   const base = baseline ?? nextClean;
   return {
     character: next,
-    nextBaseline: mergeRemotePreservingDirty(nextClean, base, dirtyKeys),
+    nextBaseline: mergeSheetAutosaveBaseline(nextClean, base, dirtyKeys, cleaned),
   };
 }
