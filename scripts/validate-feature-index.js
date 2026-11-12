@@ -737,6 +737,54 @@ for (const id of LIBRARY_SCREEN_NOTE_IDS) {
 }
 console.log(`FEATURE_INDEX library screen check OK (${LIBRARY_SCREEN_NOTE_IDS.length} notes).`);
 
+const CHARACTER_SHEET_SCREEN_NOTE_IDS = [
+  'sheet-mobile-carousel-vs-desktop-layout',
+  'sheet-edit-and-temp-modes-exclusive',
+  'sheet-library-sub-edit-toggle',
+  'sheet-library-tab-visibility-play-mode',
+  'sheet-guest-owner-local-save',
+  'sheet-viewer-omits-toolbar-and-handlers',
+  'sheet-empowered-in-add-power-modal',
+  'sheet-skills-skill-row-vs-guided-guided-skill-row',
+  'sheet-no-standalone-empowered-library-tab',
+];
+
+const characterSheetScreensSection = mathSectionSlice(indexText, '## Character sheet screens');
+if (!characterSheetScreensSection) {
+  console.error('FEATURE_INDEX is missing the character sheet screens section.');
+  process.exit(2);
+}
+if (!characterSheetScreensSection.includes('### Same job, different behavior')) {
+  console.error(
+    'FEATURE_INDEX character sheet section is missing ### Same job, different behavior.',
+  );
+  process.exit(2);
+}
+const sheetScreenBehaviorStart = characterSheetScreensSection.indexOf(
+  '### Same job, different behavior',
+);
+const sheetScreenDeadStart = characterSheetScreensSection.indexOf('### Dead or unreachable paths');
+if (sheetScreenBehaviorStart < 0 || sheetScreenDeadStart < 0) {
+  console.error('FEATURE_INDEX character sheet section missing behavior or dead-path headings.');
+  process.exit(2);
+}
+const sheetScreenBehaviorBody = characterSheetScreensSection.slice(
+  sheetScreenBehaviorStart,
+  sheetScreenDeadStart,
+);
+const sheetScreenDeadBody = characterSheetScreensSection.slice(sheetScreenDeadStart);
+for (const id of CHARACTER_SHEET_SCREEN_NOTE_IDS) {
+  const inBehavior = sheetScreenBehaviorBody.includes(`screen-behavior-note:${id}:`);
+  const inDead = sheetScreenDeadBody.includes(`screen-behavior-note:${id}:`);
+  if (!inBehavior && !inDead) {
+    console.error('FEATURE_INDEX missing required character-sheet screen note:', id);
+    process.exit(2);
+  }
+}
+console.log(
+  `FEATURE_INDEX character-sheet screen check OK (${CHARACTER_SHEET_SCREEN_NOTE_IDS.length} notes).`,
+);
+
 const gen = spawnSync(
   process.execPath,
   [path.join(__dirname, 'generate-feature-index-barrels.js'), '--check'],

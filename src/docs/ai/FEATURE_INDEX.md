@@ -2623,6 +2623,63 @@ Single hub **`/library`** (`library/page.tsx`) for **My Library** (signed-in use
 - screen-behavior-note:library-no-species-tab: There is no species tab on `/library`; species are not listed on this hub (codex / species creator instead).
 - screen-behavior-note:legacy-browse-alias-redirect: `/browse` does not render; permanent redirect to `/library` (same hub as Realms guest browse).
 
+## Character sheet screens (behavior pass)
+
+Play and edit surfaces: character list, live sheet at `/characters/[id]`, main column sections, and library sub-tabs. **Partial pass:** `use-character-sheet-actions` and enrichment hooks skimmed; campaign **view-only** sheet URL not walked.
+
+### Screens walked (read through save wiring)
+
+**Character list** — `/characters` → `characters/page.tsx`.
+
+Signed-in users see account characters (`useCharacters`), delete, duplicate (`useDuplicateCharacter`), create → `/characters/new` (role quota via `useCharacterQuota`). Signed-out users can still see **browser-local guest** sheets (`getGuestCharactersList`); create works locally with sign-in CTA. Deletes use `DeleteConfirmModal` with `deleteContext` `browser` vs `account`.
+
+**Character sheet page** — `/characters/[id]` → `character-sheet-route.tsx` + `useCharacterSheetPage` (data in `use-character-sheet-page-data`, chrome in `use-character-sheet-page-ui`).
+
+**Load & save:** `useCharacter` hydrates React Query; owner edits `patchCharacterDetailQuery`. **`useAutoSave`** debounces → `cleanForSave` → **dirty-field** patch via `saveCharacterWithConflictRetry` (`/api/characters/[id]`). Guest ids use guest storage branch inside character service. Owners get `CloudSyncOfflineBanner`, conflict merge (`mergeRemotePreservingDirty`), optional **realtime** merge; guests skip `useCharacterResourceSync` (encounter HP sync).
+
+**Owner vs viewer:** `isOwner` = guest sheet **or** `character.userId === user.uid`. Non-owners see “View only”, no `SheetActionToolbar`, handlers stripped with `whenSheetOwner`. `RollProvider` sets `canRoll={isOwner}` and personal roll log id for owners.
+
+**Interaction modes** (owner): `SheetActionToolbar` toggles **Edit** and **Temp** via `nextSheetInteractionMode` — mutually exclusive; clicking active mode turns both off. `effectiveEditMode` / `effectiveTempModifierMode` require `isOwner`. Edit unlocks ability/skill spend, library adds/removes, archetype/species modals. Temp mode drives `tempModifiers` on abilities/skills without full edit chrome.
+
+**Header** — `SheetHeader`: name (edit mode), portrait upload, current/max HP & EN & AP, XP, level-up entry, archetype/species edit buttons (edit mode), recovery/level-up/settings modals.
+
+**Main sections** (`CharacterSheetBody`):
+
+| Section | Component | Play vs edit (summary) |
+|---------|-----------|-------------------------|
+| Abilities & defenses | `AbilitiesSection` | Edit: spend ability points, defense skills; Temp: temp modifiers |
+| Skills | `SkillsSection` | Edit: add/remove/allocate (`SkillRow` from patterns); uses `AddSubSkillModal`; Temp: temp bonuses |
+| Archetype & attacks | `ArchetypeSection` | Proficiencies, milestones, quick armor table, equipped attacks |
+| Library (card) | `LibrarySection` | Nested tabs below; extra **EditSectionToggle** when sheet edit mode is on (library-specific edit chrome) |
+
+**Desktop vs mobile:** Desktop shows abilities full-width, then a grid with skills / archetype / library. **Mobile** uses horizontal snap carousel (`SHEET_CAROUSEL_PANEL_OPTIONS`: Abilities, Skills, Archetype, Library) + sticky `SegmentedControl`; abilities render twice (desktop block + mobile panel).
+
+**Library sub-tabs** (`LIBRARY_TAB_DEFS` / `library-tab-config.ts`): **Feats**, **Powers**, **Techniques**, **Inventory** (weapons, shields, armor, equipment), **Proficiencies**, **Notes** (named notes + visibility). Tab visibility toggles (settings) hide tabs in **play** mode; `resolveLibraryActiveTab` jumps to a visible tab. Add buttons open `CharacterSheetModals` → `AddLibraryItemModal` / `AddFeatModal` / etc. **Empowered techniques** are not a library tab; they are picked inside **Add power** flow (`powerSelectionMode === 'empowered'` on the modal). Powers panel splits innate vs regular; techniques use spend/energy row chrome.
+
+**Roll log:** Page-level `RollLog` under `RollProvider` (not inside library creatures tab — that pattern is hub-only).
+
+### Screens not walked in this pass
+
+- `/campaigns/.../view/.../character` read-only sheet embedding.
+- Every handler inside `use-character-sheet-actions.ts` line-by-line.
+- Onboarding tour steps beyond modal wiring.
+- Campaigns, admin, crafting, marketing (per scope).
+
+### Same job, different behavior
+
+- screen-behavior-note:sheet-mobile-carousel-vs-desktop-layout: **Mobile** side-scrolls four section panels; **desktop** uses a multi-column grid and shows **Abilities** outside the carousel (duplicate mount on small viewports only).
+- screen-behavior-note:sheet-edit-and-temp-modes-exclusive: **Edit** and **Temp** cannot both be active; toolbar uses `nextSheetInteractionMode` to flip one off when enabling the other.
+- screen-behavior-note:sheet-library-sub-edit-toggle: Sheet-level **Edit** does not immediately enable library row delete/add; **`EditSectionToggle`** on the library card toggles `showLibraryEditControls` separately.
+- screen-behavior-note:sheet-library-tab-visibility-play-mode: Hidden library tabs (settings) are skipped when **not** in edit mode via `resolveLibraryActiveTab`; in edit mode all tabs stay reachable for visibility editing.
+- screen-behavior-note:sheet-guest-owner-local-save: **Guest** sheets count as **owner** for edits but persist in **browser storage**, show guest banner, lock **visibility** settings, and skip encounter resource sync hooks used by signed-in sheets.
+- screen-behavior-note:sheet-viewer-omits-toolbar-and-handlers: **Viewers** get no action toolbar; `whenSheetOwner` drops change handlers so controls do not appear as dead buttons.
+- screen-behavior-note:sheet-empowered-in-add-power-modal: Hub library has an **Empowered** tab; the **character sheet** has no empowered library tab — empowered picks use **`AddLibraryItemModal`** power mode sub-switch.
+- screen-behavior-note:sheet-skills-skill-row-vs-guided-guided-skill-row: Sheet **`SkillsSection`** uses shared `SkillRow` from patterns; guided creator uses **`GuidedSkillRow`** in `guided-skills-panel.tsx` (same spend math, different UI).
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:sheet-no-standalone-empowered-library-tab: `LIBRARY_TAB_DEFS` has no `empowered-techniques` entry; empowered content is only via add-power modal mode.
+
 ## Unused exports outside game and calculators
 
 No production file imports these names. A test import does not count. The file that exports the name may still call it. This is not a dead function unless nothing in that file calls it either. Next.js page, layout, route, proxy, and MDX conventions are not listed. `src/lib/game` and `src/lib/calculators` were not part of this search. The hook, service, and store files the barrels omit are imported by their own paths. The names below are the extra exports in those trees, not unused files.
