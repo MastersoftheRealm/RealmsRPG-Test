@@ -3018,7 +3018,7 @@ Player-facing app routes now have behavior-pass sections except **`dev/styleguid
 
 ## Codex screen (behavior pass)
 
-Public reference browser at **`/codex`** (`codex/page.tsx`). **Realms Codex** vs **My Codex** segmented control; category tabs (main + optional **Advanced** for parts, properties, creature feats, traits). **Partial pass:** row expand payloads and every filter helper not line-by-line.
+Public reference browser at **`/codex`** (`codex/page.tsx`). **Realms Codex** vs **My Codex** segmented control; category tabs (main + optional **Advanced** for parts, properties, creature feats, traits). **Partial pass:** filter helpers and chip field matrices not line-by-line; see **Codex expanded rows** for public expand bodies.
 
 ### Walked
 
@@ -3036,7 +3036,6 @@ Public reference browser at **`/codex`** (`codex/page.tsx`). **Realms Codex** vs
 
 ### Not walked
 
-- Every expanded-row field renderer per tab.
 - Guest vs signed-in gate differences (if any) on codex hooks line-by-line.
 
 ### Same job, different behavior
@@ -3053,6 +3052,45 @@ Public reference browser at **`/codex`** (`codex/page.tsx`). **Realms Codex** vs
 
 - screen-behavior-note:codex-my-non-species-tabs-placeholder: In **My Codex**, tabs other than **Species** (and the equipment message state) render **`CodexMyCodexEmpty`**—no user codex content UI yet except custom species list.
 - screen-behavior-note:codex-no-save-on-browse-page: **Realms Codex** tabs do not expose create/delete/save controls on `/codex` itself—all reference browsing only.
+
+## Codex expanded rows (behavior pass)
+
+**Realms Codex** list rows only (**My Codex** species reuse the same expand body; species row chrome differs). Each tab maps through `CodexBrowseListShell` into `GridListRow` or `CodexFeatRow` / `CodexSkillRow`. A person **clicks the row** to open or close the panel; chip groups inside can expand for more text. Nothing in these panels saves data or jumps to another codex tab—except **My Codex → Species**, which shows an **Edit** control on the row (not inside the trait grids) that opens **Species Creator**.
+
+### Walked (expand payload by tab)
+
+| Tab | Component | What you see when expanded |
+|-----|-----------|----------------------------|
+| **Feats** | `CodexFeatsTab` → `CodexFeatRow` | Full feat **description**; labeled chip sections from `buildFeatDetailSections` (Type, Ability Requirements, Skill Requirements, Feat Levels for leveled families, Tags). Path-filter chips can also sit on the name in the collapsed row. |
+| **Skills** | `CodexSkillsTab` → `CodexSkillRow` | **Description** (sub-skills add a “Sub-skill of …” line in the body). Optional chips from `getSkillExtraDescriptionDetailSections` (Success/Failure Outcomes, DS Calculation, Craft Success/Failure) when the row has that copy. |
+| **Species** | `CodexSpeciesTab` → `SpeciesCard` / `GridListRow` | Custom **`expandedContent`**: description, stat grid (height, weight, adulthood, lifespan, languages, skill names), then trait blocks—Species Traits, Ancestry Traits, Flaws, Characteristics—each as small colored cards with name + description. Thumbnail in the collapsed row when present. |
+| **Archetypes** | `CodexArchetypesTab` → `ArchetypePathCard` | Custom **`expandedContent`**: description, type/abilities/proficiency summary grid, then `PathRecommendationsBlock` sections (“Level 1 recommendations”, per-level “Level-up progression”) listing resolved feat/skill/equipment/power/technique **names as bullet lists**—not links. Empty progression shows a muted “No level 2+ progression entries…” line. |
+| **Equipment** | `CodexEquipmentTab` → `CodexEquipmentRow` | Description; `buildCodexEquipmentDetailSections` adds catalog fact chips via `glrSurfaceDetailSections` (e.g. training points when calculated) plus a **Properties** chip group when the item has properties. |
+| **Parts** | `CodexPartsTab` → inline part row | Always at least a **Type** chip section (power vs technique, mechanic, percentage cost). **Options** chips (Option 1–3) with EN/TP cost in the chip title and option text in the chip body when `op_*_desc` exists. |
+| **Properties** | `CodexPropertiesTab` → inline property row | **Options** chips only when `op_1_desc` is set (name includes IP/TP/cost multiplier labels from columns). Otherwise expand may be only the description or nothing to expand. |
+| **Traits** | `CodexTraitsTab` → `GridListRow` | **Choice options** chip section when `choiceTraitOptionIdsToChipData` returns chips; plain traits are often description-only. |
+| **Creature feats** | `CodexCreatureFeatsTab` → `GridListRow` | Description plus **Feat Levels** chips from `buildFeatLevelChips` when the family has multiple levels—not the full `buildFeatDetailSections` stack used on the Feats tab. |
+
+### Not walked
+
+- Playwright/visual baseline matrices for every chip category color.
+- Admin codex row expand (different `variant` on feat/skill rows).
+
+### Same job, different behavior
+
+- screen-behavior-note:codex-expand-detailSections-vs-expandedContent: Most tabs feed `GridListRow` **`detailSections`** (labeled chip groups). **Species** and **Archetypes** use bespoke **`expandedContent`** JSX instead—trait/style cards and path recommendation lists rather than codex chip sections.
+- screen-behavior-note:codex-expand-feats-vs-creature-feats-detail-builders: **Feats** tab uses `CodexFeatRow` → `buildFeatDetailSections` (type, requirements, tags, family levels). **Creature feats** tab builds `GridListRow` inline with only **Feat Levels** chips from `buildFeatLevelChips`—same leveled-feat helper family, different expand depth.
+- screen-behavior-note:codex-expand-skills-only-tab-with-outcome-chips: **Skills** alone uses `getSkillExtraDescriptionDetailSections` for success/failure/craft/DS chips in the expand panel; other tabs do not surface that pattern.
+- screen-behavior-note:codex-expand-parts-always-type-section: **Parts** rows always include a **Type** `detailSections` group (at minimum power/technique descriptors), so they almost always have an expand panel even when option text is missing.
+- screen-behavior-note:codex-expand-properties-traits-may-collapse-only: **Properties** (no option desc) and **Traits** (non-choice) may have **no chip sections**—the row is readable from collapsed columns and maybe a short description only.
+- screen-behavior-note:codex-expand-equipment-calculated-property-chips: **Equipment** expand merges live **Properties** chips (names resolved against `useItemProperties` data) with catalog surface chips; collapsed columns already show category/rarity/cost facts per equipment list chrome.
+- screen-behavior-note:codex-expand-species-my-codex-edit-on-row-not-in-panel: **My Codex → Species** passes `onEdit` into `GridListRow` (opens `speciesCreatorEditHref`); **Realms Codex → Species** does not. The expand panel itself is the same read-only trait layout in both modes.
+
+### Dead or unreachable paths
+
+- screen-behavior-note:codex-expand-archetype-recommendations-not-links: `PathRecommendationsBlock` in **Archetypes** lists recommendation **names only**—clicking does not open the Feats/Skills/Equipment tabs or scroll to those rows.
+- screen-behavior-note:codex-expand-public-no-inline-mutations: **Realms Codex** expand panels have no save, delete, or admin edit controls—read-only reference except the separate **My Codex** species **Edit** button on the row chrome.
+- screen-behavior-note:codex-expand-no-body-no-expander: When a row has **no** description, **no** `detailSections`, and **no** `expandedContent`, `GridListRow` omits the expander—collapsed columns are the whole story (common on sparse property/trait rows).
 
 ## Unused exports outside game and calculators
 

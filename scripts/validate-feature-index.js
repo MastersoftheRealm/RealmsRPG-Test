@@ -1112,6 +1112,53 @@ for (const id of CODEX_SCREEN_NOTE_IDS) {
 }
 console.log(`FEATURE_INDEX Codex screen check OK (${CODEX_SCREEN_NOTE_IDS.length} notes).`);
 
+const CODEX_EXPANDED_ROW_NOTE_IDS = [
+  'codex-expand-detailSections-vs-expandedContent',
+  'codex-expand-feats-vs-creature-feats-detail-builders',
+  'codex-expand-skills-only-tab-with-outcome-chips',
+  'codex-expand-parts-always-type-section',
+  'codex-expand-properties-traits-may-collapse-only',
+  'codex-expand-equipment-calculated-property-chips',
+  'codex-expand-species-my-codex-edit-on-row-not-in-panel',
+  'codex-expand-archetype-recommendations-not-links',
+  'codex-expand-public-no-inline-mutations',
+  'codex-expand-no-body-no-expander',
+];
+
+const codexExpandedRowsSection = mathSectionSlice(indexText, '## Codex expanded rows');
+if (!codexExpandedRowsSection) {
+  console.error('FEATURE_INDEX is missing the Codex expanded rows section.');
+  process.exit(2);
+}
+if (!codexExpandedRowsSection.includes('### Same job, different behavior')) {
+  console.error(
+    'FEATURE_INDEX Codex expanded rows section is missing ### Same job, different behavior.',
+  );
+  process.exit(2);
+}
+const codexExpandedBehaviorStart = codexExpandedRowsSection.indexOf('### Same job, different behavior');
+const codexExpandedDeadStart = codexExpandedRowsSection.indexOf('### Dead or unreachable paths');
+if (codexExpandedBehaviorStart < 0 || codexExpandedDeadStart < 0) {
+  console.error('FEATURE_INDEX Codex expanded rows section missing behavior or dead-path headings.');
+  process.exit(2);
+}
+const codexExpandedBehaviorBody = codexExpandedRowsSection.slice(
+  codexExpandedBehaviorStart,
+  codexExpandedDeadStart,
+);
+const codexExpandedDeadBody = codexExpandedRowsSection.slice(codexExpandedDeadStart);
+for (const id of CODEX_EXPANDED_ROW_NOTE_IDS) {
+  const inBehavior = codexExpandedBehaviorBody.includes(`screen-behavior-note:${id}:`);
+  const inDead = codexExpandedDeadBody.includes(`screen-behavior-note:${id}:`);
+  if (!inBehavior && !inDead) {
+    console.error('FEATURE_INDEX missing required Codex expanded row note:', id);
+    process.exit(2);
+  }
+}
+console.log(
+  `FEATURE_INDEX Codex expanded rows check OK (${CODEX_EXPANDED_ROW_NOTE_IDS.length} notes).`,
+);
+
 const CREATOR_SECTION_ISLAND_NOTE_IDS = [
   'creator-islands-workspace-not-autosave',
   'power-editor-facade-files-vs-technique-inline-sections',
