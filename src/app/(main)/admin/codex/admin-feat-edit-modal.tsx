@@ -13,7 +13,7 @@ import { AdminCodexEditModalFooter } from './admin-codex-edit-modal-footer';
 import { codexFeatEditorIsDirty } from './admin-codex-unsaved-leave';
 import { useCodexEditorLeaveGuard } from './admin-codex-unsaved-leave-guard';
 import { useAdminLeveledFeatSession } from './use-admin-leveled-feat-session';
-import { getFeatLevel, peakFeatInFamily } from '@/lib/leveled-feats';
+import { computeNextLevelFormState } from './admin-feat-form';
 
 export function AdminFeatEditModal({
   isOpen,
@@ -33,7 +33,6 @@ export function AdminFeatEditModal({
   initialForm,
   initialEditId,
   enableAddLevel,
-  onAddLevel,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -59,7 +58,6 @@ export function AdminFeatEditModal({
   initialForm: FeatFormState;
   initialEditId: string | null;
   enableAddLevel: boolean;
-  onAddLevel?: ((form: FeatFormState, sourceDbFeatId: string) => void) | undefined;
 }) {
   // Fresh state per open: parent remounts with key={modalSessionKey}.
   const session = useAdminLeveledFeatSession({
@@ -67,6 +65,7 @@ export function AdminFeatEditModal({
     initialEditId,
     levelFeats,
     toForm: featToFormState,
+    computeNextLevel: computeNextLevelFormState,
   });
   const {
     form,
@@ -79,6 +78,7 @@ export function AdminFeatEditModal({
     dirtyIds,
     handleSelectLevel,
     dirtyPayload,
+    addNextLevel,
   } = session;
 
   const leave = useCodexEditorLeaveGuard(
@@ -119,26 +119,15 @@ export function AdminFeatEditModal({
       <div className="space-y-4">
         <AdminFeatLevelControls
           hasLevels={hasLevels}
-          enableAddLevel={enableAddLevel && Boolean(onAddLevel)}
+          enableAddLevel={enableAddLevel && Boolean(initialEditId)}
           saving={saving}
           selectedEditId={selectedEditId}
           canAddFromSingle={Boolean(initialEditId)}
           levelOptions={levelOptions}
           dirtyLevelLabels={dirtyLevelLabels}
-          addLevelHelp="Save a new row for the next feat tier. Level and character level required are filled from the current feat."
+          addLevelHelp="Draft another tier here. Switch levels, edit each one, then save once — nothing is written until you save."
           onSelectLevel={handleSelectLevel}
-          onAddLevel={() => {
-            const sourceId = hasLevels ? selectedEditId : initialEditId;
-            if (!sourceId || !onAddLevel) return;
-            const peak = peakFeatInFamily(levelFeats);
-            const selectedLvl = form.feat_lvl != null && form.feat_lvl > 0 ? form.feat_lvl : 1;
-            if (peak != null && getFeatLevel(peak) > selectedLvl) {
-              const peakId = String(peak.id);
-              onAddLevel(peakId === sourceId ? form : featToFormState(peak), peakId);
-              return;
-            }
-            onAddLevel(form, sourceId);
-          }}
+          onAddLevel={() => addNextLevel(initialEditId)}
           selectClassName={ADMIN_FEAT_MODAL_SELECT_CLASS}
         />
         <AdminCodexCopySourceBanner copySourceName={copySourceName} entityLabel="feat" />

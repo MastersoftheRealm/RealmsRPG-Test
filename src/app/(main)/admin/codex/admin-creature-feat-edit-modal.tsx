@@ -13,8 +13,8 @@ import {
 import { codexFeatEditorIsDirty } from './admin-codex-unsaved-leave';
 import { useCodexEditorLeaveGuard } from './admin-codex-unsaved-leave-guard';
 import { useAdminLeveledFeatSession } from './use-admin-leveled-feat-session';
-import { getFeatLevel, peakFeatInFamily } from '@/lib/leveled-feats';
 import {
+  computeNextCreatureFeatFormState,
   creatureFeatToFormState,
   parseOptionalAdminDecimalInput,
   type CreatureFeatFormState,
@@ -42,7 +42,6 @@ export function AdminCreatureFeatEditModal({
   initialForm,
   initialEditId,
   enableAddLevel,
-  onAddLevel,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -59,13 +58,13 @@ export function AdminCreatureFeatEditModal({
   initialForm: CreatureFeatFormState;
   initialEditId: string | null;
   enableAddLevel: boolean;
-  onAddLevel?: ((form: CreatureFeatFormState, sourceDbFeatId: string) => void) | undefined;
 }) {
   const session = useAdminLeveledFeatSession({
     initialForm,
     initialEditId,
     levelFeats,
     toForm: creatureFeatToFormState,
+    computeNextLevel: computeNextCreatureFeatFormState,
   });
   const {
     form,
@@ -77,6 +76,7 @@ export function AdminCreatureFeatEditModal({
     dirtyIds,
     handleSelectLevel,
     dirtyPayload,
+    addNextLevel,
   } = session;
 
   const leave = useCodexEditorLeaveGuard(
@@ -117,26 +117,15 @@ export function AdminCreatureFeatEditModal({
       <div className="space-y-4">
         <AdminFeatLevelControls
           hasLevels={hasLevels}
-          enableAddLevel={enableAddLevel && Boolean(onAddLevel)}
+          enableAddLevel={enableAddLevel && Boolean(initialEditId)}
           saving={saving}
           selectedEditId={selectedEditId}
           canAddFromSingle={Boolean(initialEditId)}
           levelOptions={levelOptions}
           dirtyLevelLabels={dirtyLevelLabels}
-          addLevelHelp="Save a new row for the next creature-feat tier. Feat level is one higher, and the base feat is the level-1 creature feat. Required level is copied."
+          addLevelHelp="Draft another tier here. Switch levels, edit each one, then save once — nothing is written until you save."
           onSelectLevel={handleSelectLevel}
-          onAddLevel={() => {
-            const sourceId = hasLevels ? selectedEditId : initialEditId;
-            if (!sourceId || !onAddLevel) return;
-            const peak = peakFeatInFamily(levelFeats);
-            const selectedLvl = form.feat_lvl != null && form.feat_lvl > 0 ? form.feat_lvl : 1;
-            if (peak != null && getFeatLevel(peak) > selectedLvl) {
-              const peakId = String(peak.id);
-              onAddLevel(peakId === sourceId ? form : creatureFeatToFormState(peak), peakId);
-              return;
-            }
-            onAddLevel(form, sourceId);
-          }}
+          onAddLevel={() => addNextLevel(initialEditId)}
         />
         <AdminCodexCopySourceBanner copySourceName={copySourceName} entityLabel="creature feat" />
         <div>

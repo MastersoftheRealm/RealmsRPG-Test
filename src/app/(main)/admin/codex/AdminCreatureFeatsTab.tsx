@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { CodexRulesSourceFilter } from '@/components/patterns/filters';
 import {
   countActiveCodexRulesSourceFilters,
@@ -28,7 +28,7 @@ import { Layers } from 'lucide-react';
 import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
 import { useAdminCodexEntity } from './use-admin-codex-entity';
 import { AdminCodexRowActions, ADMIN_CODEX_ROW_ACTIONS_WIDTH } from './admin-codex-row-actions';
-import { persistCodexLevelEdits } from './admin-codex-level-save';
+import { persistCodexFamilyLevelEdits } from './admin-codex-level-save';
 import {
   AdminCreatureFeatEditModal,
   EMPTY_CREATURE_FEAT_FORM,
@@ -143,18 +143,6 @@ export function AdminCreatureFeatsTab() {
       bumpModal();
     });
 
-  const openAddLevelFromEditModal = useCallback(
-    (sourceForm: CreatureFeatFormState, sourceDbFeatId: string) => {
-      beginAdd(() => {
-        setModalInitialForm(computeNextCreatureFeatFormState(sourceForm, sourceDbFeatId));
-        setModalInitialEditId(null);
-        setModalLevelFeats([]);
-        bumpModal();
-      });
-    },
-    [beginAdd],
-  );
-
   const handleSave = async (editId: string | null, form: CreatureFeatFormState) => {
     if (!form.name.trim()) return;
     const savingId = editing ? (editId ?? editing.id) : null;
@@ -169,13 +157,14 @@ export function AdminCreatureFeatsTab() {
   const handleSaveAllLevels = async (editsById: Record<string, CreatureFeatFormState>) => {
     if (Object.keys(editsById).length === 0) return;
     setSaving(true);
-    const errorMessage = await persistCodexLevelEdits({
+    const errorMessage = await persistCodexFamilyLevelEdits({
       collection: 'codex_creature_feats',
       editsById,
       updatedAtForId: (id) =>
         (creatureFeats ?? []).find((feat) => String(feat.id) === id)?.updated_at,
       toPayload: creatureFeatFormToSavePayload,
-      invalidMessage: (id, form) => (form?.name?.trim() ? null : `Level ${id}: name is required`),
+      invalidMessage: (_id, form) =>
+        form?.name?.trim() ? null : `Level ${form?.feat_lvl ?? '?'}: name is required`,
       queryClient,
     });
     setSaving(false);
@@ -296,7 +285,6 @@ export function AdminCreatureFeatsTab() {
           initialForm={modalInitialForm}
           initialEditId={modalInitialEditId}
           enableAddLevel
-          onAddLevel={openAddLevelFromEditModal}
         />
       ) : null}
 
