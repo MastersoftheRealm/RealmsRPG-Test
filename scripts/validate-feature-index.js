@@ -91,6 +91,19 @@ const FOLDER_FILE_DIRS = [
   'src/lib/validation',
   'src/lib/constants',
   'src/lib/utils',
+  'src/lib/ancestry',
+  'src/lib/api',
+  'src/lib/chip',
+  'src/lib/data-enrichment',
+  'src/lib/detail-option',
+  'src/lib/glr',
+  'src/lib/observability',
+  'src/lib/routes',
+  'src/lib/security',
+  'src/lib/server',
+  'src/lib/supabase',
+  'src/lib/tooltips',
+  'src/lib/ui',
 ];
 
 function walk(dir, acc = []) {

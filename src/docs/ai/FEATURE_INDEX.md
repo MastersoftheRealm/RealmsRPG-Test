@@ -15,12 +15,13 @@ Checked on this pass:
 - Every non-test `.ts` / `.tsx` file under `src/components/ui` and `src/app/(main)/admin/codex`. The pairs in that section were opened. The files listed there as not read line by line were not.
 - Every non-test `.ts` / `.tsx` file under the other `src/app/(main)/admin` screens, `src/lib/codex`, `src/lib/character`, `src/lib/library`, `src/lib/auth`, `src/lib/guided-creator`, and `src/lib/password-policy.ts`. The pairs in that section were opened. The files listed there as not read line by line were not.
 - Every non-test `.ts` / `.tsx` file under `src/lib/character-sheet`, `crafting`, `creator`, `encounter`, `rolls`, `rules`, `tabletop`, `validation`, `constants`, and `utils`, plus `src/lib/admin.ts` and the other loose files directly under `src/lib/`. The pairs in that section were opened. The files listed there as not read line by line were not.
+- Every non-test `.ts` / `.tsx` file under `src/lib/ancestry`, `api`, `chip`, `data-enrichment`, `detail-option`, `glr`, `observability`, `routes`, `security`, `server`, `supabase`, `tooltips`, and `ui`. The pairs in that section were opened. The files listed there as not read line by line were not.
 - A static import walk from app entries. A file loaded only by a variable `import()` would not show up. `knip` was not run, so unused exports inside a file that is imported were not measured.
 
 Not checked, so silence here is not "it does not exist" and not "there is no fork":
 
 - Behavior of calculators, saves, or admin editors.
-- The `src/lib` folders still named at the bottom of this index, and the unread parts of `src/lib/game` and `src/lib/calculators`.
+- The unread parts of `src/lib/game` and `src/lib/calculators`.
 - Pairs of files that are not named in a fork section below.
 
 Export **names** for patterns, ui, hooks, and services are in [`FEATURE_INDEX_BARRELS.generated.md`](FEATURE_INDEX_BARRELS.generated.md). That generated file is not a list of what is used, and it does not read the other barrels.
@@ -1800,11 +1801,152 @@ Every path below is a non-test source file. The checker fails if one is missing 
 
 ---
 
+## Ancestry, API cache, chips, enrichment, lists, and clients
+
+68 non-test `.ts` / `.tsx` files. `src/lib/glr/validate-glr-chrome-spacing.ts` is imported only by its test. `next.config.ts` imports `src/lib/security/content-security-policy.ts` and `src/lib/security/next-app-flags.ts`. Every other file in this slice has a production importer under `src`.
+
+### Second implementations
+
+- Library lookup. `findInLibrary` matches an id with `String(reference.id)` and a name with `toLowerCase()`. It does not call `findByNormalizedId`. That helper lowercases and trims, and it also matches `docId`.
+- Power and technique enrichment. `enrichPowers` and `enrichTechniques` each call `findInLibrary` on the user library and then the public library. They do not call each other. A found power keeps the character row id. A found technique returns `libraryItem.id`. `enrichItems` is a third function. It was not read past its opening.
+- Detail options. `powerToDetailOption` calls `derivePowerDisplay`. `techniqueToDetailOption` calls `deriveTechniqueDisplay`. They do not call each other. `resolveCombatDetailOption` calls one or the other.
+- Species sizes. `getSpeciesSizeOptions` returns the `sizes` array when it has entries, and otherwise the single `size`. `combineSpeciesSizes` reads both fields on two species, unions them, and stops at 4. It does not call `getSpeciesSizeOptions`.
+- Chip variants. `gridListChipVariant` maps `warning` to `listWarning` and `success` to `listSuccess`. `descriptorChipVariantForGridList` maps those same categories to `warning` and `success`. `gridListChipStyleVariant` calls one or the other. `partChipVariant` and `rarityChipVariant` are separate maps.
+- Supabase clients. `src/lib/supabase/client.ts`, `src/lib/supabase/server.ts`, and `createPublicClient` each build a client. They do not call each other. The browser and server factories use the publishable key and cookies. The public factory uses the publishable key and no cookies. `createServiceRoleClient` uses the service-role key.
+- Session user. `sessionUserFromClaims` reads `sub`. `sessionUserFromAuthUser` reads `user.id`. `requireAuth` calls `getSession`. `requireLiveUser` calls `auth.getUser` and does not call `getSession`.
+- Page access. `assertCharacterSheetHttpAccess` and `assertCampaignDetailHttpAccess` each call `fetchInternalApi` and then `denyResourcePage`. The character check returns early for a guest id. They do not call each other.
+
+### Calls a shared component
+
+- `enrichCharacterData` calls `enrichPowers`, `enrichTechniques`, and `enrichItems`. `getCharacterAllowedSizes` calls `getSpeciesSizeOptions`.
+- `officialEntityBrowseChrome` calls `glrListChrome`. `createBrowserSupabaseCookieMethods` calls `createSupabaseAuthCookieMethods`. The server client uses that same cookie helper.
+- `src/proxy.ts` calls `updateSession` and `redirectOAuthCodeToCallback`. `next.config.ts` uses `ACCOUNT_PATH_ALIAS_REWRITE` and `buildContentSecurityPolicy`.
+- `src/lib/glr/index.ts` does not re-export `validate-glr-chrome-spacing.ts`. That file says the barrel must not. The barrel also omits `assertRowFactCoverage`. Tests import that function from the file. `src/lib/observability/index.ts` does not re-export `sentry-client-filter.ts`. `src/instrumentation-client.ts` imports it by path. `src/lib/detail-option/index.ts` does not re-export `format-recovery.ts`. `builders.ts` imports it.
+
+### Not read line by line
+
+- `src/lib/ancestry/ancestry-selection.ts` past `combineSpeciesSizes`.
+- `src/lib/chip/list-row-metadata.ts`.
+- `src/lib/data-enrichment/clean-for-save.ts`, `enrich-items.ts` past its opening, and `enrich-character.ts` past the three calls.
+- `src/lib/detail-option/compact-facts.ts`.
+- `src/lib/glr/glr-fact-catalog.ts`, `glr-density.ts`, `resolve-glr-fact-layout.ts`, `validate-glr-facts.ts`, and `validate-glr-chrome-spacing.ts` past its header.
+- `src/lib/supabase/middleware.ts` past `isHardProtectedPath`, `supabase-auth-cookies.ts` past `createSupabaseAuthCookieMethods`, `database.ts`, `cached-public-read.ts`, and `verified-claims.ts`.
+- `src/lib/tooltips/floating-help.tsx` past the placement helper.
+
+
+### `src/lib/ancestry`
+
+- `src/lib/ancestry/ancestry-selection.ts`
+- `src/lib/ancestry/species-size-options.ts`
+
+### `src/lib/api`
+
+- `src/lib/api/public-catalog-cache-invalidation.ts`
+- `src/lib/api/public-catalog-cache-purge.ts`
+- `src/lib/api/public-catalog-list-cache-tags.ts`
+- `src/lib/api/public-cdn-cache.ts`
+
+### `src/lib/chip`
+
+- `src/lib/chip/chip-data-helpers.ts`
+- `src/lib/chip/chip-size-tokens.ts`
+- `src/lib/chip/descriptor-chip-variants.ts`
+- `src/lib/chip/expandable-chip-props.ts`
+- `src/lib/chip/expandable-chip-shell.ts`
+- `src/lib/chip/full-row-expand-layout.ts`
+- `src/lib/chip/grid-list-chip-utils.ts`
+- `src/lib/chip/grid-list-chip-variant.ts`
+- `src/lib/chip/list-row-metadata.ts`
+- `src/lib/chip/part-chip-variant.ts`
+- `src/lib/chip/part-chips-from-display.ts`
+- `src/lib/chip/part-data.ts`
+- `src/lib/chip/rarity-chip-variant.ts`
+- `src/lib/chip/species-skill-chips.ts`
+
+### `src/lib/data-enrichment`
+
+- `src/lib/data-enrichment/clean-for-save.ts`
+- `src/lib/data-enrichment/enrich-character.ts`
+- `src/lib/data-enrichment/enrich-items.ts`
+- `src/lib/data-enrichment/enrich-powers.ts`
+- `src/lib/data-enrichment/enrich-techniques.ts`
+- `src/lib/data-enrichment/find-in-library.ts`
+- `src/lib/data-enrichment/types.ts`
+
+### `src/lib/detail-option`
+
+- `src/lib/detail-option/builders.ts`
+- `src/lib/detail-option/combat-builder.ts`
+- `src/lib/detail-option/compact-facts.ts`
+- `src/lib/detail-option/equipment-builder.ts`
+- `src/lib/detail-option/format-recovery.ts`
+- `src/lib/detail-option/index.ts`
+
+### `src/lib/glr`
+
+- `src/lib/glr/glr-chrome-spacing-norms.ts`
+- `src/lib/glr/glr-density.ts`
+- `src/lib/glr/glr-fact-catalog.ts`
+- `src/lib/glr/glr-list-chrome.ts`
+- `src/lib/glr/glr-surface-bindings.ts`
+- `src/lib/glr/index.ts`
+- `src/lib/glr/official-entity-browse-chrome.ts`
+- `src/lib/glr/resolve-glr-fact-layout.ts`
+- `src/lib/glr/validate-glr-chrome-spacing.ts`
+- `src/lib/glr/validate-glr-facts.ts`
+
+### `src/lib/observability`
+
+- `src/lib/observability/config.ts`
+- `src/lib/observability/index.ts`
+- `src/lib/observability/report-error.ts`
+- `src/lib/observability/sentry-client-filter.ts`
+
+### `src/lib/routes`
+
+- `src/lib/routes/funnel-chrome.ts`
+
+### `src/lib/security`
+
+- `src/lib/security/content-security-policy.ts`
+- `src/lib/security/next-app-flags.ts`
+
+### `src/lib/server`
+
+- `src/lib/server/assert-resource-http-access.ts`
+- `src/lib/server/internal-api-fetch.ts`
+- `src/lib/server/resource-access-unavailable.ts`
+
+### `src/lib/supabase`
+
+- `src/lib/supabase/auth-cookies.ts`
+- `src/lib/supabase/browser-auth-cookies.ts`
+- `src/lib/supabase/cached-public-read.ts`
+- `src/lib/supabase/client.ts`
+- `src/lib/supabase/database.ts`
+- `src/lib/supabase/middleware.ts`
+- `src/lib/supabase/proxy-oauth-redirect.ts`
+- `src/lib/supabase/public-client.ts`
+- `src/lib/supabase/server.ts`
+- `src/lib/supabase/session.ts`
+- `src/lib/supabase/supabase-auth-cookies.ts`
+- `src/lib/supabase/verified-claims.ts`
+
+### `src/lib/tooltips`
+
+- `src/lib/tooltips/floating-help.tsx`
+- `src/lib/tooltips/markdown-lite.tsx`
+
+### `src/lib/ui`
+
+- `src/lib/ui/status-surface-classes.ts`
+
+---
+
 ## Left for a later pass
 
 Still not opened file by file:
 
-- These `src/lib` folders: `ancestry`, `api`, `chip`, `data-enrichment`, `detail-option`, `glr`, `observability`, `routes`, `security`, `server`, `supabase`, `tooltips`, and `ui`.
 - `src/lib/game/` and `src/lib/calculators/` beyond the sibling lists already in this index, except the two skill-allocation loops and `CONDITIONS` named above.
 - Unused exports inside files that something already imports.
 - Line-by-line comparison of files in `src/components/patterns`, `src/components/character-sheet`, and `src/components/guided-creator` that are not named in that fork section.
