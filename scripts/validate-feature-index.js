@@ -1070,6 +1070,48 @@ console.log(
   `FEATURE_INDEX My Account screen check OK (${ACCOUNT_SCREEN_NOTE_IDS.length} notes).`,
 );
 
+const CODEX_SCREEN_NOTE_IDS = [
+  'codex-public-read-only-vs-admin-codex-editor',
+  'codex-vs-library-publishable-entities',
+  'codex-species-public-vs-my-user-species',
+  'codex-my-species-vs-species-creator-save',
+  'codex-my-equipment-empty-points-library',
+  'codex-feats-skills-character-filter-shared-persistence',
+  'codex-advanced-collapse-resets-tab',
+  'codex-my-non-species-tabs-placeholder',
+  'codex-no-save-on-browse-page',
+];
+
+const codexScreensSection = mathSectionSlice(indexText, '## Codex screen');
+if (!codexScreensSection) {
+  console.error('FEATURE_INDEX is missing the Codex screen section.');
+  process.exit(2);
+}
+if (!codexScreensSection.includes('### Same job, different behavior')) {
+  console.error('FEATURE_INDEX Codex section is missing ### Same job, different behavior.');
+  process.exit(2);
+}
+const codexScreenBehaviorStart = codexScreensSection.indexOf('### Same job, different behavior');
+const codexScreenDeadStart = codexScreensSection.indexOf('### Dead or unreachable paths');
+if (codexScreenBehaviorStart < 0 || codexScreenDeadStart < 0) {
+  console.error('FEATURE_INDEX Codex section missing behavior or dead-path headings.');
+  process.exit(2);
+}
+const codexScreenBehaviorBody = codexScreensSection.slice(
+  codexScreenBehaviorStart,
+  codexScreenDeadStart,
+);
+const codexScreenDeadBody = codexScreensSection.slice(codexScreenDeadStart);
+for (const id of CODEX_SCREEN_NOTE_IDS) {
+  const inBehavior = codexScreenBehaviorBody.includes(`screen-behavior-note:${id}:`);
+  const inDead = codexScreenDeadBody.includes(`screen-behavior-note:${id}:`);
+  if (!inBehavior && !inDead) {
+    console.error('FEATURE_INDEX missing required Codex screen note:', id);
+    process.exit(2);
+  }
+}
+console.log(`FEATURE_INDEX Codex screen check OK (${CODEX_SCREEN_NOTE_IDS.length} notes).`);
+
 const gen = spawnSync(
   process.execPath,
   [path.join(__dirname, 'generate-feature-index-barrels.js'), '--check'],

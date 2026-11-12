@@ -2955,10 +2955,45 @@ Profile load: `useAccountProfile` → `fetchUserProfile` (includes `rolePolicy` 
 
 ### App routes still without a dedicated behavior-pass section
 
-Other passes already cover: home/marketing, auth entry, character creators (`/characters/new`, guided, creature), library hub, entity creators, character sheet, campaigns, tabletop, encounters, admin, crafting. **No dedicated behavior-pass section yet** for:
+Player-facing app routes now have behavior-pass sections except **`dev/styleguide`** (internal UI reference, out of scope for screen walks).
 
-- **`/codex`** — public rules reference browser (tabs; guest vs signed-in read patterns not walked as its own pass).
-- **`dev/styleguide`** — internal UI reference (not a player surface).
+## Codex screen (behavior pass)
+
+Public reference browser at **`/codex`** (`codex/page.tsx`). **Realms Codex** vs **My Codex** segmented control; category tabs (main + optional **Advanced** for parts, properties, creature feats, traits). **Partial pass:** row expand payloads and every filter helper not line-by-line.
+
+### Walked
+
+**Hub** — No writes on this page in **Realms Codex** mode: browse, search, sort, expand rows via `CodexBrowseListShell` / `GridListRow` / codex row components. Page comment: **powers, techniques, armaments, creatures** live on **`/library`**, not here.
+
+| Tab | Public **Realms Codex** | **My Codex** |
+|-----|-------------------------|--------------|
+| Feats, skills, archetypes, properties, parts, traits, creature feats | Loads codex hooks (`useCodexFeats`, etc.); filters incl. rules source | **`CodexMyCodexEmpty`** (placeholder) |
+| Species | `useSpecies` → official `codex_species` rows | `useUserSpecies` list; **Edit** → `speciesCreatorEditHref` (**Species Creator**) |
+| Equipment | `useEquipment` reference list | **`EmptyState`**: custom equipment is on **Library**, not My Codex |
+
+**Feats / skills** (public): optional **`CharacterFilter`** + qualify toggles; selected character id persisted via `writePersistedLibraryCharacterFilterId` (shared persistence with library codex-style filters).
+
+**Advanced** toggle: hides advanced tab labels; if the active tab is advanced, selection resets to **feats**.
+
+### Not walked
+
+- Every expanded-row field renderer per tab.
+- Guest vs signed-in gate differences (if any) on codex hooks line-by-line.
+
+### Same job, different behavior
+
+- screen-behavior-note:codex-public-read-only-vs-admin-codex-editor: **`/codex`** is **read-only** reference UI; **`/admin/codex`** edits the same **`codex_*`** tables via modals/spreadsheet (`updateCodexDoc`)—same data, different job.
+- screen-behavior-note:codex-vs-library-publishable-entities: **`/codex`** is feats/skills/species/parts/properties/equipment reference; **`/library`** holds user/official **powers, techniques, armaments, creatures**—split called out in `codex/page.tsx` header comment.
+- screen-behavior-note:codex-species-public-vs-my-user-species: **Realms Codex → Species** shows **codex** species; **My Codex → Species** shows **`useUserSpecies`** with edit opening **Species Creator**—not **Admin → Official Library → Species** (`official_species`).
+- screen-behavior-note:codex-my-species-vs-species-creator-save: Edits from My Codex species rows navigate to **`/species-creator`**; saves happen on the creator, not inline on `/codex`.
+- screen-behavior-note:codex-my-equipment-empty-points-library: **My Codex → Equipment** is an **`EmptyState`** directing users to **Library** for custom equipment—not a second equipment editor.
+- screen-behavior-note:codex-feats-skills-character-filter-shared-persistence: **CharacterFilter** on feats/skills (and related codex tabs) persists the selected character id using the same helper as library character filtering—filter choice survives navigation.
+- screen-behavior-note:codex-advanced-collapse-resets-tab: Turning off **Advanced** while on an advanced tab **forces active tab back to feats**.
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:codex-my-non-species-tabs-placeholder: In **My Codex**, tabs other than **Species** (and the equipment message state) render **`CodexMyCodexEmpty`**—no user codex content UI yet except custom species list.
+- screen-behavior-note:codex-no-save-on-browse-page: **Realms Codex** tabs do not expose create/delete/save controls on `/codex` itself—all reference browsing only.
 
 ## Unused exports outside game and calculators
 
