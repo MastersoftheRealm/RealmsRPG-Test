@@ -41,7 +41,7 @@ Stack: Next.js App Router, React, Tailwind, Supabase (no Prisma), Vercel. Repo `
 
 ### Review
 
-1. The reviewer is a different agent with a different prompt from the writer. It uses the checklist in `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` and reads the same sources as the writer.
+1. The reviewer runs `/audit` (`.cursor/commands/audit.md`): a different agent and prompt from the writer. Rules compliance is the checklist in `src/docs/ai/ARCHITECTURE_CONSTITUTION.md`. The command is the critic procedure; this file does not restate it.
 2. The reviewer **runs** the repro test and checks CI; reading the diff alone is not enough.
 3. Only correctness, security, data-safety and checklist failures block. Anything else is a note; it becomes a ClickUp task only if Kadin or Collin chooses.
 4. **PATCH veto.** If the reviewer judges the change a PATCH (whatever the writer labelled it), it does not merge unless Kadin explicitly accepts it as a patch in his own comment on the PR ("I accept this as a PATCH because …"). An agent relaying his acceptance does not count.
@@ -53,9 +53,7 @@ Stack: Next.js App Router, React, Tailwind, Supabase (no Prisma), Vercel. Repo `
 For high-risk work that cannot wait for Collin. **Only Kadin invokes it**, in his own comment on the ClickUp task or PR, saying why it cannot wait. An agent never invokes it or suggests that it applies. Every step below is required; none is waived.
 
 1. **Brief for Kadin before any code.** Plain English, no jargon: what exists now, what is wrong, two or more options with tradeoffs and risks (including "do nothing yet"), and a recommendation. Kadin picks the option; that is his product decision, recorded on the task.
-2. **Independent senior review, adversarial, twice.** A separate session and prompt from the writer, on `grok-4.7-high` (never `-fast`). It does not see the writer's justification. If that review finds the task crosses systems, stop and split the task. Do not jump to a bigger model to finish a wide task.
-   - **Plan pass (before Kadin decides):** gets the task, Kadin's intent and the brief's options, and surveys the code itself. It challenges the plan: is the root cause real, are the assumptions accurate, is an option over-engineered or over-simplified, what forks, duplicates or dead code would it create or leave? Its challenge is appended to the brief unedited.
-   - **Implementation pass:** gets Kadin's intent and decision, the diff, CI results and the preview URL, **not** the writer's PR description, survey or reasoning. It traces the root cause itself before reading the diff, then grades the checklist in `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` and labels the result REAL FIX or PATCH. The PATCH veto applies.
+2. **Independent senior review, adversarial, twice.** Run `/audit` (`.cursor/commands/audit.md`) for the plan pass and again for the implementation pass. Model, what it may read, and the challenge are in that command. If that review finds the task crosses systems, stop and split the task. Do not jump to a bigger model to finish a wide task. The PATCH veto applies to the implementation pass.
 3. **Stricter proof**, all linked in the PR:
    - a test that fails before and passes after (no "not feasible" exemption);
    - the repro run on the Vercel preview deploy, with steps and the observed result;
@@ -138,4 +136,4 @@ One fact, one place. Other docs link; they do not restate.
 
 ## Models
 
-Never use a slug ending in `-fast`. Writer: `composer-2.5`, one system, scope tight enough to survey. Reviewer and fallback senior review: `grok-4.7-high`, a separate session, without the writer's justification. If the task crosses systems, stop and split it. If High misses inside that same scope, use `grok-4.7-xhigh` or a larger context on the same model, and note it on the task. Do not start Claude or GPT. Do not redo the same bug on the same model.
+Never use a slug ending in `-fast`. Writer: `composer-2.5`, one system, scope tight enough to survey. Critic (`/audit`): the other of `grok-4.7-high` and `composer-2.5` — never the writer, never `-fast` (`.cursor/commands/audit.md`). If the task crosses systems, stop and split it. If High misses inside that same scope, use `grok-4.7-xhigh` or a larger context on the same model, and note it on the task. Do not start Claude or GPT. Do not redo the same bug on the same model.
