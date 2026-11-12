@@ -2154,7 +2154,7 @@ Every non-test file under `src/lib/game` and `src/lib/calculators` is already re
 ### Not read line by line
 
 - Health, energy, and cost formulas in the section above are read through that pass’s scope. Skill helpers in `formulas.ts` after innate energy and `skill-allocation.ts` cost helpers are in **Skill and allocation math** below.
-- Character-check and path math is in **Character-check and path math** below. Creature creator budgets are in **Creature creator budget math**. Player proficiency caps and guided TP wiring are in **Player proficiency and training math**. Still unread: `crafting-utils.ts` past the four apply functions, `path-recommendation-index.ts`, `size-table.ts` past `calculateCarryingCapacityKg`, `targeted-defenses.ts` past `parseDefensesFromDescription`, `weapon-attack-ability.ts` past `meetsAbilityRequirement`, and `creator-cache.ts`.
+- Character-check and path math is in **Character-check and path math** below. Creature creator budgets are in **Creature creator budget math**. Player proficiency caps and guided TP wiring are in **Player proficiency and training math**. Defense targeting and weapon attack helpers are in **Defense targeting and weapon attack math**. Still unread: `crafting-utils.ts` past the four apply functions, `path-recommendation-index.ts`, `size-table.ts` past `calculateCarryingCapacityKg`, and `creator-cache.ts`.
 
 ---
 
@@ -2335,6 +2335,30 @@ Archetype proficiency caps on level change, player Training Point pool formula, 
 - `buildGuidedCharacterPayload` and `computeGuidedRequiredTrainingSpent` share `buildGuidedProficiencyInput`; save persists `buildRequiredProficiencies` rows, not the budget counter max.
 - `applyProficiencyGainForLevelUp` and `applyProficiencyLossForLevelDown` use the same `calculateProficiency` cap function the sheet uses for proficiency **pools** (points spent are separate fields on the character).
 - `resolveItemTrainingPoints` and path `validateLoadoutTrainingPoints` both use `calculateItemCosts` property TP; path validation sums the same way with quantity.
+
+## Defense targeting and weapon attack math (line-by-line pass)
+
+Power/technique “can target” defense lists and weapon attack ability / bonus resolution. Not crafting or size tables. Not a rules balance sign-off.
+
+### Read to the end
+
+- `normalizeTargetedDefenses`, `parseDefensesFromDescription`, `defensesFromPart`, `suggestTargetedDefenses`, `buildTargetedDefenseSelectOptions`, and format helpers in `src/lib/game/targeted-defenses.ts`. No point budgets. DB `defense` field wins; else description substring match (longest defense names first). Damage types map through `getPowerDamagePartInfo` then codex part `defenseFromPart`. Weapon/unarmed attack mode suggests **Evasion** only.
+- `deriveAbilityRequirementFromProperties`, `meetsAbilityRequirement`, property detectors, `defaultWeaponAbilityUtilized`, `deriveWeaponAbilityUtilized`, `getWeaponAttackAbility`, `getWeaponAttackBonusFromProperties`, and related exports in `src/lib/game/weapon-attack-ability.ts`. Requirement level is `1 + op_1_lvl` on named `* Requirement` properties. `meetsAbilityRequirement` compares that level to `abilities[key]`. Attack ability: `getWeaponAttackAbility` checks Finesse, Thrown, Reach, Heavy, then `resolveWeaponRangeDisplay` (non-Melee → Acuity, else Strength). `deriveWeaponAbilityUtilized` checks Finesse, Heavy only when `rangeType === 'ranged'`, else range-type default. Weapon attack bonus is `abilities[attackAbility] + martialProficiency` via `getWeaponAttackAbility`.
+- `getPowerDamagePartInfo` in `src/lib/calculators/mechanic-builder.ts` (damage-type → codex damage part name/id); already used in cost builds; read here only for targeted-defense damage routing.
+
+### Still not read line by line (defense / weapon scope)
+
+- None in this slice.
+
+### Disagreements
+
+- math-disagree-unclassified:weapon-derive-utilized-vs-get-attack-ability: **Second copy.** `deriveWeaponAbilityUtilized` (item creator “Ability utilized”) ignores Thrown and Reach, and applies Heavy only on ranged. `getWeaponAttackAbility` (sheet rolls, compact facts, attack bonus) treats Thrown, Reach, and Heavy (any range) before range display. The same property list can pick different abilities between creator dropdown default and sheet attack math.
+
+### Same math, separate copies
+
+- `defensesFromPart`, power/technique chip formatters, and library `part-display` all call the same targeted-defense helpers; no second parse implementation.
+- `getWeaponAttackBonusFromProperties` does not reimplement ability pick; it always calls `getWeaponAttackAbility`.
+- `meetsAbilityRequirement` is the single threshold check for derived requirements on weapons (no duplicate in this slice).
 
 ## Unused exports outside game and calculators
 

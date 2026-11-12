@@ -316,6 +316,10 @@ const PROFICIENCY_TRAINING_MATH_UNCLASSIFIED_IDS = [
   'guided-tp-bar-max-of-dedupe-vs-listed',
 ];
 
+const DEFENSE_WEAPON_MATH_UNCLASSIFIED_IDS = [
+  'weapon-derive-utilized-vs-get-attack-ability',
+];
+
 function mathSectionSlice(text, heading) {
   const start = text.indexOf(heading);
   if (start < 0) return null;
@@ -457,13 +461,38 @@ requireDisagreementTokens(
   'proficiency/training unclassified',
 );
 
+const defenseWeaponSection = mathSectionSlice(
+  indexText,
+  '## Defense targeting and weapon attack math',
+);
+if (!defenseWeaponSection) {
+  console.error('FEATURE_INDEX is missing the defense targeting and weapon attack math section.');
+  process.exit(2);
+}
+if (!defenseWeaponSection.includes('### Disagreements')) {
+  console.error('FEATURE_INDEX defense/weapon section is missing ### Disagreements.');
+  process.exit(2);
+}
+const defenseWeaponDisagreements = disagreementsSubsection(defenseWeaponSection);
+if (!defenseWeaponDisagreements) {
+  console.error('FEATURE_INDEX defense/weapon section has no ### Disagreements body.');
+  process.exit(2);
+}
+requireDisagreementTokens(
+  defenseWeaponDisagreements,
+  'math-disagree-unclassified',
+  DEFENSE_WEAPON_MATH_UNCLASSIFIED_IDS,
+  'defense/weapon unclassified',
+);
+
 const mathDisagreementCount =
   MATH_DISAGREEMENT_INTENTIONAL_IDS.length +
   MATH_DISAGREEMENT_BUG_IDS.length +
   SKILL_MATH_DISAGREEMENT_COPY_IDS.length +
   CHARACTER_PATH_MATH_UNCLASSIFIED_IDS.length +
   CREATURE_BUDGET_MATH_UNCLASSIFIED_IDS.length +
-  PROFICIENCY_TRAINING_MATH_UNCLASSIFIED_IDS.length;
+  PROFICIENCY_TRAINING_MATH_UNCLASSIFIED_IDS.length +
+  DEFENSE_WEAPON_MATH_UNCLASSIFIED_IDS.length;
 console.log(`FEATURE_INDEX math-disagreement check OK (${mathDisagreementCount} guarded lines).`);
 
 const gen = spawnSync(
