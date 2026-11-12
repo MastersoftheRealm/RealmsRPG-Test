@@ -30,7 +30,7 @@ Not checked, so silence here is not "it does not exist" and not "there is no for
 
 Export **names** for patterns, ui, hooks, and services are in [`FEATURE_INDEX_BARRELS.generated.md`](FEATURE_INDEX_BARRELS.generated.md). That generated file is not a list of what is used, and it does not read the other barrels.
 
-`scripts/validate-feature-index.js` checks that backticked `src/...` paths in this file exist. The same script fails if an app entry, a `src` barrel, a sibling missing from the six barrels above, a loose file directly under `src/lib`, or a non-test source file in the folders listed in that script is absent from this file. It also fails if the unused-export section does not match a production-import scan.
+`scripts/validate-feature-index.js` checks that backticked `src/...` paths in this file exist. The same script fails if an app entry, a `src` barrel, a sibling missing from the six barrels above, a loose file directly under `src/lib`, or a non-test source file in the folders listed in that script is absent from this file. It also fails if the unused-export section does not match a production-import scan, or if a guarded math-disagree line is dropped from the health / energy / cost section.
 
 ---
 
@@ -1968,14 +1968,7 @@ Every path below is a non-test source file. The checker fails if one is missing 
 
 ### Not read line by line
 
-- `src/lib/game/formulas.ts` past `calculateSubSkillBonusWithProficiency`. `calculateArchetypeProgression` and `getSkillBonusForFeatRequirement` were not read.
-- `src/lib/calculators/power-calc.ts` past `analyzePowerEnergy` and `formatPowerDamage`. `derivePlainPowerDisplay` was not read.
-- `src/lib/calculators/power-composition.ts` past `formatEnergyIntermediate`. `resolvePowerComposition` was not read.
-- `src/lib/calculators/technique-calc.ts` past the percentage loop in `calculateTechniqueCosts`. `deriveTechniqueDisplay` was not read.
-- `src/lib/calculators/item-calc.ts` past `deriveAgilityReductionFromProperties`. The range ladder and `deriveItemDisplay` were not read.
-- `src/lib/calculators/mechanic-builder.ts` past the start of `buildMechanicParts`.
-- `src/lib/calculators/power-energy-breakdown.ts` past the start of the combined-energy rows, and `item-cost-breakdown.ts` past the start of `buildItemAdvancedCalculationGroups`.
-- `src/lib/game/archetype-path.ts` past its export list, `character-legality.ts` past `abilityPointsSpent`, `innate-eligibility.ts` past its imports, `feat-requirements.ts` past the defense and speed calls, `path-recommendation-index.ts` past its imports, `path-validation.ts` past `validatePathDataForPublish`, `size-table.ts` past `calculateCarryingCapacityKg`, `targeted-defenses.ts` past `parseDefensesFromDescription`, and `weapon-attack-ability.ts` past `meetsAbilityRequirement`.
+- See **Health, energy, and cost math** for formula bodies. `src/lib/game/archetype-path.ts` past its export list and the other game siblings listed in the section below remain unread.
 
 ### Files
 
@@ -2141,10 +2134,10 @@ Every non-test file under `src/lib/game` and `src/lib/calculators` is already re
 ### Second implementations
 
 - Path type. `getArchetypeType` in `src/lib/game/formulas.ts` returns `powered-martial` when both proficiencies are above 0, and `none` when both are 0. `inferArchetypeCategoryFromCharacter` in `src/lib/game/archetype-edit.ts` returns `powered-martial` for that split, and `power` when both are 0, unless a stored type is set. `archetypeCategoryForEnergy` in `src/lib/game/calculations.ts` returns `undefined` when both are above 0 and no type is stored. They do not call each other.
-- Ability cost. `getAbilityIncreaseCost` uses `currentValue >= threshold`. The loop in `calculateAbilityScoreCost` uses `target > threshold`. The loop does not call `getAbilityIncreaseCost`.
+- Ability cost. `getAbilityIncreaseCost` and `calculateAbilityScoreCost` use different variables (`currentValue >= threshold` vs `target > threshold`) but each single-step cost matches. The loop does not call `getAbilityIncreaseCost`.
 - Player health and creature health. `calculateMaxHealth` adds a base health. `calculateCreatureMaxHealth` in `src/lib/game/encounter-utils.ts` does not. It does not call `calculateMaxHealth` or `calculateHealthEnergyPool`.
-- Item property sums. `calculateItemCosts` adds IP, training points, and currency. `analyzeItemCosts` in `src/lib/calculators/item-cost-breakdown.ts` adds IP and currency again and does not call `calculateItemCosts`.
-- Energy text. `formatEnergyNumber` calls `formatCost`. `formatEnergyIntermediate` in `src/lib/calculators/power-composition.ts` rounds to two decimals and does not call `formatEnergyNumber`.
+- Item property sums. `calculateItemCosts` and `analyzeItemCosts` agree on IP and property currency per row. See **Health, energy, and cost math** for the guarded disagreement list and for copies that match.
+- Energy text. `formatEnergyNumber` and `formatEnergyIntermediate` disagree on decimals; see `math-disagree:format-energy-intermediate-vs-format-energy-number` in that section.
 - Breakdown helpers. `nearlyEqual` is written in `power-energy-breakdown.ts`, `technique-energy-breakdown.ts`, `item-cost-breakdown.ts`, and `empowered-energy-breakdown.ts`. `formatOptionSuffix` is written in the power file and the technique file. They do not call each other.
 - Technique part energy. `getTechniquePartEnergyContribution` and the sum inside `calculateTechniqueCosts` are the same base-plus-options product. They do not call each other. `partEnergyContribution` in `technique-energy-breakdown.ts` is that sum again.
 
@@ -2160,16 +2153,56 @@ Every non-test file under `src/lib/game` and `src/lib/calculators` is already re
 
 ### Not read line by line
 
-- `src/lib/game/formulas.ts` past `calculateSubSkillBonusWithProficiency`.
-- `src/lib/calculators/power-calc.ts` past `analyzePowerEnergy` and `formatPowerDamage`.
-- `src/lib/calculators/power-composition.ts` past `formatEnergyIntermediate`.
-- `src/lib/calculators/technique-calc.ts` past the percentage loop in `calculateTechniqueCosts`.
-- `src/lib/calculators/item-calc.ts` past `deriveAgilityReductionFromProperties`.
-- `src/lib/calculators/mechanic-builder.ts` past the start of `buildMechanicParts`.
-- `src/lib/calculators/power-energy-breakdown.ts` past the start of the combined-energy rows, and `item-cost-breakdown.ts` past the start of `buildItemAdvancedCalculationGroups`.
+- Health, energy, and cost formulas read in the section above. Remaining unread lines there name `buildPowerPartsPayloadForCost`, composed-power display helpers, and weapon range ladders not needed for market currency.
 - `src/lib/game/archetype-path.ts`, `character-legality.ts` past `abilityPointsSpent`, `innate-eligibility.ts`, `feat-requirements.ts` past the defense and speed calls, `crafting-utils.ts` past the four apply functions, `path-recommendation-index.ts`, `path-validation.ts` past `validatePathDataForPublish`, `size-table.ts` past `calculateCarryingCapacityKg`, `targeted-defenses.ts` past `parseDefensesFromDescription`, `weapon-attack-ability.ts` past `meetsAbilityRequirement`, `archetype-display.ts` past `applyProficiencyLossForLevelDown`, and `creator-cache.ts`.
 
 ---
+
+
+## Health, energy, and cost math (line-by-line pass)
+
+This pass read the health, energy, and currency formulas in the code. It is still a partial read: some cost helpers that only build part lists or only format UI text were not opened line by line. This is a map of what the code does, not a rules balance sign-off.
+
+### Read to the end
+
+- `calculateMaxHealth` and `computeMaxHealthEnergy` in `src/lib/game/calculations.ts`. Player max health starts from a base (default 12 from rules), adds allocated health points, and adds vitality. If vitality is negative, it is added once. If vitality is zero or higher, it is multiplied by level. When vitality is the archetype ability, the code uses strength instead of vitality for that piece. The result is clamped at zero.
+- `calculateMaxEnergy`, `calculateMaxEnergyForArchetype`, and `resolveEnergyArchetypeAbility` in the same file. Max energy is archetype-ability score × level plus allocated energy points, clamped at zero. Powered-Martial uses the higher of the martial and power ability names unless the path type forces one side.
+- `calculateCreatureMaxHealth` and `calculateCreatureMaxEnergy` in `src/lib/game/encounter-utils.ts`. Creature max health has no player base health. It uses vitality × level when vitality is not negative, otherwise vitality once, plus hit points from the pool. Creature max energy uses the highest non-vitality primary ability × level plus energy points. It does not call the player functions.
+- `calculateHealthEnergyPool` and `allocateHealthEnergyPool` in `src/lib/game/formulas.ts`. The pool grows by level from rules defaults. Allocation puts pool points toward energy first, up to the highest power or technique energy cost, then puts the rest toward health.
+- `getAbilityIncreaseCost` and `calculateAbilityScoreCost` in `src/lib/game/formulas.ts`. One step from the current score uses `currentValue >= threshold` to pick cost 1 vs 2. The total-to-reach loop uses `target > threshold` for the same split. Each single-step cost matches between the two functions.
+- `calculateCreatureCurrency` in `src/lib/game/formulas.ts` and `computeStartingCurrency` in `src/lib/guided-creator/equipment-currency.ts`. Both use base 200 and growth 1.45 with `Math.ceil(base × growth ** (level − 1))` above level 1. They read constants from different files but the numbers match today.
+- `analyzePowerEnergy`, `calculatePowerCosts`, `finalizePowerEnergy`, and `derivePlainPowerDisplay` in `src/lib/calculators/power-calc.ts`. Power energy adds flat parts, multiplies percentage parts, and applies a duration equation: `(flat_normal × perc_all) + ((dur_all + 1) × flat_duration × perc_dur) − (flat_duration × perc_dur)`. Published energy rounds up once and can floor at 1 EN when there was positive flat energy.
+- `analyzeTechniqueEnergy` and `calculateTechniqueCosts` in `src/lib/calculators/technique-calc.ts` and `src/lib/calculators/technique-energy-breakdown.ts`. Technique energy is flat parts summed, then multiplied by the product of percentage parts. Both paths use the same math and call `finalizePowerEnergy` for publish.
+- `calculateEmpoweredTechniqueCosts` in `src/lib/calculators/empowered-technique-calc.ts`. It runs the power and technique cost functions, multiplies only the technique percentage-part product into the power raw energy, adds the full technique raw energy, then applies the same publish floor.
+- `formatEnergyIntermediate` in `src/lib/calculators/power-composition.ts` and `formatEnergyNumber` in `src/lib/calculators/power-energy-breakdown.ts` (via `formatCost` in `src/lib/game/creator-constants.ts`). Both format intermediate numbers for breakdown UIs; see disagreements.
+- `resolvePowerComposition` in `src/lib/calculators/power-composition.ts` through its return. Composed power energy sums shared chassis energy, variant extras, choice max, modify sums, randomize face averages, and reverse drawback discounts, then calls `finalizeCompositionEnergy` (same floor as plain powers).
+- `calculateItemCosts`, `analyzeItemMarketCurrency`, `resolveItemMarketPricing`, and `deriveItemDisplay` in `src/lib/calculators/item-calc.ts`. Item points and property currency sum base plus option × level per property. Market currency picks a rarity band from total IP, then `band_low × (1 + 0.125 × property currency sum)`, clamps to the band min and max, then floors for display.
+- `analyzeItemCosts` and `buildItemAdvancedCalculationGroups` in `src/lib/calculators/item-cost-breakdown.ts`. Breakdown lines repeat the same per-property IP and currency sums as `calculateItemCosts`; totals add rarity and rounded-down market currency.
+- `getSkillBonusForFeatRequirement` and `calculateArchetypeProgression` in `src/lib/game/formulas.ts` through their returns. Feat skill checks rebuild sub-skill and base-skill bonuses from codex rows. Archetype progression sets innate pools, thresholds, and bonus feat slots from proficiencies and milestone choices.
+- `buildMechanicParts` in `src/lib/calculators/mechanic-builder.ts` through the action-type branch. It builds mechanic part payloads; energy math still runs through `analyzePowerEnergy` on those payloads.
+- `computePartTrainingPoints` in `src/lib/calculators/part-training-points.ts`. Training points round base plus option products up once per part; power and technique share the same function.
+
+### Still not read line by line (health / energy / cost scope)
+
+- `buildPowerPartsPayloadForCost` in `src/lib/calculators/power-calc.ts`. It decides which saved parts feed `calculatePowerCosts`.
+- `powerCompositionEnergyLines`, `deriveComposedPowerDisplay`, and `formatPowerCompositionSummary` in `src/lib/calculators/power-composition.ts`. Display text after `resolvePowerComposition`.
+- Weapon range ladder helpers in `src/lib/calculators/item-calc.ts` after `deriveAgilityReductionFromProperties` except where `deriveItemDisplay` calls market pricing.
+- Innate energy summing helpers at the end of `src/lib/game/formulas.ts` past `calculateArchetypeProgression` except where already named above.
+
+### Disagreements
+
+Two copies doing the same job. These IDs are required; dropping a line makes `scripts/validate-feature-index.js` exit 2.
+
+- math-disagree:player-vs-creature-max-health: `calculateMaxHealth` adds a player base health (default 12) and can swap vitality for strength when vitality is the archetype ability. `calculateCreatureMaxHealth` never adds that base and always uses creature vitality. Same vitality×level shape when vitality is not negative, but totals differ whenever base health or the archetype swap applies.
+- math-disagree:player-vs-creature-max-energy: `calculateMaxEnergyForArchetype` picks the path’s archetype ability (or the higher of two on Powered-Martial). `calculateCreatureMaxEnergy` uses the highest non-vitality primary score only. A creature with high vitality but lower other scores can get a different max energy than a player with the same numbers.
+- math-disagree:power-energy-vs-technique-energy: `analyzePowerEnergy` splits flat, percentage, and duration parts with the duration extra equation. `analyzeTechniqueEnergy` only does flat sum × percentage product with no duration branch. They are not interchangeable: the same part list would not yield the same energy on both sides.
+- math-disagree:format-energy-intermediate-vs-format-energy-number: `formatEnergyIntermediate` rounds to two decimals and builds its own minus sign. `formatEnergyNumber` uses `formatCost`, which rounds to three decimals and strips trailing zeros. The same number can show different text in composition notes versus creator breakdowns.
+
+### Same math, separate copies
+
+- `calculateItemCosts` and `analyzeItemCosts` sum the same IP and property currency per row. Breakdown does not add training points; chip TP still comes from `trainingPointsForItemPropertyRef`.
+- `getTechniquePartEnergyContribution`, the loop inside `calculateTechniqueCosts`, and `partEnergyContribution` in `technique-energy-breakdown.ts` use the same base-plus-three-options energy product.
+- `calculateCreatureCurrency` and `computeStartingCurrency` use the same growth formula and the same 200 / 1.45 defaults, stored in different constant imports.
 
 ## Unused exports outside game and calculators
 
@@ -2628,7 +2661,7 @@ No production file imports these names. A test import does not count. The file t
 
 This index is not finished. These were not opened file by line:
 
-- The bodies named under "Not read line by line" above and in the earlier sections. That includes creator, encounter, campaign, admin, codex, library, sheet, auth, and styleguide files, and the formula and calculator bodies named in this section.
+- The bodies named under "Not read line by line" above and in the earlier sections. That includes creator, encounter, campaign, admin, codex, library, sheet, auth, and styleguide files, and the formula helpers still listed under health / energy / cost math.
 - The barrel-gap files under `src/hooks`, `src/services`, and `src/stores` were not re-read line by line. Their unused exports are named.
 
 No `src/app` folder still has a non-test source file that is missing from this index. This file is still a map of files and copies. It is not a re-check of how every screen behaves.

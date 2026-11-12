@@ -289,6 +289,47 @@ if (missingNotes.length || staleNotes.length) {
 }
 console.log(`FEATURE_INDEX unused-export check OK (${foundUnused.length} exports).`);
 
+const MATH_DISAGREEMENT_IDS = [
+  'player-vs-creature-max-health',
+  'player-vs-creature-max-energy',
+  'power-energy-vs-technique-energy',
+  'format-energy-intermediate-vs-format-energy-number',
+];
+
+function mathDisagreementSection(text) {
+  const start = text.indexOf('## Health, energy, and cost math');
+  if (start < 0) return null;
+  const rest = text.slice(start);
+  const next = rest.indexOf('\n## ', 10);
+  return next < 0 ? rest : rest.slice(0, next);
+}
+
+const mathSection = mathDisagreementSection(indexText);
+if (!mathSection) {
+  console.error('FEATURE_INDEX is missing the health/energy/cost math section.');
+  process.exit(2);
+}
+if (!mathSection.includes('### Disagreements')) {
+  console.error('FEATURE_INDEX math section is missing ### Disagreements.');
+  process.exit(2);
+}
+if (!mathSection.includes('### Read to the end')) {
+  console.error('FEATURE_INDEX math section is missing ### Read to the end.');
+  process.exit(2);
+}
+const disagStart = mathSection.indexOf('### Disagreements');
+const afterDisag = mathSection.slice(disagStart);
+const disagEnd = afterDisag.indexOf('\n### ', 10);
+const disagreements = disagEnd < 0 ? afterDisag : afterDisag.slice(0, disagEnd);
+for (const id of MATH_DISAGREEMENT_IDS) {
+  const token = `math-disagree:${id}:`;
+  if (!disagreements.includes(token)) {
+    console.error('FEATURE_INDEX missing required math disagreement:', id);
+    process.exit(2);
+  }
+}
+console.log(`FEATURE_INDEX math-disagreement check OK (${MATH_DISAGREEMENT_IDS.length} disagreements).`);
+
 const gen = spawnSync(
   process.execPath,
   [path.join(__dirname, 'generate-feature-index-barrels.js'), '--check'],
