@@ -30,7 +30,7 @@ Not checked, so silence here is not "it does not exist" and not "there is no for
 
 Export **names** for patterns, ui, hooks, and services are in [`FEATURE_INDEX_BARRELS.generated.md`](FEATURE_INDEX_BARRELS.generated.md). That generated file is not a list of what is used, and it does not read the other barrels.
 
-`scripts/validate-feature-index.js` checks that backticked `src/...` paths in this file exist. The same script fails if an app entry, a `src` barrel, a sibling missing from the six barrels above, a loose file directly under `src/lib`, or a non-test source file in the folders listed in that script is absent from this file. It also fails if the unused-export section does not match a production-import scan, or if a guarded `math-disagree-intentional`, `math-disagree-bug`, or `math-disagree-copy` line is dropped from the health / energy / cost or skill / allocation sections.
+`scripts/validate-feature-index.js` checks that backticked `src/...` paths in this file exist. The same script fails if an app entry, a `src` barrel, a sibling missing from the six barrels above, a loose file directly under `src/lib`, or a non-test source file in the folders listed in that script is absent from this file. It also fails if the unused-export section does not match a production-import scan, or if a guarded `math-disagree-intentional`, `math-disagree-bug`, or `math-disagree-copy` line is dropped from the health / energy / cost, skill / allocation, or character-check / path math sections.
 
 ---
 
@@ -1968,7 +1968,7 @@ Every path below is a non-test source file. The checker fails if one is missing 
 
 ### Not read line by line
 
-- See **Health, energy, and cost math** for formula bodies. `src/lib/game/archetype-path.ts` past its export list and the other game siblings listed in the section below remain unread.
+- See **Health, energy, and cost math** for formula bodies. Character-check and path files listed under **Not read line by line** below are mapped in **Character-check and path math** when read.
 
 ### Files
 
@@ -2154,7 +2154,7 @@ Every non-test file under `src/lib/game` and `src/lib/calculators` is already re
 ### Not read line by line
 
 - Health, energy, and cost formulas in the section above are read through that pass’s scope. Skill helpers in `formulas.ts` after innate energy and `skill-allocation.ts` cost helpers are in **Skill and allocation math** below.
-- `src/lib/game/archetype-path.ts`, `character-legality.ts` past `abilityPointsSpent`, `innate-eligibility.ts`, `feat-requirements.ts` past the defense and speed calls, `crafting-utils.ts` past the four apply functions, `path-recommendation-index.ts`, `path-validation.ts` past `validatePathDataForPublish`, `size-table.ts` past `calculateCarryingCapacityKg`, `targeted-defenses.ts` past `parseDefensesFromDescription`, `weapon-attack-ability.ts` past `meetsAbilityRequirement`, `archetype-display.ts` past `applyProficiencyLossForLevelDown`, and `creator-cache.ts`.
+- Character-check and path math for `character-legality.ts`, `feat-requirements.ts`, `path-validation.ts`, `archetype-path.ts`, and `innate-eligibility.ts` is in **Character-check and path math** below. `crafting-utils.ts` past the four apply functions, `path-recommendation-index.ts`, `size-table.ts` past `calculateCarryingCapacityKg`, `targeted-defenses.ts` past `parseDefensesFromDescription`, `weapon-attack-ability.ts` past `meetsAbilityRequirement`, `archetype-display.ts` past `applyProficiencyLossForLevelDown`, and `creator-cache.ts`.
 
 ---
 
@@ -2251,6 +2251,35 @@ Skill bonus, skill point totals, and allocation spend in `src/lib/game/formulas.
 - `getHighestLinkedAbilityKey` and private `getHighestLinkedAbility` use the same max scan; one returns the key, one the value.
 - `buildGuidedSkillMeta` in `skill-reconcile.ts` and the `skillMeta` map in `skills-allocation-page.tsx` both set `isSubSkill` from `base_skill_id !== undefined`; spend loops match when given the same catalog.
 - `calculateGuidedSkillPointBudget` uses the same `calculateSimpleSkillPointsSpent` and the same `extraSkillPoints` rule (`speciesSkillIds.has('0') ? 1 : 0`) as the allocation page; it fixes level at `1` for guided creation, which matches `skills-step.tsx`.
+
+## Character-check and path math (line-by-line pass)
+
+Save legality budgets, feat requirement checks, path publish validation, innate power eligibility, and archetype path JSON parsing. Not creator UI screens. Not a rules balance sign-off.
+
+### Read to the end
+
+- `findCharacterLegalityViolations` and helpers in `src/lib/game/character-legality.ts` through `evaluateCharacterLegalityForSave`. Ability budget: `calculateAbilityPoints` vs sum of `calculateAbilityScoreCost` per ability. Skill budget: `getTotalSkillPoints(level, 'character', budgetRules)` vs `skillPointsSpentFloor` (sums nonnegative `skill_val` / allocation vals plus `defenseIncreaseCost ×` defense skill totals; **not** proficiency or stepped value costs). Archetype feat cap: `calculateMaxArchetypeFeats` with `normalizeArchetypeChoices`. Character feat cap: `calculateMaxCharacterFeats`. Health–energy pool: `calculateHealthEnergyPool(level, 'PLAYER', …)` vs `healthPoints + energyPoints` (allocatable pool only; player base health is separate). Feat rows: `checkFeatRequirements` when catalog loaded.
+- `checkFeatRequirements`, `getMaxQualifiedFeatLevel`, `applyTempModifiersForFeatRequirements`, and mappers in `src/lib/game/feat-requirements.ts`. Level: `lvl_req` or else `2 × featLevel` for ranks above 1. Ability reqs use raw abilities; defense reqs use `calculateDefenses(abilities, defenseVals)`. Skill reqs call `getSkillBonusForFeatRequirement`. Speed uses `calculateSpeed`. Leveled feats use `getPreviousLevelFeatId` and `ownsFeatOrUpgrade`. Sheet warning compares base vs temp-adjusted characters through the same `checkFeatRequirements`.
+- `validatePathDataForPublish`, `validateLevel1Skills`, `validateLoadoutTrainingPoints`, and `validateInnatePowerRecommendations` in `src/lib/game/path-validation.ts`. Governance caps from `LAYER1_GOVERNANCE`. Loadout TP: sum `resolveItemTrainingPoints(id) × max(1, quantity)` per flattened loadout entry vs `trainingPointLimit`. Innate list delegates to `validateRecommendedInnatePowers`.
+- `parseArchetypePathData`, `collectPathRecommendedIds`, guidance helpers, and codex write validators in `src/lib/game/archetype-path.ts` through the return of each export in that file. Parsing only; no progression formulas beyond finite number checks on recommended abilities.
+- `validateRecommendedInnatePowers`, `evaluateInnatePowerEligibility`, `snapshotOfficialPowerForInnate`, `getLevel1InnateBudget`, duration and action predicates, and filter helpers in `src/lib/game/innate-eligibility.ts`. L1 innate budget from `calculateArchetypeProgression(1, martialProf, powerProf)` with path or default proficiencies. Per-power energy from `derivePowerDisplay` / `resolvePowerComposition` (composed variants re-call `resolvePowerComposition` for priced energy). Threshold and duration checks are local predicates; energy sum compared to `budget.innateEnergy`.
+
+### Still not read line by line (character-check / path scope)
+
+- None in this slice. `buildMixedSpeciesSkillOptions` and other ancestry UI remain outside this pass.
+
+### Disagreements
+
+- math-disagree-intentional:legality-skill-spent-floor-vs-allocation-spent: **Intentional.** Server legality uses `skillPointsSpentFloor` (rank sums + defense spend). Creators and the sheet use `calculateSimpleSkillPointsSpent` (proficiency cost, past-cap steps, species rules). The file comment labels skill spend a deliberate **lower bound**; over-budget warnings can fire late compared to true allocation spend.
+
+### Same math, separate copies
+
+- `abilityPointsSpent` and `buildSuggestedAbilityArray` both use `calculateAbilityScoreCost`; legality does not reimplement ability step costs.
+- `findCharacterLegalityViolations` and `calculateGuidedSkillPointBudget` both call `getTotalSkillPoints` with rules when computing skill **budget** (legality at character level; guided at 1).
+- `validateRecommendedInnatePowers` and sheet innate pools both source threshold/energy from `calculateArchetypeProgression` via `getLevel1InnateBudget` or `calculateArchetypeProgression` directly; path validation passes path L1 proficiencies into that budget.
+- `checkFeatRequirements` is the single feat gate for legality, sheet, creator, and codex filter; `getMaxQualifiedFeatLevel` loops the same function.
+- Innate path validation energy uses live `derivePowerDisplay` / `resolvePowerComposition`, same family as `calculatePowerCosts` (contrast `math-disagree-bug:innate-remaining-uses-stored-cost` on the sheet budget field).
+- `validateLoadoutTrainingPoints` uses `flattenLoadoutEntries` only; no second TP sum formula in this slice.
 
 ## Unused exports outside game and calculators
 

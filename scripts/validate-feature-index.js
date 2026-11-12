@@ -304,6 +304,10 @@ const SKILL_MATH_DISAGREEMENT_COPY_IDS = [
   'guided-skill-total-omits-rules-on-getTotalSkillPoints',
 ];
 
+const CHARACTER_PATH_MATH_INTENTIONAL_IDS = [
+  'legality-skill-spent-floor-vs-allocation-spent',
+];
+
 function mathSectionSlice(text, heading) {
   const start = text.indexOf(heading);
   if (start < 0) return null;
@@ -377,10 +381,32 @@ requireDisagreementTokens(
   'skill copy',
 );
 
+const characterMathSection = mathSectionSlice(indexText, '## Character-check and path math');
+if (!characterMathSection) {
+  console.error('FEATURE_INDEX is missing the character-check and path math section.');
+  process.exit(2);
+}
+if (!characterMathSection.includes('### Disagreements')) {
+  console.error('FEATURE_INDEX character/path math section is missing ### Disagreements.');
+  process.exit(2);
+}
+const characterDisagreements = disagreementsSubsection(characterMathSection);
+if (!characterDisagreements) {
+  console.error('FEATURE_INDEX character/path math section has no ### Disagreements body.');
+  process.exit(2);
+}
+requireDisagreementTokens(
+  characterDisagreements,
+  'math-disagree-intentional',
+  CHARACTER_PATH_MATH_INTENTIONAL_IDS,
+  'character/path intentional',
+);
+
 const mathDisagreementCount =
   MATH_DISAGREEMENT_INTENTIONAL_IDS.length +
   MATH_DISAGREEMENT_BUG_IDS.length +
-  SKILL_MATH_DISAGREEMENT_COPY_IDS.length;
+  SKILL_MATH_DISAGREEMENT_COPY_IDS.length +
+  CHARACTER_PATH_MATH_INTENTIONAL_IDS.length;
 console.log(`FEATURE_INDEX math-disagreement check OK (${mathDisagreementCount} guarded lines).`);
 
 const gen = spawnSync(
