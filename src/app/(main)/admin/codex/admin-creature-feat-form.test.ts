@@ -40,6 +40,25 @@ describe('computeNextCreatureFeatFormState', () => {
     expect(next.base_feat_id).toBe('36');
     expect(next.lvl_req).toBe(3);
   });
+
+  it('adds the tier after the highest existing level when the source row is still level 1', () => {
+    const family = [
+      { id: '36', feat_lvl: 1 },
+      { id: '37', feat_lvl: 2, base_feat_id: '36' },
+    ];
+    const next = computeNextCreatureFeatFormState(
+      {
+        ...EMPTY_CREATURE_FEAT_FORM,
+        name: 'Speedy',
+        feat_lvl: 1,
+        lvl_req: 3,
+      },
+      '36',
+      family,
+    );
+    expect(next.feat_lvl).toBe(3);
+    expect(next.base_feat_id).toBe('36');
+  });
 });
 
 describe('creatureFeatFormToSavePayload', () => {
