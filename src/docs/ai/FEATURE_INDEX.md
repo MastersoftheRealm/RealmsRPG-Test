@@ -2578,6 +2578,51 @@ A person searches and filters (tabs All / Active / Completed, type chips combat/
 
 - screen-behavior-note:encounter-id-redirect-no-type-page: `/encounters/[id]` never renders play; only redirects or error. A stored `encounter.type` with no matching play route file would `replace` to a missing page (redirect does not validate against known types).
 
+## Library screens (behavior pass)
+
+Single hub **`/library`** (`library/page.tsx`) for **My Library** (signed-in user rows) and **Realms Library** (official published rows). Legacy **`/browse`** redirects here. **Partial pass:** tab row components and `UserLibraryEntityTabShell` read; pattern `Official*List` implementations not line-by-line. **Admin** official-library editor (`/admin/public-library`) out of scope.
+
+### Screens walked (read through save/delete wiring)
+
+**Library hub** — one page, two scopes via `SegmentedControl` (`libraryMode` `'my' | 'public'`). Boot: `?view=realms` → start on Realms; guests always **public** (no toggle). `TabNavigation` entity tabs (counts from `useUserLibraryCounts` vs `useOfficialLibraryCounts` + `libraryTabCount`). Header **Create** link follows active tab (`TABS[].createHref`) — only in **My Library**, not guest, not Realms browse. Deletes run on the page via `DeleteConfirmModal` + type-specific `useDelete*` hooks.
+
+| Tab id | My Library component | Realms (`LibraryPublicContent`) | Typical save / edit |
+|--------|----------------------|----------------------------------|---------------------|
+| `powers` | `LibraryPowersTab` | `PublicPowersList` + `OfficialPowerList` | User: `/api/user/library/...`, edit → `/power-creator?edit=`; add official: `useAddOfficialToLibrary('powers')` |
+| `techniques` | `LibraryTechniquesTab` `mode="standard"` | `PublicTechniquesList` standard | Same pattern; empowered uses separate API type |
+| `empowered-techniques` | `LibraryTechniquesTab` `mode="empowered"` | `PublicTechniquesList` `mode="empowered"` | `useUserEmpoweredTechniques` / `useAddOfficialToLibrary('empowered-techniques')` |
+| `weapons` / `armor` / `shields` | `LibraryItemsTab` per `armamentKind` | `PublicItemsList` per kind | User items API; create → `itemCreatorTypeHref(kind)`; official items fetched once as `'items'` then filtered |
+| `creatures` | `LibraryCreaturesTab` | `PublicCreaturesList` | Edit → `/creature-creator?edit=`; stat-block rows |
+| `enhanced` | `LibraryEnhancedTab` | *(tab hidden)* | `useEnhancedItems`; edit → `/crafting/{id}`; create CTA → `/crafting` |
+
+**My Library row actions** (most tabs): `UserLibraryEntityTabShell` — search/sort/filters, per-row **Edit**, **Delete** (delegates to page), **Duplicate** (`useLibraryDuplicateConfirm` + `useDuplicate*`), **Sync** when codex drift (`useLibraryEntitySync` → `saveToLibrary` patch). **Add to character** on several tabs via `LibraryAddToCharacterButton` + `useAddToCharacterFromLibrary`. Power tab can block **Create** when `isAtRoleQuota` for custom powers.
+
+**Realms Library row actions**: read-only lists for guests (`readOnly` → no Add button); signed-in users **Add to library** → confirm modal → `useAddOfficialToLibrary` copies official row into user library (then editable in My Library).
+
+**Species:** not a tab on `/library`. Custom species use **species creator** / My Codex flows elsewhere; official species are not browsed on this hub.
+
+### Screens not walked in this pass
+
+- `/admin/public-library` and other admin publish tools.
+- Full bodies of `OfficialPowerList`, `OfficialTechniqueList`, `OfficialItemList`, `OfficialCreatureList` in `components/patterns`.
+- **Crafting** save UI (enhanced tab only links in).
+- Codex species browse (separate product surface).
+
+### Same job, different behavior
+
+- screen-behavior-note:library-my-vs-realms-one-page-toggle: **My Library** and **Realms Library** are not separate routes; `library/page.tsx` swaps `LibraryPowersTab` (etc.) vs `LibraryPublicContent` from `resolvedLibraryMode`.
+- screen-behavior-note:library-guest-realms-read-only: Guests always see Realms lists with `readOnly` and `LibraryGuestNotice`; no scope toggle, no Create, Add prompts `LoginPromptModal`.
+- screen-behavior-note:library-enhanced-tab-my-only: **Enhanced Items** tab exists only in My Library (`TABS` filtered + state clamp from `enhanced` → `powers` if user switches to Realms).
+- screen-behavior-note:library-techniques-tab-empowered-dual-hook: Standard and **Empowered** are separate nav tabs but both use **`LibraryTechniquesTab`** with `mode` — only the matching `useUserTechniques` / `useUserEmpoweredTechniques` query is enabled.
+- screen-behavior-note:library-realms-add-official-vs-my-sync: Realms mode **adds** via `useAddOfficialToLibrary`. My mode **updates** user rows via creators, duplicate, or drift **sync** (`saveToLibrary` with `existingId`) — not the same as official add.
+- screen-behavior-note:library-creatures-tab-embeds-roll-log: Only **`LibraryCreaturesTab`** wraps the list in `RollProvider` and passes `afterList={<RollLog />}` on the entity shell; other My tabs do not embed a roll log on this page.
+- screen-behavior-note:library-enhanced-edit-via-crafting-route: **Enhanced** rows edit with `router.push('/crafting/{id}')`, not item or power creators; create CTA on that tab points to `/crafting`.
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:library-no-species-tab: There is no species tab on `/library`; species are not listed on this hub (codex / species creator instead).
+- screen-behavior-note:legacy-browse-alias-redirect: `/browse` does not render; permanent redirect to `/library` (same hub as Realms guest browse).
+
 ## Unused exports outside game and calculators
 
 No production file imports these names. A test import does not count. The file that exports the name may still call it. This is not a dead function unless nothing in that file calls it either. Next.js page, layout, route, proxy, and MDX conventions are not listed. `src/lib/game` and `src/lib/calculators` were not part of this search. The hook, service, and store files the barrels omit are imported by their own paths. The names below are the extra exports in those trees, not unused files.

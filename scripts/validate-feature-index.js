@@ -695,6 +695,48 @@ console.log(
   `FEATURE_INDEX encounter screen check OK (${ENCOUNTER_SCREEN_NOTE_IDS.length} notes).`,
 );
 
+const LIBRARY_SCREEN_NOTE_IDS = [
+  'library-my-vs-realms-one-page-toggle',
+  'library-guest-realms-read-only',
+  'library-enhanced-tab-my-only',
+  'library-techniques-tab-empowered-dual-hook',
+  'library-realms-add-official-vs-my-sync',
+  'library-creatures-tab-embeds-roll-log',
+  'library-enhanced-edit-via-crafting-route',
+  'library-no-species-tab',
+  'legacy-browse-alias-redirect',
+];
+
+const libraryScreensSection = mathSectionSlice(indexText, '## Library screens');
+if (!libraryScreensSection) {
+  console.error('FEATURE_INDEX is missing the library screens section.');
+  process.exit(2);
+}
+if (!libraryScreensSection.includes('### Same job, different behavior')) {
+  console.error('FEATURE_INDEX library section is missing ### Same job, different behavior.');
+  process.exit(2);
+}
+const libraryScreenBehaviorStart = libraryScreensSection.indexOf('### Same job, different behavior');
+const libraryScreenDeadStart = libraryScreensSection.indexOf('### Dead or unreachable paths');
+if (libraryScreenBehaviorStart < 0 || libraryScreenDeadStart < 0) {
+  console.error('FEATURE_INDEX library section missing behavior or dead-path headings.');
+  process.exit(2);
+}
+const libraryScreenBehaviorBody = libraryScreensSection.slice(
+  libraryScreenBehaviorStart,
+  libraryScreenDeadStart,
+);
+const libraryScreenDeadBody = libraryScreensSection.slice(libraryScreenDeadStart);
+for (const id of LIBRARY_SCREEN_NOTE_IDS) {
+  const inBehavior = libraryScreenBehaviorBody.includes(`screen-behavior-note:${id}:`);
+  const inDead = libraryScreenDeadBody.includes(`screen-behavior-note:${id}:`);
+  if (!inBehavior && !inDead) {
+    console.error('FEATURE_INDEX missing required library screen note:', id);
+    process.exit(2);
+  }
+}
+console.log(`FEATURE_INDEX library screen check OK (${LIBRARY_SCREEN_NOTE_IDS.length} notes).`);
+
 const gen = spawnSync(
   process.execPath,
   [path.join(__dirname, 'generate-feature-index-barrels.js'), '--check'],
