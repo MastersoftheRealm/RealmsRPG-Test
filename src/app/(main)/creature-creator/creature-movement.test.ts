@@ -7,6 +7,7 @@ import {
   movementAfterWalkLevel,
   movementAfterSwimLevel,
   movementDropdownFeats,
+  movementSectionPointTotal,
   nextSpeedType,
   readWalkLevel,
 } from './creature-movement';
@@ -74,5 +75,11 @@ describe('creature movement section helpers', () => {
     const withSwim = movementAfterSwimLevel(withFly, 1);
     expect(withSwim.movementTypes).toContain('Swim Half');
     expect(nextSpeedType(withSwim.movementTypes)).toBeNull();
+  });
+
+  it('counts implied control feat costs from movementTypes for legacy creatures', () => {
+    expect(
+      movementSectionPointTotal({ ...initialState, movementTypes: ['Speedy'], feats: [] }, catalog),
+    ).toBe(0.5);
   });
 });

@@ -299,16 +299,22 @@ export function movementControlFeatIdsFromNames(movementTypes: readonly string[]
 }
 
 export function movementSectionPointTotal(
-  creature: Pick<CreatureState, 'feats'>,
+  creature: Pick<CreatureState, 'feats' | 'movementTypes'>,
   catalog: readonly CodexCreatureFeat[],
 ): number {
   const dropdownIds = new Set(movementDropdownFeats(catalog).map((feat) => String(feat.id)));
   const byId = new Map(catalog.map((feat) => [String(feat.id), feat]));
+  const onCreature = new Set(creature.feats.map((feat) => String(feat.id)));
   let sum = 0;
   for (const feat of creature.feats) {
     const id = String(feat.id);
     if (!isCreatureMovementControlFeatId(id) && !dropdownIds.has(id)) continue;
     const points = feat.points ?? byId.get(id)?.points ?? 0;
+    if (Number.isFinite(points)) sum += points;
+  }
+  for (const id of movementControlFeatIdsFromNames(creature.movementTypes)) {
+    if (onCreature.has(id)) continue;
+    const points = byId.get(id)?.points ?? 0;
     if (Number.isFinite(points)) sum += points;
   }
   return sum;
