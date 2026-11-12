@@ -81,10 +81,17 @@ const FOLDER_FILE_DIRS = [
   'src/lib/library',
   'src/lib/auth',
   'src/lib/guided-creator',
+  'src/lib/character-sheet',
+  'src/lib/crafting',
+  'src/lib/creator',
+  'src/lib/encounter',
+  'src/lib/rolls',
+  'src/lib/rules',
+  'src/lib/tabletop',
+  'src/lib/validation',
+  'src/lib/constants',
+  'src/lib/utils',
 ];
-
-/** Single files outside those folders. */
-const EXTRA_REQUIRED_FILES = ['src/lib/password-policy.ts'];
 
 function walk(dir, acc = []) {
   for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -145,7 +152,14 @@ function requiredFeatureIndexPaths(root) {
       folderFiles.push(toRel(root, abs));
     }
   }
-  return [...appEntries, ...rootEntries, ...barrels, ...gaps, ...folderFiles, ...EXTRA_REQUIRED_FILES];
+  const looseLibFiles = fs
+    .readdirSync(path.join(root, 'src/lib'), { withFileTypes: true })
+    .filter((ent) => ent.isFile())
+    .map((ent) => ent.name)
+    .filter((name) => /\.(ts|tsx)$/.test(name))
+    .filter((name) => !name.endsWith('.d.ts') && !/\.(test|spec)\./.test(name))
+    .map((name) => `src/lib/${name}`);
+  return [...appEntries, ...rootEntries, ...barrels, ...gaps, ...folderFiles, ...looseLibFiles];
 }
 
 const indexText = fs.readFileSync(indexPath, 'utf8');

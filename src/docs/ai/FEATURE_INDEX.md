@@ -14,12 +14,13 @@ Checked on this pass:
 - Every non-test `.ts` / `.tsx` file under `src/components/rolls`, `rules`, `tabletop`, `layout`, `landing`, `about`, `auth`, `legal`, `onboarding`, `providers`, and `src/app/(main)/my-account/_components`. The pairs in that section were opened. The files listed there as not read line by line were not.
 - Every non-test `.ts` / `.tsx` file under `src/components/ui` and `src/app/(main)/admin/codex`. The pairs in that section were opened. The files listed there as not read line by line were not.
 - Every non-test `.ts` / `.tsx` file under the other `src/app/(main)/admin` screens, `src/lib/codex`, `src/lib/character`, `src/lib/library`, `src/lib/auth`, `src/lib/guided-creator`, and `src/lib/password-policy.ts`. The pairs in that section were opened. The files listed there as not read line by line were not.
+- Every non-test `.ts` / `.tsx` file under `src/lib/character-sheet`, `crafting`, `creator`, `encounter`, `rolls`, `rules`, `tabletop`, `validation`, `constants`, and `utils`, plus `src/lib/admin.ts` and the other loose files directly under `src/lib/`. The pairs in that section were opened. The files listed there as not read line by line were not.
 - A static import walk from app entries. A file loaded only by a variable `import()` would not show up. `knip` was not run, so unused exports inside a file that is imported were not measured.
 
 Not checked, so silence here is not "it does not exist" and not "there is no fork":
 
 - Behavior of calculators, saves, or admin editors.
-- The other `src/lib` folders and loose files named at the bottom of this index.
+- The `src/lib` folders still named at the bottom of this index, and the unread parts of `src/lib/game` and `src/lib/calculators`.
 - Pairs of files that are not named in a fork section below.
 
 Export **names** for patterns, ui, hooks, and services are in [`FEATURE_INDEX_BARRELS.generated.md`](FEATURE_INDEX_BARRELS.generated.md). That generated file is not a list of what is used, and it does not read the other barrels.
@@ -1576,12 +1577,234 @@ Every path below is a non-test source file. The checker fails if one is missing 
 
 ---
 
+## Sheet, crafting, creator, encounter, rolls, rules, tabletop, and loose lib files
+
+150 non-test `.ts` / `.tsx` files. `src/lib/api-input-validation-scan.ts` and `src/lib/api-mutation-guard-route-scan.ts` are imported only by tests. Every other file in this slice has a production importer.
+
+### Second implementations
+
+- Password length. `loginSchema` and `registerSchema` in `src/lib/validation/schemas.ts` each use `.min(6, 'Password must be at least 6 characters')`. They do not import `PASSWORD_MIN_LENGTH`.
+- Username length. `registerSchema` uses `.max(24)`. `src/lib/username-rules.ts` has a private `USERNAME_MAX_LEN` of `24`. The schema also calls `validateUsername`. The `24` on the schema is not that constant.
+- Search escaping. `buildAdminUsersIlikePattern` in `src/lib/admin-users-search.ts` repeats the `/[%_\\]/` replace from `escapeIlikePattern` in `src/lib/ilike-pattern.ts`. It does not import that function.
+- Official table names. `OFFICIAL_TABLE_BY_TYPE` is written in `src/lib/official-library-server.ts` and again in `src/lib/official-library-get-payload.ts`. The payload file imports the fetch functions and not the map. `TABLE_MAP` in `src/app/api/official/[type]/route.ts` is the same five table names. That route was not read past the map. `OFFICIAL_LIBRARY_COUNT_TABLES` uses the key `empoweredTechniques`. `USER_LIBRARY_COLUMNAR_TABLES` uses `empowered-techniques`.
+- Description length. `CODEX_DESC_MAX_LENGTH` in `src/lib/codex-columnar-keys.ts` and `CREATOR_DESCRIPTION_MAX_LENGTH` in `src/lib/creator/creator-text-limits.ts` are both `10000`. Neither file imports the other. `CODEX_NAME_MAX_LENGTH` is `200`. The character and creator name max is `100`.
+- Redirect paths. `buildCanonicalAuthRedirectUrl` and `buildAuthRedirectUrl` call `sanitizeRedirectPath` unless `sanitizeUserRedirect` is false. That branch only checks that the string starts with `/` and does not contain `://`.
+- Admin session. `requireLiveAdminSession` calls `isAdmin`. It does not call `requireAdminSession`.
+- Dice. `rollDie` is `Math.floor(Math.random() * max) + 1`. The initiative helpers in `encounter-view-helpers.ts` and `add-combatant-modal.tsx` hardcode `20`, add acuity, and do not call `rollDie`.
+- Ids. `generateId` and `generateRollId` each build a string from `Math.random`. They do not call each other.
+- Guest sign-in. The character migration and the encounter migration each keep their own flag and their own in-flight slot. Both call `beginSingleFlight`. They do not call each other. The upload bodies were not read line by line.
+- Ability labels. `formatAbilityLabel` capitalizes the first character. It does not read `ABILITY_FILTER_OPTIONS`. `ABILITY_OPTIONS` and `ABILITY_FILTER_OPTIONS` are two lists of the same six keys.
+
+### Calls a shared component
+
+- `creator-text-limits.ts` sets `CREATOR_NAME_MAX_LENGTH` to `CHARACTER_NAME_MAX_LENGTH` and calls `clampTextToLength` and `insertTextToLength`. `campaign-roll-limits.ts` uses `CREATOR_NAME_MAX_LENGTH`.
+- `getDefaultRolePolicy` copies the fields from `ROLE_LIMITS`.
+- `rollParsedDamage` calls `rollDie` and `parseDamageRollGroups`.
+- `official-library-get-payload.ts` calls `fetchOfficialColumnarRows` and `fetchOfficialSpeciesRows`. `character-view-enrichment-server.ts` imports the collectors from `character-view-enrichment.ts`. `library-columnar.ts` imports the key lists from `library-columnar-keys.ts`.
+- `src/lib/constants/site-copy.ts` re-exports `src/lib/constants/copy`. `src/lib/data-enrichment.ts` re-exports the `data-enrichment` folder. That folder was not opened. `src/lib/validation/index.ts` re-exports `schemas.ts`. `assertCodexAdminBodyShapes` calls `codexAdminCamelBodyShapeError`.
+- `src/lib/utils/index.ts` does not re-export `motion.ts` or `stabilize-vertical-scroll.ts`. Toast imports the motion file by path. The guided catalog list imports the scroll helper by path. The barrel also omits `rowMatchesNormalizedId` and `resolveNormalizedRefLabel`.
+
+### Not read line by line
+
+- `src/lib/constants/copy/about-copy.ts`, `guided-creator-copy.ts`, `privacy-copy.ts`, and `terms-copy.ts`.
+- `src/lib/api-validation.ts`, `library-selectable-builders.ts`, `library-sync.ts`, `library-columnar.ts` past its imports, `library-persisted-contract.ts` past its imports, `codex-persisted-contract.ts` past its imports, `proficiencies.ts`, `leveled-feats.ts`, `id-constants.ts`, and `rate-limit.ts`.
+- `character-view-enrichment.ts` past its header, `character-view-enrichment-server.ts` past its imports, and `src/lib/encounter/character-resource-sync.ts` past the suppress functions.
+- `src/lib/tabletop/server.ts` and `src/lib/tabletop/tokens.ts`.
+- `src/lib/utils/duration.ts` and `src/lib/utils/string.ts`.
+- `src/lib/codex-columnar-keys.ts` past the two length constants, and the two API scan files past their headers.
+- `src/lib/crafting/crafting-session-persist.ts` past the first schemas.
+
+
+### `src/lib/character-sheet`
+
+- `src/lib/character-sheet/add-modal-existing-ids.ts`
+
+### `src/lib/crafting`
+
+- `src/lib/crafting/crafting-session-persist.ts`
+
+### `src/lib/creator`
+
+- `src/lib/creator/creator-edit-query.ts`
+- `src/lib/creator/creator-empty-overwrite.ts`
+- `src/lib/creator/creator-missing-name-message.ts`
+- `src/lib/creator/creator-save-as-copy.ts`
+- `src/lib/creator/creator-save-error.ts`
+- `src/lib/creator/creator-text-limits.ts`
+- `src/lib/creator/creator-unsaved-guard.ts`
+- `src/lib/creator/private-library-name-save.ts`
+
+### `src/lib/encounter`
+
+- `src/lib/encounter/character-resource-sync.ts`
+- `src/lib/encounter/unique-campaign-characters.ts`
+
+### `src/lib/rolls`
+
+- `src/lib/rolls/campaign-roll-attribution.ts`
+- `src/lib/rolls/campaign-roll-limits.ts`
+- `src/lib/rolls/die.ts`
+- `src/lib/rolls/modifier-label.ts`
+- `src/lib/rolls/parse-damage-string.ts`
+- `src/lib/rolls/personal-roll-log-storage.ts`
+- `src/lib/rolls/roll-log-layout.ts`
+- `src/lib/rolls/roll-parsed-damage.ts`
+
+### `src/lib/rules`
+
+- `src/lib/rules/rulebook-callout.ts`
+- `src/lib/rules/rulebook-metadata.ts`
+- `src/lib/rules/rulebook-search-load.ts`
+- `src/lib/rules/rulebook-search.ts`
+- `src/lib/rules/rulebook.ts`
+
+### `src/lib/tabletop`
+
+- `src/lib/tabletop/grid.ts`
+- `src/lib/tabletop/server.ts`
+- `src/lib/tabletop/tokens.ts`
+- `src/lib/tabletop/visibility.ts`
+
+### `src/lib/validation`
+
+- `src/lib/validation/index.ts`
+- `src/lib/validation/schemas.ts`
+
+### `src/lib/constants`
+
+- `src/lib/constants/ability-effect-blurbs.ts`
+- `src/lib/constants/copy/about-copy.ts`
+- `src/lib/constants/copy/archetype-category-copy.ts`
+- `src/lib/constants/copy/auth-copy.ts`
+- `src/lib/constants/copy/footer-copy.ts`
+- `src/lib/constants/copy/guided-creator-copy.ts`
+- `src/lib/constants/copy/index.ts`
+- `src/lib/constants/copy/landing-copy.ts`
+- `src/lib/constants/copy/legal-copy-types.ts`
+- `src/lib/constants/copy/nav-copy.ts`
+- `src/lib/constants/copy/onboarding-copy.ts`
+- `src/lib/constants/copy/path-ability-copy.ts`
+- `src/lib/constants/copy/privacy-copy.ts`
+- `src/lib/constants/copy/resources-copy.ts`
+- `src/lib/constants/copy/rules-copy.ts`
+- `src/lib/constants/copy/shared-copy.ts`
+- `src/lib/constants/copy/terms-copy.ts`
+- `src/lib/constants/creator-layer-governance.ts`
+- `src/lib/constants/site-copy.ts`
+- `src/lib/constants/skills.ts`
+
+### `src/lib/utils`
+
+- `src/lib/utils/action-type.ts`
+- `src/lib/utils/cn.ts`
+- `src/lib/utils/defined.ts`
+- `src/lib/utils/duration.ts`
+- `src/lib/utils/exact-optional.ts`
+- `src/lib/utils/id.ts`
+- `src/lib/utils/index.ts`
+- `src/lib/utils/motion.ts`
+- `src/lib/utils/normalize-id.ts`
+- `src/lib/utils/number.ts`
+- `src/lib/utils/object.ts`
+- `src/lib/utils/stabilize-vertical-scroll.ts`
+- `src/lib/utils/string.ts`
+
+### Loose files directly under `src/lib/`
+
+- `src/lib/admin-users-search.ts`
+- `src/lib/admin.ts`
+- `src/lib/api-client.ts`
+- `src/lib/api-error.ts`
+- `src/lib/api-input-validation-guard.ts`
+- `src/lib/api-input-validation-scan.ts`
+- `src/lib/api-mutation-guard-route-scan.ts`
+- `src/lib/api-mutation-guard.ts`
+- `src/lib/api-validation.ts`
+- `src/lib/attack-mode.ts`
+- `src/lib/auth-email-site-origin.ts`
+- `src/lib/auth-errors.ts`
+- `src/lib/auth-redirect.ts`
+- `src/lib/campaign-invite-code.ts`
+- `src/lib/campaign-invite.ts`
+- `src/lib/campaign-roster.ts`
+- `src/lib/character-library-section-visibility.ts`
+- `src/lib/character-library-tab-visibility.ts`
+- `src/lib/character-list-columns.ts`
+- `src/lib/character-persistence-server.ts`
+- `src/lib/character-save.ts`
+- `src/lib/character-view-enrichment-server.ts`
+- `src/lib/character-view-enrichment.ts`
+- `src/lib/choice-trait.ts`
+- `src/lib/codex-archetype-path-save-validation.ts`
+- `src/lib/codex-changelog-display.ts`
+- `src/lib/codex-changelog.ts`
+- `src/lib/codex-columnar-keys.ts`
+- `src/lib/codex-mutation-validation.ts`
+- `src/lib/codex-persisted-contract.ts`
+- `src/lib/core-rules-server.ts`
+- `src/lib/creator-save-handoff.ts`
+- `src/lib/creature-chip-tier.ts`
+- `src/lib/crop-image.ts`
+- `src/lib/data-enrichment.ts`
+- `src/lib/empty.ts`
+- `src/lib/ensure-user-profile.ts`
+- `src/lib/entity-image-enrich-server.ts`
+- `src/lib/entity-image-url.ts`
+- `src/lib/guest-character-migration.ts`
+- `src/lib/guest-character-storage.ts`
+- `src/lib/guest-encounter-migration.ts`
+- `src/lib/guest-encounter-storage.ts`
+- `src/lib/guest-migration-lock.ts`
+- `src/lib/id-constants.ts`
+- `src/lib/ilike-pattern.ts`
+- `src/lib/level-up-guide.ts`
+- `src/lib/leveled-feats.ts`
+- `src/lib/library-columnar-keys.ts`
+- `src/lib/library-columnar.ts`
+- `src/lib/library-image-write.ts`
+- `src/lib/library-mutation-validation.ts`
+- `src/lib/library-persisted-contract.ts`
+- `src/lib/library-selectable-builders.ts`
+- `src/lib/library-sync.ts`
+- `src/lib/list-row-image.ts`
+- `src/lib/modal-close-click.ts`
+- `src/lib/modal-unmount-click-guard.ts`
+- `src/lib/network-error.ts`
+- `src/lib/official-library-get-payload.ts`
+- `src/lib/official-library-server.ts`
+- `src/lib/onboarding-preferences.ts`
+- `src/lib/owner-library-for-view.ts`
+- `src/lib/placeholder-art.ts`
+- `src/lib/portrait-storage.ts`
+- `src/lib/portrait.ts`
+- `src/lib/power-variant-chips.ts`
+- `src/lib/proficiencies.ts`
+- `src/lib/profile-display-name.ts`
+- `src/lib/rate-limit.ts`
+- `src/lib/realms-image-consumers.ts`
+- `src/lib/realms-images-list-cursor.ts`
+- `src/lib/realms-images-server.ts`
+- `src/lib/realms-images.ts`
+- `src/lib/role-limits.ts`
+- `src/lib/role-policy.ts`
+- `src/lib/role-quota-messages.ts`
+- `src/lib/roll-timestamp.ts`
+- `src/lib/safe-redirect.ts`
+- `src/lib/sheet-tour-highlight.ts`
+- `src/lib/site-url.ts`
+- `src/lib/skill-extra-descriptions.ts`
+- `src/lib/species-skill-migration.ts`
+- `src/lib/stepper-value-memory.ts`
+- `src/lib/username-rules.ts`
+- `src/lib/validate-image.ts`
+
+---
+
 ## Left for a later pass
 
 Still not opened file by file:
 
-- These `src/lib` folders: `ancestry`, `api`, `character-sheet`, `chip`, `constants`, `crafting`, `creator`, `data-enrichment`, `detail-option`, `encounter`, `glr`, `observability`, `rolls`, `routes`, `rules`, `security`, `server`, `supabase`, `tabletop`, `tooltips`, `ui`, `utils`, and `validation`.
-- Loose files directly under `src/lib/` other than `password-policy.ts`. `src/lib/admin.ts` was not opened. `src/lib/creator/creator-text-limits.ts` was seen only where it imports `CHARACTER_NAME_MAX_LENGTH`.
+- These `src/lib` folders: `ancestry`, `api`, `chip`, `data-enrichment`, `detail-option`, `glr`, `observability`, `routes`, `security`, `server`, `supabase`, `tooltips`, and `ui`.
 - `src/lib/game/` and `src/lib/calculators/` beyond the sibling lists already in this index, except the two skill-allocation loops and `CONDITIONS` named above.
 - Unused exports inside files that something already imports.
 - Line-by-line comparison of files in `src/components/patterns`, `src/components/character-sheet`, and `src/components/guided-creator` that are not named in that fork section.
