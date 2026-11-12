@@ -372,22 +372,22 @@ describe('library ref resolution (powers)', () => {
     expect(row?.description).toBe('official zero via id');
   });
 
-  it('uses library image_id ahead of the creature snapshot ref (names differ)', () => {
+  it('uses library image_url ahead of the creature snapshot ref (names differ)', () => {
     const user = {
       id: 'img-1',
       docId: 'img-1',
       name: 'Imaged',
       description: '',
       parts: [],
-      image_id: 'lib-img-42',
+      image_url: 'https://library/cover.png',
     } satisfies LibraryPower;
     const creature = {
       ...creatureBase,
-      powers: [{ id: 'img-1', name: 'Snapshot Label', image_id: 'snap-img-99' }],
+      powers: [{ id: 'img-1', name: 'Snapshot Label', image_url: 'https://snapshot/old.png' }],
     } satisfies CreatureData;
     const row = buildPowersForDisplay(creature, [user], [], [])[0];
-    expect(row?.thumbnail).toBeDefined();
-    expect(String(row?.thumbnail?.src ?? '')).not.toContain('snap-img-99');
+    expect(row?.thumbnail?.src).toContain('library/cover.png');
+    expect(String(row?.thumbnail?.src ?? '')).not.toContain('snapshot/old');
   });
 
   it('does not look up by ref id zero (master truthy refId)', () => {
