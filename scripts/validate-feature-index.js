@@ -929,6 +929,52 @@ console.log(
   `FEATURE_INDEX admin screen check OK (${ADMIN_SCREEN_NOTE_IDS.length} notes).`,
 );
 
+const CRAFTING_SCREEN_NOTE_IDS = [
+  'crafting-guest-no-cloud-sessions',
+  'crafting-autosave-session-json-not-enhanced-row',
+  'crafting-creator-layout-vs-item-creator-page',
+  'crafting-item-modal-vs-full-library-picker',
+  'crafting-rules-from-core-rules-not-hardcoded',
+  'crafting-hub-planned-in-in-progress-tab',
+  'library-enhanced-cta-vs-hub-start',
+  'library-enhanced-edit-not-session-id',
+  'crafting-new-redirects-to-hub',
+];
+
+const craftingScreensSection = mathSectionSlice(indexText, '## Crafting screens');
+if (!craftingScreensSection) {
+  console.error('FEATURE_INDEX is missing the crafting screens section.');
+  process.exit(2);
+}
+if (!craftingScreensSection.includes('### Same job, different behavior')) {
+  console.error('FEATURE_INDEX crafting section is missing ### Same job, different behavior.');
+  process.exit(2);
+}
+const craftingScreenBehaviorStart = craftingScreensSection.indexOf(
+  '### Same job, different behavior',
+);
+const craftingScreenDeadStart = craftingScreensSection.indexOf('### Dead or unreachable paths');
+if (craftingScreenBehaviorStart < 0 || craftingScreenDeadStart < 0) {
+  console.error('FEATURE_INDEX crafting section missing behavior or dead-path headings.');
+  process.exit(2);
+}
+const craftingScreenBehaviorBody = craftingScreensSection.slice(
+  craftingScreenBehaviorStart,
+  craftingScreenDeadStart,
+);
+const craftingScreenDeadBody = craftingScreensSection.slice(craftingScreenDeadStart);
+for (const id of CRAFTING_SCREEN_NOTE_IDS) {
+  const inBehavior = craftingScreenBehaviorBody.includes(`screen-behavior-note:${id}:`);
+  const inDead = craftingScreenDeadBody.includes(`screen-behavior-note:${id}:`);
+  if (!inBehavior && !inDead) {
+    console.error('FEATURE_INDEX missing required crafting screen note:', id);
+    process.exit(2);
+  }
+}
+console.log(
+  `FEATURE_INDEX crafting screen check OK (${CRAFTING_SCREEN_NOTE_IDS.length} notes).`,
+);
+
 const gen = spawnSync(
   process.execPath,
   [path.join(__dirname, 'generate-feature-index-barrels.js'), '--check'],

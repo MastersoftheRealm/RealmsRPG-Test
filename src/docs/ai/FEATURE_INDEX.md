@@ -2812,6 +2812,60 @@ Admin hub at **`/admin`** (`admin/page.tsx`) links every tool below. **`admin/la
 - screen-behavior-note:admin-non-admin-direct-url-redirect: A signed-in **non-admin** who opens `/admin` or any child route is **redirected to `/`** by layout—no read-only admin preview.
 - screen-behavior-note:admin-changelogs-no-undo: **Changelogs** is audit-only; there is no “revert this edit” control on that page (fixes happen back in Codex, Official Library, or Core Rules).
 
+## Crafting screens (behavior pass)
+
+Crafting hub **`/crafting`** and session tool **`/crafting/[id]`**. Product area is marked **deferred** (`crafting/DEFERRED.md`); this pass only records current behavior, not fixes. **Partial pass:** `crafting-tool-derived.ts` math and every optional-modifier edge not line-by-line.
+
+### Screens walked
+
+**Crafting hub** — `crafting/page.tsx`. Lists the signed-in user’s sessions (`useCraftingSessions` → `GET /api/crafting` → `crafting_sessions`). **Start Crafting** creates a blank session (`useCreateCraftingSession` → `POST /api/crafting`) and navigates to `/crafting/{id}`. Tabs **All / In progress / Completed** filter by `status`; search filters `itemName`. Row open → tool page; delete → `useDeleteCraftingSession`. Guests see a sign-in banner but the page still renders; session APIs require auth.
+
+**Crafting tool** — `crafting/[id]/page.tsx` + `useCraftingToolPage`. Loads one session (`useCraftingSession` → `GET /api/crafting/[id]`). **Autosave:** debounced 2s `useSaveCraftingSession` → `PATCH /api/crafting/[id]` with `session.data` JSON. Uses `CreatorLayout` + sidebar (`CraftingSummarySidebar` / `CreatorSummaryPanel`).
+
+| Panel | Role |
+|--------|------|
+| `CraftingItemOptionsSection` | Pick item (modal), consumable/bulk/enhance/upgrade options, custom base item, power pick for enhanced |
+| `CraftingAdjustmentsSection` | DS modifier, extra successes/failures |
+| `CraftingRollsSection` | Per-session d20 rolls → `computeSkillRollResult` |
+| `CraftingOptionalRulesSection` | Optional rule sliders (`optionalModifiers`) |
+| `CraftingOutcomeCard` | Shown when `status === 'completed'` |
+
+**Item pick** — `CraftingItemSelectModal`: **Armaments** (user + Realms official items) and **Equipment** (user + codex equipment), `SourceFilter` All / My / Realms. Not powers, techniques, or creatures.
+
+**Rules & math** — `useGameRules()` → `rules.CRAFTING`; `computeCraftingRequirements`, tallies, and `calculateCraftingOutcome` in `crafting-utils` / helpers. `bootstrapCraftingSession` migrates older `multipleUseTableIndex` rows when rules load.
+
+**Complete** — Sidebar **Complete Crafting** → `handleComplete`: sets `status: 'completed'`, stores `outcome` on session, saves via PATCH. **Enhanced** crafts can then **Save to Library** in `CraftingOutcomeCard` → `useCreateEnhancedItem` (user **Enhanced** library rows, not another crafting session row). Potency upgrade path uses `useUpdateEnhancedItem` when `isUpgradePotency` is set on the session.
+
+**What saves where**
+
+| Action | Store |
+|--------|--------|
+| Session progress, rolls, options | `crafting_sessions.data` (Supabase) via `/api/crafting` |
+| Enhanced item from completed craft | User enhanced-items API via `createEnhanced` |
+| Potency update after upgrade craft | `updateEnhanced` on existing enhanced item id |
+
+### Screens not walked in this pass
+
+- `crafting-tool-derived.ts` and `crafting-utils.ts` formula walk-through (deferred product math review).
+- Every optional-modifier slider max-step branch.
+- Marketing routes (out of scope).
+- `crafting/DEFERRED.md` and root `DEFERRED.md` policy text (area flagged deferred only).
+
+### Same job, different behavior (deferred product notes)
+
+- screen-behavior-note:crafting-guest-no-cloud-sessions: **Hub** is reachable signed-out with a banner, but **list/create/save/delete** APIs return **401**—there is no guest-local crafting session store (deferred: unlike guest character sheets).
+- screen-behavior-note:crafting-autosave-session-json-not-enhanced-row: In-progress edits **autosave** the **`crafting_sessions`** JSON blob; **Save to Library** on the outcome card is a **separate** enhanced-item create after completion—not the same save path as `item-creator`.
+- screen-behavior-note:crafting-creator-layout-vs-item-creator-page: Tool uses **`CreatorLayout`** / summary sidebar like creators, but persistence is **session JSON**, not `useCreatorSave` → user armament row (deferred: overlapping chrome, different job than `/item-creator`).
+- screen-behavior-note:crafting-item-modal-vs-full-library-picker: **`CraftingItemSelectModal`** limits pickers to **armaments + codex/user equipment** with source filter—narrower than Library hub tabs or sheet **Add Library** flows (deferred scope).
+- screen-behavior-note:crafting-rules-from-core-rules-not-hardcoded: Requirements and outcomes read **`core_rules` / `CRAFTING`** through `useGameRules`, same category family as **Admin → Core Rules → Crafting** tab—not inline literals in the tool page.
+- screen-behavior-note:crafting-hub-planned-in-in-progress-tab: Tab **In progress** includes both **`in_progress` and `planned`** sessions; there is no dedicated **Planned** tab (deferred UX).
+- screen-behavior-note:library-enhanced-cta-vs-hub-start: **Library → Enhanced** empty/create CTA links **`/crafting`**; functionally the same entry as **Start Crafting** on the hub (two doors, one flow).
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:library-enhanced-edit-not-session-id: **Library `LibraryEnhancedTab` `onEdit`** navigates to **`/crafting/{enhancedItemId}`**, which is **not** a `crafting_sessions` id—the tool page shows session not found (404 API) unless ids collide by accident.
+- screen-behavior-note:crafting-new-redirects-to-hub: Legacy **`/crafting/new`** redirects to **`/crafting`** (`next.config.ts`); there is no separate “new session” page—**Start Crafting** creates the session and opens `/crafting/[id]`.
+
 ## Unused exports outside game and calculators
 
 No production file imports these names. A test import does not count. The file that exports the name may still call it. This is not a dead function unless nothing in that file calls it either. Next.js page, layout, route, proxy, and MDX conventions are not listed. `src/lib/game` and `src/lib/calculators` were not part of this search. The hook, service, and store files the barrels omit are imported by their own paths. The names below are the extra exports in those trees, not unused files.
