@@ -2866,6 +2866,56 @@ Crafting hub **`/crafting`** and session tool **`/crafting/[id]`**. Product area
 - screen-behavior-note:library-enhanced-edit-not-session-id: **Library `LibraryEnhancedTab` `onEdit`** navigates to **`/crafting/{enhancedItemId}`**, which is **not** a `crafting_sessions` id—the tool page shows session not found (404 API) unless ids collide by accident.
 - screen-behavior-note:crafting-new-redirects-to-hub: Legacy **`/crafting/new`** redirects to **`/crafting`** (`next.config.ts`); there is no separate “new session” page—**Start Crafting** creates the session and opens `/crafting/[id]`.
 
+## Marketing and public entry screens (behavior pass)
+
+Public marketing copy and account sign-in under `(main)/` (with site header/footer) and `(auth)/` (branded auth shell). **Partial pass:** individual rulebook MDX chapter bodies not read; header nav dropdown internals only as needed for links.
+
+### Pages walked
+
+**Home `/`** — `page.tsx` renders landing sections: `HeroSection`, `UniquenessSection`, `HowItWorksSection`, `SecondaryDiscoverySection`, `CommunitySection`. **Read-only marketing** (no form saves). CTAs link into app routes: `/characters/new`, `/characters`, `/power-creator`, `/item-creator`, `/rules`, Discord (`DISCORD_URL`). `HeroSection` swaps copy when signed-in user has characters: primary → **`/characters`**, secondary → **`/characters/new`**.
+
+**About `/about`** — Carousel + creator note; CTAs to `/characters/new`, `/rules`, Discord.
+
+**Core Rulebook `/rules`** — Welcome chapter in-app (`RulebookShell`, search/outline). Top link opens external Google Doc (`RULES_COPY.viewUrl`). Chapter pages **`/rules/[slug]`** render MDX via `getRulebookChapterComponent`; pager prev/next.
+
+**Resources `/resources`** — Static copy; one working download (`/Realms Character Sheet Alpha.pdf` in `public/`). “Coming soon” list is text only (no links).
+
+**Privacy `/privacy`**, **Terms `/terms`** — `LegalDocumentBody` + copy constants; read-only legal prose.
+
+**Footer** (`Footer` full on `(main)` layout) — Groups from `FOOTER_COPY`: Play (`/characters`, `/campaigns`, `/encounters`), Learn (`/about`, `/rules`, `/resources`), Create (creator routes), Legal (`/terms`, `/privacy`, mailto contact). Discord CTA external. **Auth shell** uses `Footer variant="minimal"` (privacy, terms, contact, discord only).
+
+**Login `/login`** — Email/password via `loginWithPasswordAction`, optional remember-me, Turnstile captcha, Google OAuth (`signInWithGoogleOAuth`). **`returnTo`** / sessionStorage redirect via `resolvePostAuthRedirectPath`. On success may run guest character/encounter migration helpers. Links: `/forgot-password`, `/register`.
+
+**Register `/register`** — `signUpAction` + `createUserProfileAction`, terms acceptance, captcha, Google OAuth, email-confirmation flow with resend. Links: `/login`.
+
+**Forgot password `/forgot-password`** — `requestPasswordResetAction` (email); no account session created.
+
+**Reset password `/reset-password`** — Requires Supabase recovery **session** from email link; `updateUser({ password })`, then redirect `/login?message=password_updated`. Without session shows expired state → `/forgot-password`.
+
+**What saves (account entry only)** — Supabase Auth session/cookies via login, register, OAuth, and password reset; profile row via register action. Marketing/legal pages do not write game data.
+
+### Public pages not walked
+
+- Each `/rules/[slug]` chapter content line-by-line.
+- `/my-account` (signed-in settings — app shell, not home/footer marketing).
+- `/codex`, `/library`, and other app hubs (covered in other behavior passes).
+- `dev/styleguide`.
+- Header account menu beyond login/register links.
+
+### Same job, different behavior
+
+- screen-behavior-note:marketing-hero-returning-vs-new-cta-targets: Signed-in users with characters get **Continue** → **`/characters`**; new visitors get **Create Character** → **`/characters/new`** only.
+- screen-behavior-note:marketing-rules-in-app-vs-google-doc: **`/rules`** hosts the on-site rulebook; the same page also links the **Google Doc manuscript** (`RULES_COPY.viewUrl`)—two ways to read rules, not one canonical UI.
+- screen-behavior-note:marketing-footer-full-vs-auth-minimal-legal: **Full footer** lists Play/Learn/Create plus legal; **auth minimal footer** repeats **privacy/terms/contact/discord** only—duplicate legal entry points, fewer app links.
+- screen-behavior-note:marketing-home-about-footer-duplicate-ctas: **Home**, **About**, **footer Create/Learn**, and **secondary discovery** repeat links to **`/characters/new`**, creators, and **`/rules`**—same destinations, multiple marketing surfaces.
+- screen-behavior-note:marketing-login-returnTo-guest-migration: **Login** honors **`returnTo`** (and stored redirect) after auth; may migrate **guest characters/encounters** into the account—marketing entry that changes app data on success.
+- screen-behavior-note:marketing-resources-coming-soon-no-links: **Resources** “Coming soon” bullets are **labels only**—no hrefs (not broken links; placeholders).
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:marketing-rules-welcome-slug-redirects-index: Visiting **`/rules/welcome-to-realms`** **permanent-redirects** to **`/rules`**—welcome exists only on the index URL, not as a separate chapter route.
+- screen-behavior-note:marketing-reset-password-without-session: **`/reset-password`** without a valid recovery session shows **Reset Link Expired**—form is unreachable until the user completes the email flow from **`/forgot-password`**.
+
 ## Unused exports outside game and calculators
 
 No production file imports these names. A test import does not count. The file that exports the name may still call it. This is not a dead function unless nothing in that file calls it either. Next.js page, layout, route, proxy, and MDX conventions are not listed. `src/lib/game` and `src/lib/calculators` were not part of this search. The hook, service, and store files the barrels omit are imported by their own paths. The names below are the extra exports in those trees, not unused files.

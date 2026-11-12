@@ -975,6 +975,56 @@ console.log(
   `FEATURE_INDEX crafting screen check OK (${CRAFTING_SCREEN_NOTE_IDS.length} notes).`,
 );
 
+const MARKETING_SCREEN_NOTE_IDS = [
+  'marketing-hero-returning-vs-new-cta-targets',
+  'marketing-rules-in-app-vs-google-doc',
+  'marketing-footer-full-vs-auth-minimal-legal',
+  'marketing-home-about-footer-duplicate-ctas',
+  'marketing-login-returnTo-guest-migration',
+  'marketing-resources-coming-soon-no-links',
+  'marketing-rules-welcome-slug-redirects-index',
+  'marketing-reset-password-without-session',
+];
+
+const marketingScreensSection = mathSectionSlice(
+  indexText,
+  '## Marketing and public entry screens',
+);
+if (!marketingScreensSection) {
+  console.error('FEATURE_INDEX is missing the marketing and public entry screens section.');
+  process.exit(2);
+}
+if (!marketingScreensSection.includes('### Same job, different behavior')) {
+  console.error(
+    'FEATURE_INDEX marketing section is missing ### Same job, different behavior.',
+  );
+  process.exit(2);
+}
+const marketingScreenBehaviorStart = marketingScreensSection.indexOf(
+  '### Same job, different behavior',
+);
+const marketingScreenDeadStart = marketingScreensSection.indexOf('### Dead or unreachable paths');
+if (marketingScreenBehaviorStart < 0 || marketingScreenDeadStart < 0) {
+  console.error('FEATURE_INDEX marketing section missing behavior or dead-path headings.');
+  process.exit(2);
+}
+const marketingScreenBehaviorBody = marketingScreensSection.slice(
+  marketingScreenBehaviorStart,
+  marketingScreenDeadStart,
+);
+const marketingScreenDeadBody = marketingScreensSection.slice(marketingScreenDeadStart);
+for (const id of MARKETING_SCREEN_NOTE_IDS) {
+  const inBehavior = marketingScreenBehaviorBody.includes(`screen-behavior-note:${id}:`);
+  const inDead = marketingScreenDeadBody.includes(`screen-behavior-note:${id}:`);
+  if (!inBehavior && !inDead) {
+    console.error('FEATURE_INDEX missing required marketing screen note:', id);
+    process.exit(2);
+  }
+}
+console.log(
+  `FEATURE_INDEX marketing screen check OK (${MARKETING_SCREEN_NOTE_IDS.length} notes).`,
+);
+
 const gen = spawnSync(
   process.execPath,
   [path.join(__dirname, 'generate-feature-index-barrels.js'), '--check'],
