@@ -20,7 +20,7 @@ Checked on this pass:
 - Every non-test `.ts` / `.tsx` file under public codex, library (including `components` and `hooks`), character detail, the characters list, the campaigns list (including the tabletop page), campaign detail outside `_components`, auth, encounter mixed and skill, the profile-picture upload route, and the styleguide. The pairs in that section were opened. The files listed there as not read line by line were not.
 - Every non-test `.ts` / `.tsx` file under `src/hooks`, `src/services`, and `src/stores`. The pairs in that section were opened. The files listed there as not read line by line were not. The barrel-gap names already in this index were not re-read.
 - The game and calculator sibling files the barrels do not re-export, and the formula and cost files named in that section. The pairs in that section were opened. The files listed there as not read line by line were not.
-- A static import walk from app entries. A file loaded only by a variable `import()` would not show up. `knip` was not run, so unused exports inside a file that is imported were not measured.
+- Exported names outside `src/lib/game` and `src/lib/calculators`. A production import, including `import()`, counts. A test import does not. The names are in the unused-export section.
 
 Not checked, so silence here is not "it does not exist" and not "there is no fork":
 
@@ -30,7 +30,7 @@ Not checked, so silence here is not "it does not exist" and not "there is no for
 
 Export **names** for patterns, ui, hooks, and services are in [`FEATURE_INDEX_BARRELS.generated.md`](FEATURE_INDEX_BARRELS.generated.md). That generated file is not a list of what is used, and it does not read the other barrels.
 
-`scripts/validate-feature-index.js` checks that backticked `src/...` paths in this file exist. The same script fails if an app entry, a `src` barrel, a sibling missing from the six barrels above, a loose file directly under `src/lib`, or a non-test source file in the folders listed in that script is absent from this file.
+`scripts/validate-feature-index.js` checks that backticked `src/...` paths in this file exist. The same script fails if an app entry, a `src` barrel, a sibling missing from the six barrels above, a loose file directly under `src/lib`, or a non-test source file in the folders listed in that script is absent from this file. It also fails if the unused-export section does not match a production-import scan.
 
 ---
 
@@ -2171,12 +2171,464 @@ Every non-test file under `src/lib/game` and `src/lib/calculators` is already re
 
 ---
 
+## Unused exports outside game and calculators
+
+No production file imports these names. A test import does not count. The file that exports the name may still call it. This is not a dead function unless nothing in that file calls it either. Next.js page, layout, route, proxy, and MDX conventions are not listed. `src/lib/game` and `src/lib/calculators` were not part of this search. The hook, service, and store files the barrels omit are imported by their own paths. The names below are the extra exports in those trees, not unused files.
+
+### Only a test imports this
+
+- `src/app/(main)/admin/codex/admin-codex-unsaved-leave.ts`: `codexEditorWarning`, `CodexEditorExit` (type)
+- `src/app/(main)/admin/codex/admin-property-form.ts`: `normalizePropertyType`
+- `src/app/(main)/admin/codex/codex-column-map.ts`: `columnarDbColumns`
+- `src/app/(main)/admin/codex/codex-spreadsheet-helpers.ts`: `rowDataWithoutId`
+- `src/app/(main)/admin/core-rules/core-rules-conditions.ts`: `LEVELED_CONDITION_NAMES`
+- `src/app/(main)/admin/core-rules/core-rules-number.ts`: `CORE_RULES_NUMBER_REQUIRED`, `CORE_RULES_NUMBER_SERVER_NEGATIVE`, `CORE_RULES_NUMBER_TOO_LARGE`, `CORE_RULES_NUMBER_WHOLE`
+- `src/app/(main)/admin/core-rules/core-rules-unsaved-leave.ts`: `CORE_RULES_EDITOR_DISCARD_CONFIRM`, `CORE_RULES_EDITOR_DISCARD_DESCRIPTION`, `CORE_RULES_TAB_DISCARD_CONFIRM`
+- `src/app/(main)/admin/sources/actions.ts`: `addAdminCodexSourceMembership`
+- `src/app/(main)/admin/users/admin-users-directory-state.ts`: `tryApplyContinuationResult`
+- `src/app/(main)/creature-creator/creature-creator-library-selectables.ts`: `codexEquipmentAsLibraryItem`
+- `src/app/(main)/creature-creator/creature-creator-remove-section-confirm-placeholder.ts`: `REMOVE_SECTION_CONFIRM_CONFIRM_LABEL`, `REMOVE_SECTION_CONFIRM_DESCRIPTION`
+- `src/app/(main)/creature-creator/map-creature-inventory-rows.ts`: `creatureArmamentToSheetItem`
+- `src/app/(main)/creature-creator/transformers.ts`: `customEquipmentItemToCreatureArmament`
+- `src/app/(main)/encounters/[id]/_components/combat/use-combat-round-actions.ts`: `encounterStateAfterEnd`, `encounterStateAfterStart`
+- `src/app/(main)/encounters/[id]/_components/encounter-play-page-shell.tsx`: `encounterPlayPageGatePhase`
+- `src/app/(main)/item-creator/item-creator-editor-armor.tsx`: `ARMOR_FIELD_GRID_CLASS`
+- `src/app/(main)/item-creator/item-creator-helpers.tsx`: `RARITY_REFERENCE`, `formatPropertyHeaderCost`, `formatPropertyPerLevelCost`, `propertyPointTotal`
+- `src/app/(main)/item-creator/item-creator-property-options.ts`: `ADD_PROPERTY_DISABLED_REASON`, `ADD_PROPERTY_SHIELD_DISABLED_REASON`
+- `src/app/(main)/my-account/_components/account-profile-card.tsx`: `PROFILE_PICTURE_UPLOAD_DENIED`
+- `src/app/(main)/power-creator/power-creator-composition.ts`: `overlayFlagsFromVariants`
+- `src/app/(main)/power-creator/power-creator-part-actions.ts`: `nextMechanicPartToAdd`
+- `src/app/(main)/species-creator/species-creator-bootstrap.ts`: `resolveSpeciesEditForm`
+- `src/app/robots.ts`: `ROBOTS_DISALLOW`
+- `src/app/sitemap.ts`: `SITEMAP_PATHS`
+- `src/components/character-sheet/level-up-modal.tsx`: `calculateLevelGains`
+- `src/components/character-sheet/library-feat-rows.tsx`: `customizationDraftDiffers`, `traitRowId`
+- `src/components/character-sheet/notes-tab.tsx`: `SheetNoteField`
+- `src/components/character-sheet/sheet-currency-input-layout.ts`: `SHEET_CURRENCY_INPUT_MAX_CH`, `SHEET_CURRENCY_INPUT_MAX_CHROME_CH`, `SHEET_CURRENCY_REPRO_FORMATTED`
+- `src/components/character-sheet/sheet-desktop-columns.ts`: `archetypeStackedWeaponNamePx`, `sheetSkillNameCellPx`, `sheetThreeColumnFits`, `sheetWeaponNameCellPx`
+- `src/components/character-sheet/sheet-header-layout.ts`: `sheetHeaderThreeColumnFits`
+- `src/components/character-sheet/use-sheet-feat-actions.ts`: `traitUsesAfterDelta`
+- `src/components/creator/CreatorSaveToolbar.tsx`: `CREATOR_SAVE_DISABLED_CLASS`
+- `src/components/creator/LoadFromLibraryModal.tsx`: `LOAD_FROM_LIBRARY_MODAL_SIZE`
+- `src/components/creator/ability-score-editor.tsx`: `abilityNextCostVisible`
+- `src/components/creator/power-part-card.tsx`: `creatorPartOptionLabel`, `formatCreatorPartEnergy`
+- `src/components/encounters/combatant-card-resources.tsx`: `COMBATANT_RESOURCE_NUMBER_INPUT_CLASS`
+- `src/components/guided-creator/guided-choice-card.tsx`: `guidedChoiceCardSelectAriaLabel`, `isGuidedChoiceCardSelectKey`
+- `src/components/guided-creator/guided-equipment-l2-grid.ts`: `ARMOR_L2_HEADER_COLUMNS`, `GEAR_L2_HEADER_COLUMNS`, `WEAPON_L2_HEADER_COLUMNS`
+- `src/components/guided-creator/guided-skills-panel.tsx`: `AssignedSkillDetails`
+- `src/components/layout/header.tsx`: `accountAvatarInitial`, `accountMenuPointerClickState`, `armDismissClickSwallow`, `shouldCloseDisclosureOnFocusLeave`, `shouldCloseDisclosureOnOutsidePointer`
+- `src/components/patterns/chrome/cloud-sync-offline-banner.tsx`: `CLOUD_SYNC_SERVER_UNREACHABLE_BODY`, `CLOUD_SYNC_SERVER_UNREACHABLE_TITLE`
+- `src/components/patterns/chrome/image-upload-modal.tsx`: `IMAGE_CROPPER_KEYBOARD_HINT`, `imageCropperA11yProps`
+- `src/components/patterns/chrome/roll-button.tsx`: `rollButtonVariants`
+- `src/components/patterns/list/entity-library-powers-techniques.tsx`: `powerListFactCells`
+- `src/components/patterns/list/grid-list-row-chrome.ts`: `GRID_LIST_ROW_THUMBNAIL_COLUMN_WIDTH`, `collapsedNameTrackWidthPx`, `expandGridTemplateTokens`, `externalChromeFootprintWidth`
+- `src/components/patterns/list/grid-list-row-columns.ts`: `columnHasInteractiveValue`, `dataColumnTrackCount`
+- `src/components/patterns/list/grid-list-row.tsx`: `expandedBodyClickShouldToggle`, `selectedTextInside`
+- `src/components/patterns/list/hub-list-row.tsx`: `HUB_LIST_ROW_MOBILE_CHROME_END_DEFAULT`, `HUB_LIST_ROW_MOBILE_CHROME_END_SLOT`, `hubListRowMobileChromeEnd`
+- `src/components/patterns/list/list-header.tsx`: `columnSortAccessibleName`
+- `src/components/patterns/select/powered-martial-slider.tsx`: `formatProficiencyPointTotal`
+- `src/components/patterns/select/unified-selection-modal.tsx`: `selectionAddBlocked`
+- `src/components/rolls/roll-log.tsx`: `isCreatorRoutePath`, `rollLogShowsDiceBuilder`
+- `src/components/ui/button.tsx`: `buttonVariants`
+- `src/components/ui/icon-button.tsx`: `iconButtonVariants`
+- `src/components/ui/tab-navigation.tsx`: `scrollDeltaToRevealChild`, `tabListOverflowState`
+- `src/hooks/use-auto-save.ts`: `AUTOSAVE_RETRY_DELAYS_MS`, `flushDirtyAutosave`, `nextAutosaveRetryDelayMs`
+- `src/hooks/use-browser-offline.ts`: `getBrowserOfflineSnapshot`, `subscribeBrowserOffline`
+- `src/hooks/use-characters.ts`: `mergeCharacterDetailQueryData`, `nextCharacterDetailQueryData`
+- `src/hooks/use-library-section-collapse.ts`: `librarySectionExpandedForCount`, `librarySectionStateForMount`, `readLibrarySectionSession`, `rememberLibrarySectionSession`
+- `src/hooks/use-user-library.ts`: `userLibraryAfterMutationKeys`
+- `src/lib/admin-users-search.ts`: `buildAdminUsersIlikePattern`, `compareAdminUserProfilesForListing`, `profileMatchesAdminUserSearch`, `rolesMatchingAdminUserSearchQuery`
+- `src/lib/ancestry/ancestry-selection.ts`: `areSpeciesTraitChoicesComplete`
+- `src/lib/api-client.ts`: `ApiError`
+- `src/lib/api-input-validation-scan.ts`: `collectInputValidationGaps`, `collectReExportedHandlerMethods`, `getHandlerMethod`, `handlerReadsJsonBody`, `handlerReadsQuery`, `handlerUsesRouteParams`, `splitHandlerChunks`
+- `src/lib/api-mutation-guard-route-scan.ts`: `chunkInvokesMutationGuard`, `stripCommentsAndStringLiterals`
+- `src/lib/api-mutation-guard.ts`: `isApiMutationMethod`
+- `src/lib/api-validation.ts`: `readBodyWithLimit`
+- `src/lib/api/public-catalog-cache-invalidation.ts`: `codexListedGetCacheTags`, `codexWritePurgeCacheTags`, `officialListedGetCacheTags`, `officialWritePurgeCacheTags`
+- `src/lib/api/public-cdn-cache.ts`: `VERCEL_CACHE_TAG_HEADER`
+- `src/lib/auth-errors.ts`: `AUTH_EMAIL_NOT_CONFIRMED_MESSAGE`, `AUTH_INVALID_CREDENTIALS_LOGIN_MESSAGE`
+- `src/lib/auth-redirect.ts`: `collectAllowedRedirectHosts`, `resolveCanonicalRedirectOrigin`, `resolveTrustedRedirectOrigin`
+- `src/lib/auth/auth-page-client.ts`: `buildGoogleOAuthCallbackUrl`
+- `src/lib/auth/oauth-delete-grant-core.ts`: `verifyOAuthDeleteIntent`
+- `src/lib/auth/session-persistence.ts`: `PERSISTENT_AUTH_SESSION_MAX_AGE_S`
+- `src/lib/auth/supabase-pkce-cookies.ts`: `supabasePkceCodeVerifierCookieKey`
+- `src/lib/campaign-invite-code.ts`: `INVITE_CODE_ALPHABET`, `INVITE_CODE_LENGTH`
+- `src/lib/campaign-roster.ts`: `isUserCampaignParticipant`
+- `src/lib/character-library-section-visibility.ts`: `DEFAULT_LIBRARY_SECTION_VISIBILITY`
+- `src/lib/character-view-enrichment-server.ts`: `getCharacterViewEnrichment`
+- `src/lib/character/appearance-age.ts`: `parseAgeFromAppearance`, `stripAgeFromAppearance`
+- `src/lib/character/character-name-limit.ts`: `CHARACTER_DEFAULT_NAME`
+- `src/lib/character/character-relational-save-errors.ts`: `CHARACTER_SAVE_FAILED_MESSAGE`, `parseCharacterRelationalValidationError`
+- `src/lib/character/dirty-patch.ts`: `isStaleCharacterWrite`
+- `src/lib/character/innate-power-capacity.ts`: `resolveCharacterInnateEnergy`
+- `src/lib/character/notes-tab-sections.ts`: `DEFAULT_NOTES_SECTION_ORDER`
+- `src/lib/character/prune-trait-sheet-state.ts`: `PruneTraitSheetStateCharacterInput` (type)
+- `src/lib/character/relational-lean-save.ts`: `RELATIONAL_SAVE_ENTRY_ALLOWLIST`
+- `src/lib/character/save-lock.ts`: `resetCharacterSaveLockForTests`
+- `src/lib/character/sheet-allocation-reset.ts`: `resetSheetSkillAllocationRows`
+- `src/lib/character/sheet-skills-display.ts`: `isCodexBaseSkill`
+- `src/lib/character/temp-modifiers.ts`: `sectionHasTempModifiers`
+- `src/lib/chip/chip-size-tokens.ts`: `CHIP_ENTITY_INLINE_SIZE`
+- `src/lib/chip/list-row-metadata.ts`: `rankedGlrFactChips`
+- `src/lib/codex-archetype-path-save-validation.ts`: `archetypePathDataFromSaveInput`, `normalizeCodexCommaListColumn`
+- `src/lib/codex-changelog-display.ts`: `diffCodexChangedFields`, `parseChangedFields`, `summarizeChangedFieldNames`
+- `src/lib/codex/collection-to-payload-key.ts`: `CODEX_COLLECTION_TO_PAYLOAD_KEY`
+- `src/lib/codex/fake-supabase.ts`: `FakeSupabase`
+- `src/lib/codex/feat-restriction-notice.ts`: `getLimitedUsesNotice`
+- `src/lib/codex/id-allocation.ts`: `lowestUnusedNumericId`
+- `src/lib/codex/public-table-select.ts`: `CODEX_PROPERTIES_PUBLIC_SELECT`, `CODEX_SKILLS_PUBLIC_SELECT`
+- `src/lib/codex/row-map.ts`: `toNumArray`
+- `src/lib/codex/sources.ts`: `CODEX_SOURCE_WHITESPACE_CODE_POINTS`, `previewCodexSourceRename`
+- `src/lib/core-rules-server.ts`: `resetCoreRulesCacheForTests`
+- `src/lib/creator/creator-edit-query.ts`: `bindCreatorEditClear`, `creatorEditClearPlan`, `creatorPathWithoutEdit`
+- `src/lib/creator/creator-save-error.ts`: `CREATOR_DELETED_ROW_MESSAGE`
+- `src/lib/creator/creator-unsaved-guard.ts`: `CreatorBackHistory` (type)
+- `src/lib/crop-image.ts`: `CROPPED_IMAGE_EXTENSION`
+- `src/lib/detail-option/combat-builder.ts`: `powerToDetailOption`, `techniqueToDetailOption`
+- `src/lib/detail-option/compact-facts.ts`: `capitalizeSpacesTerm`, `formatCriticalRangeIncreaseFact`, `formatCurrencyFact`, `formatEnergyFact`, `formatHandednessFact`, `formatRangeFact`, `formatSpacesFact`, `formatTrainingPointsFact`, `formatWeaponAbilityFact`, `propertyDescriptorChip`
+- `src/lib/encounter/character-resource-sync.ts`: `CharacterResourcePatch` (type)
+- `src/lib/encounter/unique-campaign-characters.ts`: `hasDuplicateCampaignCharacters`
+- `src/lib/glr/validate-glr-chrome-spacing.ts`: `assertGlrChromeSpacingSources`, `expectedRowChromeFromRowActions`, `resolvedRowChromeFlags`, `scanGlrChromeSpacingSources`, `validateCodexBrowseShellSource`, `validateCreatorEmbeddedGlrSource`, `validateGlrGridColumnSource`, `validateGlrListClassName`, `validateGlrPublicBarrelSource`, `validateGlrRowLayoutSource`, `validateMyLibraryEntityTabSource`, `validateUsmListShellSource`, `validateUsmQuantityChromeSource`
+- `src/lib/glr/validate-glr-facts.ts`: `assertRowFactCoverage`, `assertSurfaceColumnConfig`, `validateRowFactCoverage`, `validateSurfaceColumnConfig`
+- `src/lib/guest-character-storage.ts`: `GUEST_CHARACTER_CAP`, `GuestCharacterCapError`
+- `src/lib/guided-creator/ancestry-pick-tasks.ts`: `AncestryPickSpeciesInput` (type)
+- `src/lib/guided-creator/chapter-rail-lock.ts`: `findGuidedChapterRailBlockerChapter`, `findGuidedChapterRailBlockerSubStep`
+- `src/lib/guided-creator/curated-skills.ts`: `GUIDED_CURATED_MIN_SUGGESTIONS`, `formatGuidedAbilityKeysLabel`, `getGuidedAbilityRecommendationTiers`, `isTooBroadSkillAbility`, `skillMatchesArchetypeAbility`
+- `src/lib/guided-creator/equipment-currency.ts`: `resolveItemUnitCost`
+- `src/lib/guided-creator/equipment-eligibility.ts`: `isCommonRarity`
+- `src/lib/guided-creator/equipment-phase-nav.ts`: `canCompleteEquipmentPhase`, `canNavigateToEquipmentPhase`
+- `src/lib/guided-creator/guided-equipment-l2.ts`: `computeL2GearSpend`
+- `src/lib/guided-creator/loadout-tp.ts`: `guidedTrainingPointsOverspendAmount`
+- `src/lib/guided-creator/powers-phase-nav.ts`: `isLastPowersPhase`
+- `src/lib/guided-creator/powers-techniques-energy-filter.ts`: `GUIDED_L1_FULL_ENERGY_POOL`
+- `src/lib/guided-creator/powers-techniques-l2.ts`: `GUIDED_POWERS_L2_HEADER_COLUMNS`, `GUIDED_TECHNIQUES_L2_HEADER_COLUMNS`
+- `src/lib/guided-creator/preview-ability-summary.ts`: `PREVIEW_ABILITY_ORDER`, `formatPreviewAbilityValue`, `resolvePreviewArchetypeAbilities`
+- `src/lib/guided-creator/resolve-loadout-items.ts`: `groupResolvedItemsByCategory`, `loadoutDraftFromSelection`, `resolveLoadoutItems`
+- `src/lib/guided-creator/substep-satisfaction.ts`: `isGuidedDraftSaveable`
+- `src/lib/leveled-feats.ts`: `featLevelChipDescription`, `levelToRomanNumeral`, `parseFeatNameRomanSuffix`
+- `src/lib/library-selectable-builders.ts`: `derivePowerTechniqueBudgetFacts`, `getItemColumns`
+- `src/lib/library-sync.ts`: `syncItemProperties`, `syncPowerParts`
+- `src/lib/library/catalog-listing.ts`: `catalogListingToSaveTarget`
+- `src/lib/library/character-filter-persistence.ts`: `LIBRARY_CHARACTER_FILTER_KEY`, `readPersistedLibraryCharacterFilterId`
+- `src/lib/library/empowered-technique-display.ts`: `buildEmpoweredPowerDocument`, `buildEmpoweredTechniqueDocument`, `deriveEmpoweredTechniquePartChips`
+- `src/lib/library/fetch-library-tab-counts.ts`: `LibraryCountsClient` (type)
+- `src/lib/library/power-technique-filters.ts`: `normalizeActionTypeFilterKey`
+- `src/lib/library/published-training-points.ts`: `publishedPowerTrainingPoints`
+- `src/lib/modal-unmount-click-guard.ts`: `armModalUnmountClickGuard`, `modalUnmountShouldArmGuard`
+- `src/lib/observability/sentry-client-filter.ts`: `isAbortOrCancelledRequest`, `isChunkOrDynamicImportFailure`, `isHarmlessBrowserNetworkError`, `shouldDropClientSentryEvent`
+- `src/lib/onboarding-preferences.ts`: `PLAY_TOGETHER_KEY`, `SHEET_TOUR_KEY`, `TUTORIALS_ENABLED_KEY`, `TUTORIAL_MILESTONES_KEY`, `getSheetTourStatus`
+- `src/lib/owner-library-for-view.ts`: `emptyLibraryForView`
+- `src/lib/portrait.ts`: `PORTRAIT_SAVE_NO_URL`, `dataUrlToBlob`
+- `src/lib/power-variant-chips.ts`: `buildPowerVariantChips`, `rollPowerRandomizeDie`
+- `src/lib/proficiencies.ts`: `hasSufficientProficiency`
+- `src/lib/profile-display-name.ts`: `PROFILE_DISPLAY_NAME_MAX_LENGTH`
+- `src/lib/rate-limit.ts`: `isDurableRateLimitEnabled`, `rateLimit`
+- `src/lib/role-limits.ts`: `ROLE_POLICY_LIMIT_UNLIMITED_SENTINEL`
+- `src/lib/role-policy.ts`: `getDefaultRolePolicy`
+- `src/lib/role-quota-messages.ts`: `ROLE_QUOTA_EXCEEDED_CODE`
+- `src/lib/roll-timestamp.ts`: `normalizeRollTimestamp`
+- `src/lib/rolls/campaign-roll-limits.ts`: `CAMPAIGN_ROLL_DAMAGE_TITLE_SUFFIX`
+- `src/lib/rolls/die.ts`: `d20CritAdjustment`, `defaultRollOutcomeKind`, `StoredRollKind` (type)
+- `src/lib/rolls/personal-roll-log-storage.ts`: `StoredRollLogEntry` (type)
+- `src/lib/rolls/roll-log-layout.ts`: `ROLL_LOG_HISTORY_LIST_MIN_CLASS`
+- `src/lib/rules/rulebook-search.ts`: `stripMdx`
+- `src/lib/security/content-security-policy.ts`: `TURNSTILE_CSP_ORIGIN`, `buildContentSecurityPolicy`
+- `src/lib/security/next-app-flags.ts`: `ACCOUNT_PATH_ALIAS_REWRITE`, `NEXT_APP_POWERED_BY_HEADER`
+- `src/lib/server/resource-access-unavailable.ts`: `RESOURCE_ACCESS_UNAVAILABLE_DIGEST`
+- `src/lib/sheet-tour-highlight.ts`: `SHEET_TOUR_NARROW_BOTTOM_PLACEMENT_CLASS`, `SHEET_TOUR_NARROW_MAX_WIDTH_PX`, `SHEET_TOUR_NARROW_TOP_PLACEMENT_CLASS`, `isTallSheetTourTarget`, `onboardingHighlightScrollBlock`, `sheetTourCardAnchorForViewport`, `sheetTourStepScrollBlockForViewport`
+- `src/lib/stepper-value-memory.ts`: `rememberStepperValue`, `StepperValueMemory` (type)
+- `src/lib/supabase/middleware.ts`: `isHardProtectedPath`
+- `src/lib/supabase/proxy-oauth-redirect.ts`: `shouldRedirectOAuthCodeFromRoot`
+- `src/lib/supabase/public-client.ts`: `CI_BUILD_SUPABASE_URL`, `isPublicSupabaseConfigured`
+- `src/lib/supabase/server.ts`: `ServiceRoleSupabaseClient` (type)
+- `src/lib/supabase/session.ts`: `sessionUserFromClaims`
+- `src/lib/supabase/verified-claims.ts`: `clearVerifiedClaimsCache`
+- `src/lib/tooltips/floating-help.tsx`: `floatingHelpPanelPointerClass`
+- `src/lib/utils/normalize-id.ts`: `resolveNormalizedRefLabel`, `rowMatchesNormalizedId`
+- `src/types/library.ts`: `LIBRARY_ITEM_TYPES`
+
+### Nothing imports this
+
+- `src/app/(auth)/login/login-action-result.ts`: `LoginActionFailure` (type)
+- `src/app/(main)/admin/codex/admin-archetype-editor-config.ts`: `ShowToast` (type)
+- `src/app/(main)/admin/codex/admin-archetype-editor-guided.tsx`: `AdminArchetypeEditorGuidedProps` (type)
+- `src/app/(main)/admin/codex/admin-archetype-editor-level1.tsx`: `AdminArchetypeEditorLevel1Props` (type)
+- `src/app/(main)/admin/codex/admin-archetype-editor-meta.tsx`: `AdminArchetypeEditorMetaProps` (type)
+- `src/app/(main)/admin/codex/admin-archetype-editor-progression.tsx`: `AdminArchetypeEditorProgressionProps` (type)
+- `src/app/(main)/admin/codex/admin-feat-edit-modal-fields.tsx`: `AdminFeatEditModalFieldsProps` (type)
+- `src/app/(main)/admin/codex/admin-part-edit-modal-options.tsx`: `AdminPartEditModalOptionsProps` (type)
+- `src/app/(main)/admin/codex/admin-part-edit-modal.tsx`: `AdminPartEditModalProps` (type)
+- `src/app/(main)/admin/codex/admin-property-edit-modal.tsx`: `AdminPropertyEditModalProps` (type)
+- `src/app/(main)/admin/codex/admin-species-edit-modal.tsx`: `AdminSpeciesEditModalProps` (type)
+- `src/app/(main)/admin/codex/admin-trait-edit-modal.tsx`: `AdminTraitCreateModalProps` (type), `AdminTraitEditModalProps` (type)
+- `src/app/(main)/admin/codex/codex-spreadsheet-table-row.tsx`: `CodexSpreadsheetTableRowProps` (type)
+- `src/app/(main)/admin/codex/use-admin-archetype-selection-options.ts`: `AdminArchetypeSelectionOptionsInput` (type)
+- `src/app/(main)/admin/codex/use-admin-codex-delete.tsx`: `AdminCodexDelete` (type)
+- `src/app/(main)/admin/codex/use-admin-codex-entity.tsx`: `AdminCodexNamedEntity` (type)
+- `src/app/(main)/admin/codex/use-codex-spreadsheet.ts`: `PendingRowChange` (type)
+- `src/app/(main)/admin/core-rules/core-rules-conditions.ts`: `ConditionsEditorShape` (type)
+- `src/app/(main)/admin/core-rules/core-rules-number.ts`: `CoreRulesNumberResult` (type)
+- `src/app/(main)/admin/core-rules/core-rules-tabs.ts`: `TabDef` (type)
+- `src/app/(main)/admin/core-rules/core-rules-unsaved-leave.ts`: `CoreRulesUnsavedAction` (type)
+- `src/app/(main)/admin/images/admin-image-delete-modal.tsx`: `AdminImageDeleteModalProps` (type)
+- `src/app/(main)/admin/images/admin-image-edit-modal.tsx`: `AdminImageEditModalProps` (type)
+- `src/app/(main)/admin/sources/actions.ts`: `AdminCodexSourceMembershipResult` (type)
+- `src/app/(main)/admin/users/admin-users-directory-state.ts`: `AdminUsersDirectoryAction` (type), `AdminUsersListOwner` (type)
+- `src/app/(main)/admin/users/use-admin-users-load-more.ts`: `AdminUsersLoadMorePage` (type), `AdminUsersLoadMoreRow` (type)
+- `src/app/(main)/crafting/[id]/_components/crafting-tool-derived.ts`: `CraftingSessionTallies` (type)
+- `src/app/(main)/creature-creator/AddCreatureFeatModal.tsx`: `AddCreatureFeatModalProps` (type)
+- `src/app/(main)/creature-creator/creature-creator-editor.tsx`: `CreatureCreatorStatsSlice` (type)
+- `src/app/(main)/creature-creator/creature-creator-feat-armament-display.ts`: `CreatureFeatRow` (type), `CreatureFeatSourceLookup` (type)
+- `src/app/(main)/creature-creator/creature-creator-library-selectables.ts`: `CreatureCodexEquipmentRow` (type), `CreatureEquipmentLibraryItem` (type)
+- `src/app/(main)/creature-creator/creature-creator-remove-section-confirm-placeholder.ts`: `CreatureCreatorOptionalSectionDisplayName` (type)
+- `src/app/(main)/creature-creator/creature-damage-modifiers.ts`: `DamageModifierLists` (type)
+- `src/app/(main)/creature-creator/creature-over-budget-notification.ts`: `CreatureOverBudgetNotification` (type)
+- `src/app/(main)/empowered-technique-creator/empowered-technique-bootstrap.ts`: `EmpoweredLibraryRecord` (type)
+- `src/app/(main)/empowered-technique-creator/empowered-technique-cost-derivation.ts`: `EmpoweredSectionCostSlice` (type)
+- `src/app/(main)/empowered-technique-creator/empowered-technique-creator-editor.tsx`: `EmpoweredTechniqueCreatorEditorProps` (type)
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-action-profile.tsx`: `EmpoweredTechniqueEditorActionProfileProps` (type)
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-config.ts`: `EmpoweredSectionCosts` (type)
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-meta.tsx`: `EmpoweredTechniqueEditorMetaProps` (type)
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-config.tsx`: `EmpoweredTechniqueEditorPowerConfigProps` (type)
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-damage.tsx`: `EmpoweredTechniqueEditorPowerDamageProps` (type)
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-parts.tsx`: `EmpoweredTechniqueEditorPowerPartsProps` (type)
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-technique-parts.tsx`: `EmpoweredTechniqueEditorTechniquePartsProps` (type)
+- `src/app/(main)/encounters/[id]/_components/EncounterCampaignRosterSection.tsx`: `EncounterCampaignRosterSectionProps` (type)
+- `src/app/(main)/encounters/[id]/_components/EncounterPageHeader.tsx`: `EncounterPageHeaderProps` (type), `EncounterTypeLabel` (type)
+- `src/app/(main)/encounters/[id]/_components/combat/combat-add-sidebar.tsx`: `CombatAddSidebarProps` (type)
+- `src/app/(main)/encounters/[id]/_components/combat/combat-combatant-list.tsx`: `CombatCombatantListProps` (type)
+- `src/app/(main)/encounters/[id]/_components/combat/combat-round-controls.tsx`: `CombatRoundControlsProps` (type)
+- `src/app/(main)/encounters/[id]/_components/encounter-play-page-shell.tsx`: `EncounterPlayPageGatePhase` (type), `EncounterPlayPageResult` (type), `EncounterPlayPageShared` (type)
+- `src/app/(main)/encounters/[id]/_components/skill/skill-participant-list.tsx`: `SkillParticipantListProps` (type)
+- `src/app/(main)/encounters/[id]/_components/skill/skill-sidebar.tsx`: `SkillSidebarProps` (type)
+- `src/app/(main)/encounters/[id]/_components/skill/skill-trackers-section.tsx`: `SkillTrackersSectionProps` (type)
+- `src/app/(main)/item-creator/item-creator-bootstrap.ts`: `ItemAbilityRequirement` (type)
+- `src/app/(main)/item-creator/item-creator-cost-derivation.ts`: `ItemSectionCostSlice` (type)
+- `src/app/(main)/item-creator/item-creator-editor-config.ts`: `ItemSectionCosts` (type)
+- `src/app/(main)/item-creator/item-creator-editor.tsx`: `ItemCreatorEditorProps` (type)
+- `src/app/(main)/item-creator/item-creator-helpers.tsx`: `PropertyCostKind` (type)
+- `src/app/(main)/library/components/UserLibraryEntityTabShell.tsx`: `UserLibraryEntityTabShellProps` (type)
+- `src/app/(main)/library/hooks/use-library-duplicate-confirm.ts`: `UseLibraryDuplicateConfirmOptions` (type)
+- `src/app/(main)/library/hooks/use-library-entity-sync.ts`: `LibrarySyncSanitizeResult` (type), `UseLibraryEntitySyncOptions` (type)
+- `src/app/(main)/power-creator/power-creator-cost-derivation.ts`: `PowerSectionCostSlice` (type)
+- `src/app/(main)/power-creator/power-creator-editor-config.ts`: `PowerSectionCosts` (type)
+- `src/app/(main)/power-creator/power-creator-editor.tsx`: `PowerCreatorEditorProps` (type)
+- `src/app/(main)/power-creator/power-creator-help.tsx`: `PowerCreatorHelpTopic` (type)
+- `src/app/(main)/species-creator/species-creator-bootstrap.ts`: `SpeciesCreatorCache` (type), `SpeciesCreatorEditPlan` (type)
+- `src/app/(main)/technique-creator/technique-creator-bootstrap.ts`: `TechniqueSavedPart` (type)
+- `src/components/character-sheet/character-sheet-settings-modal.tsx`: `CharacterSheetSettingsModalProps` (type), `SpeedDisplayUnit` (type)
+- `src/components/character-sheet/currency-field-commit.ts`: `CurrencyFieldCommit` (type)
+- `src/components/character-sheet/edit-species-ancestry-step.tsx`: `EditSpeciesAncestryStepProps` (type)
+- `src/components/character-sheet/edit-species-modal.tsx`: `EditSpeciesResult` (type)
+- `src/components/character-sheet/edit-species-species-step.tsx`: `EditSpeciesSpeciesStepProps` (type)
+- `src/components/character-sheet/library-feat-rows.tsx`: `FeatRowInput` (type), `TraitRowInput` (type)
+- `src/components/character-sheet/library-inventory-panel.tsx`: `LibraryInventoryPanelProps` (type)
+- `src/components/character-sheet/library-list-helpers.ts`: `ArmorItemCombatStats` (type), `EquippedArmorQuickRef` (type)
+- `src/components/character-sheet/library-powers-panel.tsx`: `LibraryPowersPanelProps` (type)
+- `src/components/character-sheet/library-tab-config.ts`: `LibraryTabDef` (type)
+- `src/components/character-sheet/path-level-guidance.tsx`: `PathLevelGuidanceProps` (type), `PathRemoveGuidanceProps` (type)
+- `src/components/character-sheet/sheet-resource-input.tsx`: `ResourceInputProps` (type)
+- `src/components/character-sheet/skills-header-pin.ts`: `SkillsHeaderPinInput` (type)
+- `src/components/character-sheet/use-character-sheet-actions.ts`: `UseCharacterSheetActionsArgs` (type)
+- `src/components/character-sheet/use-character-sheet-derived.ts`: `UseCharacterSheetDerivedArgs` (type)
+- `src/components/character-sheet/use-edit-species-modal.ts`: `EditSpeciesStep` (type)
+- `src/components/character-sheet/use-library-section-rows.ts`: `LibrarySectionRowsInput` (type)
+- `src/components/character/portrait-thumb.tsx`: `PortraitThumbProps` (type)
+- `src/components/creator/collapsible-section.tsx`: `CollapsibleSectionRemoveConfirmCopy` (type)
+- `src/components/creator/creator-summary-panel.tsx`: `BreakdownList` (type), `CostStat` (type), `StatRow` (type), `SummaryItem` (type)
+- `src/components/encounters/add-combatant-modal.tsx`: `AddCombatantModalProps` (type)
+- `src/components/encounters/combatant-card-conditions.tsx`: `CombatantCardConditionChipsProps` (type), `CombatantCardConditionsPanelProps` (type)
+- `src/components/encounters/combatant-card-header.tsx`: `CombatantCardHeaderProps` (type)
+- `src/components/encounters/combatant-card-initiative.tsx`: `CombatantCardInitiativeProps` (type)
+- `src/components/encounters/combatant-card-quick-actions.tsx`: `CombatantCardResourceQuickActionsProps` (type)
+- `src/components/encounters/combatant-card-resources.tsx`: `CombatantCardResourcesProps` (type)
+- `src/components/encounters/encounter-combatant-types.ts`: `Combatant` (type), `CombatantCondition` (type), `CombatantType` (type)
+- `src/components/guided-creator/character-preview-panel.tsx`: `CharacterPreviewPanelProps` (type)
+- `src/components/guided-creator/guided-abilities-customize-panel.tsx`: `GuidedAbilitiesCustomizePanelProps` (type)
+- `src/components/guided-creator/guided-choice-card.tsx`: `GuidedChoiceCardProps` (type)
+- `src/components/guided-creator/guided-creator-page-shell.tsx`: `GuidedCreatorPageShellProps` (type)
+- `src/components/guided-creator/guided-detail-option-list.tsx`: `GuidedDetailOptionListProps` (type)
+- `src/components/guided-creator/guided-entity-detail-modal.tsx`: `GuidedEntityDetailModalProps` (type)
+- `src/components/guided-creator/guided-equipment-fact-chips.tsx`: `GuidedFactChipRowProps` (type)
+- `src/components/guided-creator/guided-equipment-l1-phase.tsx`: `GuidedEquipmentL1PhaseProps` (type)
+- `src/components/guided-creator/guided-equipment-l2-grid.ts`: `L2ColumnHeader` (type)
+- `src/components/guided-creator/guided-equipment-l2-modal.tsx`: `GuidedEquipmentL2ModalProps` (type)
+- `src/components/guided-creator/guided-equipment-phase-layout.tsx`: `GuidedEquipmentPhaseLayoutProps` (type)
+- `src/components/guided-creator/guided-feats-filter-fields.tsx`: `GuidedFeatsFilterFieldsProps` (type)
+- `src/components/guided-creator/guided-feats-l2-modal.tsx`: `GuidedFeatsL2ModalProps` (type)
+- `src/components/guided-creator/guided-mixed-species-overview.tsx`: `GuidedMixedSpeciesOverviewProps` (type)
+- `src/components/guided-creator/guided-path-custom-archetype.tsx`: `GuidedPathCustomArchetypeProps` (type)
+- `src/components/guided-creator/guided-path-detail-modal.tsx`: `GuidedPathDetailModalProps` (type)
+- `src/components/guided-creator/guided-path-detail-overview.tsx`: `GuidedPathDetailOverviewProps` (type)
+- `src/components/guided-creator/guided-portrait-upload.tsx`: `GuidedPortraitUploadProps` (type)
+- `src/components/guided-creator/guided-powers-techniques-l1-content.tsx`: `GuidedPowersTechniquesL1ContentProps` (type), `PowersTechniquesDisplayItem` (type)
+- `src/components/guided-creator/guided-powers-techniques-l2-modal.tsx`: `GuidedPowersTechniquesL2ModalProps` (type)
+- `src/components/guided-creator/guided-restriction-notice.tsx`: `GuidedFeatRestrictionNoticeProps` (type), `GuidedRestrictionNoticeProps` (type), `GuidedTraitRestrictionNoticeProps` (type)
+- `src/components/guided-creator/guided-reveal-review-modal.tsx`: `GuidedRevealReviewModalProps` (type)
+- `src/components/guided-creator/guided-section-title.tsx`: `GuidedSectionTitleLevel` (type), `GuidedSectionTitleProps` (type)
+- `src/components/guided-creator/guided-skills-panel.tsx`: `GuidedSkillsPanelProps` (type)
+- `src/components/guided-creator/guided-species-detail-modal.tsx`: `GuidedSpeciesDetailModalProps` (type)
+- `src/components/guided-creator/guided-step-footer.tsx`: `GuidedStepFooterProps` (type)
+- `src/components/guided-creator/guided-step-layout.tsx`: `GuidedStepLayoutProps` (type)
+- `src/components/guided-creator/guided-trait-option-list.tsx`: `GuidedTraitOptionListProps` (type)
+- `src/components/guided-creator/guided-unarmed-prowess-panel.tsx`: `GuidedUnarmedProwessPanelProps` (type)
+- `src/components/guided-creator/species-reveal-panel.tsx`: `SpeciesRevealPanelProps` (type)
+- `src/components/layout/footer.tsx`: `FooterProps` (type)
+- `src/components/patterns/chrome/creator-portrait-upload.tsx`: `CreatorPortraitUploadLabels` (type), `CreatorPortraitUploadProps` (type), `CreatorPortraitVariant` (type)
+- `src/components/patterns/chrome/edit-section-toggle.tsx`: `SheetModeToggleColors` (type)
+- `src/components/patterns/chrome/image-upload-modal.tsx`: `CropShape` (type), `ImageUploadModalProps` (type)
+- `src/components/patterns/chrome/loadout-budget-bar.tsx`: `LoadoutBudgetBarProps` (type)
+- `src/components/patterns/chrome/point-status.tsx`: `PointStatusProps` (type)
+- `src/components/patterns/chrome/roll-button.tsx`: `RollButtonProps` (type)
+- `src/components/patterns/chrome/segmented-control.tsx`: `SegmentedControlProps` (type), `SegmentedOption` (type)
+- `src/components/patterns/chrome/temp-modifier-toggle.tsx`: `TempModifierToggleProps` (type)
+- `src/components/patterns/chrome/trait-section.tsx`: `TraitSectionProps` (type)
+- `src/components/patterns/help/descriptor-chip-with-tip.tsx`: `DescriptorChipWithTipProps` (type)
+- `src/components/patterns/help/expandable-image.tsx`: `ExpandableImageModalProps` (type)
+- `src/components/patterns/list/ability-score-grid.tsx`: `AbilityScoreGridProps` (type)
+- `src/components/patterns/list/creature-library-stat-block-rows.tsx`: `CreatureLibraryStatBlockRowProps` (type), `CreatureLibraryStatBlockRowsProps` (type)
+- `src/components/patterns/list/grid-list-row-chrome.ts`: `ExternalChromeFootprintInput` (type), `MobileCollapsedGridColumnsOptions` (type)
+- `src/components/patterns/list/grid-list-row-collapsed.tsx`: `GridListRowExternalChromeProps` (type)
+- `src/components/patterns/list/official-entity-list.tsx`: `OfficialEntityListProps` (type), `OfficialEntityRow` (type)
+- `src/components/patterns/select/ability-pick-button.tsx`: `AbilityPickButtonProps` (type)
+- `src/components/patterns/select/add-skill-modal.tsx`: `AddSkillModalSkillBadge` (type)
+- `src/components/patterns/select/choice-trait-option-select.tsx`: `ChoiceTraitOptionListPickerProps` (type)
+- `src/components/patterns/select/mixed-species-skill-picker.tsx`: `MixedSpeciesSkillPickerProps` (type)
+- `src/components/patterns/select/selection-toggle.tsx`: `IconPairToggleFloor` (type), `IconPairToggleProps` (type), `IconPairToggleSize` (type)
+- `src/components/patterns/select/unified-selection-modal-footer.tsx`: `UnifiedSelectionModalFooterProps` (type)
+- `src/components/patterns/select/unified-selection-modal-leave-prompt.tsx`: `UnifiedSelectionModalLeavePromptProps` (type)
+- `src/components/patterns/select/unified-selection-modal-list.tsx`: `UnifiedSelectionModalListProps` (type)
+- `src/components/patterns/select/unified-selection-modal-toolbar.tsx`: `UnifiedSelectionModalToolbarProps` (type)
+- `src/components/patterns/select/value-stepper.tsx`: `StepperButtonProps` (type), `ValueStepperProps` (type)
+- `src/components/rolls/roll-log.tsx`: `DieResult` (type), `RollEntry` (type), `RollType` (type)
+- `src/components/ui/alert.tsx`: `AlertProps` (type)
+- `src/components/ui/card.tsx`: `CardProps` (type)
+- `src/components/ui/checkbox.tsx`: `CheckboxProps` (type)
+- `src/components/ui/expandable-chip.tsx`: `ChipGroupProps` (type)
+- `src/components/ui/icon-button.tsx`: `IconButtonProps` (type)
+- `src/components/ui/input.tsx`: `InputProps` (type)
+- `src/components/ui/select.tsx`: `SelectProps` (type)
+- `src/components/ui/selection-card.tsx`: `SelectionCardProps` (type), `SelectionCardSurfaceProps` (type)
+- `src/components/ui/tab-navigation.tsx`: `TabContentPanelProps` (type), `TabNavOverflowScrollerProps` (type)
+- `src/components/ui/textarea.tsx`: `TextareaProps` (type)
+- `src/hooks/add-library-item/load-raw-items.ts`: `RawItemsInput` (type)
+- `src/hooks/use-characters.ts`: `UseCharacterOptions` (type), `UseCharactersOptions` (type)
+- `src/hooks/use-codex-source-catalog.ts`: `CodexSourceCatalogState` (type)
+- `src/hooks/use-codex.ts`: `CodexQueryOptions` (type)
+- `src/hooks/use-creator-save.ts`: `CreatorSaveTarget` (type)
+- `src/hooks/use-creator-unsaved-guard.ts`: `CreatorLeaveRequest` (type)
+- `src/hooks/use-enhanced-items.ts`: `EnhancedItemsScope` (type)
+- `src/hooks/use-game-rules.ts`: `GameRulesQueryOptions` (type)
+- `src/hooks/use-library-section-collapse.ts`: `LibrarySectionSession` (type)
+- `src/hooks/use-profile.ts`: `ProfileDisplay` (type), `UserProfileActionResult` (type)
+- `src/lib/admin-users-search.ts`: `AdminUserProfileSearchRow` (type)
+- `src/lib/admin.ts`: `AdminSessionResult` (type)
+- `src/lib/ancestry/ancestry-selection.ts`: `AncestryTraitBuckets` (type)
+- `src/lib/api-input-validation-scan.ts`: `InputValidationGap` (type)
+- `src/lib/auth-errors.ts`: `AuthErrorContext` (type)
+- `src/lib/auth/auth-page-client.ts`: `ResendConfirmationResult` (type)
+- `src/lib/auth/oauth-delete-grant-core.ts`: `SignedOAuthDeleteIntentPayload` (type)
+- `src/lib/auth/sensitive-account-auth.ts`: `SensitiveAccountReauthInput` (type)
+- `src/lib/character-persistence-server.ts`: `CharacterPatchResult` (type)
+- `src/lib/character-sheet/add-modal-existing-ids.ts`: `AddModalEntityType` (type)
+- `src/lib/character-view-enrichment.ts`: `CharacterViewRefIds` (type)
+- `src/lib/character/build-creator-skills.ts`: `BuildCreatorSkillSaveRowsOptions` (type), `CreatorSkillCodexEntry` (type), `CreatorSkillSaveRow` (type)
+- `src/lib/character/character-relational-save-errors.ts`: `CharacterRelationalSaveLogIds` (type), `CharacterRelationalValidationPayload` (type)
+- `src/lib/character/character-size.ts`: `SpeciesSizeSource` (type)
+- `src/lib/character/collect-sheet-traits.ts`: `CollectSheetTraitsInput` (type), `SheetTraitCategory` (type), `SheetTraitRow` (type), `VanillaTraitFields` (type)
+- `src/lib/character/notes-tab-sections.ts`: `NotesTabSectionDef` (type)
+- `src/lib/character/realtime-merge.ts`: `SheetRealtimeMerge` (type)
+- `src/lib/character/recovery-uses.ts`: `RecoveryUseSource` (type)
+- `src/lib/character/sheet-edit-notification.ts`: `ComputeSheetPointPoolsArgs` (type), `SheetEditNotificationSeverity` (type), `SheetPointPools` (type)
+- `src/lib/character/sheet-skills-display.ts`: `CodexSkillRef` (type)
+- `src/lib/chip/chip-size-tokens.ts`: `ChipVariantSize` (type)
+- `src/lib/chip/list-row-metadata.ts`: `GlrFactChipSource` (type)
+- `src/lib/chip/part-chips-from-display.ts`: `DisplayPartChip` (type)
+- `src/lib/codex-changelog.ts`: `CodexChangeOperation` (type)
+- `src/lib/codex/admin-source-list.ts`: `AdminSourceRowDetail` (type)
+- `src/lib/codex/fake-supabase.ts`: `FakeRpcCall` (type), `FakeSupabaseOptions` (type)
+- `src/lib/codex/feat-list.ts`: `FEAT_SELECTABLE_HEADER_COLUMNS`, `FeatFilterOptions` (type), `FeatSelectableColumnOptions` (type), `FilterFeatsOptions` (type)
+- `src/lib/codex/feat-restriction-notice.ts`: `FeatRestrictionNoticeOpts` (type), `LimitedUseEntity` (type)
+- `src/lib/codex/references.ts`: `ReferenceProbe` (type)
+- `src/lib/codex/skill-list.ts`: `SkillFilterOptions` (type)
+- `src/lib/constants/copy/legal-copy-types.ts`: `LegalSection` (type)
+- `src/lib/creator/creator-edit-query.ts`: `CreatorEditClear` (type)
+- `src/lib/creator/creator-unsaved-guard.ts`: `CreatorBackLocation` (type)
+- `src/lib/creator/private-library-name-save.ts`: `PrivateLibraryNameSave` (type)
+- `src/lib/encounter/unique-campaign-characters.ts`: `DuplicateCampaignCharacterReport` (type)
+- `src/lib/glr/glr-density.ts`: `GlrModeSpec` (type)
+- `src/lib/glr/glr-fact-catalog.ts`: `GlrEntityFactMeta` (type), `GlrFactDef` (type)
+- `src/lib/glr/glr-list-chrome.ts`: `GlrChromeOptions` (type)
+- `src/lib/glr/glr-surface-bindings.ts`: `GLR_SURFACE_BINDINGS`
+- `src/lib/glr/validate-glr-chrome-spacing.ts`: `GlrChromeSpacingScanResult` (type), `RowChromeFlags` (type)
+- `src/lib/guided-creator/ancestry-pick-gate.ts`: `AncestryPickGateInput` (type)
+- `src/lib/guided-creator/ancestry-pick-tasks.ts`: `AncestryPickPhase` (type), `BuildAncestryPickTasksInput` (type), `BuildMixedAncestryPickTasksInput` (type)
+- `src/lib/guided-creator/build-character.ts`: `BuildGuidedCharacterContext` (type)
+- `src/lib/guided-creator/chapter-rail-lock.ts`: `GuidedChapterRailRef` (type)
+- `src/lib/guided-creator/curated-skills.ts`: `GuidedCuratedSkillsOptions` (type)
+- `src/lib/guided-creator/equipment-currency.ts`: `CatalogRowCostFields` (type), `CurrencyLineItem` (type), `RefCostLookupItem` (type)
+- `src/lib/guided-creator/equipment-eligibility.ts`: `WeaponHandValidation` (type)
+- `src/lib/guided-creator/equipment-phase-candidates.ts`: `PhaseL1RankContext` (type)
+- `src/lib/guided-creator/equipment-phase-nav.ts`: `EquipmentPhaseCompletionContext` (type)
+- `src/lib/guided-creator/equipment-phase-stats.ts`: `BuildPhaseCardStatsInput` (type), `EquipmentPhaseCardStats` (type)
+- `src/lib/guided-creator/guided-equipment-l2.ts`: `ApplyL2Result` (type), `GuidedEquipmentL2ItemData` (type)
+- `src/lib/guided-creator/guided-skill-recommendations.ts`: `BuildGuidedSkillSuggestionsOptions` (type), `BuildGuidedSkillSuggestionsResult` (type), `GuidedSkillSuggestion` (type), `GuidedSkillSuggestionBadge` (type), `GuidedSkillSuggestionKind` (type)
+- `src/lib/guided-creator/loadout-pool.ts`: `GuidedLoadoutDraftSelection` (type)
+- `src/lib/guided-creator/path-ability-labels.ts`: `PathAbilityChipLabel` (type)
+- `src/lib/guided-creator/power-technique-display.ts`: `PowerTechniqueCardFacts` (type)
+- `src/lib/guided-creator/powers-phase-nav.ts`: `PowersPhaseVisibility` (type)
+- `src/lib/guided-creator/powers-techniques-l1-candidates.ts`: `ResolvePowersTechniquesCanonicalId` (type)
+- `src/lib/guided-creator/powers-techniques-step-helpers.ts`: `InnateSelectionWarnReason` (type)
+- `src/lib/guided-creator/preview-ability-summary.ts`: `PreviewAbilityChip` (type), `PreviewAbilityHighlight` (type), `PreviewArchetypeAbilityContext` (type)
+- `src/lib/guided-creator/resolve-loadout-items.ts`: `EquipmentLookupEntry` (type), `ResolvedLoadoutItem` (type)
+- `src/lib/guided-creator/reveal-blockers.ts`: `GuidedChapterRef` (type)
+- `src/lib/guided-creator/skill-reconcile.ts`: `GuidedSkillPointBudget` (type), `PrunedSkillAllocations` (type), `SkillIdIndex` (type)
+- `src/lib/leveled-feats.ts`: `BuildFeatLevelChipsOptions` (type), `ComputeNextLeveledFeatFieldsInput` (type), `FeatFamily` (type), `FeatLevelChipSelect` (type), `LeveledFeatSourceType` (type), `MergeFeatRow` (type), `MergeFeatsInFamilyOnAddArgs` (type)
+- `src/lib/library-mutation-validation.ts`: `LibraryWriteValidationMode` (type)
+- `src/lib/library-selectable-builders.ts`: `PowerColumnDisplay` (type), `PowerTechniqueBudgetDisplay` (type), `PowerTechniqueBudgetFacts` (type), `TechniqueColumnDisplay` (type)
+- `src/lib/library-sync.ts`: `SyncIssue` (type), `SyncIssueCode` (type), `SyncResult` (type)
+- `src/lib/library/armament-filters.ts`: `ArmamentFilterProfile` (type), `ArmamentFilterableRow` (type)
+- `src/lib/library/armament-library-labels.ts`: `ArmamentKindChromeLabels` (type)
+- `src/lib/library/catalog-listing.ts`: `ResolveCreatorSaveTargetOptions` (type)
+- `src/lib/library/fetch-library-tab-counts.ts`: `LibraryCountQuery` (type), `LibraryCountTables` (type)
+- `src/lib/library/official-catalog-row-filter.ts`: `OfficialArmamentFilterableRow` (type), `OfficialArmamentRowFilters` (type), `OfficialPowerTechniqueFilterableRow` (type)
+- `src/lib/library/power-technique-categories.ts`: `PartCategoryDbRow` (type), `PartCategorySource` (type)
+- `src/lib/library/published-training-points.ts`: `PublishedTrainingPoints` (type)
+- `src/lib/onboarding-preferences.ts`: `SheetTourStatus` (type), `TutorialMilestones` (type)
+- `src/lib/rate-limit.ts`: `RateLimitResult` (type)
+- `src/lib/realms-images.ts`: `REALMS_IMAGE_CATEGORIES`, `CreateRealmsImageInput` (type), `RealmsImageUsageReport` (type), `RealmsImagesListPage` (type)
+- `src/lib/role-policy.ts`: `RolePolicy` (type)
+- `src/lib/role-quota-messages.ts`: `RoleQuotaExceededPayload` (type), `RoleQuotaResource` (type)
+- `src/lib/rolls/modifier-label.ts`: `RollModifierKind` (type)
+- `src/lib/rolls/parse-damage-string.ts`: `DamageRollGroup` (type)
+- `src/lib/rolls/roll-parsed-damage.ts`: `DamageRollDieResult` (type)
+- `src/lib/rules/rulebook-callout.ts`: `RulebookCalloutKind` (type)
+- `src/lib/rules/rulebook-search.ts`: `RulebookSearchHit` (type)
+- `src/lib/rules/rulebook.ts`: `RulebookHeading` (type)
+- `src/lib/sheet-tour-highlight.ts`: `ONBOARDING_FLOATING_CARD_NARROW_TOP_PIN_CLASS`, `SHEET_TOUR_NARROW_CHROME_RESERVE_PX`, `sheetTourStepScrollBlock`
+- `src/lib/skill-extra-descriptions.ts`: `SkillExtraChip` (type)
+- `src/lib/supabase/database.ts`: `DynamicTableFilter` (type), `DynamicTableQuery` (type)
+- `src/lib/supabase/session.ts`: `SessionUser` (type)
+- `src/lib/supabase/supabase-auth-cookies.ts`: `PendingSupabaseCookieWrite` (type), `SupabaseCookieStore` (type)
+- `src/lib/supabase/verified-claims.ts`: `VerifiedClaimsError` (type), `VerifiedClaimsResult` (type)
+- `src/lib/tabletop/server.ts`: `VttSceneRow` (type)
+- `src/lib/tooltips/floating-help.tsx`: `FloatingHelpPanelProps` (type)
+- `src/lib/username-rules.ts`: `UsernameValidationResult` (type)
+- `src/services/campaign-roll-service.ts`: `AddCampaignRollParams` (type)
+- `src/services/persist-finished-character.ts`: `PersistFinishedCharacterResult` (type)
+- `src/services/resource-client.ts`: `ResourceClient` (type)
+- `src/stores/guided-creator-store.ts`: `GuidedChapterId` (type), `GuidedChapterMeta` (type), `GuidedPathLayer` (type)
+- `src/types/archetype.ts`: `ArchetypePathLevel` (type)
+- `src/types/campaign-roll.ts`: `CampaignRollTimestamp` (type), `CampaignRollType` (type)
+- `src/types/codex.ts`: `CodexRowVersion` (type)
+- `src/types/core-rules.ts`: `ArchetypeProgressionEntry` (type), `MultipleUseEnergyRow` (type), `OptionalReduceDifficultyByCost` (type), `OptionalReduceDifficultyByTime` (type), `OptionalReduceTimeByCost` (type), `OptionalReduceTimeByDifficulty` (type), `RarityTier` (type), `SizeCategoryDef` (type)
+- `src/types/equipment.ts`: `DamageEntry` (type)
+
 ## Left for a later pass
 
 This index is not finished. These were not opened file by line:
 
 - The bodies named under "Not read line by line" above and in the earlier sections. That includes creator, encounter, campaign, admin, codex, library, sheet, auth, and styleguide files, and the formula and calculator bodies named in this section.
-- Unused exports inside files outside `src/lib/game` and `src/lib/calculators`.
-- The barrel-gap files under `src/hooks`, `src/services`, and `src/stores`. They are named. They were not re-read.
+- The barrel-gap files under `src/hooks`, `src/services`, and `src/stores` were not re-read line by line. Their unused exports are named.
 
 No `src/app` folder still has a non-test source file that is missing from this index. This file is still a map of files and copies. It is not a re-check of how every screen behaves.

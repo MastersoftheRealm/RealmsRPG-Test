@@ -229,6 +229,66 @@ if (omitted.length) {
 
 console.log(`FEATURE_INDEX coverage check OK (${required.length} required paths).`);
 
+const unusedScan = spawnSync(process.execPath, [path.join(__dirname, 'unused-production-exports.mjs')], {
+  encoding: 'utf8',
+});
+if (unusedScan.status !== 0) {
+  if (unusedScan.stderr) process.stderr.write(unusedScan.stderr);
+  console.error('unused-production-exports failed');
+  process.exit(unusedScan.status || 2);
+}
+const foundUnused = JSON.parse(unusedScan.stdout);
+const foundKey = (row) => `${row.tests ? 'test' : 'none'}|${row.kind}|${row.file}|${row.name}`;
+const foundSet = new Set(foundUnused.map(foundKey));
+
+function listedUnusedExports(text) {
+  const start = text.indexOf('## Unused exports outside game and calculators');
+  if (start < 0) return null;
+  const rest = text.slice(start);
+  const next = rest.indexOf('\n## ', 10);
+  const section = next < 0 ? rest : rest.slice(0, next);
+  let tests = null;
+  const listed = [];
+  for (const line of section.split('\n')) {
+    if (line.startsWith('### Only a test imports this')) tests = true;
+    else if (line.startsWith('### Nothing imports this')) tests = false;
+    const match = line.match(/^- `([^`]+)`: (.+)$/);
+    if (!match || tests === null) continue;
+    for (const part of match[2].split(', ')) {
+      const nameMatch = part.match(/^`([^`]+)`(?: \(type\))?$/);
+      if (!nameMatch) {
+        console.error('FEATURE_INDEX unused-export line is not readable:', line);
+        process.exit(2);
+      }
+      listed.push({
+        tests,
+        kind: part.endsWith('(type)') ? 'type' : 'value',
+        file: match[1],
+        name: nameMatch[1],
+      });
+    }
+  }
+  return listed;
+}
+
+const listedUnused = listedUnusedExports(indexText);
+if (!listedUnused) {
+  console.error('FEATURE_INDEX is missing the unused-export section.');
+  process.exit(2);
+}
+const listedSet = new Set(listedUnused.map(foundKey));
+const missingNotes = [...foundSet].filter((key) => !listedSet.has(key)).sort();
+const staleNotes = [...listedSet].filter((key) => !foundSet.has(key)).sort();
+if (missingNotes.length || staleNotes.length) {
+  console.error('FEATURE_INDEX unused-export list does not match production imports.');
+  missingNotes.slice(0, 40).forEach((key) => console.error('  missing from index:', key));
+  staleNotes.slice(0, 40).forEach((key) => console.error('  named but imported, or gone:', key));
+  if (missingNotes.length > 40) console.error(`  ... ${missingNotes.length - 40} more missing`);
+  if (staleNotes.length > 40) console.error(`  ... ${staleNotes.length - 40} more stale`);
+  process.exit(2);
+}
+console.log(`FEATURE_INDEX unused-export check OK (${foundUnused.length} exports).`);
+
 const gen = spawnSync(
   process.execPath,
   [path.join(__dirname, 'generate-feature-index-barrels.js'), '--check'],
