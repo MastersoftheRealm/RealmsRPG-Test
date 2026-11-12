@@ -46,9 +46,7 @@ import { isListedSavedCreatureSkill } from '@/components/patterns/list/creature-
 import { getCreatureAbilityBounds } from '@/lib/game/creature-ability-bounds';
 import { formatCreatureAbilityPointsValue } from './creature-ability-points-display';
 import {
-  creatureMovementLabel,
   creaturePickerMaxSelections,
-  creatureSenseLabel,
   creatureSizeDisplayLabel,
   formatCreatureGroupedNumber,
   uniqueCreatureLanguages,
@@ -99,10 +97,6 @@ function CreatureCreatorContent() {
     techniqueSelectableItems,
     armamentSelectableItems,
     skillAllocations,
-    senseDescriptions,
-    movementDescriptions,
-    getSenseCostLabel,
-    getMovementCostLabel,
     featsSummary,
     powersSummary,
     techniquesSummary,
@@ -333,8 +327,6 @@ function CreatureCreatorContent() {
             { label: 'Immunities', items: creature.immunities },
             { label: 'Condition Immunities', items: creature.conditionImmunities },
             { label: 'Weaknesses', items: creature.weaknesses },
-            { label: 'Senses', items: creature.senses.map(creatureSenseLabel) },
-            { label: 'Movement', items: creature.movementTypes.map(creatureMovementLabel) },
             { label: 'Languages', items: uniqueCreatureLanguages(creature.languages) },
             {
               label: 'Inventory Cost',
@@ -487,10 +479,6 @@ function CreatureCreatorContent() {
         stats={stats}
         skillPointsHelp={skillPointsHelp}
         skillAllocations={skillAllocations}
-        senseDescriptions={senseDescriptions}
-        movementDescriptions={movementDescriptions}
-        getSenseCostLabel={getSenseCostLabel}
-        getMovementCostLabel={getMovementCostLabel}
         featsSummary={featsSummary}
         powersSummary={powersSummary}
         techniquesSummary={techniquesSummary}

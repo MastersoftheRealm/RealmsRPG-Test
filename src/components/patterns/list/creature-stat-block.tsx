@@ -112,9 +112,6 @@ export function CreatureStatBlock({
   const shields = inventory.shields;
   const armor = inventory.armor;
   const equipment = inventory.equipment;
-  const senses = creature.senses ?? [];
-  const movement = creature.movementTypes ?? [];
-  const hasSensesOrMovement = senses.length > 0 || movement.length > 0;
   const creatureSkills = useMemo(() => {
     if (!creature.skills)
       return [] as Array<{
@@ -231,9 +228,6 @@ export function CreatureStatBlock({
           rollContext={rollContext}
           attackAbilities={attackAbilities}
           itemPropertiesDb={itemPropertiesDb}
-          senses={senses}
-          movement={movement}
-          hasSensesOrMovement={hasSensesOrMovement}
           skillRows={skillRows}
           hasSkills={hasSkills}
           hasFeats={hasFeats}

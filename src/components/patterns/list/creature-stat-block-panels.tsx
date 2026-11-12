@@ -28,17 +28,9 @@ import type { Abilities } from '@/types';
 import type { CreatureData, CreatureStatBlockArmament } from './creature-stat-block-types';
 import { StatBlockSection } from './creature-stat-block-section';
 import {
-  creatureMovementDescription,
-  creatureMovementLabel,
-  creatureSenseDescription,
-  creatureSenseLabel,
-} from '@/app/(main)/creature-creator/creature-trait-labels';
-import {
   REALMS_ABILITY_ORDER,
   REALMS_ABILITY_ABBR,
   DEFENSES_BY_ABILITY,
-  SIMPLE_LIST_COLUMNS,
-  SIMPLE_LIST_GRID,
   formatModifier,
   getAbilityValue,
   propertiesToChips,
@@ -62,9 +54,6 @@ interface CreatureStatBlockExpandedContentProps {
   rollContext: RollContext;
   attackAbilities: Abilities;
   itemPropertiesDb: CodexProperty[];
-  senses: string[];
-  movement: string[];
-  hasSensesOrMovement: boolean;
   skillRows: Array<{
     key: string;
     rowId: string;
@@ -103,9 +92,6 @@ export function CreatureStatBlockExpandedContent({
   rollContext,
   attackAbilities,
   itemPropertiesDb,
-  senses,
-  movement,
-  hasSensesOrMovement,
   skillRows,
   hasSkills,
   hasFeats,
@@ -285,46 +271,6 @@ export function CreatureStatBlockExpandedContent({
       {/* Sections start full-width under the header */}
       <div className="grid gap-4 xl:grid-cols-2">
         <div className="space-y-4">
-          {hasSensesOrMovement && (
-            <>
-              {senses.length > 0 && (
-                <StatBlockSection title="Senses" defaultExpanded>
-                  <ListHeader columns={SIMPLE_LIST_COLUMNS} gridColumns={SIMPLE_LIST_GRID} />
-                  <div className="mt-2 space-y-1">
-                    {senses.map((sense) => (
-                      <GridListRow
-                        key={`${creature.id}-sense-${sense}`}
-                        id={`${creature.id}-sense-${sense}`}
-                        name={creatureSenseLabel(sense)}
-                        description={creatureSenseDescription(sense)}
-                        gridColumns={SIMPLE_LIST_GRID}
-                        compact
-                      />
-                    ))}
-                  </div>
-                </StatBlockSection>
-              )}
-
-              {movement.length > 0 && (
-                <StatBlockSection title="Movement" defaultExpanded>
-                  <ListHeader columns={SIMPLE_LIST_COLUMNS} gridColumns={SIMPLE_LIST_GRID} />
-                  <div className="mt-2 space-y-1">
-                    {movement.map((m) => (
-                      <GridListRow
-                        key={`${creature.id}-move-${m}`}
-                        id={`${creature.id}-move-${m}`}
-                        name={creatureMovementLabel(m)}
-                        description={creatureMovementDescription(m)}
-                        gridColumns={SIMPLE_LIST_GRID}
-                        compact
-                      />
-                    ))}
-                  </div>
-                </StatBlockSection>
-              )}
-            </>
-          )}
-
           {hasSkills && (
             <StatBlockSection title="Skills" defaultExpanded>
               <div className="mt-2 grid grid-cols-1 gap-3 xl:grid-cols-2">

@@ -207,14 +207,14 @@ export const CREATURE_FEAT_IDS = {
   TELEPATHICALLY_INTUNE: 45,
 } as const;
 
-// Mechanical creature feats that are auto-added based on UI selections
-// These should be hidden from manual feat selection
+// Hidden from the general creature-feat picker.
+// Damage traits have their own summary lines. Movement and senses ids stay out of
+// that picker until category sections exist. This set is not a category list.
 export const MECHANICAL_CREATURE_FEAT_IDS: Set<number> = new Set([
   CREATURE_FEAT_IDS.RESISTANCE,
   CREATURE_FEAT_IDS.IMMUNITY,
   CREATURE_FEAT_IDS.WEAKNESS,
   CREATURE_FEAT_IDS.CONDITION_IMMUNITY,
-  // Senses - auto-added based on senses selection
   CREATURE_FEAT_IDS.DARKVISION,
   CREATURE_FEAT_IDS.DARKVISION_II,
   CREATURE_FEAT_IDS.DARKVISION_III,
@@ -222,7 +222,6 @@ export const MECHANICAL_CREATURE_FEAT_IDS: Set<number> = new Set([
   CREATURE_FEAT_IDS.BLINDSENSE_II,
   CREATURE_FEAT_IDS.BLINDSENSE_III,
   CREATURE_FEAT_IDS.BLINDSENSE_IV,
-  // Movement - auto-added based on movement selection
   CREATURE_FEAT_IDS.FLYING,
   CREATURE_FEAT_IDS.FLYING_II,
   CREATURE_FEAT_IDS.BURROW,

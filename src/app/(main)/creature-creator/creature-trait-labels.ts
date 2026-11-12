@@ -1,45 +1,13 @@
 /**
- * Shared labels for stored creature sense, movement, size, and language values.
- * Stored keys stay as they are (Fly, Fly Half, miniscule). Displays use these labels.
+ * Shared labels for stored creature size and language values.
+ * Stored keys stay as they are (miniscule). Displays use these labels.
  */
 
-import {
-  MOVEMENT_DESCRIPTIONS,
-  SENSE_DESCRIPTIONS,
-} from '@/components/patterns/list/creature-stat-block-helpers';
 import { findSizeTableRow } from '@/lib/game/size-table';
 import { formatListCellLabel } from '@/lib/utils';
-import { MOVEMENT_TYPES, SENSES } from './creature-creator-constants';
-
-const SENSE_BY_VALUE = new Map(SENSES.map((sense) => [sense.value, sense]));
-const MOVEMENT_BY_VALUE = new Map(MOVEMENT_TYPES.map((movement) => [movement.value, movement]));
 
 /** Hard cap on how many rows one creature picker confirm can add. */
 const CREATURE_PICKER_SELECTION_CAP = 10;
-
-export function creatureSenseLabel(value: string): string {
-  return SENSE_BY_VALUE.get(value)?.label ?? value;
-}
-
-export function creatureMovementLabel(value: string): string {
-  return MOVEMENT_BY_VALUE.get(value)?.label ?? value;
-}
-
-export function creatureSenseDescription(value: string): string {
-  return (
-    SENSE_BY_VALUE.get(value)?.description ??
-    SENSE_DESCRIPTIONS[value] ??
-    'No description available.'
-  );
-}
-
-export function creatureMovementDescription(value: string): string {
-  return (
-    MOVEMENT_BY_VALUE.get(value)?.description ??
-    MOVEMENT_DESCRIPTIONS[value] ??
-    'See movement rules for details.'
-  );
-}
 
 /** Size-table label for a stored size key. Unknown keys keep the list-cell title case. */
 export function creatureSizeDisplayLabel(size: string | null | undefined): string {

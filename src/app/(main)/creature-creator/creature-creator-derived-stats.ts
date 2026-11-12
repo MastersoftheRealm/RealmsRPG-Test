@@ -27,7 +27,6 @@ import {
 } from '@/lib/game/creature-inventory';
 import { creatureArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import type { CoreRulesMap } from '@/types/core-rules';
-import { SENSE_TO_FEAT_ID, MOVEMENT_TO_FEAT_ID } from './creature-creator-constants';
 import type { CreatureState } from './creature-creator-types';
 import {
   computeCreatureTrainingSpent,
@@ -114,31 +113,11 @@ export function calculateCreatureCreatorStats(
     featPointsMap.get(String(CREATURE_FEAT_IDS.CONDITION_IMMUNITY)) ??
     CREATURE_MECHANICAL_FEAT_POINTS.CONDITION_IMMUNITY;
 
-  const senseFeatPoints = creature.senses.reduce((sum, sense) => {
-    const featId = SENSE_TO_FEAT_ID[sense];
-    if (featId) {
-      const cost = featPointsMap.get(String(featId)) ?? 0;
-      return sum + cost;
-    }
-    return sum;
-  }, 0);
-
-  const movementFeatPoints = creature.movementTypes.reduce((sum, movement) => {
-    const featId = MOVEMENT_TO_FEAT_ID[movement];
-    if (featId) {
-      const cost = featPointsMap.get(String(featId)) ?? 0;
-      return sum + cost;
-    }
-    return sum;
-  }, 0);
-
   const mechanicalFeatPoints =
     creature.resistances.length * resistanceFeatCost +
     creature.immunities.length * immunityFeatCost +
     creature.weaknesses.length * weaknessFeatCost +
-    creature.conditionImmunities.length * conditionImmunityFeatCost +
-    senseFeatPoints +
-    movementFeatPoints;
+    creature.conditionImmunities.length * conditionImmunityFeatCost;
 
   const manualFeatSpent = creature.feats.reduce((sum, f) => sum + (f.points ?? 1), 0);
   const featSpent = manualFeatSpent + mechanicalFeatPoints;

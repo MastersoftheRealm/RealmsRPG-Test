@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { GridListRow, type SelectableItem, type ColumnValue } from '@/components/patterns';
+import { type SelectableItem, type ColumnValue } from '@/components/patterns';
 import { Button, DescriptorChip } from '@/components/ui';
 import type { DisplayItem } from '@/types/items';
 import { resolveListRowThumbnail, type ListRowImageKind } from '@/lib/list-row-image';
@@ -64,70 +64,6 @@ export function ChipList({
               ×
             </button>
           </span>
-        );
-      })}
-    </div>
-  );
-}
-
-// =============================================================================
-// ExpandableChipList
-// =============================================================================
-
-export function ExpandableChipList({
-  items,
-  onRemove,
-  color = 'bg-surface-alt text-text-secondary',
-  rowHoverClass,
-  descriptions,
-  costLabel,
-  labelFor,
-  removeLabel,
-}: {
-  items: string[];
-  onRemove: (item: string) => void;
-  color?: string | undefined;
-  rowHoverClass?: string | undefined;
-  descriptions: Record<string, string>;
-  /** Optional: return feat point cost label per item (e.g. "+1 pt"). Shown in rightSlot as chip. */
-  costLabel?: ((item: string) => string | undefined) | undefined;
-  /** Display label for a stored key. Removal still uses the stored value. */
-  labelFor?: ((item: string) => string) | undefined;
-  /** Accessible name for the remove control. Default "Remove {label}". */
-  removeLabel?: ((item: string) => string) | undefined;
-}) {
-  if (items.length === 0) return <p className="text-sm text-text-muted italic">None</p>;
-
-  return (
-    <div className="flex flex-col gap-2">
-      {items.map((item) => {
-        const description = descriptions[item];
-        const cost = costLabel?.(item);
-
-        return (
-          <GridListRow
-            key={item}
-            id={item}
-            name={labelFor?.(item) ?? item}
-            description={description}
-            onDelete={() => onRemove(item)}
-            deleteLabel={removeLabel?.(item) ?? `Remove ${labelFor?.(item) ?? item}`}
-            compact
-            className={color}
-            rowHoverClass={rowHoverClass}
-            rightSlot={
-              cost != null && cost !== '' ? (
-                <DescriptorChip
-                  variant="primary"
-                  size="sm"
-                  className="shrink-0"
-                  title="Feat point cost"
-                >
-                  {cost}
-                </DescriptorChip>
-              ) : undefined
-            }
-          />
         );
       })}
     </div>

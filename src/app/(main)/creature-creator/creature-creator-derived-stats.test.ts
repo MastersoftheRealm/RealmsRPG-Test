@@ -33,6 +33,20 @@ describe('calculateCreatureCreatorStats', () => {
     expect(slow.speed).toBe(base.speed - 2);
   });
 
+  it('stored movement names do not spend feat points', () => {
+    const map = new Map(featPointsMap);
+    map.set(String(CREATURE_FEAT_IDS.SPEEDY), 3);
+    const base = calculateCreatureCreatorStats(initialState, map, new Set(), undefined);
+    const speedy = calculateCreatureCreatorStats(
+      { ...initialState, movementTypes: ['Speedy'] },
+      map,
+      new Set(),
+      undefined,
+    );
+    expect(speedy.speed).toBe(base.speed + 2);
+    expect(speedy.featSpent).toBe(base.featSpent);
+  });
+
   it('returns positive remaining budgets for a fresh level-1 creature', () => {
     const stats = calculateCreatureCreatorStats(initialState, featPointsMap, new Set(), undefined);
     expect(stats.featRemaining).toBeGreaterThanOrEqual(0);

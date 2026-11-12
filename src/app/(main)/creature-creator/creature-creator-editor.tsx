@@ -57,10 +57,6 @@ export type CreatureCreatorEditorProps = {
   stats: CreatureCreatorStatsSlice;
   skillPointsHelp: ReactNode;
   skillAllocations: Record<string, number>;
-  senseDescriptions: Record<string, string>;
-  movementDescriptions: Record<string, string>;
-  getSenseCostLabel: (sense: string) => string | undefined;
-  getMovementCostLabel: (movement: string) => string | undefined;
   featsSummary: string;
   powersSummary: string;
   techniquesSummary: string;

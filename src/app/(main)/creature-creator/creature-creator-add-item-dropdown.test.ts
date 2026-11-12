@@ -13,9 +13,9 @@ describe('creature creator AddItemDropdown phone width (86e3ptm8f)', () => {
     expect(helpers).toMatch(/w-0 min-w-0 flex-1/);
   });
 
-  it('bounds Senses and Movement columns inside the card grid', () => {
-    expect(traits).toContain('grid min-w-0 gap-4 md:grid-cols-2');
-    const sensesMovement = traits.slice(traits.indexOf('Senses & Movement'));
-    expect(sensesMovement.match(/className="min-w-0"/g)?.length).toBeGreaterThanOrEqual(2);
+  it('does not keep the old Senses and Movement name lists on the traits card', () => {
+    expect(traits).not.toContain('Senses & Movement');
+    expect(traits).not.toContain('MOVEMENT_TYPES');
+    expect(traits).not.toContain('SENSES');
   });
 });

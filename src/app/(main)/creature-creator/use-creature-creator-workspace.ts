@@ -46,14 +46,7 @@ import { useSort } from '@/hooks/use-sort';
 import { useDiscardableCreatorDraft } from '@/hooks/use-creator-unsaved-guard';
 import type { AbilityName } from '@/types';
 import type { CreatureSkill, CreatureState } from './creature-creator-types';
-import {
-  SENSES,
-  MOVEMENT_TYPES,
-  SENSE_TO_FEAT_ID,
-  MOVEMENT_TO_FEAT_ID,
-  initialState,
-  CREATURE_CREATOR_CACHE_KEY,
-} from './creature-creator-constants';
+import { initialState, CREATURE_CREATOR_CACHE_KEY } from './creature-creator-constants';
 import { allocationsToCreatureSkills, creatureSkillsToAllocations } from './creature-skill-utils';
 import { bootstrapCreatureState } from './creature-creator-bootstrap';
 import {
@@ -69,7 +62,6 @@ import {
 import { normalizeCreatureInventoryType } from '@/lib/game/creature-inventory';
 import { mergeLibraryBySource } from '@/lib/library/source-scope';
 import { mergeCreatureFeatsOnAdd } from './creature-feat-utils';
-import { replaceTieredCreatureChipValue } from '@/lib/creature-chip-tier';
 import { canAddDamageModifier } from './creature-damage-modifiers';
 import {
   buildArmamentLibraryList,
@@ -294,41 +286,6 @@ export function useCreatureCreatorWorkspace() {
   const skillAbilityMap = useMemo(() => buildSkillAbilityMap(skillsData), [skillsData]);
   const subSkillNames = useMemo(() => buildSubSkillNames(skillsData), [skillsData]);
 
-  const getSenseCostLabel = useCallback(
-    (sense: string) => {
-      const featId = SENSE_TO_FEAT_ID[sense];
-      if (featId == null) return undefined;
-      const cost = featPointsMap.get(String(featId));
-      return cost != null ? `${cost >= 0 ? '+' : ''}${cost} pt` : undefined;
-    },
-    [featPointsMap],
-  );
-  const getMovementCostLabel = useCallback(
-    (movement: string) => {
-      const featId = MOVEMENT_TO_FEAT_ID[movement];
-      if (featId == null) return undefined;
-      const cost = featPointsMap.get(String(featId));
-      return cost != null ? `${cost >= 0 ? '+' : ''}${cost} pt` : undefined;
-    },
-    [featPointsMap],
-  );
-
-  const senseDescriptions = useMemo(() => {
-    const map: Record<string, string> = {};
-    SENSES.forEach((sense: { value: string; description: string }) => {
-      map[sense.value] = sense.description;
-    });
-    return map;
-  }, []);
-
-  const movementDescriptions = useMemo(() => {
-    const map: Record<string, string> = {};
-    MOVEMENT_TYPES.forEach((movement: { value: string; description: string }) => {
-      map[movement.value] = movement.description;
-    });
-    return map;
-  }, []);
-
   const featLevelsByFamily = useMemo(
     () => buildFeatLevelsByFamilyMap(codexFeatsData as Feat[]),
     [codexFeatsData],
@@ -447,31 +404,18 @@ export function useCreatureCreatorWorkspace() {
     }));
   }, []);
 
-  const addToArray = useCallback(
-    (field: keyof CreatureState, item: string) => {
-      setCreature((prev) => {
-        if (
-          (field === 'resistances' || field === 'weaknesses' || field === 'immunities') &&
-          !canAddDamageModifier(prev, item)
-        ) {
-          return prev;
-        }
-        const current = prev[field] as string[];
-        const chipMap =
-          field === 'senses'
-            ? SENSE_TO_FEAT_ID
-            : field === 'movementTypes'
-              ? MOVEMENT_TO_FEAT_ID
-              : null;
-        const next =
-          chipMap != null
-            ? replaceTieredCreatureChipValue(current, item, chipMap, codexCreatureFeatsById)
-            : [...current, item];
-        return { ...prev, [field]: next };
-      });
-    },
-    [codexCreatureFeatsById],
-  );
+  const addToArray = useCallback((field: keyof CreatureState, item: string) => {
+    setCreature((prev) => {
+      if (
+        (field === 'resistances' || field === 'weaknesses' || field === 'immunities') &&
+        !canAddDamageModifier(prev, item)
+      ) {
+        return prev;
+      }
+      const current = prev[field] as string[];
+      return { ...prev, [field]: [...current, item] };
+    });
+  }, []);
 
   const removeFromArray = useCallback((field: keyof CreatureState, item: string) => {
     setCreature((prev) => ({
@@ -606,10 +550,6 @@ export function useCreatureCreatorWorkspace() {
     armamentSelectableItems,
     codexFeatsById,
     skillAllocations,
-    senseDescriptions,
-    movementDescriptions,
-    getSenseCostLabel,
-    getMovementCostLabel,
     featsSummary,
     powersSummary,
     techniquesSummary,
