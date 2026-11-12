@@ -62,7 +62,10 @@ import {
 import { normalizeCreatureInventoryType } from '@/lib/game/creature-inventory';
 import { mergeLibraryBySource } from '@/lib/library/source-scope';
 import { codexCreatureFeatToCreatureFeat, mergeCreatureFeatsOnAdd } from './creature-feat-utils';
-import { isCreatureMovementControlFeatId } from './creature-movement';
+import {
+  isCreatureMovementEffectFeat,
+  isMovementBoundFamilyFeat,
+} from './creature-movement';
 import { canAddDamageModifier } from './creature-damage-modifiers';
 import {
   buildArmamentLibraryList,
@@ -378,8 +381,14 @@ export function useCreatureCreatorWorkspace() {
 
   const sortedFeats = useMemo(
     () =>
-      sortFeatItems(featsWithTypeLabel.filter((feat) => !isCreatureMovementControlFeatId(feat.id))),
-    [featsWithTypeLabel, sortFeatItems],
+      sortFeatItems(
+        featsWithTypeLabel.filter((feat) => {
+          if (isCreatureMovementEffectFeat(feat)) return false;
+          const row = codexCreatureFeatsById.get(String(feat.id));
+          return !(row && isMovementBoundFamilyFeat(row));
+        }),
+      ),
+    [codexCreatureFeatsById, featsWithTypeLabel, sortFeatItems],
   );
 
   const addMovementDropdownFeat = useCallback(

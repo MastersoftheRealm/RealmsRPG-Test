@@ -133,6 +133,8 @@ export interface CreatureFeat {
   description?: string | undefined;
   points?: number | undefined;
   featSourceType?: CreatureFeatSourceType | undefined;
+  /** Set when the Movement section owns this row, so it is not also listed as a feat. */
+  boundControl?: boolean | undefined;
 }
 
 export interface CreatureArmament {

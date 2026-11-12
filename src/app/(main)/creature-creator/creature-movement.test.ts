@@ -3,13 +3,18 @@ import { CREATURE_FEAT_IDS } from '@/lib/id-constants';
 import { initialState } from './creature-creator-constants';
 import {
   isCreatureMovementControlFeatId,
+  isCreatureMovementEffectFeat,
+  movementAfterBurrowLevel,
   movementAfterFlyLevel,
   movementAfterWalkLevel,
   movementAfterSwimLevel,
   movementDropdownFeats,
   movementSectionPointTotal,
+  movementToggleLines,
+  movementTravelLines,
   nextSpeedType,
   readWalkLevel,
+  walkLevelCap,
 } from './creature-movement';
 
 const catalog = [
@@ -81,5 +86,55 @@ describe('creature movement section helpers', () => {
     expect(
       movementSectionPointTotal({ ...initialState, movementTypes: ['Speedy'], feats: [] }, catalog),
     ).toBe(0.5);
+  });
+
+  it('uses a further Speedy family level as the speed step, not a listed feat', () => {
+    const withFourth = [
+      ...catalog,
+      {
+        id: '166',
+        name: 'Speedy',
+        description: 'This creature’s Speed is increased by 4.',
+        points: 2,
+        feat_lvl: 4,
+        base_feat_id: String(CREATURE_FEAT_IDS.SPEEDY),
+        mechanic: false,
+        category: 'Movement',
+      },
+    ];
+    expect(walkLevelCap(withFourth).up).toBe(4);
+    const stepped = movementAfterWalkLevel(initialState, 4, withFourth);
+    expect(readWalkLevel(stepped.movementTypes)).toBe(4);
+    expect(stepped.movementTypes).toContain('walk:+4');
+    expect(stepped.movementTypes).not.toContain('Speedy');
+    expect(stepped.feats.map((feat) => feat.id)).toEqual(['166']);
+    expect(stepped.feats[0]?.boundControl).toBe(true);
+    expect(isCreatureMovementEffectFeat(stepped.feats[0]!)).toBe(true);
+    expect(movementDropdownFeats(withFourth).map((feat) => feat.id)).toEqual([
+      String(CREATURE_FEAT_IDS.BOUNDING),
+    ]);
+    expect(
+      movementSectionPointTotal(
+        { ...initialState, movementTypes: stepped.movementTypes, feats: stepped.feats },
+        withFourth,
+      ),
+    ).toBe(2);
+  });
+
+  it('publishes fly, swim, and burrow speeds, and toggle feats by their saved text', () => {
+    const withFly = movementAfterFlyLevel(initialState, 2, catalog);
+    const withBurrow = movementAfterBurrowLevel(withFly, 2, catalog);
+    const types = movementAfterSwimLevel(withBurrow, 1).movementTypes;
+    expect(movementTravelLines(types, 10)).toEqual([
+      { label: 'Flying Speed', value: '10' },
+      { label: 'Swimming Speed', value: '5' },
+      { label: 'Burrow Speed', value: '10' },
+    ]);
+    expect(
+      movementToggleLines([
+        { id: CREATURE_FEAT_IDS.HOVER, name: 'Hover', description: 'Stays aloft.' },
+        { id: CREATURE_FEAT_IDS.BOUNDING, name: 'Bounding' },
+      ]),
+    ).toEqual([{ id: String(CREATURE_FEAT_IDS.HOVER), name: 'Hover', description: 'Stays aloft.' }]);
   });
 });

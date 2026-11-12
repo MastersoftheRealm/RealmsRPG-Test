@@ -90,32 +90,61 @@ export function calculateSpeed(agility: number, speedBase?: number, rules?: Rule
 }
 
 /**
- * Walking-speed spaces from the Speedy and Slow families.
- * Each feat level is 1 space (Speedy +1/+2/+3, Slow −1/−2/−3). A higher level replaces a lower one in that family.
+ * Legacy saved names for Speedy and Slow. Each name is that feat level.
+ * One space per level. A `walk:+N` / `walk:-N` token is the same rule when the
+ * family has a level these three names do not spell.
  */
-const SPEEDY_WALK_SPACES: Record<string, number> = {
+const SPEEDY_WALK_LEVEL: Record<string, number> = {
   Speedy: 1,
   'Speedy II': 2,
   'Speedy III': 3,
 };
-const SLOW_WALK_SPACES: Record<string, number> = {
+const SLOW_WALK_LEVEL: Record<string, number> = {
   Slow: 1,
   'Slow II': 2,
   'Slow III': 3,
 };
 
-function creatureWalkingSpeedAdjustment(
+const WALK_LEVEL_TOKEN = /^walk:([+-]?\d+)$/;
+
+/** Signed Speedy/Slow level. Positive is Speedy, negative is Slow. */
+export function creatureWalkLevel(
   movementTypes: readonly string[] | null | undefined,
 ): number {
+  let explicit: number | null = null;
+  for (const name of movementTypes ?? []) {
+    const token = WALK_LEVEL_TOKEN.exec(name);
+    if (token) {
+      const parsed = Number(token[1]);
+      if (Number.isFinite(parsed)) explicit = parsed;
+    }
+  }
+  if (explicit != null) return explicit;
+
   let speedy = 0;
   let slow = 0;
   for (const name of movementTypes ?? []) {
-    const bonus = SPEEDY_WALK_SPACES[name];
+    const bonus = SPEEDY_WALK_LEVEL[name];
     if (bonus != null && bonus > speedy) speedy = bonus;
-    const penalty = SLOW_WALK_SPACES[name];
+    const penalty = SLOW_WALK_LEVEL[name];
     if (penalty != null && penalty > slow) slow = penalty;
   }
   return speedy - slow;
+}
+
+/** Name an old save already uses, or a level token when the family is longer than those names. */
+export function walkMovementToken(level: number): string | null {
+  if (level > 0) {
+    return Object.keys(SPEEDY_WALK_LEVEL)[level - 1] ?? `walk:+${level}`;
+  }
+  if (level < 0) {
+    return Object.keys(SLOW_WALK_LEVEL)[-level - 1] ?? `walk:${level}`;
+  }
+  return null;
+}
+
+export function isLegacyWalkMovementName(name: string): boolean {
+  return name in SPEEDY_WALK_LEVEL || name in SLOW_WALK_LEVEL || WALK_LEVEL_TOKEN.test(name);
 }
 
 /**
@@ -127,7 +156,7 @@ export function calculateCreatureSpeed(
   rules?: Rules,
   movementTypes?: readonly string[] | null,
 ): number {
-  return calculateSpeed(agility, undefined, rules) + creatureWalkingSpeedAdjustment(movementTypes);
+  return calculateSpeed(agility, undefined, rules) + creatureWalkLevel(movementTypes);
 }
 
 /** Score = 10 + Bonus (GAME_RULES "The Score Pattern") — Defense Score, Martial/Power Potency. */

@@ -4,7 +4,7 @@
 
 import type { CreatureState } from './creature-creator-types';
 import { collectCreatureInventoryItems } from '@/lib/game/creature-inventory';
-import { isCreatureMovementControlFeatId } from './creature-movement';
+import { isCreatureMovementEffectFeat } from './creature-movement';
 
 function summarizeNamedItems(
   items: Array<{ name?: string | undefined }>,
@@ -17,7 +17,7 @@ function summarizeNamedItems(
 }
 
 export function buildCreatureFeatsSummary(creature: CreatureState): string {
-  const listed = creature.feats.filter((feat) => !isCreatureMovementControlFeatId(feat.id));
+  const listed = creature.feats.filter((feat) => !isCreatureMovementEffectFeat(feat));
   return summarizeNamedItems(listed, 'No feats');
 }
 

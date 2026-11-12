@@ -1,19 +1,25 @@
 /**
  * Creature Movement controls.
  * Speed, fly, and burrow are bound to feat families. Other on/off controls are toggles.
- * Category is not decided here. A row with mechanic false stays a normal pick.
- * Saved names (Speedy, Fly Half, Fly) are the loader for creatures written before this section.
+ * Category is not decided here. A Speedy, Slow, Flying, or Burrow family row is this
+ * section's control, even when its mechanic flag is false. Other mechanic-false
+ * Movement rows stay normal picks.
+ * Saved Speedy and Slow names still load an old speed. A family level those names
+ * cannot spell is stored as walk:+N or walk:-N, one space per level.
  */
 
 import { CREATURE_FEAT_IDS } from '@/lib/id-constants';
 import { getFeatLevel } from '@/lib/leveled-feats';
+import {
+  creatureWalkLevel,
+  isLegacyWalkMovementName,
+  walkMovementToken,
+} from '@/lib/game/calculations';
 import type { CreatureFeat as CodexCreatureFeat } from '@/hooks';
 import { codexCreatureFeatToCreatureFeat } from './creature-feat-utils';
 import type { CreatureState } from './creature-creator-types';
 import type { CreatureFeat } from './transformers';
 
-const SPEEDY_NAMES = ['Speedy', 'Speedy II', 'Speedy III'] as const;
-const SLOW_NAMES = ['Slow', 'Slow II', 'Slow III'] as const;
 const FLY_NAMES = ['Fly Half', 'Fly'] as const;
 const SWIM_NAMES = ['Swim Half', 'Swim'] as const;
 const BURROW_NAMES = ['Burrow', 'Burrow II'] as const;
@@ -40,7 +46,16 @@ const TOGGLE_IDS = [
   98,
 ] as const;
 
-const WALK_NAMES = new Set<string>([...SPEEDY_NAMES, ...SLOW_NAMES]);
+const WALK_FAMILY_ROOTS = new Set<string>([
+  String(CREATURE_FEAT_IDS.SPEEDY),
+  String(CREATURE_FEAT_IDS.SLOW),
+  String(CREATURE_FEAT_IDS.FLYING),
+  String(CREATURE_FEAT_IDS.BURROW),
+]);
+const SPEED_ROOTS = new Set<string>([
+  String(CREATURE_FEAT_IDS.SPEEDY),
+  String(CREATURE_FEAT_IDS.SLOW),
+]);
 
 function idString(id: number): string {
   return String(id);
@@ -56,6 +71,27 @@ const CONTROL_IDS = new Set<string>([
 
 export function isCreatureMovementControlFeatId(id: string | number): boolean {
   return CONTROL_IDS.has(String(id));
+}
+
+/** A family row the Movement steppers own, including a mechanic-false child such as a further Speedy level. */
+export function isMovementBoundFamilyFeat(feat: {
+  id: string | number;
+  base_feat_id?: string | number | null | undefined;
+}): boolean {
+  const id = String(feat.id);
+  const base =
+    feat.base_feat_id == null || feat.base_feat_id === '' ? '' : String(feat.base_feat_id);
+  return WALK_FAMILY_ROOTS.has(id) || WALK_FAMILY_ROOTS.has(base);
+}
+
+/** Hidden from the feat list: a known control id, or a row this section just wrote. */
+export function isCreatureMovementEffectFeat(feat: {
+  id?: string | number | undefined;
+  boundControl?: boolean | undefined;
+}): boolean {
+  if (feat.boundControl) return true;
+  if (feat.id == null) return false;
+  return isCreatureMovementControlFeatId(feat.id);
 }
 
 export function formatMovementPointCost(points: number): string {
@@ -111,17 +147,7 @@ export function walkLevelCap(catalog: readonly CodexCreatureFeat[]): { up: numbe
 }
 
 export function readWalkLevel(movementTypes: readonly string[]): number {
-  let speedy = 0;
-  let slow = 0;
-  for (const name of movementTypes) {
-    const speedyLevel = SPEEDY_NAMES.indexOf(name as (typeof SPEEDY_NAMES)[number]);
-    if (speedyLevel >= 0) speedy = Math.max(speedy, speedyLevel + 1);
-    const slowLevel = SLOW_NAMES.indexOf(name as (typeof SLOW_NAMES)[number]);
-    if (slowLevel >= 0) slow = Math.max(slow, slowLevel + 1);
-  }
-  if (speedy > 0 && slow === 0) return speedy;
-  if (slow > 0 && speedy === 0) return -slow;
-  return speedy - slow;
+  return creatureWalkLevel(movementTypes);
 }
 
 function readSpeedMode(
@@ -163,7 +189,21 @@ function withFeat(
 ): CreatureFeat[] {
   const row = catalog.find((feat) => String(feat.id) === id);
   if (!row) return feats;
-  return [...feats, codexCreatureFeatToCreatureFeat(row)];
+  return [...feats, { ...codexCreatureFeatToCreatureFeat(row), boundControl: true }];
+}
+
+function withoutSpeedFamily(
+  feats: readonly CreatureFeat[],
+  catalog: readonly CodexCreatureFeat[],
+): CreatureFeat[] {
+  const family = new Set<string>(WALK_IDS);
+  for (const feat of catalog) {
+    const id = String(feat.id);
+    const base =
+      feat.base_feat_id == null || feat.base_feat_id === '' ? '' : String(feat.base_feat_id);
+    if (SPEED_ROOTS.has(id) || SPEED_ROOTS.has(base)) family.add(id);
+  }
+  return feats.filter((feat) => !family.has(String(feat.id)));
 }
 
 const WALK_IDS = new Set<string>([...SPEEDY_IDS, ...SLOW_IDS].map(idString));
@@ -177,17 +217,17 @@ export function movementAfterWalkLevel(
 ): Pick<CreatureState, 'movementTypes' | 'feats'> {
   const caps = walkLevelCap(catalog);
   const nextLevel = Math.max(-caps.down, Math.min(caps.up, level));
-  let movementTypes = stripNames(creature.movementTypes, WALK_NAMES);
-  let feats = withoutIds(creature.feats, WALK_IDS);
+  let movementTypes = creature.movementTypes.filter((name) => !isLegacyWalkMovementName(name));
+  let feats = withoutSpeedFamily(creature.feats, catalog);
+  const token = walkMovementToken(nextLevel);
+  if (token) movementTypes = [...movementTypes, token];
   if (nextLevel > 0) {
-    movementTypes = [...movementTypes, SPEEDY_NAMES[nextLevel - 1] ?? 'Speedy'];
     feats = withFeat(
       feats,
       catalog,
       featIdForLevel(catalog, CREATURE_FEAT_IDS.SPEEDY, nextLevel, SPEEDY_IDS),
     );
   } else if (nextLevel < 0) {
-    movementTypes = [...movementTypes, SLOW_NAMES[-nextLevel - 1] ?? 'Slow'];
     feats = withFeat(
       feats,
       catalog,
@@ -282,15 +322,22 @@ export function movementDropdownFeats(catalog: readonly CodexCreatureFeat[]): Co
     (feat) =>
       feat.category === 'Movement' &&
       feat.mechanic !== true &&
-      !isCreatureMovementControlFeatId(feat.id),
+      !isCreatureMovementControlFeatId(feat.id) &&
+      !isMovementBoundFamilyFeat(feat),
   );
 }
 
 export function movementControlFeatIdsFromNames(movementTypes: readonly string[]): string[] {
   const ids: string[] = [];
   const walk = readWalkLevel(movementTypes);
-  if (walk > 0) ids.push(String(SPEEDY_IDS[walk - 1] ?? SPEEDY_IDS[0]));
-  if (walk < 0) ids.push(String(SLOW_IDS[-walk - 1] ?? SLOW_IDS[0]));
+  if (walk > 0) {
+    const id = SPEEDY_IDS[walk - 1];
+    if (id != null) ids.push(String(id));
+  }
+  if (walk < 0) {
+    const id = SLOW_IDS[-walk - 1];
+    if (id != null) ids.push(String(id));
+  }
   const fly = readFlyLevel(movementTypes);
   if (fly > 0) ids.push(String(FLY_IDS[fly - 1]));
   const burrow = readBurrowLevel(movementTypes);
@@ -308,7 +355,7 @@ export function movementSectionPointTotal(
   let sum = 0;
   for (const feat of creature.feats) {
     const id = String(feat.id);
-    if (!isCreatureMovementControlFeatId(id) && !dropdownIds.has(id)) continue;
+    if (!isCreatureMovementEffectFeat(feat) && !dropdownIds.has(id)) continue;
     const points = feat.points ?? byId.get(id)?.points ?? 0;
     if (Number.isFinite(points)) sum += points;
   }
@@ -329,4 +376,60 @@ export function toggleMovementFeat(
   const rest = creature.feats.filter((row) => String(row.id) !== id);
   if (!on) return rest;
   return [...rest, codexCreatureFeatToCreatureFeat(feat)];
+}
+
+export type MovementSpeedLine = { label: string; value: string };
+
+/** Flying, swimming, and burrow speeds for the published block. Labels match the creator. */
+export function movementTravelLines(
+  movementTypes: readonly string[],
+  walkSpeed: number,
+): MovementSpeedLine[] {
+  const lines: MovementSpeedLine[] = [];
+  const fly = readFlyLevel(movementTypes);
+  if (fly === 1 || fly === 2) {
+    lines.push({
+      label: 'Flying Speed',
+      value: formatMovementSpeed(movementTravelSpeed(walkSpeed, fly)),
+    });
+  }
+  const swim = readSwimLevel(movementTypes);
+  if (swim === 1 || swim === 2) {
+    lines.push({
+      label: 'Swimming Speed',
+      value: formatMovementSpeed(movementTravelSpeed(walkSpeed, swim)),
+    });
+  }
+  const burrow = readBurrowLevel(movementTypes);
+  if (burrow === 1 || burrow === 2) {
+    lines.push({
+      label: 'Burrow Speed',
+      value: formatMovementSpeed(movementTravelSpeed(walkSpeed, burrow)),
+    });
+  }
+  return lines;
+}
+
+export type MovementToggleLine = { id: string; name: string; description?: string };
+
+const TOGGLE_ID_SET = new Set<string>(TOGGLE_IDS.map(idString));
+
+/** Toggle controls stay off the feat list and show here by their saved name and description. */
+export function movementToggleLines(
+  feats: readonly {
+    id?: string | number | undefined;
+    name?: string | undefined;
+    description?: string | undefined;
+  }[],
+): MovementToggleLine[] {
+  const lines: MovementToggleLine[] = [];
+  for (const feat of feats) {
+    if (feat.id == null || !TOGGLE_ID_SET.has(String(feat.id))) continue;
+    const name = feat.name?.trim();
+    if (!name) continue;
+    const line: MovementToggleLine = { id: String(feat.id), name };
+    if (feat.description) line.description = feat.description;
+    lines.push(line);
+  }
+  return lines;
 }

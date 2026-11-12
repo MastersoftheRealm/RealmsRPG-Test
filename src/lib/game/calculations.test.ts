@@ -174,6 +174,8 @@ describe('calculateCreatureSpeed (M12 / D4)', () => {
     expect(calculateCreatureSpeed(2, undefined, ['Speedy', 'Speedy III'])).toBe(10);
     expect(calculateCreatureSpeed(2, undefined, ['Speedy III', 'Slow'])).toBe(9);
     expect(calculateCreatureSpeed(2, undefined, ['Fly'])).toBe(7);
+    expect(calculateCreatureSpeed(2, undefined, ['walk:+4'])).toBe(11);
+    expect(calculateCreatureSpeed(2, undefined, ['walk:-4'])).toBe(3);
   });
 });
 

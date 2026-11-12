@@ -26,7 +26,11 @@ import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-red
 import { normalizeRangeDisplay } from '@/lib/utils';
 import type { Abilities } from '@/types';
 import type { CreatureData, CreatureStatBlockArmament } from './creature-stat-block-types';
-import { isCreatureMovementControlFeatId } from '@/app/(main)/creature-creator/creature-movement';
+import {
+  isCreatureMovementEffectFeat,
+  movementToggleLines,
+  movementTravelLines,
+} from '@/app/(main)/creature-creator/creature-movement';
 import { StatBlockSection } from './creature-stat-block-section';
 import {
   REALMS_ABILITY_ORDER,
@@ -109,6 +113,8 @@ export function CreatureStatBlockExpandedContent({
   powersForDisplay,
   techniquesForDisplay,
 }: CreatureStatBlockExpandedContentProps) {
+  const travelLines = movementTravelLines(creature.movementTypes ?? [], speed);
+  const toggleLines = movementToggleLines(creature.feats ?? []);
   return (
     <div className="space-y-4">
       {/* Header (character-sheet style, simplified) */}
@@ -175,9 +181,30 @@ export function CreatureStatBlockExpandedContent({
                 </span>
                 <span className="text-lg font-bold text-info-fg">{maxEnDisplay}</span>
               </div>
+              {travelLines.map((line) => (
+                <div
+                  key={line.label}
+                  className="flex min-w-0 flex-col rounded-lg border border-border-light bg-surface-alt p-3 dark:border-border dark:bg-surface"
+                >
+                  <span className="text-xs font-semibold tracking-wide text-text-secondary uppercase dark:text-text-primary">
+                    {line.label}
+                  </span>
+                  <span className="text-lg font-bold text-text-primary">{line.value}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
+        {toggleLines.length > 0 ? (
+          <div className="mt-3 space-y-1">
+            {toggleLines.map((line) => (
+              <p key={line.id} className="text-sm text-text-primary">
+                <span className="font-semibold">{line.name}</span>
+                {line.description ? ` — ${line.description}` : null}
+              </p>
+            ))}
+          </div>
+        ) : null}
 
         {/* Abilities row (mini boxes with roll buttons) */}
         {creature.abilities && (
@@ -341,14 +368,7 @@ export function CreatureStatBlockExpandedContent({
                 compactRows
                 showTitle={false}
                 items={(creature.feats ?? [])
-                  .filter((f) => {
-                    const rawId = 'id' in f ? f.id : undefined;
-                    const id =
-                      typeof rawId === 'string' || typeof rawId === 'number'
-                        ? String(rawId)
-                        : undefined;
-                    return id == null || !isCreatureMovementControlFeatId(id);
-                  })
+                  .filter((f) => !isCreatureMovementEffectFeat(f))
                   .map(
                     (f, idx): EntityFeatRow => ({
                       id: `${creature.id}-feat-${idx}`,
