@@ -1352,7 +1352,7 @@ Every path below is a non-test source file. The checker fails if one is missing 
 - Discard prompts. `CORE_RULES_EDITOR_DISCARD_TITLE`, `CORE_RULES_EDITOR_DISCARD_CONFIRM`, and `CORE_RULES_EDITOR_DISCARD_CANCEL` are the same strings as the codex editor title, confirm, and cancel. The descriptions differ. `src/app/(main)/admin/core-rules/core-rules-unsaved-leave.ts` does not import the codex file. The core rules page renders `ConfirmActionModal`.
 - Password length. `src/lib/password-policy.ts` exports `PASSWORD_MIN_LENGTH` as `6`. The account card check uses that constant. `assertSensitiveAccountReauth` in `src/lib/auth/sensitive-account-auth.ts` rejects an empty password and then calls `signInWithPassword`. It does not import `PASSWORD_MIN_LENGTH`.
 - Name length. `CHARACTER_NAME_MAX_LENGTH` in `src/lib/character/character-name-limit.ts` is `100`. `CODEX_SOURCE_NAME_MAX_LENGTH` in `src/lib/codex/sources.ts` is a private `100`. `sources.ts` does not import the character constant.
-- Base skill. `isCodexBaseSkill` in `src/lib/character/sheet-skills-display.ts` and in `src/app/(main)/admin/codex/admin-archetype-path-form.ts` are both `base_skill_id == null`. Neither imports the other. `src/lib/guided-creator/curated-skills.ts` keeps a skill only when `base_skill_id !== undefined`. It does not call `isCodexBaseSkill`. The species creator skill options use `base_skill_id == null || base_skill_id === 0`. The loops in `src/lib/game/skill-allocation.ts` and `src/lib/game/skill-allocation-add.ts` skip a skill when the id is null or `0`. Those three files were not read past those lines.
+- Base skill. `isCodexBaseSkill` in `src/lib/character/sheet-skills-display.ts` and in `src/app/(main)/admin/codex/admin-archetype-path-form.ts` are both `base_skill_id == null`. Neither imports the other. `src/lib/guided-creator/curated-skills.ts` keeps a skill only when `base_skill_id !== undefined`. It does not call `isCodexBaseSkill`. The species creator skill options use `base_skill_id == null || base_skill_id === 0`. The loops in `src/lib/game/skill-allocation.ts` and `src/lib/game/skill-allocation-add.ts` skip a skill when the id is null or `0`. `buildGuidedSkillMeta` and `skills-allocation-page.tsx` treat `base_skill_id !== undefined` as sub-skill (so `0` counts as sub). See **Skill and allocation math** for modal add/remove and guided budget reads.
 - Table lists. `CODEX_DATA_TABLES` in `src/lib/codex/codex-tables.ts` includes `codex_archetype_levels` and does not include `core_rules`. `CodexCollection` in `src/lib/codex/collections.ts` includes `core_rules` and does not include `codex_archetype_levels`. `CODEX_SOURCE_TABLES` is `COLUMNAR_COLLECTIONS` with `core_rules` filtered out. It is not a third hand-written list.
 
 ### Calls a shared component
@@ -2218,7 +2218,7 @@ These IDs are required; dropping a line makes `scripts/validate-feature-index.js
 
 ## Skill and allocation math (line-by-line pass)
 
-Skill bonus, skill point totals, and allocation spend in `src/lib/game/formulas.ts` (from the Skill Helpers block through `getSkillBonusForFeatRequirement`) and `src/lib/game/skill-allocation.ts` through `calculateSimpleSkillPointsSpent`. `getCreatureSkillBonus` in `creature-creator-skill-bonus.ts` delegates to the shared bonus helpers. Not a rules balance sign-off.
+Skill bonus, skill point totals, and allocation spend in `src/lib/game/formulas.ts` (from the Skill Helpers block through `getSkillBonusForFeatRequirement`), `src/lib/game/skill-allocation.ts` through `calculateSimpleSkillPointsSpent`, `src/lib/game/skill-allocation-add.ts`, and `src/lib/guided-creator/skill-reconcile.ts`. `getCreatureSkillBonus` in `creature-creator-skill-bonus.ts` delegates to the shared bonus helpers. Not a rules balance sign-off.
 
 ### Read to the end
 
@@ -2229,24 +2229,28 @@ Skill bonus, skill point totals, and allocation spend in `src/lib/game/formulas.
 - `getSkillBonusForFeatRequirement` in `src/lib/game/formulas.ts`. Inlines base/sub bonus shapes similar to the proficiency helpers but always reads the **first** comma-separated codex ability (not highest/chosen). Draft vs sheet proficiency uses numeric thresholds (`base ≥ 0`, sub `≥ 1`) or `{ prof, val }` rows.
 - `resolveSkillAllocationRules`, `getTotalSkillPoints`, `getSkillValueIncreaseCost`, `skillAllocationIncreaseCost`, `applySkillAllocationIncrease`, `applySkillAllocationDecrease`, `canIncreaseDefense`, `calculateCharacterSkillPointsSpent`, and `calculateSimpleSkillPointsSpent` in `src/lib/game/skill-allocation.ts`. Value steps cost 1 point below soft cap; at or past cap use `baseSkillPastCapCost` or `subSkillPastCapCost`. Non-species rows pay `gainProficiencyCost` once when gaining proficiency. Spent totals loop value from 1..n and sum `getSkillValueIncreaseCost(v − 1, …)`; defense spends `defenseIncreaseCost` per skill-point defense bonus.
 - `getCreatureSkillBonus` in `src/app/(main)/creature-creator/creature-creator-skill-bonus.ts`. Wraps `calculateSkillBonusWithProficiency` / `calculateSubSkillBonusWithProficiency` with codex-linked abilities and parent skill lookup.
+- `buildExistingSkillIdSet`, `buildExistingSkillNames`, `buildCharacterSkillsForSubModal`, `removeAllocatedSkill`, `applyAddedBaseSkills`, and `applyAddedSubSkills` in `src/lib/game/skill-allocation-add.ts`. No separate point-cost table. Base adds start at allocation `0` (proficient, zero ranks). Sub adds start at `1` (proficient sub). `autoAddBaseSkill` seeds the parent base at `0` when missing. `removeAllocatedSkill` deletes the base key and any codex sub whose `base_skill_id` matches (skips rows where `base_skill_id` is null or `0`). Proficiency for sub-modal parents uses `(allocations[id] ?? 0) >= 0`, same threshold as `readProficiency` for base skills in `getSkillBonusForFeatRequirement`.
+- `pruneUnresolvedSkillAllocations`, `calculateGuidedSkillPointBudget`, and helpers in `src/lib/guided-creator/skill-reconcile.ts`. Prune drops allocation keys absent from the codex index. Budget builds `skillMeta` (`isSubSkill: base_skill_id !== undefined`), merges species and recommended path skills at default values, adds `extraSkillPoints` when species grant id `"0"` (Any), then `spentPoints = calculateSimpleSkillPointsSpent(...)` with `resolveSkillAllocationRules(rules)`. `remainingPoints = totalPoints − spentPoints`. `mergeGuidedSkillAllocationsWithDefaults` keeps orphaned keys while `skillMeta.size === 0` so a cold catalog does not wipe allocations; once the catalog loads, only resolved keys remain for spend.
 
 ### Still not read line by line (skill / allocation scope)
 
-- `skill-allocation-add.ts` past modal apply helpers (add/remove skill payloads only; no separate point math).
-- `src/lib/guided-creator/skill-reconcile.ts` (calls `calculateSimpleSkillPointsSpent`; body not opened this pass).
+- None in this slice. `buildMixedSpeciesSkillOptions` in `src/lib/ancestry/ancestry-selection.ts` was not opened (species skill pick list only; no point math). Out of scope for this pass.
 
 ### Disagreements
 
 `math-disagree-copy` marks a second implementation that does not match the primary helper. Dropping a line fails the validator.
 
 - math-disagree-copy:feat-skill-req-first-ability-vs-sheet-highest: **Second copy.** `getSkillBonusForFeatRequirement` uses only the first codex ability string. `calculateSkillBonusWithProficiency` and `calculateSubSkillBonusWithProficiency` use `getLinkedAbilityMod` (chosen key if valid, else highest). Multi-ability skills can show a higher bonus on the sheet than feat requirement checks see (or the reverse if the first listed ability is higher).
+- math-disagree-copy:guided-skill-total-omits-rules-on-getTotalSkillPoints: **Second copy.** `calculateGuidedSkillPointBudget` passes `rules` into `resolveSkillAllocationRules` and `calculateSimpleSkillPointsSpent` but calls `getTotalSkillPoints(1, 'character')` with no `rules` argument. `skills-allocation-page.tsx` and `character-legality.ts` pass rules into `getTotalSkillPoints`. If `PROGRESSION_PLAYER` overrides change skill points per level, guided remaining budget can disagree with the rest of the app while spend costs still honor `SKILLS_AND_DEFENSES`.
 
 ### Same math, separate copies
 
-- `getTotalSkillPoints` returns `calculateSkillPointsForEntity`; one skill-point total formula.
+- `getTotalSkillPoints` returns `calculateSkillPointsForEntity`; one skill-point total formula when callers pass the same `rules`.
 - `skillAllocationIncreaseCost` and `calculateSimpleSkillPointsSpent` both call `getSkillValueIncreaseCost`; no parallel past-cap table.
 - `getCreatureSkillBonus`, the character sheet, guided creator, allocation page, and creature stat block display call the same `calculateSkillBonusWithProficiency` / `calculateSubSkillBonusWithProficiency` pair (not the feat inline path).
 - `getHighestLinkedAbilityKey` and private `getHighestLinkedAbility` use the same max scan; one returns the key, one the value.
+- `buildGuidedSkillMeta` in `skill-reconcile.ts` and the `skillMeta` map in `skills-allocation-page.tsx` both set `isSubSkill` from `base_skill_id !== undefined`; spend loops match when given the same catalog.
+- `calculateGuidedSkillPointBudget` uses the same `calculateSimpleSkillPointsSpent` and the same `extraSkillPoints` rule (`speciesSkillIds.has('0') ? 1 : 0`) as the allocation page; it fixes level at `1` for guided creation, which matches `skills-step.tsx`.
 
 ## Unused exports outside game and calculators
 

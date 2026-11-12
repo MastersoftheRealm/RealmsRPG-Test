@@ -299,7 +299,10 @@ const MATH_DISAGREEMENT_INTENTIONAL_IDS = [
 
 const MATH_DISAGREEMENT_BUG_IDS = ['innate-remaining-uses-stored-cost'];
 
-const SKILL_MATH_DISAGREEMENT_COPY_IDS = ['feat-skill-req-first-ability-vs-sheet-highest'];
+const SKILL_MATH_DISAGREEMENT_COPY_IDS = [
+  'feat-skill-req-first-ability-vs-sheet-highest',
+  'guided-skill-total-omits-rules-on-getTotalSkillPoints',
+];
 
 function mathSectionSlice(text, heading) {
   const start = text.indexOf(heading);
