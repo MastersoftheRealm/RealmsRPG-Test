@@ -2428,6 +2428,56 @@ Creature size table, carrying-capacity kg formula, and archetype-path browse fil
 - Path filter chip logic (`expandPathFilterSelection`, `addPathFilterSelection`) does not duplicate entity resolution; matching uses the prebuilt `entityIdsByPathId` map.
 - Character size pickers and sheet height hints use `findSizeTableRow` / `reconcileSizeWithAllowedOptions` from this module without a second carry table.
 
+## Character creator screens (behavior pass)
+
+What a player can do on each **character** creator surface: guided (and custom entry), entry chooser, and creature creator. Item/power/technique/species/crafting creators are out of scope for this pass. Not a rules balance sign-off.
+
+### Screens walked (read through save wiring)
+
+**Entry chooser** — route `src/app/(main)/characters/new/page.tsx`. A person picks **Guided** or **Custom**; both links go to `/characters/new/guided` with `?entry=guided` or `?entry=custom` (optional `returnTo`). No form fields; quota alert only. Does not save anything.
+
+**Guided / Custom character creator (one app)** — route `src/app/(main)/characters/new/guided/page.tsx` → `GuidedEntryBootstrap` applies `buildOpenGuidedPathEntryPatch` or `buildOpenCustomPathEntryPatch` from `path-selection-draft.ts`, then `GuidedCreatorShell`. State: `useGuidedCreatorStore` (Zustand + `localStorage`; legacy nine-step `character-creator-store` removed). Shell: chapter rail (`GUIDED_CHAPTERS`), mobile/desktop `CharacterPreviewPanel`, step body from `STEP_COMPONENTS` in `guided-creator-shell.tsx`.
+
+| Sub-step | Component | What the player does | Draft fields touched |
+|----------|-----------|----------------------|----------------------|
+| `path` | `PathStep` | L1: pick codex archetype path (`buildPathSelectionDraftPatch`). L3: custom type + abilities (`buildCustomArchetypeDraftPatch`, `buildEnterCustomArchetypeLayerPatch`). Layer nav L1↔L3. | `archetypePathId`, `pathLayer`, `pow_abil`, `mart_abil`, clears dependents on change |
+| `species` | `SpeciesStep` | Pick species or mixed pair; size where allowed. | `speciesName`, ancestry ids, size |
+| `ancestry` | `AncestryStep` | Species traits, characteristic, ancestry trait, optional flaw. | `ancestry` blob, trait picks |
+| `abilities` | `AbilitiesStep` | Recommended array or customize via `guided-abilities-customize-panel` + `AbilityScoreGrid`. | `abilities`, `abilitiesMode` |
+| `skills` | `SkillsStep` | Species/path skills, spend budget via `calculateGuidedSkillPointBudget`, browse via `AddSkillModal` / sub-skills modal; `GuidedSkillsPanel` (not sheet `SkillRow`). | `skills`, `defenseVals`, `skillAbilities` |
+| `archetype-feats` | `ArchetypeFeatsStep` | Path-recommended feats (`guided-feats-l2-modal` + path filter). | `archetypeFeatIds` |
+| `character-feat` | `CharacterFeatStep` | Optional L1 character feat. | `characterFeatIds` |
+| `loadout` | `LoadoutStep` | Phased weapon → armor → gear (`equipmentPhase`); path-filtered catalog; currency/unarmed via `computeStartingCurrency` / loadout TP helpers. | `loadoutWeapons`, `loadoutArmor`, `armaments`, `equipment`, `currency` |
+| `powers-techniques` | `PowersTechniquesStep` | Innate, powers, techniques phases (`powersPhase`); L2 modals. | `innatePowerIds`, `powerIds`, `techniqueIds` |
+| `reveal` | `RevealStep` | Name, age, appearance, portrait, HP/EN split (`GuidedHealthEnergySection`), summary; save when logged in. | identity + `hpAllocated` / `energyAllocated` |
+
+**Save (guided/custom):** `RevealStep` builds payload with `buildGuidedCharacterPayload` (proficiencies via `buildRequiredProficiencies`, skills via `buildCreatorSkillSaveRows`, equipment via `resolve-loadout-items` + `applyStarterEquippedFlags`), then `cleanForSave`, then `persistFinishedCharacter` (`/api/characters` pattern in `persist-finished-character.ts`). Guests draft locally only; `LoginPromptModal` gates save. After save: optional `returnTo`, sheet tour via `characterSheetUrlWithTourOffer`, `resetCreator` on handoff helpers.
+
+**Creature creator** — route `src/app/(main)/creature-creator/page.tsx` → `useCreatureCreatorWorkspace` + `CreatureCreatorEditor` inside **`CreatorPageShell`** (not `GuidedCreatorShell`). Bootstrap: `bootstrapCreatureState`, session draft `creator-cache` keyed `CREATURE_CREATOR_CACHE_KEY`.
+
+What the screen exposes (via `creature-creator-editor.tsx` and child sections): name/description/image; **level** select; size; type; **ArchetypeSelector** (creature archetype type, not player path); **AbilityScoreEditor** + **HealthEnergyAllocator**; **SkillsAllocationPage** (same pattern as sheet allocation, not guided skills panel); defense skills; sense/movement trait chips with feat costs; manual **feat** list (`AddCreatureFeatModal`); **loadout** powers / empowered / techniques / armaments via `UnifiedSelectionModal` + `creature-creator-editor-loadout-sections`; inventory tabs. Budget bar from `calculateCreatureCreatorStats` / `isCreatureOverBudget` blocks save when over budget.
+
+**Save (creature):** `useCreatureCreatorWorkspacePersistence` → `useCreatorSave({ type: 'creatures' })` with `stampCreatureSyncMeta` on payload; My Library vs Realms Library for admins (`saveTarget`); load/restart/save-as-copy through `CreatorPageShell` + `LoadFromLibraryModal`. Edits from library use `?edit=` query and `useCreatorEditDraftDecision`.
+
+### Screens not walked in this pass
+
+- **Legacy “standard” nine-step character wizard** — removed (`guided-creator-store` comment TASK-912); no route remains.
+- **Character sheet in-place editing** — post-create play on `/characters/[id]`; not a creator screen.
+- **Item, power, technique, empowered-technique, species creators** — separate `CreatorPageShell` tools; named only in the index elsewhere.
+- **Crafting tool** — out of scope.
+- Every file under `src/components/guided-creator/` and `creature-creator-editor-*` not opened line-by-line beyond the paths above (**partial pass**).
+
+### Same job, different behavior
+
+- screen-behavior-note:custom-and-guided-share-one-shell: **Guided** and **Custom** on the chooser are not two apps. Both render `GuidedCreatorShell` and the same sub-steps; `buildOpenGuidedPathEntryPatch` vs `buildOpenCustomPathEntryPatch` only sets `creatorEntryMode`, `pathLayer`, and clears dependents. Custom lands on Path **L3** (no codex path id); guided lands on Path **L1** cards.
+- screen-behavior-note:character-creator-shell-fork: **Player character create** uses `GuidedCreatorPageShell` + funnel chrome. **Creature creator** uses `CreatorPageShell` with toolbar load/save/publish like item/power creators. Same “creator” name, different shells and persistence (character row vs library creature).
+- screen-behavior-note:guided-skills-panel-vs-skills-allocation-page: **Guided** skills step uses `GuidedSkillsPanel` / local `GuidedSkillRow` and `calculateGuidedSkillPointBudget`. **Creature creator** (and the live character sheet allocation UI) uses `SkillsAllocationPage` from patterns — same underlying `skill-allocation` spend functions when rules match, different UI and guided-only path/species suggestion wiring.
+- screen-behavior-note:guided-ability-grid-vs-creature-ability-editor: **Guided** `AbilitiesStep` uses `AbilityScoreGrid` (+ customize panel). **Creature creator** uses `AbilityScoreEditor` from the creator barrel (different control layout; both use ability point formulas from `formulas.ts` when budgets match).
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:legacy-character-creator-store-removed: No `character-creator-store` or non-guided multi-step character route; chooser “Custom” still opens `/characters/new/guided`.
+
 ## Unused exports outside game and calculators
 
 No production file imports these names. A test import does not count. The file that exports the name may still call it. This is not a dead function unless nothing in that file calls it either. Next.js page, layout, route, proxy, and MDX conventions are not listed. `src/lib/game` and `src/lib/calculators` were not part of this search. The hook, service, and store files the barrels omit are imported by their own paths. The names below are the extra exports in those trees, not unused files.

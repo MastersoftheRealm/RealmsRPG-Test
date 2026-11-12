@@ -554,6 +554,51 @@ const mathDisagreementCount =
   SIZE_PATH_MATH_BUG_IDS.length;
 console.log(`FEATURE_INDEX math-disagreement check OK (${mathDisagreementCount} guarded lines).`);
 
+const CHARACTER_CREATOR_SCREEN_NOTE_IDS = [
+  'custom-and-guided-share-one-shell',
+  'character-creator-shell-fork',
+  'guided-skills-panel-vs-skills-allocation-page',
+  'guided-ability-grid-vs-creature-ability-editor',
+  'legacy-character-creator-store-removed',
+];
+
+const characterCreatorScreensSection = mathSectionSlice(
+  indexText,
+  '## Character creator screens',
+);
+if (!characterCreatorScreensSection) {
+  console.error('FEATURE_INDEX is missing the character creator screens section.');
+  process.exit(2);
+}
+if (!characterCreatorScreensSection.includes('### Same job, different behavior')) {
+  console.error('FEATURE_INDEX character creator section is missing ### Same job, different behavior.');
+  process.exit(2);
+}
+const screenBehaviorStart = characterCreatorScreensSection.indexOf(
+  '### Same job, different behavior',
+);
+const screenDeadStart = characterCreatorScreensSection.indexOf('### Dead or unreachable paths');
+if (screenBehaviorStart < 0 || screenDeadStart < 0) {
+  console.error('FEATURE_INDEX character creator section missing behavior or dead-path headings.');
+  process.exit(2);
+}
+const screenBehaviorBody = characterCreatorScreensSection.slice(
+  screenBehaviorStart,
+  screenDeadStart,
+);
+const screenDeadBody = characterCreatorScreensSection.slice(screenDeadStart);
+for (const id of CHARACTER_CREATOR_SCREEN_NOTE_IDS) {
+  const inBehavior = screenBehaviorBody.includes(`screen-behavior-note:${id}:`);
+  const inDead = screenDeadBody.includes(`screen-behavior-note:${id}:`);
+  if (!inBehavior && !inDead) {
+    console.error('FEATURE_INDEX missing required character-creator screen note:', id);
+    process.exit(2);
+  }
+}
+console.log(
+  `FEATURE_INDEX character-creator screen check OK (${CHARACTER_CREATOR_SCREEN_NOTE_IDS.length} notes).`,
+);
+
 const gen = spawnSync(
   process.execPath,
   [path.join(__dirname, 'generate-feature-index-barrels.js'), '--check'],
