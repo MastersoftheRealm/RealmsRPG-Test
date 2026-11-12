@@ -13,12 +13,13 @@ Checked on this pass:
 - Every non-test `.ts` / `.tsx` file under `src/components/character`, `src/components/codex`, `src/app/(main)/encounters/[id]/_components`, and `src/app/(detail)/campaigns/[id]/_components`. The pairs in that section were opened. The files listed there as not read line by line were not.
 - Every non-test `.ts` / `.tsx` file under `src/components/rolls`, `rules`, `tabletop`, `layout`, `landing`, `about`, `auth`, `legal`, `onboarding`, `providers`, and `src/app/(main)/my-account/_components`. The pairs in that section were opened. The files listed there as not read line by line were not.
 - Every non-test `.ts` / `.tsx` file under `src/components/ui` and `src/app/(main)/admin/codex`. The pairs in that section were opened. The files listed there as not read line by line were not.
+- Every non-test `.ts` / `.tsx` file under the other `src/app/(main)/admin` screens, `src/lib/codex`, `src/lib/character`, `src/lib/library`, `src/lib/auth`, `src/lib/guided-creator`, and `src/lib/password-policy.ts`. The pairs in that section were opened. The files listed there as not read line by line were not.
 - A static import walk from app entries. A file loaded only by a variable `import()` would not show up. `knip` was not run, so unused exports inside a file that is imported were not measured.
 
 Not checked, so silence here is not "it does not exist" and not "there is no fork":
 
 - Behavior of calculators, saves, or admin editors.
-- Loose modules under `src/lib/` outside `game/` and `calculators/`.
+- The other `src/lib` folders and loose files named at the bottom of this index.
 - Pairs of files that are not named in a fork section below.
 
 Export **names** for patterns, ui, hooks, and services are in [`FEATURE_INDEX_BARRELS.generated.md`](FEATURE_INDEX_BARRELS.generated.md). That generated file is not a list of what is used, and it does not read the other barrels.
@@ -1332,12 +1333,256 @@ Every path below is a non-test source file. The checker fails if one is missing 
 
 ---
 
+## Other admin screens, and codex, character, library, auth, and guided helpers
+
+164 non-test `.ts` / `.tsx` files. `src/app/(main)/admin/page.tsx` and `src/app/(main)/admin/layout.tsx` have no TypeScript importer because Next loads them. `src/lib/codex/fake-supabase.ts` is imported only by tests. Every other file in this slice has a production importer.
+
+### Second implementations
+
+- Admin home cards. `src/app/(main)/admin/page.tsx` repeats the same bordered section, heading, paragraph, and `Button` plus `Link` eight times. The Sources card reads `admin-sources-copy.ts`. The other seven write the strings in the page.
+- Official-library delete. Powers, techniques, armaments, creatures, and species each call `apiFetch` with `DELETE`, then invalidate `officialLibraryKeys.all` and `officialLibraryKeys.counts`. None of those files calls a shared delete helper. Techniques and empowered techniques are one component, `AdminPublicTechniquesTab`, with a `mode` prop.
+- Species list. `AdminPublicSpeciesTab` renders `OfficialEntityList`. There is no `OfficialSpeciesList`. Powers, techniques, armaments, and creatures render `OfficialPowerList`, `OfficialTechniqueList`, `OfficialItemList`, and `OfficialCreatureList`.
+- Image delete. `src/app/(main)/admin/images/admin-image-delete-modal.tsx` renders `Modal` and `Button`. It does not render `DeleteConfirmModal`.
+- Discard prompts. `CORE_RULES_EDITOR_DISCARD_TITLE`, `CORE_RULES_EDITOR_DISCARD_CONFIRM`, and `CORE_RULES_EDITOR_DISCARD_CANCEL` are the same strings as the codex editor title, confirm, and cancel. The descriptions differ. `src/app/(main)/admin/core-rules/core-rules-unsaved-leave.ts` does not import the codex file. The core rules page renders `ConfirmActionModal`.
+- Password length. `src/lib/password-policy.ts` exports `PASSWORD_MIN_LENGTH` as `6`. The account card check uses that constant. `assertSensitiveAccountReauth` in `src/lib/auth/sensitive-account-auth.ts` rejects an empty password and then calls `signInWithPassword`. It does not import `PASSWORD_MIN_LENGTH`.
+- Name length. `CHARACTER_NAME_MAX_LENGTH` in `src/lib/character/character-name-limit.ts` is `100`. `CODEX_SOURCE_NAME_MAX_LENGTH` in `src/lib/codex/sources.ts` is a private `100`. `sources.ts` does not import the character constant.
+- Base skill. `isCodexBaseSkill` in `src/lib/character/sheet-skills-display.ts` and in `src/app/(main)/admin/codex/admin-archetype-path-form.ts` are both `base_skill_id == null`. Neither imports the other. `src/lib/guided-creator/curated-skills.ts` keeps a skill only when `base_skill_id !== undefined`. It does not call `isCodexBaseSkill`. The species creator skill options use `base_skill_id == null || base_skill_id === 0`. The loops in `src/lib/game/skill-allocation.ts` and `src/lib/game/skill-allocation-add.ts` skip a skill when the id is null or `0`. Those three files were not read past those lines.
+- Table lists. `CODEX_DATA_TABLES` in `src/lib/codex/codex-tables.ts` includes `codex_archetype_levels` and does not include `core_rules`. `CodexCollection` in `src/lib/codex/collections.ts` includes `core_rules` and does not include `codex_archetype_levels`. `CODEX_SOURCE_TABLES` is `COLUMNAR_COLLECTIONS` with `core_rules` filtered out. It is not a third hand-written list.
+
+### Calls a shared component
+
+- `fetchAdminCodexSourceRows` in `src/app/(main)/admin/sources/actions.ts` calls `loadAdminCodexSourceRows`. `admin-source-list.ts` imports the name helpers from `sources.ts`.
+- `src/lib/auth/oauth-delete-grant.server.ts` re-exports `src/lib/auth/oauth-delete-grant-core.ts` and adds the cookie options. `buildProtectedRouteLoginUrl` calls `sanitizeRedirectPath` and `buildLoginRedirectUrl`. `buildPathAbilityChipLabels` calls `resolvePathAbilityLabels`.
+- The official library page renders `TabNavigation` and one tab component. Empowered techniques are `AdminPublicTechniquesTab` with `mode="empowered"`. The enhanced-items tab renders `OfficialEnhancedList`, `DeleteConfirmModal`, and its own `Modal`.
+- The image library page renders `CodexBrowseListShell`. The admin layout calls `requireAdminSession` from `src/lib/admin.ts`. That module was not opened.
+
+### Not read line by line
+
+- `src/app/(main)/admin/sources/page.tsx`, `sources/actions.ts` past the two fetch wrappers, `users/page.tsx`, `roles/page.tsx` past its imports, `changelogs/page.tsx` past its imports, and `images/page.tsx` past its imports.
+- `src/app/(main)/admin/core-rules/page.tsx` past the `ConfirmActionModal` import, and the core-rules editor components.
+- The official-library tab bodies past the delete calls. `useDeleteOfficialEnhancedItem` and the enhanced edit modal body were not read.
+- `src/lib/codex/feat-list.ts`, `skill-list.ts`, and `row-map.ts` past their openings. `sources.ts` past `collapseCodexSourceName` and the length check. `fake-supabase.ts` past the class header.
+- `src/lib/character/dirty-patch.ts`, `temp-modifiers.ts`, `sheet-edit-notification.ts`, and `sheet-skills-display.ts` past `isCodexBaseSkill`.
+- `src/lib/library/official-power-list.ts` and `official-technique-list.ts` past their imports. `official-item-list.ts` and `power-technique-filters.ts`.
+- `src/lib/auth/oauth-delete-grant-core.ts` past the cookie names and payload types.
+- The large guided-creator files, including `build-character.ts`, `guided-equipment-l2.ts`, and `curated-skills.ts` past the two `base_skill_id !== undefined` filters.
+
+
+### `src/app/(main)/admin` pages
+
+- `src/app/(main)/admin/layout.tsx`
+- `src/app/(main)/admin/page.tsx`
+
+### `src/app/(main)/admin/changelogs`
+
+- `src/app/(main)/admin/changelogs/page.tsx`
+
+### `src/app/(main)/admin/core-rules`
+
+- `src/app/(main)/admin/core-rules/core-rules-ability-skills-editors.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-archetypes-editor.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-armament-editor.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-category-editor.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-combat-editor.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-conditions-editor.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-conditions.ts`
+- `src/app/(main)/admin/core-rules/core-rules-crafting-rules-editor.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-damage-types-editor.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-field-editors.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-number.ts`
+- `src/app/(main)/admin/core-rules/core-rules-progression-editor.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-progression-preview.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-rarities-editor.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-recovery-experience-editors.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-sizes-editor.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-tabs.ts`
+- `src/app/(main)/admin/core-rules/core-rules-unsaved-leave.ts`
+- `src/app/(main)/admin/core-rules/page.tsx`
+
+### `src/app/(main)/admin/images`
+
+- `src/app/(main)/admin/images/admin-image-delete-modal.tsx`
+- `src/app/(main)/admin/images/admin-image-edit-modal.tsx`
+- `src/app/(main)/admin/images/page.tsx`
+
+### `src/app/(main)/admin/public-library`
+
+- `src/app/(main)/admin/public-library/AdminPublicCreaturesTab.tsx`
+- `src/app/(main)/admin/public-library/AdminPublicEnhancedItemsTab.tsx`
+- `src/app/(main)/admin/public-library/AdminPublicItemsTab.tsx`
+- `src/app/(main)/admin/public-library/AdminPublicPowersTab.tsx`
+- `src/app/(main)/admin/public-library/AdminPublicSpeciesTab.tsx`
+- `src/app/(main)/admin/public-library/AdminPublicTechniquesTab.tsx`
+- `src/app/(main)/admin/public-library/page.tsx`
+
+### `src/app/(main)/admin/roles`
+
+- `src/app/(main)/admin/roles/page.tsx`
+
+### `src/app/(main)/admin/sources`
+
+- `src/app/(main)/admin/sources/actions.ts`
+- `src/app/(main)/admin/sources/admin-sources-copy.ts`
+- `src/app/(main)/admin/sources/page.tsx`
+
+### `src/app/(main)/admin/users`
+
+- `src/app/(main)/admin/users/admin-users-directory-state.ts`
+- `src/app/(main)/admin/users/admin-users-search-applied.ts`
+- `src/app/(main)/admin/users/page.tsx`
+- `src/app/(main)/admin/users/use-admin-users-load-more.ts`
+
+### `src/lib/codex`
+
+- `src/lib/codex/admin-source-list.ts`
+- `src/lib/codex/admin-source-rows.ts`
+- `src/lib/codex/cache-tags.ts`
+- `src/lib/codex/codex-tables.ts`
+- `src/lib/codex/collection-to-payload-key.ts`
+- `src/lib/codex/collections.ts`
+- `src/lib/codex/equipment-list.ts`
+- `src/lib/codex/fake-supabase.ts`
+- `src/lib/codex/feat-ability.ts`
+- `src/lib/codex/feat-list.ts`
+- `src/lib/codex/feat-requirement-catalog-server.ts`
+- `src/lib/codex/feat-restriction-notice.ts`
+- `src/lib/codex/feat-tags.ts`
+- `src/lib/codex/id-allocation.ts`
+- `src/lib/codex/list-rules-source-filter.ts`
+- `src/lib/codex/part-type.ts`
+- `src/lib/codex/postgrest-pager.ts`
+- `src/lib/codex/public-table-select.ts`
+- `src/lib/codex/references.ts`
+- `src/lib/codex/row-map.ts`
+- `src/lib/codex/skill-list.ts`
+- `src/lib/codex/source-catalog.ts`
+- `src/lib/codex/sources.ts`
+
+### `src/lib/character`
+
+- `src/lib/character/appearance-age.ts`
+- `src/lib/character/build-creator-skills.ts`
+- `src/lib/character/character-autosave-equal.ts`
+- `src/lib/character/character-name-limit.ts`
+- `src/lib/character/character-relational-save-errors.ts`
+- `src/lib/character/character-size.ts`
+- `src/lib/character/collect-sheet-traits.ts`
+- `src/lib/character/current-follows-max.ts`
+- `src/lib/character/dirty-patch.ts`
+- `src/lib/character/innate-power-capacity.ts`
+- `src/lib/character/notes-tab-sections.ts`
+- `src/lib/character/power-energy-spend.ts`
+- `src/lib/character/prune-trait-sheet-state.ts`
+- `src/lib/character/quick-shield-table-display.ts`
+- `src/lib/character/realtime-merge.ts`
+- `src/lib/character/recovery-over-max.ts`
+- `src/lib/character/recovery-uses.ts`
+- `src/lib/character/relational-lean-save.ts`
+- `src/lib/character/resource-value-color.ts`
+- `src/lib/character/save-lock.ts`
+- `src/lib/character/schema-normalize.ts`
+- `src/lib/character/sheet-allocation-reset.ts`
+- `src/lib/character/sheet-edit-notification.ts`
+- `src/lib/character/sheet-equipment-match.ts`
+- `src/lib/character/sheet-header-species-label.ts`
+- `src/lib/character/sheet-interaction-mode.ts`
+- `src/lib/character/sheet-skills-display.ts`
+- `src/lib/character/sheet-trait-display.ts`
+- `src/lib/character/temp-modifiers.ts`
+
+### `src/lib/library`
+
+- `src/lib/library/armament-character-context.ts`
+- `src/lib/library/armament-filters.ts`
+- `src/lib/library/armament-library-labels.ts`
+- `src/lib/library/catalog-listing.ts`
+- `src/lib/library/character-filter-persistence.ts`
+- `src/lib/library/creator-load-selectables.ts`
+- `src/lib/library/empowered-technique-display.ts`
+- `src/lib/library/fetch-library-tab-counts.ts`
+- `src/lib/library/library-tab-counts.ts`
+- `src/lib/library/official-catalog-row-filter.ts`
+- `src/lib/library/official-creature-list.ts`
+- `src/lib/library/official-enhanced-list.ts`
+- `src/lib/library/official-item-list.ts`
+- `src/lib/library/official-power-list.ts`
+- `src/lib/library/official-technique-list.ts`
+- `src/lib/library/part-display.ts`
+- `src/lib/library/power-technique-categories.ts`
+- `src/lib/library/power-technique-character-context.ts`
+- `src/lib/library/power-technique-filters.ts`
+- `src/lib/library/published-training-points.ts`
+- `src/lib/library/source-scope.ts`
+- `src/lib/library/use-creator-edit-draft.ts`
+
+### `src/lib/auth`
+
+- `src/lib/auth/auth-page-client.ts`
+- `src/lib/auth/captcha.ts`
+- `src/lib/auth/oauth-delete-grant-core.ts`
+- `src/lib/auth/oauth-delete-grant.server.ts`
+- `src/lib/auth/oauth-delete-messages.ts`
+- `src/lib/auth/oauth-google-delete-proof.ts`
+- `src/lib/auth/sensitive-account-auth.ts`
+- `src/lib/auth/session-persistence.ts`
+- `src/lib/auth/should-clear-query-cache-on-auth-event.ts`
+- `src/lib/auth/should-ignore-null-auth-session.ts`
+- `src/lib/auth/sign-in-guard.ts`
+- `src/lib/auth/supabase-pkce-cookies.ts`
+
+### `src/lib/guided-creator`
+
+- `src/lib/guided-creator/ancestry-pick-gate.ts`
+- `src/lib/guided-creator/ancestry-pick-tasks.ts`
+- `src/lib/guided-creator/build-character.ts`
+- `src/lib/guided-creator/chapter-progress-label.ts`
+- `src/lib/guided-creator/chapter-rail-lock.ts`
+- `src/lib/guided-creator/creator-entry-mode.ts`
+- `src/lib/guided-creator/curated-skills.ts`
+- `src/lib/guided-creator/equipment-catalog-rows.ts`
+- `src/lib/guided-creator/equipment-currency.ts`
+- `src/lib/guided-creator/equipment-eligibility.ts`
+- `src/lib/guided-creator/equipment-phase-candidates.ts`
+- `src/lib/guided-creator/equipment-phase-nav.ts`
+- `src/lib/guided-creator/equipment-phase-stats.ts`
+- `src/lib/guided-creator/feat-selection.ts`
+- `src/lib/guided-creator/feats-l2.ts`
+- `src/lib/guided-creator/guided-deep-entry-landing.ts`
+- `src/lib/guided-creator/guided-equipment-l2.ts`
+- `src/lib/guided-creator/guided-skill-recommendations.ts`
+- `src/lib/guided-creator/guided-species-resolve.ts`
+- `src/lib/guided-creator/guided-substep-nav.ts`
+- `src/lib/guided-creator/loadout-pool.ts`
+- `src/lib/guided-creator/loadout-tp.ts`
+- `src/lib/guided-creator/path-ability-labels.ts`
+- `src/lib/guided-creator/path-selection-draft.ts`
+- `src/lib/guided-creator/power-technique-display.ts`
+- `src/lib/guided-creator/powers-phase-nav.ts`
+- `src/lib/guided-creator/powers-techniques-energy-filter.ts`
+- `src/lib/guided-creator/powers-techniques-l1-candidates.ts`
+- `src/lib/guided-creator/powers-techniques-l2.ts`
+- `src/lib/guided-creator/powers-techniques-step-helpers.ts`
+- `src/lib/guided-creator/preview-ability-summary.ts`
+- `src/lib/guided-creator/resolve-loadout-items.ts`
+- `src/lib/guided-creator/reveal-blockers.ts`
+- `src/lib/guided-creator/skill-reconcile.ts`
+- `src/lib/guided-creator/species-selection-draft.ts`
+- `src/lib/guided-creator/substep-satisfaction.ts`
+- `src/lib/guided-creator/use-guided-deep-entry-on-arrival.ts`
+
+### `src/lib/password-policy.ts`
+
+- `src/lib/password-policy.ts`
+
+---
+
 ## Left for a later pass
 
 Still not opened file by file:
 
-- Modules under `src/lib/` other than the `game/` and `calculators/` sibling lists above. `src/lib/game/creator-constants.ts` was opened only for `CONDITIONS`. `src/lib/password-policy.ts` was not opened. The admin source field imports `@/lib/codex/sources` and was not a read of that module.
+- These `src/lib` folders: `ancestry`, `api`, `character-sheet`, `chip`, `constants`, `crafting`, `creator`, `data-enrichment`, `detail-option`, `encounter`, `glr`, `observability`, `rolls`, `routes`, `rules`, `security`, `server`, `supabase`, `tabletop`, `tooltips`, `ui`, `utils`, and `validation`.
+- Loose files directly under `src/lib/` other than `password-policy.ts`. `src/lib/admin.ts` was not opened. `src/lib/creator/creator-text-limits.ts` was seen only where it imports `CHARACTER_NAME_MAX_LENGTH`.
+- `src/lib/game/` and `src/lib/calculators/` beyond the sibling lists already in this index, except the two skill-allocation loops and `CONDITIONS` named above.
 - Unused exports inside files that something already imports.
 - Line-by-line comparison of files in `src/components/patterns`, `src/components/character-sheet`, and `src/components/guided-creator` that are not named in that fork section.
 - The files named under "Not read line by line" in the earlier sections and in the section above.
-- Admin screens outside `src/app/(main)/admin/codex` (users, images, roles, sources, public library, core rules).

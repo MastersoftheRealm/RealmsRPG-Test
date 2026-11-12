@@ -69,7 +69,22 @@ const FOLDER_FILE_DIRS = [
   'src/app/(main)/my-account/_components',
   'src/components/ui',
   'src/app/(main)/admin/codex',
+  'src/app/(main)/admin/changelogs',
+  'src/app/(main)/admin/core-rules',
+  'src/app/(main)/admin/images',
+  'src/app/(main)/admin/public-library',
+  'src/app/(main)/admin/roles',
+  'src/app/(main)/admin/sources',
+  'src/app/(main)/admin/users',
+  'src/lib/codex',
+  'src/lib/character',
+  'src/lib/library',
+  'src/lib/auth',
+  'src/lib/guided-creator',
 ];
+
+/** Single files outside those folders. */
+const EXTRA_REQUIRED_FILES = ['src/lib/password-policy.ts'];
 
 function walk(dir, acc = []) {
   for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -130,7 +145,7 @@ function requiredFeatureIndexPaths(root) {
       folderFiles.push(toRel(root, abs));
     }
   }
-  return [...appEntries, ...rootEntries, ...barrels, ...gaps, ...folderFiles];
+  return [...appEntries, ...rootEntries, ...barrels, ...gaps, ...folderFiles, ...EXTRA_REQUIRED_FILES];
 }
 
 const indexText = fs.readFileSync(indexPath, 'utf8');
