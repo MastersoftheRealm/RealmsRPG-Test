@@ -6,8 +6,8 @@ import type { CodexCollection } from '@/lib/codex/collections';
 import { createCodexDoc, updateCodexDoc } from './actions';
 import { isAdminPendingFeatLevelId } from './admin-pending-feat-level-id';
 
-/** Save each dirty level of one feat family. Shared by the character and creature feat editors. */
-export async function persistCodexLevelEdits<TForm>(options: {
+/** Updates dirty existing rows (used by {@link persistCodexFamilyLevelEdits}). */
+async function persistCodexLevelEdits<TForm>(options: {
   collection: CodexCollection;
   editsById: Record<string, TForm>;
   updatedAtForId: (id: string) => string | undefined;
@@ -91,27 +91,12 @@ export async function persistCodexFamilyLevelEdits<TForm>(options: {
     }
   }
 
-  for (const id of updateIds) {
-    const form = options.editsById[id];
-    const invalid = options.invalidMessage(id, form);
-    if (invalid) {
-      errors.push(invalid);
-      continue;
-    }
-    if (!form) continue;
-
-    const result = await updateCodexDoc(options.collection, id, options.toPayload(form), {
-      expectedUpdatedAt: options.updatedAtForId(id),
-    });
-    if (!result.success) {
-      errors.push(`Update ${id}: ${result.error}`);
-      continue;
-    }
-    if (result.updatedAt) {
-      patchAdminCodexCollectionRow(options.queryClient, options.collection, id, {
-        updated_at: result.updatedAt,
-      });
-    }
+  if (updateIds.length > 0) {
+    const updateEdits = Object.fromEntries(
+      updateIds.map((id) => [id, options.editsById[id]!] as const),
+    ) as Record<string, TForm>;
+    const updateError = await persistCodexLevelEdits({ ...options, editsById: updateEdits });
+    if (updateError) errors.push(updateError);
   }
 
   if (errors.length === 0) return null;
