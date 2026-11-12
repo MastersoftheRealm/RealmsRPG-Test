@@ -129,7 +129,8 @@ export function AdminCreatureFeatEditModal({
             const sourceId = hasLevels ? selectedEditId : initialEditId;
             if (!sourceId || !onAddLevel) return;
             const peak = peakFeatInFamily(levelFeats);
-            if (peak != null && getFeatLevel(peak) > getFeatLevel({ feat_lvl: form.feat_lvl })) {
+            const selectedLvl = form.feat_lvl != null && form.feat_lvl > 0 ? form.feat_lvl : 1;
+            if (peak != null && getFeatLevel(peak) > selectedLvl) {
               const peakId = String(peak.id);
               onAddLevel(peakId === sourceId ? form : creatureFeatToFormState(peak), peakId);
               return;
