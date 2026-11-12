@@ -16,17 +16,19 @@ Checked on this pass:
 - Every non-test `.ts` / `.tsx` file under the other `src/app/(main)/admin` screens, `src/lib/codex`, `src/lib/character`, `src/lib/library`, `src/lib/auth`, `src/lib/guided-creator`, and `src/lib/password-policy.ts`. The pairs in that section were opened. The files listed there as not read line by line were not.
 - Every non-test `.ts` / `.tsx` file under `src/lib/character-sheet`, `crafting`, `creator`, `encounter`, `rolls`, `rules`, `tabletop`, `validation`, `constants`, and `utils`, plus `src/lib/admin.ts` and the other loose files directly under `src/lib/`. The pairs in that section were opened. The files listed there as not read line by line were not.
 - Every non-test `.ts` / `.tsx` file under `src/lib/ancestry`, `api`, `chip`, `data-enrichment`, `detail-option`, `glr`, `observability`, `routes`, `security`, `server`, `supabase`, `tooltips`, and `ui`. The pairs in that section were opened. The files listed there as not read line by line were not.
+- The modules `src/lib/game/index.ts` and `src/lib/calculators/index.ts` re-export. The pairs in that section were opened. The files listed there as not read line by line were not. The sibling files those barrels do not re-export were already named and were not re-read in that section.
 - A static import walk from app entries. A file loaded only by a variable `import()` would not show up. `knip` was not run, so unused exports inside a file that is imported were not measured.
 
 Not checked, so silence here is not "it does not exist" and not "there is no fork":
 
 - Behavior of calculators, saves, or admin editors.
-- The unread parts of `src/lib/game` and `src/lib/calculators`.
+- App folders that still have source files which were not opened file by file, named at the bottom of this index.
+- The sibling files under `src/lib/game` and `src/lib/calculators` that the barrels do not re-export, except the snippets named above.
 - Pairs of files that are not named in a fork section below.
 
 Export **names** for patterns, ui, hooks, and services are in [`FEATURE_INDEX_BARRELS.generated.md`](FEATURE_INDEX_BARRELS.generated.md). That generated file is not a list of what is used, and it does not read the other barrels.
 
-`scripts/validate-feature-index.js` checks that backticked `src/...` paths in this file exist. The same script fails if an app entry, a `src` barrel, a sibling missing from the six barrels above, or a non-test source file in the covered component and creator folders is absent from this file.
+`scripts/validate-feature-index.js` checks that backticked `src/...` paths in this file exist. The same script fails if an app entry, a `src` barrel, a sibling missing from the six barrels above, a loose file directly under `src/lib`, or a non-test source file in the folders listed in that script is absent from this file.
 
 ---
 
@@ -1943,11 +1945,66 @@ Every path below is a non-test source file. The checker fails if one is missing 
 
 ---
 
+## Game formulas and creator calculators the barrels re-export
+
+20 non-test files. Every one has a production importer. The sibling files those barrels do not re-export were already named. They were not re-read here, except the skill-allocation loops and `CONDITIONS` named above.
+
+### Second implementations
+
+- Currency growth. `calculateCreatureCurrency` in `src/lib/game/formulas.ts` uses `CREATURE_CONSTANTS.BASE_CURRENCY` and `CREATURE_CONSTANTS.CURRENCY_GROWTH`, both `200` and `1.45`. `computeStartingCurrency` in `src/lib/guided-creator/equipment-currency.ts` uses `CHARACTER_STARTING_CURRENCY` (`200`) and a private `CURRENCY_GROWTH` of `1.45`. It does not import the creature constant. Level 1 returns the character constant. Above that it uses the same `Math.ceil(base * growth ** (level - 1))` shape.
+- Damage text. `formatPowerDamage` joins `amount + "d" + size + type` for an array. `formatTechniqueDamage` returns `"+" + amount + "d" + size` for one object. They do not call each other.
+- Action from parts. `power-calc.ts` and `technique-calc.ts` each have a private `computeActionType`. Both call `deriveActionType`. The technique one also matches the names `Reaction`, `Quick or Free Action`, and `Long Action`. The power one does not. `computeActionTypeFromSelection` in both files is the same `actionTypeFromSelection` from `src/lib/calculators/action-type.ts`.
+- Inventory kind. `normalizeCreatureInventoryType` returns `equipment` when the type is not weapon, armor, or shield. `normalizeArmamentKind` in `src/lib/library/official-item-list.ts` returns `null` for that case. They do not call each other.
+- Creature speed. `calculateCreatureSpeed` calls `calculateSpeed` and then adds Speedy and Slow. It is not a second speed formula.
+
+### Calls a shared component
+
+- `derivePowerDisplay` calls `deriveComposedPowerDisplay`, and if that returns null it calls `derivePlainPowerDisplay`. `derivePlainPowerDisplay` calls `calculatePowerCosts`.
+- `calculateEmpoweredTechniqueCosts` calls `calculatePowerCosts` and `calculateTechniqueCosts`, then multiplies the power energy by a local percentage product. That product uses `getTechniquePartEnergyContribution` in the same file. It was not compared to the percentage loop inside `calculateTechniqueCosts`.
+- `buildEmpoweredAdvancedCalculationGroups` calls `buildPowerEnergySectionGroups` and `buildTechniqueEnergySectionGroups`. The technique breakdown imports `formatEnergyNumber` and `formatPercentagePartModifier` from the power breakdown. It keeps its own section id list: action, attack, damage, parts.
+- `abilityDefenseBonusesFromAbilities` calls `calculateDefenses`. `formulas.ts` imports the fallback numbers from `constants.ts`.
+
+### Not read line by line
+
+- `src/lib/game/formulas.ts` past `calculateCreatureCurrency`, and `src/lib/game/calculations.ts` past `calculateMaxEnergy`.
+- `src/lib/calculators/power-calc.ts` past `derivePowerDisplay` and `formatPowerDamage`, and `power-composition.ts` past the start of `deriveComposedPowerDisplay`.
+- `src/lib/calculators/technique-calc.ts` past the start of `deriveTechniqueDisplay`, `item-calc.ts`, and `mechanic-builder.ts`.
+- The advanced-calculation group bodies in `power-energy-breakdown.ts`, `technique-energy-breakdown.ts`, `item-cost-breakdown.ts`, and `empowered-energy-breakdown.ts`.
+- The sibling files already listed under the barrel gaps.
+
+### Files
+
+- `src/lib/game/calculations.ts`
+- `src/lib/game/constants.ts`
+- `src/lib/game/creature-inventory.ts`
+- `src/lib/game/creature-level-display.ts`
+- `src/lib/game/formulas.ts`
+- `src/lib/game/unarmed-prowess.ts`
+- `src/lib/calculators/empowered-energy-breakdown.ts`
+- `src/lib/calculators/empowered-overlap-parts.ts`
+- `src/lib/calculators/empowered-technique-calc.ts`
+- `src/lib/calculators/item-calc.ts`
+- `src/lib/calculators/item-cost-breakdown.ts`
+- `src/lib/calculators/mechanic-builder.ts`
+- `src/lib/calculators/no-attack-creator-warning.ts`
+- `src/lib/calculators/power-calc.ts`
+- `src/lib/calculators/power-composition.ts`
+- `src/lib/calculators/power-energy-breakdown.ts`
+- `src/lib/calculators/power-mechanic-constants.ts`
+- `src/lib/calculators/technique-calc.ts`
+- `src/lib/calculators/technique-creator-section-costs.ts`
+- `src/lib/calculators/technique-energy-breakdown.ts`
+
+`src/lib/game/index.ts` and `src/lib/calculators/index.ts` re-export those modules. A dropped file in either folder fails `scripts/validate-feature-index.js`.
+
+---
+
 ## Left for a later pass
 
-Still not opened file by file:
+This index is not finished. These were not opened file by file:
 
-- `src/lib/game/` and `src/lib/calculators/` beyond the sibling lists already in this index, except the two skill-allocation loops and `CONDITIONS` named above.
+- App folders that still have source files outside the page and route entries: `src/app/(main)/codex`, `src/app/(main)/library` (including `components` and `hooks`), `src/app/(detail)/characters/[id]`, `src/app/(main)/characters`, `src/app/(main)/campaigns`, the file in `src/app/(detail)/campaigns/[id]` outside `_components`, `src/app/(auth)`, `src/app/(main)/encounters/[id]/mixed`, `src/app/(main)/encounters/[id]/skill`, `src/app/api/upload/profile-picture`, and `src/app/dev/styleguide`. The public codex and library tab files are named where a page imports them. They were not opened.
+- The sibling files under `src/lib/game` and `src/lib/calculators` that the barrels do not re-export, except the skill-allocation loops and `CONDITIONS`.
+- `src/hooks`, `src/services`, and `src/stores` beyond the barrel-gap names.
 - Unused exports inside files that something already imports.
-- Line-by-line comparison of files in `src/components/patterns`, `src/components/character-sheet`, and `src/components/guided-creator` that are not named in that fork section.
 - The files named under "Not read line by line" in the earlier sections and in the section above.

@@ -104,6 +104,8 @@ const FOLDER_FILE_DIRS = [
   'src/lib/supabase',
   'src/lib/tooltips',
   'src/lib/ui',
+  'src/lib/game',
+  'src/lib/calculators',
 ];
 
 function walk(dir, acc = []) {
@@ -172,7 +174,16 @@ function requiredFeatureIndexPaths(root) {
     .filter((name) => /\.(ts|tsx)$/.test(name))
     .filter((name) => !name.endsWith('.d.ts') && !/\.(test|spec)\./.test(name))
     .map((name) => `src/lib/${name}`);
-  return [...appEntries, ...rootEntries, ...barrels, ...gaps, ...folderFiles, ...looseLibFiles];
+  return [
+    ...new Set([
+      ...appEntries,
+      ...rootEntries,
+      ...barrels,
+      ...gaps,
+      ...folderFiles,
+      ...looseLibFiles,
+    ]),
+  ];
 }
 
 const indexText = fs.readFileSync(indexPath, 'utf8');
