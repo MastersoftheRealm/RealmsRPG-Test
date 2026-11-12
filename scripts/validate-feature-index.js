@@ -299,15 +299,14 @@ const MATH_DISAGREEMENT_INTENTIONAL_IDS = [
 
 const MATH_DISAGREEMENT_BUG_IDS = ['innate-remaining-uses-stored-cost'];
 
-const SKILL_MATH_BUG_IDS = ['feat-skill-req-first-ability-vs-sheet-highest'];
-
-const SKILL_MATH_UNCLASSIFIED_IDS = ['guided-skill-total-omits-rules-on-getTotalSkillPoints'];
+const SKILL_MATH_BUG_IDS = [
+  'feat-skill-req-first-ability-vs-sheet-highest',
+  'guided-skill-total-omits-rules-on-getTotalSkillPoints',
+];
 
 const CHARACTER_PATH_MATH_BUG_IDS = ['legality-skill-spent-floor-vs-allocation-spent'];
 
-const CREATURE_BUDGET_MATH_UNCLASSIFIED_IDS = [
-  'creature-training-stored-tp-without-parts',
-];
+const CREATURE_BUDGET_MATH_BUG_IDS = ['creature-training-stored-tp-without-parts'];
 
 const PROFICIENCY_TRAINING_MATH_BUG_IDS = ['guided-tp-bar-max-of-dedupe-vs-listed'];
 
@@ -390,12 +389,6 @@ if (!skillDisagreements) {
   process.exit(2);
 }
 requireDisagreementTokens(skillDisagreements, 'math-disagree-bug', SKILL_MATH_BUG_IDS, 'skill bug');
-requireDisagreementTokens(
-  skillDisagreements,
-  'math-disagree-unclassified',
-  SKILL_MATH_UNCLASSIFIED_IDS,
-  'skill unclassified',
-);
 
 const characterMathSection = mathSectionSlice(indexText, '## Character-check and path math');
 if (!characterMathSection) {
@@ -434,9 +427,9 @@ if (!creatureBudgetDisagreements) {
 }
 requireDisagreementTokens(
   creatureBudgetDisagreements,
-  'math-disagree-unclassified',
-  CREATURE_BUDGET_MATH_UNCLASSIFIED_IDS,
-  'creature budget unclassified',
+  'math-disagree-bug',
+  CREATURE_BUDGET_MATH_BUG_IDS,
+  'creature budget bug',
 );
 
 const proficiencyMathSection = mathSectionSlice(
@@ -552,9 +545,8 @@ const mathDisagreementCount =
   MATH_DISAGREEMENT_INTENTIONAL_IDS.length +
   MATH_DISAGREEMENT_BUG_IDS.length +
   SKILL_MATH_BUG_IDS.length +
-  SKILL_MATH_UNCLASSIFIED_IDS.length +
   CHARACTER_PATH_MATH_BUG_IDS.length +
-  CREATURE_BUDGET_MATH_UNCLASSIFIED_IDS.length +
+  CREATURE_BUDGET_MATH_BUG_IDS.length +
   PROFICIENCY_TRAINING_MATH_BUG_IDS.length +
   DEFENSE_WEAPON_MATH_BUG_IDS.length +
   CRAFTING_COST_MATH_BUG_IDS.length +

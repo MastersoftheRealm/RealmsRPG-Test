@@ -2239,7 +2239,7 @@ Skill bonus, skill point totals, and allocation spend in `src/lib/game/formulas.
 ### Disagreements
 
 - math-disagree-bug:feat-skill-req-first-ability-vs-sheet-highest: **Bug (Kadin).** Feat skill requirements must match the sheet: chosen linked ability when set, else highest, with the full skill bonus including proficiency. `getSkillBonusForFeatRequirement` still uses only the first codex ability string and its inline bonus path. `calculateSkillBonusWithProficiency` / `calculateSubSkillBonusWithProficiency` use `getLinkedAbilityMod` (chosen or highest). Not intentional.
-- math-disagree-unclassified:guided-skill-total-omits-rules-on-getTotalSkillPoints: **Unclassified (Kadin).** `calculateGuidedSkillPointBudget` calls `getTotalSkillPoints(1, 'character')` without the `rules` argument while spend uses `resolveSkillAllocationRules(rules)`. Kadin: guided remaining points should ignore a **custom skills-per-level rules override** only; the guided creator still uses the normal per-level amount. The species skill choice that grants one extra spendable point is a separate bonus and is **not** this finding.
+- math-disagree-bug:guided-skill-total-omits-rules-on-getTotalSkillPoints: **Bug (Kadin).** Guided remaining skill points must use core rules for the base total and for skill points per level. `calculateGuidedSkillPointBudget` calls `getTotalSkillPoints(1, 'character')` without the `rules` argument while spend uses `resolveSkillAllocationRules(rules)`, so the guided creator can show a built-in normal total and skip the live `PROGRESSION_PLAYER` values. The species skill choice that grants one extra spendable point is a separate bonus and is **not** this finding.
 
 ### Same math, separate copies
 
@@ -2298,7 +2298,7 @@ Creature point budgets, spend totals, and training-point aggregation for the cre
 
 `math-disagree-unclassified` marks a difference that is not labelled intentional or bug. Dropping a line fails the validator.
 
-- math-disagree-unclassified:creature-training-stored-tp-without-parts: **Unclassified until fix (Kadin intent recorded).** Intended rule: prefer live parts through `sumRequiredProficiencyTrainingPoints` when parts exist; saved `tp` is acceptable only when parts cannot be found (may be stale). Today `computeCreatureTrainingSpent` still adds stored `power.tp` / `technique.tp` / `armament.tp` on the without-parts path while live rows use parts. Legacy no-DB mode uses stored sums only.
+- math-disagree-bug:creature-training-stored-tp-without-parts: **Bug (Kadin).** Intended rule: use live parts through `sumRequiredProficiencyTrainingPoints` when parts exist; saved `tp` only when parts cannot be found (may be stale). `computeCreatureTrainingSpent` still adds stored `power.tp` / `technique.tp` / `armament.tp` on paths where parts could be resolved, so spend can disagree with live TP when parts exist. Legacy no-DB mode uses stored sums only.
 
 ### Same math, separate copies
 
