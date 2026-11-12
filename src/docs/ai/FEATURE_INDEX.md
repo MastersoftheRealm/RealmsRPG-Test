@@ -8,16 +8,19 @@ Checked on this pass:
 - Every `index.ts` / `index.tsx` under `src`.
 - Sibling source files that these barrels do **not** re-export: `src/lib/game/index.ts`, `src/lib/calculators/index.ts`, `src/hooks/index.ts`, `src/services/index.ts`, `src/stores/index.ts`, `src/components/ui/index.ts`.
 - Same-name modules and the two help widgets, by opening those files.
-- A static import walk from those app entries. A file loaded only by a variable `import()` would not show up. `knip` was not run, so unused exports inside a file that is imported were not measured.
+- Every non-test `.ts` / `.tsx` file under `src/components/patterns`, `src/components/character-sheet`, and `src/components/guided-creator`: static imports, plus the pairs named in that section, which were opened. The other files in those folders were not read line by line.
+- A static import walk from app entries. A file loaded only by a variable `import()` would not show up. `knip` was not run, so unused exports inside a file that is imported were not measured.
 
 Not checked, so silence here is not "it does not exist" and not "there is no fork":
 
-- Behavior of calculators, saves, sheets, creators, or admin editors.
-- Whether two differently named files inside `src/components/patterns`, `src/components/character-sheet`, `src/components/guided-creator`, or `src/app/(main)` do the same job.
-- Which files under `src/components/patterns/` are omitted by `src/components/patterns/index.ts` (that barrel exports from subfolders; the sibling check above does not cover it). Export **names** for patterns, ui, hooks, and services are in [`FEATURE_INDEX_BARRELS.generated.md`](FEATURE_INDEX_BARRELS.generated.md). That generated file is not a list of what is used, and it does not read the other barrels.
+- Behavior of calculators, saves, creators, or admin editors.
+- Creator page folders under `src/app/(main)`, encounter and campaign `_components`, and admin codex edit modals.
 - Loose modules under `src/lib/` outside `game/` and `calculators/`.
+- Pairs of files in the three component folders that are not named in the fork section below.
 
-`scripts/validate-feature-index.js` checks that backticked `src/...` paths in this file exist. The same script fails if an app entry, a `src` barrel, or a sibling missing from the six barrels above is absent from this file.
+Export **names** for patterns, ui, hooks, and services are in [`FEATURE_INDEX_BARRELS.generated.md`](FEATURE_INDEX_BARRELS.generated.md). That generated file is not a list of what is used, and it does not read the other barrels.
+
+`scripts/validate-feature-index.js` checks that backticked `src/...` paths in this file exist. The same script fails if an app entry, a `src` barrel, a sibling missing from the six barrels above, or a non-test source file in the three component folders is absent from this file.
 
 ---
 
@@ -423,11 +426,314 @@ Not dead. Not part of a screen. The static walk from app entries did not reach t
 
 ---
 
+## Patterns, character sheet, guided creator
+
+Static imports were resolved for every non-test `.ts` / `.tsx` file in these three folders. Each of those files has at least one production importer. None are unused files. An export inside a used file can still be unused; that was not measured.
+
+### Two implementations, not one component
+
+- Ability tiles. `src/components/character-sheet/abilities-section.tsx` renders `src/components/character-sheet/ability-stat-tile.tsx`. `src/components/patterns/list/ability-score-grid.tsx` does not render `AbilityStatTile`. Callers that render `AbilityScoreGrid`: `src/components/guided-creator/guided-path-detail-overview.tsx`, `src/components/guided-creator/guided-reveal-summary.tsx`, `src/components/guided-creator/steps/abilities-step.tsx`, and `src/components/creator/ability-score-editor.tsx`. `src/components/guided-creator/guided-abilities-customize-panel.tsx` renders `AbilityScoreEditor`. The creator editor was not read past that render. `AbilityScoreGrid` keeps its own `ABILITY_DISPLAY_ORDER` and `ABILITY_DISPLAY_INFO`. `src/components/patterns/stat-tiles/ability-defense-stat-model.ts` keeps `ABILITY_ORDER` and `ABILITY_INFO`. The six keys are the same and in the same order. The grid's class string is written out in the grid file. The sheet section uses `SHEET_STAT_GRID_CLASS` from the stat model. Those class strings are not the same constant.
+- Skill rows. `src/components/character-sheet/skills-section.tsx` renders `SkillRow` from `src/components/patterns/list/skill-row.tsx`. `src/components/guided-creator/guided-skills-panel.tsx` defines `GuidedSkillRow` in that file and does not render `SkillRow`.
+- Armor display. `src/components/character-sheet/archetype-section.tsx` renders `QuickArmorTable` from `src/components/patterns/list/quick-armaments-sections.tsx` (an HTML table). `src/components/character-sheet/library-inventory-panel.tsx` renders `ArmorListSection` from `src/components/patterns/list/entity-library-inventory.tsx`. Neither file imports the other.
+- `CodexPart` and `CodexProperty` are each declared twice. `src/components/patterns/list/creature-stat-block-helpers.ts` declares both with optional `name`. That `CodexPart` has no `defense` field. `src/components/character-sheet/library-list-helpers.ts` aliases both names to `CodexPartRow` and `CodexPropertyRow` from `src/lib/library/part-display.ts`. Those rows require `name`. `CodexPartRow` also has `defense`.
+
+### Calls the shared component
+
+These were opened. They are wrappers, not a second copy of the shared component.
+
+- `src/components/guided-creator/guided-detail-option-list.tsx` and `src/components/guided-creator/guided-trait-option-list.tsx` render `DetailOptionList` from `src/components/patterns/list/detail-option-list.tsx`.
+- `src/components/guided-creator/guided-portrait-upload.tsx` renders `CreatorPortraitUpload` from `src/components/patterns/chrome/creator-portrait-upload.tsx`.
+- `src/components/guided-creator/guided-health-energy-section.tsx` and `src/components/character-sheet/sheet-header-resources.tsx` render `HealthEnergyAllocator` from `@/components/creator`.
+- `src/components/guided-creator/guided-path-detail-modal.tsx` and `src/components/guided-creator/guided-species-detail-modal.tsx` render `GuidedEntityDetailModal` from `src/components/guided-creator/guided-entity-detail-modal.tsx`.
+- `src/components/guided-creator/guided-equipment-fact-chips.tsx` renders `DescriptorChipWithTip`.
+- `src/components/character-sheet/add-feat-modal.tsx`, `src/components/character-sheet/add-library-item-modal.tsx`, `src/components/character-sheet/add-proficiency-modal.tsx`, `src/components/guided-creator/guided-feats-l2-modal.tsx`, `src/components/guided-creator/guided-equipment-l2-modal.tsx`, and `src/components/guided-creator/guided-powers-techniques-l2-modal.tsx` render `UnifiedSelectionModal`. Feat steps import the guided feats modal, not the sheet add-feat modal.
+- `src/components/guided-creator/steps/skills-step.tsx` renders `AddSkillModal`. `src/components/guided-creator/steps/species-step.tsx` and `src/components/guided-creator/steps/ancestry-step.tsx` render `MixedSpeciesModal`. `src/components/character-sheet/edit-species-modal.tsx` also renders `MixedSpeciesModal`.
+- `src/components/patterns/list/official-power-list.tsx`, `src/components/patterns/list/official-technique-list.tsx`, `src/components/patterns/list/official-item-list.tsx`, `src/components/patterns/list/official-creature-list.tsx`, and `src/components/patterns/list/official-enhanced-list.tsx` render `OfficialEntityList`.
+- `src/components/patterns/list/entity-library-sections.tsx` re-exports the section components from `entity-library-inventory.tsx`, `entity-library-powers-techniques.tsx`, `entity-library-feats.tsx`, and `entity-library-sections-columns.ts`. One implementation each.
+- `src/components/patterns/list/grid-list-row.tsx` renders `GridListRowCollapsed` and `GridListRowExpandedBody`.
+- `src/components/character-sheet/sheet-header.tsx` renders `SheetHeaderIdentity`, `SheetHeaderResources`, and `LargeStatBlock`.
+- `src/components/guided-creator/guided-creator-shell.tsx` renders `GuidedCreatorPageShell` and the step components. `src/components/guided-creator/guided-creator-page-shell.tsx` renders `CreatorFunnelHero` from `@/components/landing`. It does not import `CreatorPageShell`.
+- `src/components/character-sheet/library-powers-panel.tsx` renders `PowersListSection`. `src/components/character-sheet/library-inventory-panel.tsx` renders the weapon, shield, armor, and equipment list sections. `src/components/character-sheet/feats-tab.tsx` renders `FeatsTraitsListSection`.
+- `src/components/patterns/filters/source-filter.tsx` is All / Realms Library / My Library. `src/components/patterns/filters/codex-rules-source-filter.tsx` is a codex-catalog multi-select. Different filters.
+- `src/components/patterns/select/choice-trait-option-select.tsx` is a single-choice picker. `GuidedTraitOptionList` is a read-only list over `DetailOptionList`. Different jobs.
+
+### Files
+
+Every path below is a non-test source file. The checker fails if one is missing from this document.
+
+### `src/components/character-sheet`
+
+- `src/components/character-sheet/abilities-section.tsx`
+- `src/components/character-sheet/ability-stat-tile.tsx`
+- `src/components/character-sheet/add-feat-modal.tsx`
+- `src/components/character-sheet/add-library-item-modal.tsx`
+- `src/components/character-sheet/add-proficiency-modal.tsx`
+- `src/components/character-sheet/archetype-path-identity.tsx`
+- `src/components/character-sheet/archetype-section.tsx`
+- `src/components/character-sheet/build-library-section-data.ts`
+- `src/components/character-sheet/character-sheet-body.tsx`
+- `src/components/character-sheet/character-sheet-context.tsx`
+- `src/components/character-sheet/character-sheet-settings-modal.tsx`
+- `src/components/character-sheet/currency-field-commit.ts`
+- `src/components/character-sheet/edit-archetype-modal.tsx`
+- `src/components/character-sheet/edit-species-ancestry-step.tsx`
+- `src/components/character-sheet/edit-species-modal.tsx`
+- `src/components/character-sheet/edit-species-species-filter.ts`
+- `src/components/character-sheet/edit-species-species-step.tsx`
+- `src/components/character-sheet/feats-tab.tsx`
+- `src/components/character-sheet/index.ts`
+- `src/components/character-sheet/level-up-modal.tsx`
+- `src/components/character-sheet/library-entity-rows.tsx`
+- `src/components/character-sheet/library-feat-rows.tsx`
+- `src/components/character-sheet/library-inventory-panel.tsx`
+- `src/components/character-sheet/library-list-helpers.ts`
+- `src/components/character-sheet/library-powers-panel.tsx`
+- `src/components/character-sheet/library-section-props.ts`
+- `src/components/character-sheet/library-section-visibility-toggle.tsx`
+- `src/components/character-sheet/library-section.tsx`
+- `src/components/character-sheet/library-tab-config.ts`
+- `src/components/character-sheet/notes-tab-edit-controls.tsx`
+- `src/components/character-sheet/notes-tab.tsx`
+- `src/components/character-sheet/path-level-guidance.tsx`
+- `src/components/character-sheet/proficiencies-tab.tsx`
+- `src/components/character-sheet/read-only-sheet.ts`
+- `src/components/character-sheet/recovery-modal.tsx`
+- `src/components/character-sheet/sheet-action-toolbar.tsx`
+- `src/components/character-sheet/sheet-allocation-reset-button.tsx`
+- `src/components/character-sheet/sheet-currency-input-layout.ts`
+- `src/components/character-sheet/sheet-desktop-columns.ts`
+- `src/components/character-sheet/sheet-field-focus.ts`
+- `src/components/character-sheet/sheet-header-identity.tsx`
+- `src/components/character-sheet/sheet-header-layout.ts`
+- `src/components/character-sheet/sheet-header-name.ts`
+- `src/components/character-sheet/sheet-header-resources.tsx`
+- `src/components/character-sheet/sheet-header.tsx`
+- `src/components/character-sheet/sheet-item-match.ts`
+- `src/components/character-sheet/sheet-large-stat-block.tsx`
+- `src/components/character-sheet/sheet-mobile-carousel.ts`
+- `src/components/character-sheet/sheet-resource-input.tsx`
+- `src/components/character-sheet/sheet-temp-modifier-controls.tsx`
+- `src/components/character-sheet/sheet-viewer-edits.ts`
+- `src/components/character-sheet/skills-header-pin.ts`
+- `src/components/character-sheet/skills-section.tsx`
+- `src/components/character-sheet/use-character-sheet-actions.ts`
+- `src/components/character-sheet/use-character-sheet-derived.ts`
+- `src/components/character-sheet/use-edit-species-modal.ts`
+- `src/components/character-sheet/use-library-section-rows.ts`
+- `src/components/character-sheet/use-library-tab-navigation.tsx`
+- `src/components/character-sheet/use-sheet-auto-proficiencies.ts`
+- `src/components/character-sheet/use-sheet-feat-actions.ts`
+- `src/components/character-sheet/use-sheet-library-actions.ts`
+- `src/components/character-sheet/use-sheet-resource-actions.ts`
+- `src/components/character-sheet/use-sheet-skill-identity-actions.ts`
+
+### `src/components/character-sheet/add-library-item`
+
+- `src/components/character-sheet/add-library-item/add-custom-equipment-form.tsx`
+- `src/components/character-sheet/add-library-item/build-custom-equipment.ts`
+- `src/components/character-sheet/add-library-item/map-selection.ts`
+- `src/components/character-sheet/add-library-item/modal-config.ts`
+- `src/components/character-sheet/add-library-item/power-header-extra.tsx`
+
+### `src/components/guided-creator`
+
+- `src/components/guided-creator/character-preview-panel.tsx`
+- `src/components/guided-creator/guided-abilities-customize-panel.tsx`
+- `src/components/guided-creator/guided-choice-card.tsx`
+- `src/components/guided-creator/guided-choice-image.ts`
+- `src/components/guided-creator/guided-choice-styles.ts`
+- `src/components/guided-creator/guided-creator-page-shell.tsx`
+- `src/components/guided-creator/guided-creator-shell.tsx`
+- `src/components/guided-creator/guided-detail-option-list.tsx`
+- `src/components/guided-creator/guided-entity-detail-modal.tsx`
+- `src/components/guided-creator/guided-equipment-fact-chips.tsx`
+- `src/components/guided-creator/guided-equipment-l1-phase.tsx`
+- `src/components/guided-creator/guided-equipment-l2-grid.ts`
+- `src/components/guided-creator/guided-equipment-l2-modal.tsx`
+- `src/components/guided-creator/guided-equipment-phase-layout.tsx`
+- `src/components/guided-creator/guided-feats-filter-fields.tsx`
+- `src/components/guided-creator/guided-feats-l2-modal.tsx`
+- `src/components/guided-creator/guided-health-energy-section.tsx`
+- `src/components/guided-creator/guided-mixed-species-overview.tsx`
+- `src/components/guided-creator/guided-overview-section.tsx`
+- `src/components/guided-creator/guided-path-custom-archetype.tsx`
+- `src/components/guided-creator/guided-path-detail-modal.tsx`
+- `src/components/guided-creator/guided-path-detail-overview.tsx`
+- `src/components/guided-creator/guided-portrait-upload.tsx`
+- `src/components/guided-creator/guided-powers-techniques-l1-content.tsx`
+- `src/components/guided-creator/guided-powers-techniques-l2-modal.tsx`
+- `src/components/guided-creator/guided-restriction-notice.tsx`
+- `src/components/guided-creator/guided-reveal-review-modal.tsx`
+- `src/components/guided-creator/guided-reveal-summary.tsx`
+- `src/components/guided-creator/guided-section-title.tsx`
+- `src/components/guided-creator/guided-skills-panel.tsx`
+- `src/components/guided-creator/guided-species-detail-modal.tsx`
+- `src/components/guided-creator/guided-species-utils.ts`
+- `src/components/guided-creator/guided-step-footer.tsx`
+- `src/components/guided-creator/guided-step-layout.tsx`
+- `src/components/guided-creator/guided-text.ts`
+- `src/components/guided-creator/guided-trait-option-list.tsx`
+- `src/components/guided-creator/guided-unarmed-prowess-panel.tsx`
+- `src/components/guided-creator/index.ts`
+- `src/components/guided-creator/species-reveal-panel.tsx`
+- `src/components/guided-creator/use-guided-path-data.ts`
+
+### `src/components/guided-creator/steps`
+
+- `src/components/guided-creator/steps/abilities-step.tsx`
+- `src/components/guided-creator/steps/ancestry-step.tsx`
+- `src/components/guided-creator/steps/archetype-feats-step.tsx`
+- `src/components/guided-creator/steps/character-feat-step.tsx`
+- `src/components/guided-creator/steps/index.ts`
+- `src/components/guided-creator/steps/loadout-step.tsx`
+- `src/components/guided-creator/steps/path-step.tsx`
+- `src/components/guided-creator/steps/powers-techniques-step.tsx`
+- `src/components/guided-creator/steps/reveal-step.tsx`
+- `src/components/guided-creator/steps/skills-step.tsx`
+- `src/components/guided-creator/steps/species-step.tsx`
+- `src/components/guided-creator/steps/use-powers-techniques-selection.ts`
+
+### `src/components/patterns/chrome`
+
+- `src/components/patterns/chrome/cloud-sync-offline-banner.tsx`
+- `src/components/patterns/chrome/confirm-action-modal.tsx`
+- `src/components/patterns/chrome/creator-portrait-upload.tsx`
+- `src/components/patterns/chrome/delete-confirm-modal.tsx`
+- `src/components/patterns/chrome/discord-icon.tsx`
+- `src/components/patterns/chrome/edit-section-toggle.tsx`
+- `src/components/patterns/chrome/error-boundary.tsx`
+- `src/components/patterns/chrome/image-upload-modal.tsx`
+- `src/components/patterns/chrome/loadout-budget-bar.tsx`
+- `src/components/patterns/chrome/login-prompt-modal.tsx`
+- `src/components/patterns/chrome/point-status.tsx`
+- `src/components/patterns/chrome/realms-image-picker.tsx`
+- `src/components/patterns/chrome/roll-button.tsx`
+- `src/components/patterns/chrome/section-cost-badge.tsx`
+- `src/components/patterns/chrome/section-header.tsx`
+- `src/components/patterns/chrome/segmented-control.tsx`
+- `src/components/patterns/chrome/tab-summary-section.tsx`
+- `src/components/patterns/chrome/temp-modifier-toggle.tsx`
+- `src/components/patterns/chrome/theme-toggle.tsx`
+- `src/components/patterns/chrome/trait-section.tsx`
+
+### `src/components/patterns/filters`
+
+- `src/components/patterns/filters/ability-requirement-filter.tsx`
+- `src/components/patterns/filters/archetype-path-filter.tsx`
+- `src/components/patterns/filters/armament-filters.tsx`
+- `src/components/patterns/filters/character-filter.tsx`
+- `src/components/patterns/filters/chip-select.tsx`
+- `src/components/patterns/filters/codex-rules-source-filter.tsx`
+- `src/components/patterns/filters/filter-native-select.tsx`
+- `src/components/patterns/filters/filter-section.tsx`
+- `src/components/patterns/filters/filter-utils.ts`
+- `src/components/patterns/filters/index.ts`
+- `src/components/patterns/filters/power-technique-filters.tsx`
+- `src/components/patterns/filters/select-filter.tsx`
+- `src/components/patterns/filters/source-filter.tsx`
+- `src/components/patterns/filters/tag-filter.tsx`
+
+### `src/components/patterns/guided-choice`
+
+- `src/components/patterns/guided-choice/guided-inline-catalog-list.tsx`
+- `src/components/patterns/guided-choice/guided-layer-nav.tsx`
+- `src/components/patterns/guided-choice/guided-nav-button-styles.ts`
+- `src/components/patterns/guided-choice/index.ts`
+
+### `src/components/patterns/help`
+
+- `src/components/patterns/help/descriptor-chip-with-tip.tsx`
+- `src/components/patterns/help/expandable-image.tsx`
+- `src/components/patterns/help/info-tippy.tsx`
+- `src/components/patterns/help/path-help-card.tsx`
+
+### `src/components/patterns`
+
+- `src/components/patterns/index.ts`
+
+### `src/components/patterns/list`
+
+- `src/components/patterns/list/ability-score-grid.tsx`
+- `src/components/patterns/list/codex-browse-list-shell.tsx`
+- `src/components/patterns/list/creature-library-stat-block-rows.tsx`
+- `src/components/patterns/list/creature-stat-block-display-data.ts`
+- `src/components/patterns/list/creature-stat-block-helpers.ts`
+- `src/components/patterns/list/creature-stat-block-panels.tsx`
+- `src/components/patterns/list/creature-stat-block-section.tsx`
+- `src/components/patterns/list/creature-stat-block-types.ts`
+- `src/components/patterns/list/creature-stat-block.tsx`
+- `src/components/patterns/list/detail-option-list.tsx`
+- `src/components/patterns/list/entity-library-feats.tsx`
+- `src/components/patterns/list/entity-library-inventory.tsx`
+- `src/components/patterns/list/entity-library-powers-techniques.tsx`
+- `src/components/patterns/list/entity-library-sections-columns.ts`
+- `src/components/patterns/list/entity-library-sections-rows.tsx`
+- `src/components/patterns/list/entity-library-sections-types.ts`
+- `src/components/patterns/list/entity-library-sections.tsx`
+- `src/components/patterns/list/grid-list-chip.tsx`
+- `src/components/patterns/list/grid-list-row-chrome.ts`
+- `src/components/patterns/list/grid-list-row-collapsed.tsx`
+- `src/components/patterns/list/grid-list-row-columns.ts`
+- `src/components/patterns/list/grid-list-row-detail.tsx`
+- `src/components/patterns/list/grid-list-row-expanded.tsx`
+- `src/components/patterns/list/grid-list-row-types.ts`
+- `src/components/patterns/list/grid-list-row.tsx`
+- `src/components/patterns/list/hub-list-row.tsx`
+- `src/components/patterns/list/library-add-to-library-button.tsx`
+- `src/components/patterns/list/library-row-action-slot.tsx`
+- `src/components/patterns/list/list-components.tsx`
+- `src/components/patterns/list/list-header.tsx`
+- `src/components/patterns/list/list-row-thumbnail.tsx`
+- `src/components/patterns/list/list-search-toolbar.tsx`
+- `src/components/patterns/list/official-creature-list.tsx`
+- `src/components/patterns/list/official-enhanced-list.tsx`
+- `src/components/patterns/list/official-entity-list.tsx`
+- `src/components/patterns/list/official-item-list.tsx`
+- `src/components/patterns/list/official-power-list.tsx`
+- `src/components/patterns/list/official-technique-list.tsx`
+- `src/components/patterns/list/quick-armaments-sections.tsx`
+- `src/components/patterns/list/skill-row.tsx`
+- `src/components/patterns/list/skills-allocation-page.tsx`
+- `src/components/patterns/list/summary-chip-list.tsx`
+
+### `src/components/patterns/select`
+
+- `src/components/patterns/select/ability-pick-button.tsx`
+- `src/components/patterns/select/add-skill-modal.tsx`
+- `src/components/patterns/select/add-sub-skill-modal.tsx`
+- `src/components/patterns/select/choice-trait-option-select.tsx`
+- `src/components/patterns/select/equip-toggle.tsx`
+- `src/components/patterns/select/innate-toggle.tsx`
+- `src/components/patterns/select/mixed-species-modal.tsx`
+- `src/components/patterns/select/mixed-species-skill-picker.tsx`
+- `src/components/patterns/select/powered-martial-slider.tsx`
+- `src/components/patterns/select/quantity-selector.tsx`
+- `src/components/patterns/select/selection-toggle.tsx`
+- `src/components/patterns/select/unified-selection-modal-footer.tsx`
+- `src/components/patterns/select/unified-selection-modal-helpers.ts`
+- `src/components/patterns/select/unified-selection-modal-leave-prompt.tsx`
+- `src/components/patterns/select/unified-selection-modal-list.tsx`
+- `src/components/patterns/select/unified-selection-modal-toolbar.tsx`
+- `src/components/patterns/select/unified-selection-modal-types.ts`
+- `src/components/patterns/select/unified-selection-modal.tsx`
+- `src/components/patterns/select/value-stepper.tsx`
+
+### `src/components/patterns/stat-tiles`
+
+- `src/components/patterns/stat-tiles/ability-defense-stat-model.ts`
+- `src/components/patterns/stat-tiles/defense-stat-tile.tsx`
+- `src/components/patterns/stat-tiles/index.ts`
+
+
+---
+
 ## Left for a later pass
 
-Open these before treating this index as a complete "do not build another one" list:
+Still not opened file by file:
 
-- `src/components/patterns/` (subfolders `chrome`, `list`, `select`, `filters`, `help`, `guided-choice`, `stat-tiles`). The generated barrel file lists export names. It was not checked against every file in those folders.
-- `src/components/character-sheet/`, `src/components/guided-creator/`, and the creator page folders under `src/app/(main)/`.
-- Modules directly under `src/lib/` that are not in `game/` or `calculators/` (codex, character, library, guided-creator, auth, and the rest).
+- Creator implementation folders under `src/app/(main)/power-creator`, `technique-creator`, `empowered-technique-creator`, `item-creator`, `species-creator`, `creature-creator`, and `crafting`.
+- Encounter, campaign, admin codex, and my-account folders under `src/app` beyond the page file each route imports.
+- `src/components/creator` (seen only where the three folders import `AbilityScoreEditor` and `HealthEnergyAllocator`). The rest of that folder was not opened.
+- Modules under `src/lib/` other than the `game/` and `calculators/` sibling lists above (`codex`, `character`, `library`, `guided-creator`, `auth`, and the rest).
 - Unused exports inside files that something already imports.
+- Line-by-line comparison of files in the three component folders that are not named in the fork section above.

@@ -37,6 +37,13 @@ const BARREL_GAP_DIRS = [
   'src/components/ui',
 ];
 
+/** Non-test source under these trees must be named. Tests are not required. */
+const FOLDER_FILE_DIRS = [
+  'src/components/patterns',
+  'src/components/character-sheet',
+  'src/components/guided-creator',
+];
+
 function walk(dir, acc = []) {
   for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
     if (ent.name === 'node_modules' || ent.name === '.next') continue;
@@ -86,7 +93,17 @@ function requiredFeatureIndexPaths(root) {
       if (!specs.has(name.replace(/\.(ts|tsx)$/, ''))) gaps.push(`${dirRel}/${name}`);
     }
   }
-  return [...appEntries, ...rootEntries, ...barrels, ...gaps];
+  const folderFiles = [];
+  for (const dirRel of FOLDER_FILE_DIRS) {
+    for (const abs of walk(path.join(root, dirRel))) {
+      const name = path.basename(abs);
+      if (!/\.(ts|tsx)$/.test(name)) continue;
+      if (name.endsWith('.d.ts') || /\.(test|spec)\./.test(name)) continue;
+      if (!fs.statSync(abs).isFile()) continue;
+      folderFiles.push(toRel(root, abs));
+    }
+  }
+  return [...appEntries, ...rootEntries, ...barrels, ...gaps, ...folderFiles];
 }
 
 const indexText = fs.readFileSync(indexPath, 'utf8');
