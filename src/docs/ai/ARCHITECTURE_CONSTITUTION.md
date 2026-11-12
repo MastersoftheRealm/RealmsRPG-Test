@@ -63,7 +63,7 @@ Question for human: (HOLD only, one clear decision, addressed to Kadin for what 
 ```
 
 - **APPROVE:** standard risk, all items pass, CI green, repro test run.
-- **REQUEST CHANGES:** a checklist fail the writer can fix. Round 2 is the last.
+- **REQUEST CHANGES:** a checklist fail the writer can fix. Round count and the round-3 warning are in `AGENTS.md` (Review) and `audit.md`.
 - **HOLD FOR HUMAN:** high risk, a missing or conflicting rule, a product decision, or you are not independent of the writer.
 - **PATCH veto:** if your label check says PATCH, the verdict cannot be APPROVE. Use HOLD FOR HUMAN; it merges only if Kadin accepts it as a patch in his own PR comment (`AGENTS.md`, Review).
 
