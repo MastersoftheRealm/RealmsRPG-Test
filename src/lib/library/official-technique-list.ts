@@ -15,20 +15,8 @@ import {
   derivePartCategories,
   formatPartCategoriesColumn,
 } from '@/lib/library/power-technique-categories';
-import {
-  applyPowerTechniqueFilters,
-  type PowerTechniqueFilterState,
-} from '@/lib/library/power-technique-filters';
-import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
-import {
-  filterRowsByCodexRulesSources,
-  readRowRulesSources,
-} from '@/lib/codex/list-rules-source-filter';
-import {
-  libraryRowPathIds,
-  rowMatchesPathRecommendedIds,
-} from '@/lib/game/path-recommendation-index';
-import { glrColumnKeyFor, glrListChrome } from '@/lib/glr';
+import { glrColumnKeyFor } from '@/lib/glr';
+import { officialEntityBrowseChrome } from '@/lib/glr';
 import {
   glrSurfaceDetailSections,
   mergeDetailSections,
@@ -37,18 +25,14 @@ import {
 } from '@/lib/chip/list-row-metadata';
 import { targetsFactChip } from '@/lib/detail-option/compact-facts';
 
-const officialTechniqueChrome = glrListChrome({ entityType: 'technique', mode: 'browse' });
+const {
+  chrome: officialTechniqueChrome,
+  grid: OFFICIAL_TECHNIQUE_GRID,
+  headers: OFFICIAL_TECHNIQUE_HEADER_COLUMNS,
+} = officialEntityBrowseChrome('technique');
 
 /** Data columns only — edit/delete/add use ListHeader `rowChrome`. */
-export const OFFICIAL_TECHNIQUE_GRID = officialTechniqueChrome.grid;
-
-export const OFFICIAL_TECHNIQUE_HEADER_COLUMNS = officialTechniqueChrome.headers.map(
-  ({ key, label, align }) => ({
-    key,
-    label,
-    align: align ?? ('center' as const),
-  }),
-);
+export { OFFICIAL_TECHNIQUE_GRID, OFFICIAL_TECHNIQUE_HEADER_COLUMNS };
 
 export interface OfficialTechniqueRow {
   id: string;
@@ -159,65 +143,4 @@ export function officialTechniqueRowColumns(row: OfficialTechniqueRow): ColumnVa
       align: 'center' as const,
     };
   });
-}
-
-export function filterOfficialTechniqueRows<
-  T extends {
-    id?: string | number | undefined;
-    raw?:
-      | { id?: string | number | null | undefined; docId?: string | number | null | undefined }
-      | undefined;
-    name?: string | undefined;
-    description?: string | undefined;
-    weapon?: string | undefined;
-    categories?: string[] | undefined;
-    energy?: string | number | null | undefined;
-    tp?: number | null | undefined;
-    action?: string | null | undefined;
-    actionTypeRaw?: string | null | undefined;
-    isReaction?: boolean | undefined;
-    partIds?: string[] | undefined;
-    partNames?: string[] | undefined;
-    category?: string | undefined;
-  },
->(
-  rows: T[],
-  search: string,
-  sortItems: (items: T[]) => T[],
-  advanced?: PowerTechniqueFilterState,
-  character?: PowerTechniqueCharacterContext | null,
-  pathRecommendedIds?: ReadonlySet<string> | null,
-  rulesSources?: readonly string[],
-): T[] {
-  let result = rows;
-  if (pathRecommendedIds) {
-    result = result.filter((x) =>
-      rowMatchesPathRecommendedIds(libraryRowPathIds(x), pathRecommendedIds),
-    );
-  }
-  if (search) {
-    const s = search.toLowerCase();
-    result = result.filter(
-      (x) =>
-        String(x.name ?? '')
-          .toLowerCase()
-          .includes(s) ||
-        String(x.description ?? '')
-          .toLowerCase()
-          .includes(s) ||
-        String(x.weapon ?? '')
-          .toLowerCase()
-          .includes(s) ||
-        String(x.category ?? '')
-          .toLowerCase()
-          .includes(s),
-    );
-  }
-  if (advanced) {
-    result = applyPowerTechniqueFilters(result, advanced, 'technique', character);
-  }
-  if (rulesSources && rulesSources.length > 0) {
-    result = filterRowsByCodexRulesSources(result, rulesSources, readRowRulesSources);
-  }
-  return sortItems(result);
 }

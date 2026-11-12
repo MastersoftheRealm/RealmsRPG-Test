@@ -22,7 +22,6 @@ import {
 import {
   deriveAbilityRequirementFromProperties,
   type AbilityRequirement,
-  type WeaponPropertyRef,
 } from '@/lib/game/weapon-attack-ability';
 import {
   formatAbilityRequirementFact,
@@ -32,16 +31,6 @@ import {
 import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import type { ArmamentLibraryKind } from '@/lib/library/armament-library-labels';
-import { applyArmamentFilters, type ArmamentFilterState } from '@/lib/library/armament-filters';
-import {
-  filterRowsByCodexRulesSources,
-  readRowRulesSources,
-} from '@/lib/codex/list-rules-source-filter';
-import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
-import {
-  libraryRowPathIds,
-  rowMatchesPathRecommendedIds,
-} from '@/lib/game/path-recommendation-index';
 import { glrListChrome } from '@/lib/glr';
 import {
   glrSurfaceDetailSections,
@@ -278,54 +267,4 @@ export function officialItemDetailSections(row: OfficialItemRow, kind: ArmamentL
     },
     properties ? [properties] : undefined,
   );
-}
-
-export function filterOfficialItemRows<
-  T extends {
-    id?: string | number | undefined;
-    raw?:
-      | { id?: string | number | null | undefined; docId?: string | number | null | undefined }
-      | undefined;
-    name?: string | undefined;
-    description?: string | undefined;
-    currency?: number | null | undefined;
-    tp?: number | null | undefined;
-    rarity?: string | null | undefined;
-    abilityReq?: AbilityRequirement | null | undefined;
-    properties?: WeaponPropertyRef[] | undefined;
-  },
->(
-  rows: T[],
-  search: string,
-  sortItems: (items: T[]) => T[],
-  filters?: ArmamentFilterState,
-  characterContext?: ArmamentCharacterContext | null,
-  pathRecommendedIds?: ReadonlySet<string> | null,
-  rulesSources?: readonly string[],
-): T[] {
-  let result = rows;
-  if (pathRecommendedIds) {
-    result = result.filter((x) =>
-      rowMatchesPathRecommendedIds(libraryRowPathIds(x), pathRecommendedIds),
-    );
-  }
-  if (search) {
-    const s = search.toLowerCase();
-    result = result.filter(
-      (x) =>
-        String(x.name ?? '')
-          .toLowerCase()
-          .includes(s) ||
-        String(x.description ?? '')
-          .toLowerCase()
-          .includes(s),
-    );
-  }
-  if (filters) {
-    result = applyArmamentFilters(result, filters, characterContext ?? null);
-  }
-  if (rulesSources && rulesSources.length > 0) {
-    result = filterRowsByCodexRulesSources(result, rulesSources, readRowRulesSources);
-  }
-  return sortItems(result);
 }

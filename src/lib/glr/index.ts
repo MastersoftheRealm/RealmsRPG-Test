@@ -18,5 +18,6 @@ export {
 } from './resolve-glr-fact-layout';
 
 export { glrListChrome, type GlrExtraColumn, type GlrHeaderColumn } from './glr-list-chrome';
+export { officialEntityBrowseChrome } from './official-entity-browse-chrome';
 
 export { chipLabelsFromDetailSections, type GlrRowFactSnapshot } from './validate-glr-facts';

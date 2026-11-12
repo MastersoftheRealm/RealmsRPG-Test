@@ -5,17 +5,16 @@
 
 'use client';
 
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, type ReactNode } from 'react';
 import { Swords } from 'lucide-react';
 import { OfficialEntityList } from '@/components/patterns/list/official-entity-list';
 import { PowerTechniqueFilters } from '@/components/patterns/filters';
 import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-library';
-import { usePathListFilter } from '@/hooks';
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import type { LibraryTechnique } from '@/types/library';
+import { filterOfficialPowerTechniqueRows } from '@/lib/library/official-catalog-row-filter';
 import {
   buildOfficialTechniqueRows,
-  filterOfficialTechniqueRows,
   officialTechniqueDetailSections,
   officialTechniqueRowColumns,
   OFFICIAL_TECHNIQUE_GRID,
@@ -23,21 +22,11 @@ import {
   type OfficialTechniqueRow,
 } from '@/lib/library/official-technique-list';
 import { collectCategoryOptionsFromItems } from '@/lib/library/power-technique-categories';
-import {
-  EMPTY_POWER_TECHNIQUE_FILTERS,
-  countActivePowerTechniqueFilters,
-  type PowerTechniqueFilterState,
-} from '@/lib/library/power-technique-filters';
-import { countActiveCodexRulesSourceFilters } from '@/lib/codex/list-rules-source-filter';
-import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
+import { useOfficialPowerTechniqueBrowseFilters } from '@/hooks/use-official-power-technique-browse-filters';
 import { empoweredTechniquePartsSection } from '@/lib/library/empowered-technique-display';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import type { CatalogListing } from '@/lib/library/catalog-listing';
-import {
-  libraryRowPathIds,
-  pathChipLabelsForEntity,
-  pathFilterEmptyTitle,
-} from '@/lib/game/path-recommendation-index';
+import { libraryRowPathIds, pathChipLabelsForEntity } from '@/lib/game/path-recommendation-index';
 
 export type { OfficialTechniqueRow };
 
@@ -88,21 +77,28 @@ export function OfficialTechniqueList({
   onCatalogListingChange,
 }: OfficialTechniqueListProps) {
   const empowered = mode === 'empowered';
-  const [advancedFilters, setAdvancedFilters] = useState<PowerTechniqueFilterState>(
-    EMPTY_POWER_TECHNIQUE_FILTERS,
-  );
-  const [characterContext, setCharacterContext] = useState<PowerTechniqueCharacterContext | null>(
-    null,
-  );
-  const [characterFilterId, setCharacterFilterId] = useState('');
-  const [rulesSources, setRulesSources] = useState<string[]>([]);
+  const browseFilters = useOfficialPowerTechniqueBrowseFilters({
+    kind: 'technique',
+    entities: items,
+    rowFiltersEnabled: !empowered,
+  });
+  const {
+    advancedFilters,
+    setAdvancedFilters,
+    setCharacterContext,
+    characterFilterId,
+    setCharacterFilterId,
+    rulesSources,
+    setRulesSources,
+    selectedPathIds,
+    setSelectedPathIds,
+    pathIndex,
+    rowFilters,
+    pathFilterActive,
+    filterActiveCount,
+    pathEmptyListTitle,
+  } = browseFilters;
   const addToCharacter = useAddToCharacterFromLibrary('technique', characterFilterId);
-  const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
-    usePathListFilter({
-      entities: items,
-      kind: 'techniques',
-      enabled: !empowered,
-    });
 
   const categoryOptions = useMemo(() => {
     if (empowered) return [];
@@ -115,16 +111,14 @@ export function OfficialTechniqueList({
       search: string,
       sortItems: (items: OfficialTechniqueRow[]) => OfficialTechniqueRow[],
     ) =>
-      filterOfficialTechniqueRows(
+      filterOfficialPowerTechniqueRows({
         rows,
         search,
         sortItems,
-        advancedFilters,
-        characterContext,
-        empowered ? null : pathRecommendedIds,
-        rulesSources,
-      ),
-    [advancedFilters, characterContext, empowered, pathRecommendedIds, rulesSources],
+        kind: 'technique',
+        rowFilters,
+      }),
+    [rowFilters],
   );
 
   return (
@@ -157,25 +151,11 @@ export function OfficialTechniqueList({
             />
           )
         }
-        filterActiveCount={
-          empowered
-            ? undefined
-            : countActivePowerTechniqueFilters(
-                advancedFilters,
-                'technique',
-                Boolean(characterContext),
-              ) +
-              countActiveCodexRulesSourceFilters(rulesSources) +
-              (characterFilterId ? 1 : 0) +
-              (pathFilterActive ? 1 : 0)
-        }
-        getNameChipLabels={
-          empowered
-            ? undefined
-            : (t) =>
-                pathFilterActive
-                  ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(t), selectedPathIds)
-                  : undefined
+        filterActiveCount={filterActiveCount}
+        getNameChipLabels={(t) =>
+          pathFilterActive
+            ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(t), selectedPathIds)
+            : undefined
         }
         getColumns={(t) => officialTechniqueRowColumns(t)}
         getDetailSections={(t) => {
@@ -201,12 +181,11 @@ export function OfficialTechniqueList({
         emptyTitle={emptyTitle}
         emptyMessage={emptyMessage}
         searchEmptyMessage={
-          !empowered && pathFilterActive
-            ? pathFilterEmptyTitle('techniques')
-            : (searchEmptyMessage ??
-              (empowered
-                ? 'No empowered techniques match your search.'
-                : 'No techniques match your search.'))
+          pathEmptyListTitle ??
+          searchEmptyMessage ??
+          (empowered
+            ? 'No empowered techniques match your search.'
+            : 'No techniques match your search.')
         }
         variant={variant}
         readOnly={readOnly}

@@ -5,18 +5,17 @@
 
 'use client';
 
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, type ReactNode } from 'react';
 import { Wand2 } from 'lucide-react';
 import { OfficialEntityList } from '@/components/patterns/list/official-entity-list';
 import { PowerTechniqueFilters } from '@/components/patterns/filters';
 import { useGameRules } from '@/hooks/use-game-rules';
-import { usePathListFilter } from '@/hooks';
 import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-library';
 import type { PowerPart } from '@/hooks/codex-types';
 import type { LibraryPower } from '@/types/library';
+import { filterOfficialPowerTechniqueRows } from '@/lib/library/official-catalog-row-filter';
 import {
   buildOfficialPowerRows,
-  filterOfficialPowerRows,
   officialPowerCategoryOptions,
   officialPowerDetailSections,
   officialPowerRowColumns,
@@ -24,20 +23,9 @@ import {
   OFFICIAL_POWER_HEADER_COLUMNS,
   type OfficialPowerRow,
 } from '@/lib/library/official-power-list';
-import {
-  EMPTY_POWER_TECHNIQUE_FILTERS,
-  countActivePowerTechniqueFilters,
-  type PowerTechniqueFilterState,
-} from '@/lib/library/power-technique-filters';
-import { countActiveCodexRulesSourceFilters } from '@/lib/codex/list-rules-source-filter';
-import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
+import { useOfficialPowerTechniqueBrowseFilters } from '@/hooks/use-official-power-technique-browse-filters';
 import { listInnateThresholdFilterOptions } from '@/lib/game/innate-eligibility';
-import {
-  POWER_LIST_PATH_KINDS,
-  libraryRowPathIds,
-  pathChipLabelsForEntity,
-  pathFilterEmptyTitle,
-} from '@/lib/game/path-recommendation-index';
+import { libraryRowPathIds, pathChipLabelsForEntity } from '@/lib/game/path-recommendation-index';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import type { CatalogListing } from '@/lib/library/catalog-listing';
 
@@ -85,17 +73,27 @@ export function OfficialPowerList({
   onCatalogListingChange,
 }: OfficialPowerListProps) {
   const { rules } = useGameRules();
-  const [advancedFilters, setAdvancedFilters] = useState<PowerTechniqueFilterState>(
-    EMPTY_POWER_TECHNIQUE_FILTERS,
-  );
-  const [characterContext, setCharacterContext] = useState<PowerTechniqueCharacterContext | null>(
-    null,
-  );
-  const [characterFilterId, setCharacterFilterId] = useState('');
-  const [rulesSources, setRulesSources] = useState<string[]>([]);
+  const browseFilters = useOfficialPowerTechniqueBrowseFilters({
+    kind: 'power',
+    entities: items,
+  });
+  const {
+    advancedFilters,
+    setAdvancedFilters,
+    setCharacterContext,
+    characterFilterId,
+    setCharacterFilterId,
+    rulesSources,
+    setRulesSources,
+    selectedPathIds,
+    setSelectedPathIds,
+    pathIndex,
+    rowFilters,
+    pathFilterActive,
+    filterActiveCount,
+    pathEmptyListTitle,
+  } = browseFilters;
   const addToCharacter = useAddToCharacterFromLibrary('power', characterFilterId);
-  const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
-    usePathListFilter({ entities: items, kind: POWER_LIST_PATH_KINDS });
 
   const categoryOptions = useMemo(
     () => officialPowerCategoryOptions(items, partsDb),
@@ -110,16 +108,14 @@ export function OfficialPowerList({
       search: string,
       sortItems: (items: OfficialPowerRow[]) => OfficialPowerRow[],
     ) =>
-      filterOfficialPowerRows(
+      filterOfficialPowerTechniqueRows({
         rows,
         search,
         sortItems,
-        advancedFilters,
-        characterContext,
-        pathRecommendedIds,
-        rulesSources,
-      ),
-    [advancedFilters, characterContext, pathRecommendedIds, rulesSources],
+        kind: 'power',
+        rowFilters,
+      }),
+    [rowFilters],
   );
 
   return (
@@ -151,12 +147,7 @@ export function OfficialPowerList({
             onRulesSourcesChange={setRulesSources}
           />
         }
-        filterActiveCount={
-          countActivePowerTechniqueFilters(advancedFilters, 'power', Boolean(characterContext)) +
-          countActiveCodexRulesSourceFilters(rulesSources) +
-          (characterFilterId ? 1 : 0) +
-          (pathFilterActive ? 1 : 0)
-        }
+        filterActiveCount={filterActiveCount}
         getNameChipLabels={(p) =>
           pathFilterActive
             ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(p), selectedPathIds)
@@ -174,7 +165,7 @@ export function OfficialPowerList({
         emptyIcon={emptyIcon}
         emptyTitle={emptyTitle}
         emptyMessage={emptyMessage}
-        searchEmptyMessage={pathFilterActive ? pathFilterEmptyTitle('powers') : searchEmptyMessage}
+        searchEmptyMessage={pathEmptyListTitle ?? searchEmptyMessage}
         variant={variant}
         readOnly={readOnly}
         onAddRequest={onAddRequest}

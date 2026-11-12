@@ -16,24 +16,17 @@ import {
 import { PowerTechniqueFilters } from '@/components/patterns/filters';
 import { useSort } from '@/hooks/use-sort';
 import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-library';
-import { usePathListFilter } from '@/hooks';
 import { empoweredTechniquePartsSection } from '@/lib/library/empowered-technique-display';
 import {
   buildOfficialTechniqueRows,
-  filterOfficialTechniqueRows,
   officialTechniqueDetailSections,
   officialTechniqueRowColumns,
   OFFICIAL_TECHNIQUE_GRID,
   OFFICIAL_TECHNIQUE_HEADER_COLUMNS,
 } from '@/lib/library/official-technique-list';
+import { filterOfficialPowerTechniqueRows } from '@/lib/library/official-catalog-row-filter';
 import { collectCategoryOptionsFromItems } from '@/lib/library/power-technique-categories';
-import {
-  EMPTY_POWER_TECHNIQUE_FILTERS,
-  countActivePowerTechniqueFilters,
-  type PowerTechniqueFilterState,
-} from '@/lib/library/power-technique-filters';
-import { countActiveCodexRulesSourceFilters } from '@/lib/codex/list-rules-source-filter';
-import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
+import { useOfficialPowerTechniqueBrowseFilters } from '@/hooks/use-official-power-technique-browse-filters';
 import {
   useUserTechniques,
   useUserEmpoweredTechniques,
@@ -55,11 +48,7 @@ import {
 import { useLibraryEntitySync } from './hooks/use-library-entity-sync';
 import { useLibraryDuplicateConfirm } from './hooks/use-library-duplicate-confirm';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
-import {
-  libraryRowPathIds,
-  pathChipLabelsForEntity,
-  pathFilterEmptyTitle,
-} from '@/lib/game/path-recommendation-index';
+import { libraryRowPathIds, pathChipLabelsForEntity } from '@/lib/game/path-recommendation-index';
 
 const TECHNIQUE_ROW_CHROME = {
   edit: true,
@@ -92,31 +81,36 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
   const duplicateTechnique = useDuplicateTechnique();
   const duplicateEmpoweredTechnique = useDuplicateEmpoweredTechnique();
   const [search, setSearch] = useState('');
-  const [advancedFilters, setAdvancedFilters] = useState<PowerTechniqueFilterState>(
-    EMPTY_POWER_TECHNIQUE_FILTERS,
-  );
-  const [characterContext, setCharacterContext] = useState<PowerTechniqueCharacterContext | null>(
-    null,
-  );
-  const [characterFilterId, setCharacterFilterId] = useState('');
-  const [rulesSources, setRulesSources] = useState<string[]>([]);
+  const techniques = mode === 'empowered' ? empoweredTechniques : standardTechniques;
+  const {
+    advancedFilters,
+    setAdvancedFilters,
+    setCharacterContext,
+    characterFilterId,
+    setCharacterFilterId,
+    rulesSources,
+    setRulesSources,
+    selectedPathIds,
+    setSelectedPathIds,
+    pathIndex,
+    rowFilters,
+    pathFilterActive,
+    filterActiveCount,
+    pathEmptyListTitle,
+  } = useOfficialPowerTechniqueBrowseFilters({
+    kind: 'technique',
+    entities: techniques,
+    rowFiltersEnabled: mode === 'standard',
+  });
   const addToCharacter = useAddToCharacterFromLibrary('technique', characterFilterId);
   const { sortState, handleSort, sortItems } = useSort('name');
 
-  const techniques = mode === 'empowered' ? empoweredTechniques : standardTechniques;
   const isLoading = mode === 'empowered' ? empoweredLoading : standardLoading;
   const error = mode === 'empowered' ? empoweredError : standardError;
   const labels =
     mode === 'empowered' ? EMPOWERED_TECHNIQUE_LIBRARY_LABELS : TECHNIQUE_LIBRARY_LABELS;
   const saveType = mode === 'empowered' ? 'empowered-techniques' : 'techniques';
   const duplicateMutation = mode === 'empowered' ? duplicateEmpoweredTechnique : duplicateTechnique;
-  const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
-    usePathListFilter({
-      entities: techniques,
-      kind: 'techniques',
-      enabled: mode === 'standard',
-    });
-
   const cardData = useMemo(() => {
     return buildOfficialTechniqueRows(techniques, partsDb, mode).map((row) => {
       const syncResult = getTechniqueSyncResult(row.raw, partsDb);
@@ -158,27 +152,17 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
     mutate: (id, handlers) => duplicateMutation.mutate(id, handlers),
   });
 
-  const filteredData = useMemo(() => {
-    const advanced = mode === 'empowered' ? undefined : advancedFilters;
-    return filterOfficialTechniqueRows(
-      cardData,
-      search,
-      sortItems,
-      advanced,
-      mode === 'empowered' ? null : characterContext,
-      mode === 'empowered' ? null : pathRecommendedIds,
-      mode === 'empowered' ? undefined : rulesSources,
-    );
-  }, [
-    cardData,
-    search,
-    sortItems,
-    mode,
-    advancedFilters,
-    characterContext,
-    pathRecommendedIds,
-    rulesSources,
-  ]);
+  const filteredData = useMemo(
+    () =>
+      filterOfficialPowerTechniqueRows({
+        rows: cardData,
+        search,
+        sortItems,
+        kind: 'technique',
+        rowFilters,
+      }),
+    [cardData, search, sortItems, rowFilters],
+  );
 
   return (
     <>
@@ -233,21 +217,8 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
             />
           )
         }
-        filterActiveCount={
-          mode === 'empowered'
-            ? undefined
-            : countActivePowerTechniqueFilters(
-                advancedFilters,
-                'technique',
-                Boolean(characterContext),
-              ) +
-              countActiveCodexRulesSourceFilters(rulesSources) +
-              (characterFilterId ? 1 : 0) +
-              (pathFilterActive ? 1 : 0)
-        }
-        filterEmptyTitle={
-          mode !== 'empowered' && pathFilterActive ? pathFilterEmptyTitle('techniques') : undefined
-        }
+        filterActiveCount={filterActiveCount}
+        filterEmptyTitle={pathEmptyListTitle}
       >
         {filteredData.map((tech) => {
           const detailSections =
@@ -259,10 +230,9 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
                   return section ? [section] : undefined;
                 })()
               : officialTechniqueDetailSections(tech);
-          const nameLabels =
-            mode !== 'empowered' && pathFilterActive
-              ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(tech), selectedPathIds)
-              : undefined;
+          const nameLabels = pathFilterActive
+            ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(tech), selectedPathIds)
+            : undefined;
           const nameBadges = nameLabels?.map((label) => ({ label })) ?? [];
           const driftBadges = tech.hasDrift
             ? [{ label: 'Needs sync' as const, color: 'amber' as const }]
