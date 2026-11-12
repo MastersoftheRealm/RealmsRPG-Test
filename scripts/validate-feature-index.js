@@ -1210,6 +1210,47 @@ console.log(
   `FEATURE_INDEX Admin codex spreadsheet check OK (${ADMIN_CODEX_SPREADSHEET_NOTE_IDS.length} notes).`,
 );
 
+const ONSITE_RULEBOOK_CHAPTER_NOTE_IDS = [
+  'rulebook-welcome-index-not-slug-url',
+  'rulebook-google-doc-not-a-chapter',
+  'rulebook-nav-tree-vs-pager-order',
+  'rulebook-json-mdx-registry-must-match',
+  'rulebook-glossary-realms-metadata-unfinished',
+  'rulebook-unknown-slug-notFound',
+  'rulebook-welcome-slug-route-dead-end',
+];
+
+const onsiteRulebookSection = mathSectionSlice(indexText, '## On-site rulebook chapters');
+if (!onsiteRulebookSection) {
+  console.error('FEATURE_INDEX is missing the On-site rulebook chapters section.');
+  process.exit(2);
+}
+if (!onsiteRulebookSection.includes('### Same job, different behavior')) {
+  console.error(
+    'FEATURE_INDEX On-site rulebook section is missing ### Same job, different behavior.',
+  );
+  process.exit(2);
+}
+const rulebookBehaviorStart = onsiteRulebookSection.indexOf('### Same job, different behavior');
+const rulebookDeadStart = onsiteRulebookSection.indexOf('### Dead or unreachable paths');
+if (rulebookBehaviorStart < 0 || rulebookDeadStart < 0) {
+  console.error('FEATURE_INDEX On-site rulebook section missing behavior or dead-path headings.');
+  process.exit(2);
+}
+const rulebookBehaviorBody = onsiteRulebookSection.slice(rulebookBehaviorStart, rulebookDeadStart);
+const rulebookDeadBody = onsiteRulebookSection.slice(rulebookDeadStart);
+for (const id of ONSITE_RULEBOOK_CHAPTER_NOTE_IDS) {
+  const inBehavior = rulebookBehaviorBody.includes(`screen-behavior-note:${id}:`);
+  const inDead = rulebookDeadBody.includes(`screen-behavior-note:${id}:`);
+  if (!inBehavior && !inDead) {
+    console.error('FEATURE_INDEX missing required On-site rulebook chapter note:', id);
+    process.exit(2);
+  }
+}
+console.log(
+  `FEATURE_INDEX On-site rulebook chapters check OK (${ONSITE_RULEBOOK_CHAPTER_NOTE_IDS.length} notes).`,
+);
+
 const CREATOR_SECTION_ISLAND_NOTE_IDS = [
   'creator-islands-workspace-not-autosave',
   'power-editor-facade-files-vs-technique-inline-sections',

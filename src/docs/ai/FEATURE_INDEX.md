@@ -2973,7 +2973,7 @@ Crafting hub **`/crafting`** and session tool **`/crafting/[id]`**. Product area
 
 ## Marketing and public entry screens (behavior pass)
 
-Public marketing copy and account sign-in under `(main)/` (with site header/footer) and `(auth)/` (branded auth shell). **Partial pass:** individual rulebook MDX chapter bodies not read; header nav dropdown internals only as needed for links.
+Public marketing copy and account sign-in under `(main)/` (with site header/footer) and `(auth)/` (branded auth shell). **Partial pass:** header nav dropdown internals only as needed for links. **Rulebook chapter inventory and routes** are in **On-site rulebook chapters** (not MDX prose).
 
 ### Pages walked
 
@@ -2981,7 +2981,7 @@ Public marketing copy and account sign-in under `(main)/` (with site header/foot
 
 **About `/about`** — Carousel + creator note; CTAs to `/characters/new`, `/rules`, Discord.
 
-**Core Rulebook `/rules`** — Welcome chapter in-app (`RulebookShell`, search/outline). Top link opens external Google Doc (`RULES_COPY.viewUrl`). Chapter pages **`/rules/[slug]`** render MDX via `getRulebookChapterComponent`; pager prev/next.
+**Core Rulebook `/rules`** — See **On-site rulebook chapters** for the full slug list, loaders, and external Google Doc link.
 
 **Resources `/resources`** — Static copy; one working download (`/Realms Character Sheet Alpha.pdf` in `public/`). “Coming soon” list is text only (no links).
 
@@ -3001,7 +3001,6 @@ Public marketing copy and account sign-in under `(main)/` (with site header/foot
 
 ### Public pages not walked
 
-- Each `/rules/[slug]` chapter content line-by-line.
 - `/my-account` (signed-in settings — app shell, not home/footer marketing).
 - `/codex`, `/library`, and other app hubs (covered in other behavior passes).
 - `dev/styleguide`.
@@ -3020,6 +3019,63 @@ Public marketing copy and account sign-in under `(main)/` (with site header/foot
 
 - screen-behavior-note:marketing-rules-welcome-slug-redirects-index: Visiting **`/rules/welcome-to-realms`** **permanent-redirects** to **`/rules`**—welcome exists only on the index URL, not as a separate chapter route.
 - screen-behavior-note:marketing-reset-password-without-session: **`/reset-password`** without a valid recovery session shows **Reset Link Expired**—form is unreachable until the user completes the email flow from **`/forgot-password`**.
+
+## On-site rulebook chapters (behavior pass)
+
+**Routes:** index **`/rules`** (`rules/page.tsx`) and **`/rules/[slug]`** (`rules/[slug]/page.tsx`). Both wrap content in **`RulebookShell`** (nav, search, outline). **Partial pass:** MDX body text inside each `.mdx` file was not read—only metadata, routing, and registry parity.
+
+### How chapters load
+
+| Step | Function / file |
+|------|-----------------|
+| Catalog | **`src/content/rules/chapters.json`** → imported as **`RULEBOOK_CHAPTERS`** in **`lib/rules/rulebook.ts`** (`title`, `description`, `headings`, optional **`parentSlug`**). |
+| Body | **`getRulebookChapterComponent(slug)`** in **`content/rules/index.ts`** maps each slug to a static MDX import (`*.mdx` under `content/rules/`). |
+| Index page | **`rules/page.tsx`** renders **`RULEBOOK_WELCOME_SLUG`** (`welcome-to-realms`) MDX on **`/rules`** via **`getRulebookChapterComponent`**. |
+| Chapter page | **`[slug]/page.tsx`**: **`getRulebookChapter(slug)`** for metadata; **`getRulebookChapterComponent(slug)`** for body; missing slug or missing component → **`notFound()`**. |
+| Nav outline | **`getRulebookNavTree()`** — roots omit **`parentSlug`**; children nest under parent (Encounters, Character Creation, Equipment groups). Links use **`getRulebookChapterHref`**. |
+| Prev/next | **`getAdjacentRulebookChapters`** walks the **flat `chapters.json` array order** (not only root chapters). |
+| Search | **`loadRulebookSearchChunks`** (`rulebook-search-load.ts`) reads each **`{slug}.mdx`** file from disk at build/RSC time. |
+| Sitemap | **`RULEBOOK_SITEMAP_PATHS`** — Welcome maps to **`/rules`**; no **`/rules/welcome-to-realms`** URL in sitemap. |
+
+Every chapter page also shows **`RULES_COPY.viewUrl`** (Google Docs manuscript)—external **view source**, not an on-site chapter slug.
+
+### Chapter inventory (13 in `chapters.json`)
+
+| # | Slug | Title | Opens at | MDX + component |
+|---|------|-------|----------|-----------------|
+| 1 | `welcome-to-realms` | Welcome to Realms | **`/rules` only** (`/rules/welcome-to-realms` **redirects** to `/rules`) | yes |
+| 2 | `playing-the-game` | Playing the Game | `/rules/playing-the-game` | yes |
+| 3 | `encounters` | Encounters | `/rules/encounters` | yes |
+| 4 | `combat-encounters` | Combat Encounters | `/rules/combat-encounters` (nav child of Encounters) | yes |
+| 5 | `skill-encounters` | Skill Encounters | `/rules/skill-encounters` (nav child of Encounters) | yes |
+| 6 | `character-creation` | Character Creation & Leveling | `/rules/character-creation` | yes |
+| 7 | `roll-tables` | Roll-Tables | `/rules/roll-tables` (nav child of Character Creation) | yes |
+| 8 | `equipment` | Equipment, Crafting & Downtime | `/rules/equipment` | yes |
+| 9 | `crafting` | Crafting & Harvesting | `/rules/crafting` (nav child of Equipment) | yes |
+| 10 | `downtime` | Downtime | `/rules/downtime` (nav child of Equipment) | yes |
+| 11 | `powers-and-techniques` | Powers & Techniques | `/rules/powers-and-techniques` | yes |
+| 12 | `glossary` | Rules Glossary | `/rules/glossary` | yes (metadata: unfinished in source manuscript) |
+| 13 | `the-realms` | The Realms | `/rules/the-realms` | yes (metadata: unfinished in source manuscript) |
+
+No duplicate slugs in JSON. No extra `.mdx` files without a matching `chapters.json` row (13 files, 13 slugs). Nothing in the chapter list is **Google-Doc-only**—the Doc is a separate link on every page.
+
+### Not walked
+
+- Heading anchors inside each MDX file vs `chapters.json` `headings` list line-by-line.
+- Search ranking / snippet behavior in **`rulebook-search.ts`**.
+
+### Same job, different behavior
+
+- screen-behavior-note:rulebook-welcome-index-not-slug-url: **Welcome** content is served at **`/rules`**; **`/rules/welcome-to-realms`** **`permanentRedirect('/rules')`**—the welcome slug is not a stable chapter URL (still in **`generateStaticParams`** for the redirect route).
+- screen-behavior-note:rulebook-google-doc-not-a-chapter: **`RULES_COPY.viewUrl`** opens the full manuscript in Google Docs; it is **not** listed in **`chapters.json`** and does not replace on-site MDX.
+- screen-behavior-note:rulebook-nav-tree-vs-pager-order: Sidebar **`getRulebookNavTree`** groups **parent/child** via **`parentSlug`**; **pager** uses **flat JSON order** (e.g. after **Encounters** comes **Combat Encounters**, not the next root).
+- screen-behavior-note:rulebook-json-mdx-registry-must-match: **`[slug]/page.tsx`** requires both **`getRulebookChapter`** and **`getRulebookChapterComponent`**—a slug in JSON without an MDX **`COMPONENTS`** entry returns **404**.
+- screen-behavior-note:rulebook-glossary-realms-metadata-unfinished: **`glossary`** and **`the-realms`** descriptions in JSON state the chapter is **unfinished in the source manuscript**—pages still render local MDX; they are not external-only.
+
+### Dead or unreachable paths
+
+- screen-behavior-note:rulebook-unknown-slug-notFound: Any **`/rules/[slug]`** not in **`RULEBOOK_CHAPTERS`** → **`notFound()`** (no fallback chapter).
+- screen-behavior-note:rulebook-welcome-slug-route-dead-end: **`/rules/welcome-to-realms`** never shows its own page body—always redirects to **`/rules`** (documented duplicate URL, not duplicate content).
 
 ## My Account screen (behavior pass)
 
