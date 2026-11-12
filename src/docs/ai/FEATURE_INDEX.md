@@ -2825,7 +2825,7 @@ Shared: token list sidebar, `RollProvider` + `RollLog` with `viewOnlyCampaignId=
 
 ## Admin screens (behavior pass)
 
-Admin hub at **`/admin`** (`admin/page.tsx`) links every tool below. **`admin/layout.tsx`** runs `requireAdminSession`: signed-out users → `/login?returnTo=/admin`; signed-in non-admins → `/`. All routes under `(main)/admin/` share that gate. **Partial pass:** Codex spreadsheet grid cell semantics and per-tab modal fields not walked line-by-line; Sources batch-merge edge cases skimmed; Image Library upload/storage API not fully traced.
+Admin hub at **`/admin`** (`admin/page.tsx`) links every tool below. **`admin/layout.tsx`** runs `requireAdminSession`: signed-out users → `/login?returnTo=/admin`; signed-in non-admins → `/`. All routes under `(main)/admin/` share that gate. **Partial pass:** Codex list modal field-by-field matrix not walked; Sources batch-merge edge cases skimmed; Image Library upload/storage API not fully traced. **Spreadsheet** cell/column save rules are in **Admin codex spreadsheet**.
 
 ### Screens walked (from admin home links)
 
@@ -2849,7 +2849,6 @@ Admin hub at **`/admin`** (`admin/page.tsx`) links every tool below. **`admin/la
 
 ### Screens not walked in this pass
 
-- Every cell/column in Codex **spreadsheet** view.
 - Field-by-field validation inside each Codex list modal (feats, traits, archetype workspace, etc.).
 - Full Sources rename/merge batch failure matrix.
 - Crafting and marketing routes (out of scope).
@@ -2870,6 +2869,53 @@ Admin hub at **`/admin`** (`admin/page.tsx`) links every tool below. **`admin/la
 
 - screen-behavior-note:admin-non-admin-direct-url-redirect: A signed-in **non-admin** who opens `/admin` or any child route is **redirected to `/`** by layout—no read-only admin preview.
 - screen-behavior-note:admin-changelogs-no-undo: **Changelogs** is audit-only; there is no “revert this edit” control on that page (fixes happen back in Codex, Official Library, or Core Rules).
+
+## Admin codex spreadsheet (behavior pass)
+
+**Codex Editor → Spreadsheet** (`CodexSpreadsheetView`, `useCodexSpreadsheet`) edits the same nine collections as **List** view: feats, skills, species, traits, parts, properties, equipment, archetypes, creature feats (`codex-spreadsheet-config.ts` `TAB_CONFIG`). Data loads from `useCodexFull` (`ADMIN_CODEX_QUERY_OPTIONS`). **Partial pass:** every physical column name on every row is not enumerated; the grid builds columns from keys present in loaded rows plus fixed rules below.
+
+### What a person can do
+
+| Action | Behavior |
+|--------|----------|
+| Edit cell | Inline text, number (`NUMERIC_COLUMNS`), checkbox (`BOOLEAN_COLUMNS`), or multiline **description** (`CodexSpreadsheetTableRow`). Arrays/objects edit as **JSON text**; blur runs `stringToCellValue` (parse JSON or keep string). |
+| Find / replace | `CodexSpreadsheetToolbar` + `doFindReplace`; optional whole-cell and limit-to-column. **Never** rewrites **`id`** (`READONLY_COLUMNS`, `searchableColumns`). |
+| Copy row | Inserts duplicate below with `generateNextNumericId` and name + ` copy` (`useCodexSpreadsheet`). |
+| Add row | Empty row; new saves need a **name**. |
+| Save row / Save all | `spreadsheetPersistPayload` → `createCodexDoc` / `updateCodexDoc` (`actions.ts`) with `expectedUpdatedAt` from load snapshot. Confirmation modal lists changed column keys per dirty row. |
+
+Saves run `assertCodexAdminPayloadKeys` → `toColumnarPayload` → `toDbPayload` (`codex-column-map.ts`). Cleared cells become **`null`** in the payload. Unsupported keys fail the save with an error (no silent drop after assert).
+
+### Column accounting (all tabs)
+
+| Rule | Columns / keys |
+|------|----------------|
+| **Read-only in grid** | **`id`** — shown but not editable; save always targets `originalId` from load, not the cell. |
+| **Hidden, not a column** | **`updated_at`** — used only for optimistic concurrency on update (`HIDDEN_COLUMNS`). |
+| **Not saved (derived display)** | Stripped in `spreadsheetPersistPayload` / hidden by `visibleSpreadsheetColumns`: **species** `size`, `speed`, `traits`; **traits** `species`; **properties** `tp_cost`, `gold_cost` (write **`base_tp`**, **`base_c`**, etc.); **equipment** `type`, `gold_cost`, `properties` (write **`currency`**, real property fields); **archetypes** `path_data` (write flattened level columns); **creature_feats** `points`, `prereqs` (write **`feat_points`** and real prereq fields). |
+| **Dynamic data columns** | Any other key on rows returned for that tab (e.g. `source`, `tags`, `op_1_desc`, `level1_feats`, trait id lists, skill arrays) — editable and saved if on the collection allowlist in `CODEX_COLUMNAR_FIELDS`. |
+| **Archetype load flattening** | On load only, `spreadsheetSourceRow` copies nested `path_data.level1` into **`level1_recommend_unarmed_prowess`**, **`level1_recommended_abilities`**, **`level1_loadouts`** so those cells save like list-mode column writes. |
+
+### Not walked
+
+- Exhaustive per-tab column inventory vs every API projection field.
+- Compare each modal-only control (pickers, images, trait multi-select UI) to its spreadsheet JSON/text equivalent line-by-line.
+
+### Same job, different behavior (vs List view)
+
+- screen-behavior-note:admin-codex-spreadsheet-same-updateCodexDoc-as-list-modals: Most tabs’ list modals build a payload and call **`updateCodexDoc`** / **`createCodexDoc`** through **`useAdminCodexEntity.save`**; spreadsheet dirty rows use the same server path after **`spreadsheetPersistPayload`**—not a separate bulk SQL API.
+- screen-behavior-note:admin-codex-spreadsheet-archetypes-skip-saveArchetypeWithPath: **List → Archetypes** saves through **`saveArchetypeWithPath`** (`admin-archetype-workspace-save.ts`) with path publish/selection validation and guidance UI. **Spreadsheet** writes archetype rows with **`updateCodexDoc`** on flat columns only—no guided workspace, no publish gate from that action.
+- screen-behavior-note:admin-codex-spreadsheet-feats-list-level-modal-vs-rows: **List → Feats** can open the leveled-feat **Layers** flow and **`persistCodexLevelEdits`** for a family in one session. **Spreadsheet** treats **each feat level as its own row**; you edit `feat_lvl` / level fields per row like any other column.
+- screen-behavior-note:admin-codex-spreadsheet-species-list-catalog-listing-ui: **List → Species** exposes **catalog listing** scope filter and **`usePatchOfficialCatalogListing`** controls on rows. **Spreadsheet** can only change listing if a **`catalog_listing`** (or related) column exists on the row—no dedicated listing toggle chrome.
+- screen-behavior-note:admin-codex-spreadsheet-derived-vs-writable-columns: List modals edit **`sizes`**, **`currency`**, **`feat_points`**, level columns, etc. **Spreadsheet** hides **derived** display aliases (`size`/`speed`/`traits`, `gold_cost`, `path_data`, …) so editors are not misled into editing non-persisting cells.
+- screen-behavior-note:admin-codex-spreadsheet-json-cells-vs-modal-pickers: List modals use pickers and structured subforms (traits, sources, archetype armament lines). **Spreadsheet** expects **comma-separated text** for Postgres text-array fields and **JSON strings** for JSONB columns (`toColumnValue` / `parseJsonColumn` in `codex-column-map.ts`)—invalid JSON rejects the save.
+- screen-behavior-note:admin-codex-spreadsheet-feat-tag-normalize-on-server: **Feat** saves from spreadsheet still run **`applyFeatTagNormalization`** on the server for **`tags`**—same as list modal saves.
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:admin-codex-spreadsheet-no-delete-row: **Spreadsheet** has copy and save actions per row but **no delete row** control—removal stays in **List** view (`useAdminCodexDelete` / row actions).
+- screen-behavior-note:admin-codex-spreadsheet-id-edit-dead-end: Changing **`id`** in the cell is blocked; even if find/replace touched ids, saves would still target **`originalId`**—retargeting another entity via id edit is intentionally impossible.
+- screen-behavior-note:admin-codex-spreadsheet-derived-columns-not-in-grid: Derived keys (e.g. **`path_data`**, equipment **`properties`** summary) are **not shown**; editing them in memory would be stripped before save anyway.
 
 ## Crafting screens (behavior pass)
 

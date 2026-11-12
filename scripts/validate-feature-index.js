@@ -1159,6 +1159,57 @@ console.log(
   `FEATURE_INDEX Codex expanded rows check OK (${CODEX_EXPANDED_ROW_NOTE_IDS.length} notes).`,
 );
 
+const ADMIN_CODEX_SPREADSHEET_NOTE_IDS = [
+  'admin-codex-spreadsheet-same-updateCodexDoc-as-list-modals',
+  'admin-codex-spreadsheet-archetypes-skip-saveArchetypeWithPath',
+  'admin-codex-spreadsheet-feats-list-level-modal-vs-rows',
+  'admin-codex-spreadsheet-species-list-catalog-listing-ui',
+  'admin-codex-spreadsheet-derived-vs-writable-columns',
+  'admin-codex-spreadsheet-json-cells-vs-modal-pickers',
+  'admin-codex-spreadsheet-feat-tag-normalize-on-server',
+  'admin-codex-spreadsheet-no-delete-row',
+  'admin-codex-spreadsheet-id-edit-dead-end',
+  'admin-codex-spreadsheet-derived-columns-not-in-grid',
+];
+
+const adminCodexSpreadsheetSection = mathSectionSlice(indexText, '## Admin codex spreadsheet');
+if (!adminCodexSpreadsheetSection) {
+  console.error('FEATURE_INDEX is missing the Admin codex spreadsheet section.');
+  process.exit(2);
+}
+if (!adminCodexSpreadsheetSection.includes('### Same job, different behavior')) {
+  console.error(
+    'FEATURE_INDEX Admin codex spreadsheet section is missing ### Same job, different behavior.',
+  );
+  process.exit(2);
+}
+const adminSpreadsheetBehaviorStart = adminCodexSpreadsheetSection.indexOf(
+  '### Same job, different behavior',
+);
+const adminSpreadsheetDeadStart = adminCodexSpreadsheetSection.indexOf('### Dead or unreachable paths');
+if (adminSpreadsheetBehaviorStart < 0 || adminSpreadsheetDeadStart < 0) {
+  console.error(
+    'FEATURE_INDEX Admin codex spreadsheet section missing behavior or dead-path headings.',
+  );
+  process.exit(2);
+}
+const adminSpreadsheetBehaviorBody = adminCodexSpreadsheetSection.slice(
+  adminSpreadsheetBehaviorStart,
+  adminSpreadsheetDeadStart,
+);
+const adminSpreadsheetDeadBody = adminCodexSpreadsheetSection.slice(adminSpreadsheetDeadStart);
+for (const id of ADMIN_CODEX_SPREADSHEET_NOTE_IDS) {
+  const inBehavior = adminSpreadsheetBehaviorBody.includes(`screen-behavior-note:${id}:`);
+  const inDead = adminSpreadsheetDeadBody.includes(`screen-behavior-note:${id}:`);
+  if (!inBehavior && !inDead) {
+    console.error('FEATURE_INDEX missing required Admin codex spreadsheet note:', id);
+    process.exit(2);
+  }
+}
+console.log(
+  `FEATURE_INDEX Admin codex spreadsheet check OK (${ADMIN_CODEX_SPREADSHEET_NOTE_IDS.length} notes).`,
+);
+
 const CREATOR_SECTION_ISLAND_NOTE_IDS = [
   'creator-islands-workspace-not-autosave',
   'power-editor-facade-files-vs-technique-inline-sections',
