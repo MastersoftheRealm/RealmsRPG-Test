@@ -2721,7 +2721,48 @@ Signed-in **campaign** hub, detail, roster, shared roll log, and Realm Master (R
 ### Dead or unreachable paths (this scope)
 
 - screen-behavior-note:campaign-player-no-peer-sheet-from-roster: The roster UI does not offer “view sheet” for fellow **players**—only the RM gets the external view link on other players’ chips.
-- screen-behavior-note:campaign-tabletop-not-on-detail-page: **Tabletop/VTT** is a separate route under the campaign id, not a section on the detail page walked here.
+- screen-behavior-note:campaign-tabletop-not-on-detail-page: **Tabletop/VTT** is a separate route under the campaign id, not a section on the detail page walked here. Screen behavior is documented in **Campaign tabletop screen** below.
+
+## Campaign tabletop screen (behavior pass)
+
+Virtual tabletop at **`/campaigns/[id]/tabletop`** (`campaigns/[id]/tabletop/page.tsx`), usually opened with `?scene=` after **Open Tabletop** on a campaign-linked combat encounter. **Partial pass:** Konva canvas interaction beyond role gating not line-by-line; storage upload API not fully traced.
+
+### Walked (read through load/save wiring)
+
+**Entry & load** — `ProtectedRoute` → `useActiveCampaignTabletop(campaignId)` when no `scene` query, else `useTabletopScene(sceneId)`. `useTabletopRealtime` subscribes to `vtt_scenes`, `vtt_tokens`, `vtt_actions`. No state → empty **“No active tabletop”** (copy points to encounter **Open Tabletop**).
+
+**How you get here** — `OpenTabletopButton` on combat/mixed encounter play (`openEncounterTabletop` POST `/api/encounters/[id]/tabletop`): requires `encounter.campaignId`; **RM only** on API; creates/activates `vtt_scenes` row and seeds tokens from encounter combatants, then navigates to `/campaigns/{campaignId}/tabletop?scene={sceneId}`. Campaign **detail** page does not open the VTT.
+
+**What a person can do**
+
+| Role | Tools |
+|------|--------|
+| **Realm Master** (`state.role === 'realm-master'`) | `TabletopCanvas` drag moves tokens (`canMoveTokens`); upload map; **Sync** combatants; add **Monster** tokens (`AddMonsterTokenModal`); grid/fog/settings sidebar; hide/show/lock tokens; accept/dismiss **move requests** |
+| **Player** | Select, **Ping**, **Request Move** (pick token → click map → `createAction` `move-request`); cannot drag-move on canvas |
+
+Shared: token list sidebar, `RollProvider` + `RollLog` with `viewOnlyCampaignId={campaignId}` (campaign-scoped roll UI, not the detail page’s static roll list).
+
+**What saves** — VTT data in Supabase (`vtt_scenes`, `vtt_tokens`, `vtt_actions`, map storage via `uploadVttMap`); mutations through `useTabletopMutations` → `tabletop-service` APIs. **Sync** (`syncTabletopCombatants`) rebuilds tokens from the **linked encounter’s** combatant list (does not edit the encounter JSON on the play page). Accepting a move request updates token position via `resolveTabletopAction`. Does **not** replace encounter round/initiative UI on `/encounters/.../combat`.
+
+### Not walked in this pass
+
+- Every Konva handler in `tabletop-canvas.tsx` (partial).
+- Full RLS/policy review on tabletop tables.
+
+### Same job, different behavior
+
+- screen-behavior-note:tabletop-entry-via-encounter-open-not-campaign-hub: VTT scenes are **created/opened from encounter play** (`OpenTabletopButton`), not from `/campaigns/[id]` detail or roster.
+- screen-behavior-note:tabletop-scene-query-vs-active-scene-fetch: URL **`?scene=`** loads one scene; omitting it uses **active scene for campaign** (`getActiveCampaignTabletop`).
+- screen-behavior-note:tabletop-sync-duplicates-encounter-combatants: **Sync** on the VTT re-imports **encounter combatants** as map tokens — parallel to the encounter **combatant list**, not the campaign **character roster**.
+- screen-behavior-note:tabletop-rm-drag-vs-player-move-request: RM **drags** tokens on canvas; players use **Request Move** → pending queue RM accepts (different from encounter list reorder).
+- screen-behavior-note:tabletop-monster-usm-vs-encounter-add-combatant-modal: VTT **Monster** add uses **`AddMonsterTokenModal` + `UnifiedSelectionModal`** (creature library); encounter play uses **`AddCombatantModal`** (different picker grammar).
+- screen-behavior-note:tabletop-roll-log-vs-campaign-detail-roll-section: Page **`RollLog`** is interactive/local; campaign **detail** roll section is a read-only `useCampaignRolls` feed (same campaign rolls DB, different UI).
+- screen-behavior-note:tabletop-skill-encounter-no-open-button: **Open Tabletop** is on combat/mixed encounter chrome only — not on skill-only encounter play.
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:tabletop-direct-url-without-active-scene: Visiting `/campaigns/[id]/tabletop` with no active scene and no valid `?scene=` shows empty state — no create flow on this page alone.
+- screen-behavior-note:tabletop-encounter-without-campaign-id: `OpenTabletopButton` blocks when `campaignId` missing; API returns 400 without campaign link.
 
 ## Unused exports outside game and calculators
 

@@ -829,6 +829,61 @@ console.log(
   `FEATURE_INDEX campaign screen check OK (${CAMPAIGN_SCREEN_NOTE_IDS.length} notes).`,
 );
 
+const CAMPAIGN_TABLETOP_SCREEN_NOTE_IDS = [
+  'tabletop-entry-via-encounter-open-not-campaign-hub',
+  'tabletop-scene-query-vs-active-scene-fetch',
+  'tabletop-sync-duplicates-encounter-combatants',
+  'tabletop-rm-drag-vs-player-move-request',
+  'tabletop-monster-usm-vs-encounter-add-combatant-modal',
+  'tabletop-roll-log-vs-campaign-detail-roll-section',
+  'tabletop-skill-encounter-no-open-button',
+  'tabletop-direct-url-without-active-scene',
+  'tabletop-encounter-without-campaign-id',
+];
+
+const campaignTabletopScreensSection = mathSectionSlice(
+  indexText,
+  '## Campaign tabletop screen',
+);
+if (!campaignTabletopScreensSection) {
+  console.error('FEATURE_INDEX is missing the campaign tabletop screen section.');
+  process.exit(2);
+}
+if (!campaignTabletopScreensSection.includes('### Same job, different behavior')) {
+  console.error(
+    'FEATURE_INDEX campaign tabletop section is missing ### Same job, different behavior.',
+  );
+  process.exit(2);
+}
+const tabletopScreenBehaviorStart = campaignTabletopScreensSection.indexOf(
+  '### Same job, different behavior',
+);
+const tabletopScreenDeadStart = campaignTabletopScreensSection.indexOf(
+  '### Dead or unreachable paths',
+);
+if (tabletopScreenBehaviorStart < 0 || tabletopScreenDeadStart < 0) {
+  console.error(
+    'FEATURE_INDEX campaign tabletop section missing behavior or dead-path headings.',
+  );
+  process.exit(2);
+}
+const tabletopScreenBehaviorBody = campaignTabletopScreensSection.slice(
+  tabletopScreenBehaviorStart,
+  tabletopScreenDeadStart,
+);
+const tabletopScreenDeadBody = campaignTabletopScreensSection.slice(tabletopScreenDeadStart);
+for (const id of CAMPAIGN_TABLETOP_SCREEN_NOTE_IDS) {
+  const inBehavior = tabletopScreenBehaviorBody.includes(`screen-behavior-note:${id}:`);
+  const inDead = tabletopScreenDeadBody.includes(`screen-behavior-note:${id}:`);
+  if (!inBehavior && !inDead) {
+    console.error('FEATURE_INDEX missing required campaign-tabletop screen note:', id);
+    process.exit(2);
+  }
+}
+console.log(
+  `FEATURE_INDEX campaign-tabletop screen check OK (${CAMPAIGN_TABLETOP_SCREEN_NOTE_IDS.length} notes).`,
+);
+
 const gen = spawnSync(
   process.execPath,
   [path.join(__dirname, 'generate-feature-index-barrels.js'), '--check'],
