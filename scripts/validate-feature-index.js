@@ -289,48 +289,96 @@ if (missingNotes.length || staleNotes.length) {
 }
 console.log(`FEATURE_INDEX unused-export check OK (${foundUnused.length} exports).`);
 
-const MATH_DISAGREEMENT_IDS = [
+const MATH_DISAGREEMENT_INTENTIONAL_IDS = [
   'player-vs-creature-max-health',
   'player-vs-creature-max-energy',
   'power-energy-vs-technique-energy',
   'format-energy-intermediate-vs-format-energy-number',
   'modify-variant-ceil-vs-composition-finalize',
-  'innate-remaining-uses-stored-cost',
 ];
 
-function mathDisagreementSection(text) {
-  const start = text.indexOf('## Health, energy, and cost math');
+const MATH_DISAGREEMENT_BUG_IDS = ['innate-remaining-uses-stored-cost'];
+
+const SKILL_MATH_DISAGREEMENT_COPY_IDS = ['feat-skill-req-first-ability-vs-sheet-highest'];
+
+function mathSectionSlice(text, heading) {
+  const start = text.indexOf(heading);
   if (start < 0) return null;
   const rest = text.slice(start);
-  const next = rest.indexOf('\n## ', 10);
+  const next = rest.indexOf('\n## ', heading.length);
   return next < 0 ? rest : rest.slice(0, next);
 }
 
-const mathSection = mathDisagreementSection(indexText);
-if (!mathSection) {
+function disagreementsSubsection(sectionText) {
+  const disagStart = sectionText.indexOf('### Disagreements');
+  if (disagStart < 0) return null;
+  const afterDisag = sectionText.slice(disagStart);
+  const disagEnd = afterDisag.indexOf('\n### ', 10);
+  return disagEnd < 0 ? afterDisag : afterDisag.slice(0, disagEnd);
+}
+
+function requireDisagreementTokens(disagreements, prefix, ids, label) {
+  for (const id of ids) {
+    const token = `${prefix}:${id}:`;
+    if (!disagreements.includes(token)) {
+      console.error(`FEATURE_INDEX missing required ${label} math line:`, id);
+      process.exit(2);
+    }
+  }
+}
+
+const healthMathSection = mathSectionSlice(indexText, '## Health, energy, and cost math');
+if (!healthMathSection) {
   console.error('FEATURE_INDEX is missing the health/energy/cost math section.');
   process.exit(2);
 }
-if (!mathSection.includes('### Disagreements')) {
+if (!healthMathSection.includes('### Disagreements')) {
   console.error('FEATURE_INDEX math section is missing ### Disagreements.');
   process.exit(2);
 }
-if (!mathSection.includes('### Read to the end')) {
+if (!healthMathSection.includes('### Read to the end')) {
   console.error('FEATURE_INDEX math section is missing ### Read to the end.');
   process.exit(2);
 }
-const disagStart = mathSection.indexOf('### Disagreements');
-const afterDisag = mathSection.slice(disagStart);
-const disagEnd = afterDisag.indexOf('\n### ', 10);
-const disagreements = disagEnd < 0 ? afterDisag : afterDisag.slice(0, disagEnd);
-for (const id of MATH_DISAGREEMENT_IDS) {
-  const token = `math-disagree:${id}:`;
-  if (!disagreements.includes(token)) {
-    console.error('FEATURE_INDEX missing required math disagreement:', id);
-    process.exit(2);
-  }
+const healthDisagreements = disagreementsSubsection(healthMathSection);
+if (!healthDisagreements) {
+  console.error('FEATURE_INDEX health math section has no ### Disagreements body.');
+  process.exit(2);
 }
-console.log(`FEATURE_INDEX math-disagreement check OK (${MATH_DISAGREEMENT_IDS.length} disagreements).`);
+requireDisagreementTokens(
+  healthDisagreements,
+  'math-disagree-intentional',
+  MATH_DISAGREEMENT_INTENTIONAL_IDS,
+  'intentional',
+);
+requireDisagreementTokens(healthDisagreements, 'math-disagree-bug', MATH_DISAGREEMENT_BUG_IDS, 'bug');
+
+const skillMathSection = mathSectionSlice(indexText, '## Skill and allocation math');
+if (!skillMathSection) {
+  console.error('FEATURE_INDEX is missing the skill and allocation math section.');
+  process.exit(2);
+}
+if (!skillMathSection.includes('### Disagreements')) {
+  console.error('FEATURE_INDEX skill math section is missing ### Disagreements.');
+  process.exit(2);
+}
+const skillDisagreements = disagreementsSubsection(skillMathSection);
+if (!skillDisagreements) {
+  console.error('FEATURE_INDEX skill math section has no ### Disagreements body.');
+  process.exit(2);
+}
+requireDisagreementTokens(
+  skillDisagreements,
+  'math-disagree-copy',
+  SKILL_MATH_DISAGREEMENT_COPY_IDS,
+  'skill copy',
+);
+
+const mathDisagreementCount =
+  MATH_DISAGREEMENT_INTENTIONAL_IDS.length +
+  MATH_DISAGREEMENT_BUG_IDS.length +
+  SKILL_MATH_DISAGREEMENT_COPY_IDS.length;
+console.log(`FEATURE_INDEX math-disagreement check OK (${mathDisagreementCount} guarded lines).`);
 
 const gen = spawnSync(
   process.execPath,

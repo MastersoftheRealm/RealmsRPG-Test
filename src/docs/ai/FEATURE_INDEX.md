@@ -30,7 +30,7 @@ Not checked, so silence here is not "it does not exist" and not "there is no for
 
 Export **names** for patterns, ui, hooks, and services are in [`FEATURE_INDEX_BARRELS.generated.md`](FEATURE_INDEX_BARRELS.generated.md). That generated file is not a list of what is used, and it does not read the other barrels.
 
-`scripts/validate-feature-index.js` checks that backticked `src/...` paths in this file exist. The same script fails if an app entry, a `src` barrel, a sibling missing from the six barrels above, a loose file directly under `src/lib`, or a non-test source file in the folders listed in that script is absent from this file. It also fails if the unused-export section does not match a production-import scan, or if a guarded math-disagree line is dropped from the health / energy / cost section.
+`scripts/validate-feature-index.js` checks that backticked `src/...` paths in this file exist. The same script fails if an app entry, a `src` barrel, a sibling missing from the six barrels above, a loose file directly under `src/lib`, or a non-test source file in the folders listed in that script is absent from this file. It also fails if the unused-export section does not match a production-import scan, or if a guarded `math-disagree-intentional`, `math-disagree-bug`, or `math-disagree-copy` line is dropped from the health / energy / cost or skill / allocation sections.
 
 ---
 
@@ -2137,7 +2137,7 @@ Every non-test file under `src/lib/game` and `src/lib/calculators` is already re
 - Ability cost. `getAbilityIncreaseCost` and `calculateAbilityScoreCost` use different variables (`currentValue >= threshold` vs `target > threshold`) but each single-step cost matches. The loop does not call `getAbilityIncreaseCost`.
 - Player health and creature health. `calculateMaxHealth` adds a base health. `calculateCreatureMaxHealth` in `src/lib/game/encounter-utils.ts` does not. It does not call `calculateMaxHealth` or `calculateHealthEnergyPool`.
 - Item property sums. `calculateItemCosts` and `analyzeItemCosts` agree on IP and property currency per row. See **Health, energy, and cost math** for the guarded disagreement list and for copies that match.
-- Energy text. `formatEnergyNumber` and `formatEnergyIntermediate` disagree on decimals; see `math-disagree:format-energy-intermediate-vs-format-energy-number` in that section.
+- Energy text. `formatEnergyNumber` and `formatEnergyIntermediate` disagree on decimals by design; see `math-disagree-intentional:format-energy-intermediate-vs-format-energy-number` in that section.
 - Breakdown helpers. `nearlyEqual` is written in `power-energy-breakdown.ts`, `technique-energy-breakdown.ts`, `item-cost-breakdown.ts`, and `empowered-energy-breakdown.ts`. `formatOptionSuffix` is written in the power file and the technique file. They do not call each other.
 - Technique part energy. `getTechniquePartEnergyContribution` and the sum inside `calculateTechniqueCosts` are the same base-plus-options product. They do not call each other. `partEnergyContribution` in `technique-energy-breakdown.ts` is that sum again.
 
@@ -2153,7 +2153,7 @@ Every non-test file under `src/lib/game` and `src/lib/calculators` is already re
 
 ### Not read line by line
 
-- Health, energy, and cost formulas in the section above are read through that pass’s scope. Skill helpers in `formulas.ts` after innate energy are not in that scope.
+- Health, energy, and cost formulas in the section above are read through that pass’s scope. Skill helpers in `formulas.ts` after innate energy and `skill-allocation.ts` cost helpers are in **Skill and allocation math** below.
 - `src/lib/game/archetype-path.ts`, `character-legality.ts` past `abilityPointsSpent`, `innate-eligibility.ts`, `feat-requirements.ts` past the defense and speed calls, `crafting-utils.ts` past the four apply functions, `path-recommendation-index.ts`, `path-validation.ts` past `validatePathDataForPublish`, `size-table.ts` past `calculateCarryingCapacityKg`, `targeted-defenses.ts` past `parseDefensesFromDescription`, `weapon-attack-ability.ts` past `meetsAbilityRequirement`, `archetype-display.ts` past `applyProficiencyLossForLevelDown`, and `creator-cache.ts`.
 
 ---
@@ -2161,7 +2161,7 @@ Every non-test file under `src/lib/game` and `src/lib/calculators` is already re
 
 ## Health, energy, and cost math (line-by-line pass)
 
-This pass read the health, energy, and currency formulas in the code through the remainder named below. Skill bonus helpers in `src/lib/game/formulas.ts` after innate energy were not opened (out of this pass). This is a map of what the code does, not a rules balance sign-off.
+This pass read the health, energy, and currency formulas in the code through the remainder named below. Skill bonus and allocation helpers are in **Skill and allocation math**. This is a map of what the code does, not a rules balance sign-off.
 
 ### Read to the end
 
@@ -2178,7 +2178,7 @@ This pass read the health, energy, and currency formulas in the code through the
 - `resolvePowerComposition` in `src/lib/calculators/power-composition.ts` through its return. Composed power energy sums shared chassis energy, variant extras, choice max, modify sums, randomize face averages, and reverse drawback discounts, then calls `finalizeCompositionEnergy` (same floor as plain powers).
 - `calculateItemCosts`, `analyzeItemMarketCurrency`, `resolveItemMarketPricing`, and `deriveItemDisplay` in `src/lib/calculators/item-calc.ts`. Item points and property currency sum base plus option × level per property. Market currency picks a rarity band from total IP, then `band_low × (1 + 0.125 × property currency sum)`, clamps to the band min and max, then floors for display.
 - `analyzeItemCosts` and `buildItemAdvancedCalculationGroups` in `src/lib/calculators/item-cost-breakdown.ts`. Breakdown lines repeat the same per-property IP and currency sums as `calculateItemCosts`; totals add rarity and rounded-down market currency.
-- `getSkillBonusForFeatRequirement` and `calculateArchetypeProgression` in `src/lib/game/formulas.ts` through their returns. Feat skill checks rebuild sub-skill and base-skill bonuses from codex rows. Archetype progression sets innate pools, thresholds, and bonus feat slots from proficiencies and milestone choices.
+- `calculateArchetypeProgression` in `src/lib/game/formulas.ts` through its return. Archetype progression sets innate pools, thresholds, and bonus feat slots from proficiencies and milestone choices.
 - `buildMechanicParts` and `calculateDamageOptionLevel` in `src/lib/calculators/mechanic-builder.ts` through the return. Damage uses `floor((dice × size − 4) / 2)` for option 1. Range uses `steps − 1` for Power Range. Duration maps UI values to codex option levels (including minute/hour/day index tables). Split dice calls `computeSplits` in `dice-splits.ts`. Technique attack mode adds No Attack or Add Weapon at level 0.
 - `buildPowerPartsPayloadForCost` in `src/lib/calculators/power-calc.ts`. Without creator-style fields it maps saved parts and rebuilds weapon attack from `attackMode`. With creator fields it keeps user/advanced saved parts, rebuilds mechanics via `buildMechanicParts`, keeps legacy auto-mechanic rows only when the rebuild missed that name, then appends weapon attack. Every cost path uses the merged payload in `calculatePowerCosts`.
 - `rawEnergyOf`, `beneficialTabExtra`, `ownRangeEnergy`, and `reverseDrawbackEnergy` in `src/lib/calculators/power-composition.ts`. Tab energy is the difference of two `calculatePowerCosts` runs on footprints (not a hand-written delta). Range extra charges the full tab range, not a refund when shorter than Shared.
@@ -2190,18 +2190,23 @@ This pass read the health, energy, and currency formulas in the code through the
 
 ### Still not read line by line (health / energy / cost scope)
 
-- None. Skill helpers in `src/lib/game/formulas.ts` after `calculateRemainingInnateEnergy` were not opened; they are outside this pass.
+- None in this slice.
 
 ### Disagreements
 
-Two copies doing the same job. These IDs are required; dropping a line makes `scripts/validate-feature-index.js` exit 2.
+These IDs are required; dropping a line makes `scripts/validate-feature-index.js` exit 2. Prefix marks intent: `math-disagree-intentional` (by design), `math-disagree-bug` (code bug).
 
-- math-disagree:player-vs-creature-max-health: `calculateMaxHealth` adds a player base health (default 12) and can swap vitality for strength when vitality is the archetype ability. `calculateCreatureMaxHealth` never adds that base and always uses creature vitality. Same vitality×level shape when vitality is not negative, but totals differ whenever base health or the archetype swap applies.
-- math-disagree:player-vs-creature-max-energy: `calculateMaxEnergyForArchetype` picks the path’s archetype ability (or the higher of two on Powered-Martial). `calculateCreatureMaxEnergy` uses the highest non-vitality primary score only. A creature with high vitality but lower other scores can get a different max energy than a player with the same numbers.
-- math-disagree:power-energy-vs-technique-energy: `analyzePowerEnergy` splits flat, percentage, and duration parts with the duration extra equation. `analyzeTechniqueEnergy` only does flat sum × percentage product with no duration branch. They are not interchangeable: the same part list would not yield the same energy on both sides.
-- math-disagree:format-energy-intermediate-vs-format-energy-number: `formatEnergyIntermediate` rounds to two decimals and builds its own minus sign. `formatEnergyNumber` uses `formatCost`, which rounds to three decimals and strips trailing zeros. The same number can show different text in composition notes versus creator breakdowns.
-- math-disagree:modify-variant-ceil-vs-composition-finalize: On a Modify power, each variant’s displayed `energy` is `publishContribution(energyRaw)` (round up each tab). The power’s published total uses `finalizeCompositionEnergy` once on the sum of raw tab energies (plus Shared). Adding the per-tab rounded numbers can be higher than the published total.
-- math-disagree:innate-remaining-uses-stored-cost: `calculateRemainingInnateEnergy` subtracts each innate power’s saved `cost` field. `buildPowerPartsPayloadForCost` and `calculatePowerCosts` recompute energy from parts. If `cost` on the save is stale, remaining innate budget does not match live part math.
+**Intentional (player vs creature, power vs technique, formatting, composition display)**
+
+- math-disagree-intentional:player-vs-creature-max-health: **Intentional.** Players and creatures use different health formulas on purpose. `calculateMaxHealth` adds a player base health (default 12) and can swap vitality for strength when vitality is the archetype ability. `calculateCreatureMaxHealth` never adds that base and always uses creature vitality.
+- math-disagree-intentional:player-vs-creature-max-energy: **Intentional.** `calculateMaxEnergyForArchetype` picks the path’s archetype ability (or the higher of two on Powered-Martial). `calculateCreatureMaxEnergy` uses the highest non-vitality primary score only.
+- math-disagree-intentional:power-energy-vs-technique-energy: **Intentional.** Powers and techniques use different energy equations. `analyzePowerEnergy` includes duration parts; `analyzeTechniqueEnergy` is flat sum × percentage product only.
+- math-disagree-intentional:format-energy-intermediate-vs-format-energy-number: **Intentional display split.** `formatEnergyIntermediate` (composition notes) rounds to two decimals. `formatEnergyNumber` (creator breakdowns) uses `formatCost` at three decimals and strips trailing zeros.
+- math-disagree-intentional:modify-variant-ceil-vs-composition-finalize: **Intentional display split.** Modify variant tabs round with `publishContribution` per tab; the published power total uses one `finalizeCompositionEnergy` on summed raw energy. Per-tab rounded sums can exceed the header total.
+
+**Bug**
+
+- math-disagree-bug:innate-remaining-uses-stored-cost: **Bug.** `calculateRemainingInnateEnergy` subtracts each innate power’s saved `cost` field. Live energy comes from parts via `buildPowerPartsPayloadForCost` / `calculatePowerCosts`. A stale saved `cost` makes remaining innate energy wrong.
 
 ### Same math, separate copies
 
@@ -2210,6 +2215,38 @@ Two copies doing the same job. These IDs are required; dropping a line makes `sc
 - `calculateCreatureCurrency` and `computeStartingCurrency` use the same growth formula and the same 200 / 1.45 defaults, stored in different constant imports.
 - `rawEnergyOf` and `derivePlainPowerDisplay` both feed `buildPowerPartsPayloadForCost` into `calculatePowerCosts`. Composed-power totals use the same path through `rawEnergyOf`.
 - `computeSplits` in `dice-splits.ts` is the only split-dice formula; `buildMechanicParts` calls it for power and technique damage.
+
+## Skill and allocation math (line-by-line pass)
+
+Skill bonus, skill point totals, and allocation spend in `src/lib/game/formulas.ts` (from the Skill Helpers block through `getSkillBonusForFeatRequirement`) and `src/lib/game/skill-allocation.ts` through `calculateSimpleSkillPointsSpent`. `getCreatureSkillBonus` in `creature-creator-skill-bonus.ts` delegates to the shared bonus helpers. Not a rules balance sign-off.
+
+### Read to the end
+
+- `unproficientBonus` in `src/lib/game/formulas.ts`. Negative ability mods double; non-negative mods use `Math.ceil(mod / 2)`. Used by skill, sub-skill, feat checks, and defense unprof values in `calculations.ts`.
+- `calculateSkillPointsForEntity` in `src/lib/game/formulas.ts`. Characters: `skillPointsPerLevel × floor(level)`. Creatures: `skillPointsAtLevel1 + skillPointsPerLevel × (floor(level) − 1)`. Rules overrides come from `PROGRESSION_PLAYER` / `PROGRESSION_CREATURE`.
+- `getLinkedAbilityKeys`, `getHighestLinkedAbilityKey`, `subSkillAllocationAbility`, `getLinkedAbilityMod` (private), `calculateSkillBonusWithProficiency`, and `calculateSubSkillBonusWithProficiency` in `src/lib/game/formulas.ts`. Proficient: ability mod plus skill values (sub-skills add base value when the base is proficient). Not proficient: `unproficientBonus` on the chosen or highest linked ability. Multi-ability skills use the chosen key when valid, else the highest score.
+- `resolveParentSkillNameForSubSkill` in `src/lib/game/formulas.ts`. Resolves parent base skill name from `selectedBaseSkillId` or codex `base_skill_id`; display-only for sheet copy.
+- `getSkillBonusForFeatRequirement` in `src/lib/game/formulas.ts`. Inlines base/sub bonus shapes similar to the proficiency helpers but always reads the **first** comma-separated codex ability (not highest/chosen). Draft vs sheet proficiency uses numeric thresholds (`base ≥ 0`, sub `≥ 1`) or `{ prof, val }` rows.
+- `resolveSkillAllocationRules`, `getTotalSkillPoints`, `getSkillValueIncreaseCost`, `skillAllocationIncreaseCost`, `applySkillAllocationIncrease`, `applySkillAllocationDecrease`, `canIncreaseDefense`, `calculateCharacterSkillPointsSpent`, and `calculateSimpleSkillPointsSpent` in `src/lib/game/skill-allocation.ts`. Value steps cost 1 point below soft cap; at or past cap use `baseSkillPastCapCost` or `subSkillPastCapCost`. Non-species rows pay `gainProficiencyCost` once when gaining proficiency. Spent totals loop value from 1..n and sum `getSkillValueIncreaseCost(v − 1, …)`; defense spends `defenseIncreaseCost` per skill-point defense bonus.
+- `getCreatureSkillBonus` in `src/app/(main)/creature-creator/creature-creator-skill-bonus.ts`. Wraps `calculateSkillBonusWithProficiency` / `calculateSubSkillBonusWithProficiency` with codex-linked abilities and parent skill lookup.
+
+### Still not read line by line (skill / allocation scope)
+
+- `skill-allocation-add.ts` past modal apply helpers (add/remove skill payloads only; no separate point math).
+- `src/lib/guided-creator/skill-reconcile.ts` (calls `calculateSimpleSkillPointsSpent`; body not opened this pass).
+
+### Disagreements
+
+`math-disagree-copy` marks a second implementation that does not match the primary helper. Dropping a line fails the validator.
+
+- math-disagree-copy:feat-skill-req-first-ability-vs-sheet-highest: **Second copy.** `getSkillBonusForFeatRequirement` uses only the first codex ability string. `calculateSkillBonusWithProficiency` and `calculateSubSkillBonusWithProficiency` use `getLinkedAbilityMod` (chosen key if valid, else highest). Multi-ability skills can show a higher bonus on the sheet than feat requirement checks see (or the reverse if the first listed ability is higher).
+
+### Same math, separate copies
+
+- `getTotalSkillPoints` returns `calculateSkillPointsForEntity`; one skill-point total formula.
+- `skillAllocationIncreaseCost` and `calculateSimpleSkillPointsSpent` both call `getSkillValueIncreaseCost`; no parallel past-cap table.
+- `getCreatureSkillBonus`, the character sheet, guided creator, allocation page, and creature stat block display call the same `calculateSkillBonusWithProficiency` / `calculateSubSkillBonusWithProficiency` pair (not the feat inline path).
+- `getHighestLinkedAbilityKey` and private `getHighestLinkedAbility` use the same max scan; one returns the key, one the value.
 
 ## Unused exports outside game and calculators
 
