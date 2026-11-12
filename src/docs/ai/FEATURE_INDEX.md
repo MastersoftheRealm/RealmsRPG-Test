@@ -1,228 +1,433 @@
-# Feature Index — "Does this already exist?"
+# Feature Index — files that exist
 
-**Purpose:** The anti-re-implementation guardrail. Before building a new component, hook, service, route, or util, scan this index first. Most accidental duplication in this repo came from agents not knowing a feature already existed.
+**Status: PATCH.** The previous text described how features behave. That prose was not re-read against the functions it named, so it was removed. This file is a map of files. It is not a description of game rules or of what a screen does, except for the few import and redirect lines cited below.
 
-**Also check:** generated barrel inventory [`FEATURE_INDEX_BARRELS.generated.md`](FEATURE_INDEX_BARRELS.generated.md) (`npm run tasks:generate-index` after changing barrel exports). CI fails if that file is stale.
+Checked on this pass:
 
-**How to use:** Find your topic below → open the listed file/barrel → extend it (add a prop/variant) rather than forking a parallel copy. If you add a new top-level feature/hook/shared component, add a line here **and** regenerate the barrel file if you changed an index.ts export.
+- Every `page`, `layout`, `route`, `loading`, `error`, `not-found`, `robots`, `sitemap`, and `opengraph-image` file under `src/app`, plus `src/proxy.ts`, `src/instrumentation.ts`, and `src/instrumentation-client.ts`.
+- Every `index.ts` / `index.tsx` under `src`.
+- Sibling source files that these barrels do **not** re-export: `src/lib/game/index.ts`, `src/lib/calculators/index.ts`, `src/hooks/index.ts`, `src/services/index.ts`, `src/stores/index.ts`, `src/components/ui/index.ts`.
+- Same-name modules and the two help widgets, by opening those files.
+- A static import walk from those app entries. A file loaded only by a variable `import()` would not show up. `knip` was not run, so unused exports inside a file that is imported were not measured.
 
-> This is a map, not the source of truth for behavior. For schema use `SUPABASE_SCHEMA.md`, for formulas `GAME_RULES.md`, for data flow `ARCHITECTURE.md`.
+Not checked, so silence here is not "it does not exist" and not "there is no fork":
+
+- Behavior of calculators, saves, sheets, creators, or admin editors.
+- Whether two differently named files inside `src/components/patterns`, `src/components/character-sheet`, `src/components/guided-creator`, or `src/app/(main)` do the same job.
+- Which files under `src/components/patterns/` are omitted by `src/components/patterns/index.ts` (that barrel exports from subfolders; the sibling check above does not cover it). Export **names** for patterns, ui, hooks, and services are in [`FEATURE_INDEX_BARRELS.generated.md`](FEATURE_INDEX_BARRELS.generated.md). That generated file is not a list of what is used, and it does not read the other barrels.
+- Loose modules under `src/lib/` outside `game/` and `calculators/`.
+
+`scripts/validate-feature-index.js` checks that backticked `src/...` paths in this file exist. The same script fails if an app entry, a `src` barrel, or a sibling missing from the six barrels above is absent from this file.
 
 ---
 
-## Pages / features (`src/app/(main)/*`)
+## Routes with no page file
 
-| Feature | Route / page |
-|---------|--------------|
-| Home / marketing landing | `(main)/page.tsx` (RSC; `HeroSection` is the client island) + `components/landing/` — copy SoT `lib/constants/copy/landing-copy.ts`. Guest primary CTA **Create Character** → `/characters/new` (repeated after how-it-works). Steps: Create a character → Find a table (Discord invite) → Start playing (TASK-763). Closing tertiary **Join the Discord**. Do not reintroduce a root App Router page that wraps `(main)/layout` (chrome remount). |
-| Character list / dashboard | `characters/page.tsx` — square portrait cards (1:1 crop); no search/ListHeader. Signed-out users see browser-local characters (`local-` ids, ADR-0026 / TASK-904); signed-in list is the account plus any leftover unmigrated locals. |
-| Character sheet (view + edit) | `characters/[id]/page.tsx` facade + `use-character-sheet-page.ts` (composes data/ui hooks). Document SoT: `useCharacter` + `setQueryData` on `characterKeys.detail`. Other-user GET uses referenced `enrichment` (skip catalog hooks); owner keeps catalog hooks for add-X. Layout: `CharacterSheetBody` (single library mount; C1 `CharacterSheetColumn` carousel; C4 one dock — `sheet-mobile-action-dock` + RollLog). Below `md`, the column (`data-sheet-mobile-column`) is the vertical scroller (header in flow — TASK-907); inactive snap panels are height 0; carousel `touch-pan-x` with vertical pan forwarded to the column; snap panels share PageContainer width with the header (no carousel `-mx`/`scroll-px`); C1 affordance is a sticky compact `SegmentedControl` (not a carousel fade mask). Library: `library-section.tsx` + `LIBRARY_TAB_DEFS`. Those tabs share `character-sheet-library-panel` (`useTabGroup` + `TabContentPanel`) so each `aria-controls` resolves (86e3k0cfz). Sheet edit drops current Health or Energy to the new max when that max falls and current would stay above it (`lib/character/current-follows-max.ts`, 86e3juy8e). Full and partial recovery do not lower Health or Energy already above max, and the recovered amount is never negative (`lib/character/recovery-over-max.ts`, 86e3jv000). Extend this shell — do not fork a second body, library mount, or bottom dock. |
-| Character sheet Library → Powers | `character-sheet/library-powers-panel.tsx` — Innate Energy summary and Innate Powers heading reuse global `innateEnergyHelp` / `innatePowersHelp`; `PowersListSection.titleAddon` passes help through shared `SectionHeader` (TASK-733). Play spend is `library-entity-rows` `buildEnergyButton`; an innate power keeps its Energy number and does not spend current Energy (`lib/character/power-energy-spend.ts`, 86e3jvfmf). |
-| Character creator entry (Guided / Custom) | `characters/new/page.tsx` — copy in `GUIDED_CREATOR_COPY.chooser`. Custom card is player-facing (no Layer 3 / cohesive-creator jargon) — TASK-784. **Guided** → Path L1; **Custom** → `?entry=custom` Path L3. Retired Legacy `/characters/new/advanced` 308s to this chooser (TASK-912). |
-| Guided character preview strip/panel (TASK-686, TASK-694) | `character-preview-panel.tsx` + `lib/guided-creator/preview-ability-summary.ts` — path/type once in subtitle; ability chips gated until Abilities selection/completion; all six signed on strip (horizontal scroll on mobile); only `pow_abil`/`mart_abil` use power/martial chip highlight; feat labels via `indexByNormalizedIds` (no raw id fallback — TASK-732) |
-| Cohesive character creator (guided shell) | `characters/new/guided/page.tsx` + `guided-creator-shell.tsx` + `stores/guided-creator-store.ts` (`pathLayer` only in draft — **no persisted `creationMode`**; rail/Reveal from `lib/guided-creator/substep-satisfaction.ts`). Your Hero **Create character** stays clickable; leftovers (name, Health/Energy, unspent Skill/Ability points, unfinished chapters) open `GuidedRevealReviewModal` with jump-to-fix rows (`listGuidedRevealBlockers` — TASK-911). Save via `lib/guided-creator/build-character.ts` uses `archetypePathId` when a path was picked. Chooser **Guided** → Path L1 / **Custom** → `?entry=custom` Path L3. Lookups: `mergeLibraryBySource` + `indexByNormalizedIds` (official + user). Extend this shell — do not add a parallel guided store. |
-| Selection grammar (cards ↔ GridListRow; entity depth vs catalog breadth) | `REALMS_PRODUCT_OVERVIEW.md` §3.1; `guide/04-floating-ui-tooltips.md` § Related patterns; components: `GuidedChoiceCard`, `GuidedEntityDetailModal`, `GridListRow`, `GuidedLayerNav`, `DetailOptionList` |
-| Guided choice-card deep-dive (TASK-432+) | **See more…** = in-card deepen (truncated copy, expandedExtra / equipment mechanic chips); **More details** = entity modal (`onDetails` → `GuidedEntityDetailModal`, path/species Close \| Select via TASK-448); **See more options** = catalog Layer 2 (`GuidedLayerNav` / browse). Do not invent specialist verbs. Shared rows: `DetailOptionList` + `@/lib/detail-option`. Wrappers: `GuidedTraitOptionList` / `GuidedDetailOptionList`. Granted overview traits: `GuidedChoiceCard` `readOnly` (no select affordance; TASK-711). **See more / See less** stop card-select keys (target must be the card root); selection is announced in `aria-label` (“…, selected”) — no `aria-selected` on a generic div (TASK-734 / audit 03 P1-5). |
-| Guided skills suggestions (ability-tier curation) | `lib/guided-creator/curated-skills.ts` (`curateGuidedSkillIds`, `getGuidedAbilityRecommendationTiers`, `formatGuidedSkillAbilityTag`), `guided-skill-recommendations.ts` (`buildGuidedSkillSuggestions`); consumed by `steps/skills-step.tsx` + `AddSkillModal` badges via `guided-skills-panel.tsx`. L1 rows: name+chevron+chips inline (TASK-704); expand shows the Codex description and the same additional descriptions as Add Skill (`AssignedSkillDetails`, 86e2q66jv); contributing Ability chip or governing-Ability picker (multi-ability) + Skill Bonus `InfoTippy` (`getGuidedSkillBonusHelp` in `tooltip-text.tsx`) — TASK-548 / TASK-790. Defense Bonuses via shared `DefenseBonusesCard` → `patterns/stat-tiles/DefenseStatTile` + `SHEET_STAT_GRID_CLASS` (TASK-881); persist `defenseVals` + `skillAbilities` on save. |
-| Guided feat Layer 2 add modal | `guided-feats-l2-modal.tsx`, `lib/guided-creator/feats-l2.ts`, `feat-selection.ts`; wired in `archetype-feats-step.tsx` + `character-feat-step.tsx` via `GuidedLayerNav` → `UnifiedSelectionModal` (TASK-565; same grammar as skills/loadout/powers L2). Creator headers/cells compose Codex `featSelectable*` helpers but omit Req. Level because unmet `lvl_req` is hidden; Codex/Admin keep it (TASK-758). `GuidedFeatsFilterFields` composes Category, State Feats (shared restriction InfoTippy, TASK-759), and **Archetype Path** last (`usePathListFilter` / ADR-0014). Path flow See more auto-selects every player-visible path of `draft.archetypeType` with Filters expanded; custom/no-path inline catalogs get the control with no auto-select. Path-name chips replace Recommended while filtering; family ranks of a matching feat stay (TASK-753). |
-| Guided L1 curated feat eligibility | `selectableCuratedFeatIds` (`lib/guided-creator/feat-selection.ts`) — path-curated cards honour `checkFeatRequirements` like the L2/L3 catalog, keeping an already-selected unmet pick visible so it stays deselectable. Used by both feat steps; the character-feat step no longer auto-picks the first curated feat (TASK-738 / report 03 P1-10; vitest) |
-| Guided L3 inline catalog (no path — full Customize) | Shared **`GuidedInlineCatalogList`** (`patterns/guided-choice/guided-inline-catalog-list.tsx`). Gate: `prefersDeepCatalogEntry` (`lib/guided-creator/creator-entry-mode.ts`). Wired on archetype-feats, character-feat, loadout, and powers/techniques. Extend this list + Library/Codex GLR builders (ADR-0016 `characterCreate`; ADR-0012 allowlist) — do not fork a fourth catalog. |
-| Guided equipment phased sub-flow | Shipped in `steps/loadout-step.tsx` + `guided-equipment-l1-phase.tsx` / `guided-equipment-l2-modal.tsx`. Budget chrome: `patterns/chrome/loadout-budget-bar.tsx`. Eligibility: `lib/guided-creator/equipment-eligibility.ts` (`resolveArmorStepMode`: Power always `none`). Card-first L1; L2/L3 columns from Library armament builders. Path Power Equipment that skipped weapons: **See weapons** is `GuidedLayerNav` `trailingExpand` (same row as See more) into the existing weapon L2 modal — do not stack a second nav. Terminology: player **Equipment** / **Armaments** / **Enhanced items** (later); internal GLR id `'gear'` = Equipment (TASK-872). |
-| Guided powers/techniques L1 + L2 | `steps/powers-techniques-step.tsx` (facade; inner `powersPhase`) + `lib/guided-creator/powers-phase-nav.ts` + `use-powers-techniques-selection.ts`. L1: `guided-powers-techniques-l1-content.tsx`; L2: `guided-powers-techniques-l2-modal.tsx`. Official L2/L3 rows: `powers-techniques-l2.ts`. Lookups via `indexByNormalizedIds`; Energy kind-aware (`techniques` vs `powers`); L3 innate stays at energy cap. GLR `guided-powers-l3` / `guided-techniques-l3`. Extend this step + Library builders — do not fork a second powers phase. |
-| Unarmed Prowess TP (GAME_RULES) | `lib/game/unarmed-prowess.ts` (`computeUnarmedProwessTpCost`, level table) — sheet / library TP remaining (`power-technique-character-context`). Guided Loadout optional pick is `guided-unarmed-prowess-panel.tsx`. |
-| Library (user + official content browse) | `library/page.tsx` — tab badges from `GET /api/user/library/counts` / `GET /api/official/counts` (`useUserLibraryCounts` / `useOfficialLibraryCounts`); row lists fetch the active tab only (TASK-774 / ADR-0015). Player catalogs are **listed-only** (`catalog_listing`; ADR-0027 / TASK-927). Armaments split into **Weapons / Armor / Shields** tabs (type-specific columns in `lib/library/official-item-list.ts`; armor includes Abl. Req. + Crit +); labels in `lib/library/armament-library-labels.ts`. Overflowing `TabNavigation` strips fade + chevron (TASK-840). |
-| My Library entity tabs (sync/duplicate shell) | `library/components/UserLibraryEntityTabShell.tsx` (`enableSync` default true; `enableSync={false}` = list chrome only — no sync-all **or** duplicate modals), `library/hooks/use-library-entity-sync.ts`, `library/hooks/use-library-duplicate-confirm.ts` — sync tabs: `LibraryItemsTab` / `LibraryPowersTab` / `LibraryTechniquesTab` / `LibraryCreaturesTab`; basic: `LibraryEnhancedTab` (ADR-0001 / TASK-475) |
-| Codex (rules data browser) | `codex/page.tsx` — **Advanced** is `TabNavigation` `trailing` (stacked below `md`; in-bar from `md`, outside the tablist scrollport). `labelMobile` is the below-`md` tab label (TASK-827). Overflowing strips fade + chevron (TASK-840). |
-| Realms Library, guest read-only | `library/page.tsx` + `library/LibraryPublicContent.tsx` — guests see official "Realms" content with the My-Library toggle + "Add to library" hidden. (Former `/browse` was a redundant duplicate; removed and redirected to `/library` — TASK-336.) |
-| Power creator | `power-creator/page.tsx` (shell + bootstrap) + `use-power-creator-workspace.ts` + `power-creator-editor.tsx` + co-located `power-creator-cost-derivation.ts` / `power-creator-part-actions.ts` / editor section modules + `power-creator-help.tsx` (TASK-381, **TASK-616**, **TASK-408**, **TASK-921**, **TASK-922**, **TASK-925**) — chrome: `CreatorPageShell` + `CollapsibleSection` (no empty expanded summary line — TASK-764). **Targeted defenses:** compact `ChipSelect` in identity card (`creator/targeted-defenses-section.tsx` + `lib/game/targeted-defenses.ts`); `*` + this-entry part/damage/attack sources only. Damage rows show can-target; part cards use a Targets descriptor chip. **Advanced Calculations:** grouped Energy-only breakdown from `buildPowerAdvancedCalculationGroups` (`lib/calculators/power-energy-breakdown.ts`) via `AdvancedCalculationsPanel` `groups`. Guided power creator **not shipped** — deferred WAITING TASK-410–414 (owner 2026-08-14). **Variants (ADR-0029, TASK-930):** `power-creator-composition-band.tsx` (Structure `Select` + Reverse `Checkbox` + `TabNavigation` + die faces) in `CreatorPageShell` `aboveGrid`; tab state `use-power-creator-composition.ts`; form ↔ spec `power-creator-composition.ts`. |
-| Power variants (composition) | **Resolver:** `lib/calculators/power-composition.ts` — `resolvePowerComposition` (Choice = Shared plus the most expensive portion at that portion's footprint (a chip shows Shared plus that option; published energy is Codex parts plus this math); Alternate = selected; Modify = Shared once + each piece's parts at that piece's footprint; Randomize faces are independent and share only the action type (good face = full cost × chance, bad face = half its basic-action energy ÷ action multiplier, including Reaction, × chance; Shared adds no energy); Reverse uses that same reduction; the 1 EN floor applies only when positive energy is reduced below 1; deduped TP via `buildRequiredProficiencies`; character requirements via `composedPowerProficiencyParts` — every variant including every Alternate version, chip does not change them, TASK-934); `derivePowerDisplay(doc, db, { selectedVariantId })` resolves `payload.composition` for every surface. **Chips:** `lib/power-variant-chips.ts` (`buildPowerVariantChips` sibling of `buildFeatLevelChips`, `powerVariantsDetailSection`; Reverse drawbacks are description text via `withPowerReverseNote`, never a chip; structure rule text via `powerCompositionHelpText` → section `labelHelp`). **Play state:** `CharacterPower.selectedVariantId`. **Innate:** `snapshotOfficialPowerForInnate` (Alternate → `alternates[]`). ADR-0029 / TASK-929–933. |
-| Technique creator | `technique-creator/page.tsx` (shell + bootstrap) + `use-technique-creator-workspace.ts` + `technique-creator-editor.tsx` (TASK-601, **TASK-921**, **TASK-925**, **TASK-923**) — chrome: `CreatorPageShell`; targeted defenses in identity card (same ChipSelect). **Advanced Calculations:** grouped Energy from `buildTechniqueAdvancedCalculationGroups` (`lib/calculators/technique-energy-breakdown.ts`) via `AdvancedCalculationsPanel` `groups`. |
-| Empowered technique creator | `empowered-technique-creator/page.tsx` (shell) + `use-empowered-technique-creator-workspace.ts` + `empowered-technique-creator-editor.tsx` + co-located `empowered-technique-cost-derivation.ts` / `empowered-technique-part-actions.ts` / editor section modules (TASK-601, **TASK-610**, **TASK-683**, **TASK-921**, **TASK-925**, **TASK-923**) — Attack mode uses cheaper-EN overlap (`pickCheaperEnPart`) + No Attack; chrome: `CreatorPageShell`; targeted defenses in identity card. **Advanced Calculations:** `buildEmpoweredAdvancedCalculationGroups` (power-side + technique % + technique-side + Combined Energy). |
-| Item (armament) creator | `item-creator/page.tsx` (shell + bootstrap) + `use-item-creator-workspace.ts` + `item-creator-editor.tsx` + co-located `item-creator-cost-derivation.ts` / `item-creator-property-actions.ts` / editor section modules (TASK-381, **TASK-616**, **TASK-810**, **TASK-918**, **TASK-919**, **TASK-920**, **TASK-923**) — chrome: `CreatorPageShell`. Item Type + handedness use shared `SegmentedControl`. Weapon Range is a duration-style native `<select>` pair (Melee / Reach / Ranged / Thrown, then closed space ladders). Ability utilized is a native `<select>` (melee/reach/thrown: STR↔AGI via Finesse; ranged: ACU↔STR via Heavy, plus AGI/Finesse). **Advanced Calculations:** grouped IP/C from `buildItemAdvancedCalculationGroups` (`lib/calculators/item-cost-breakdown.ts`; Rounded Down). Load uses Weapons / Armor / Shields tabs (`useLoadModalLibrary` `itemKind`) with select-density catalog columns (no mixed Type+Stat list) |
-| Species creator | `species-creator/page.tsx` (shell) + `use-species-creator-workspace.ts` + `species-creator-editor.tsx` / bootstrap (TASK-601); Load ungated — chrome: `CreatorPageShell`; skill labels via `findByNormalizedId` (unmatched ids omitted, not raw UUID — TASK-732). `?edit=` reopens a saved species (`speciesCreatorEditHref`, 86e3jmhkn). An unknown `?edit=` id keeps the local draft (86e3mhqay) |
-| Creature creator | `creature-creator/page.tsx` (shell) + `use-creature-creator-workspace.ts` + `creature-creator-workspace-persistence.ts` + `creature-creator-editor.tsx` + co-located `creature-creator-{library-selectables,derived-stats,feat-armament-display,skill-bonus,summaries}.ts` + editor section modules (TASK-381, **TASK-610**, **TASK-615**, **TASK-712**, **TASK-810**, **TASK-812**) + `creature-skill-utils.ts`; Load/library pickers use `mergeLibraryBySource` (`lib/library/source-scope.ts`; public wins on id). Armament still hides selected `docId`s; empowered still dedupes on `docId`. Inventory picker is Weapons / Armor / Shields / Equipment (no All); selected inventory reuses sheet `WeaponsListSection` / `ArmorListSection` / `ShieldsListSection` / `EquipmentListSection`. Save/load uses kind buckets (`weapons` / `armor` / `shields` / `equipment`); mixed `data.armaments` migrates on read. Compact ability tiles share the non-compact 2/3/6 grid and Dense `size="sm"` steppers (TASK-828). `CreatorPageShell` + reset confirm |
-| Crafting (sessions + enhanced items) | `crafting/layout.tsx` title/description (TASK-793); `crafting/page.tsx`, `crafting/[id]/page.tsx` facade (TASK-607 / **TASK-666e**) + `_components/` (`use-crafting-tool-page`, `crafting-tool-helpers`, `crafting-tool-derived`, summary sidebar, item-options / adjustments / rolls / optional-rules / outcome panels); item picker `components/crafting/CraftingItemSelectModal` |
-| Encounters | `encounters/page.tsx`, `encounters/[id]/page.tsx`, `encounters/[id]/combat/page.tsx`, `encounters/[id]/mixed/page.tsx`, `encounters/[id]/skill/page.tsx`; play views `CombatEncounterView` / `SkillEncounterView` facades (TASK-608) + `_components/combat/` (`use-combat-encounter-view` facade ~78 LOC — **TASK-666a** + `use-combat-{linked-character-sync,roster-actions,round-actions}`, helpers, round controls, combatant list, add sidebar) + `_components/skill/` (`use-skill-encounter-view`, trackers, participant list/card, sidebar) + shared `encounter-view-helpers`, play routes `encounter-play-page-shell.tsx`, campaign roster chrome `EncounterCampaignRosterSection`, `encounters/[id]/_components/hooks/use-linked-campaign-characters` + `use-reorderable-list-drag`; `CombatantCard` facade ~149 LOC (**TASK-618**) + `combatant-card-{helpers,initiative,header,resources,conditions,quick-actions}`; combat turn order: the initiative number is a button, and Move up / Move down call `moveCombatantInTurnOrder` (86e3k0h3f); participant picker remains **`AddCombatantModal`**. Linked-character HP/EN/AP sync is `useCampaignCharacterEncounters` / `campaignKeys.characterEncounter` → `getCampaignCharacterForEncounter` (`?scope=encounter`; **TASK-762**) — not `useCampaignCharacterView` / the RM-view GET. Add Combatant and add-all use `fetchCampaignCharacterForEncounter` (same fetcher).
-| Campaigns | `campaigns/page.tsx`; create is `createCampaignAction` (supplies `id`, skips `INSERT … RETURNING`; owner row in `campaign_members` — **TASK-802**); detail `campaigns/[id]/page.tsx` facade (**TASK-666c**) + `_components/` (`use-campaign-detail-page`, header / invite / roster / roll-log sections, `character-chip`, `add-character-modal`); RM character view `campaigns/[id]/view/[userId]/[characterId]/page.tsx` — read-only `useCharacterSheetDerived` + `CharacterSheetBody` (TASK-597); mobile C1 frame without `.has-sheet-mobile-dock` (FAB-only gutter, no owner-dock strip — TASK-843); load is `useCampaignCharacterView` / `campaignKeys.characterView` → `getCampaignCharacterForView` (**TASK-761**; campaign-scoped + viewer-segmented key — not `characterKeys.detail` / `/api/characters/[id]`, which does not enforce roster + RM auth). Full RM GET returns referenced `libraryForView` + `enrichment` (**TASK-773**); the page does not fetch the viewer's library or official catalogs. `?scope=encounter` is still the minimal HP/EN/AP GET (TASK-762). |
-| Admin hub | `admin/page.tsx` — links Codex editor, sources, public-library, images, users, roles, core-rules, changelogs (no tooltips admin) |
-| Admin Sources (codex membership by pack) | `admin/sources/page.tsx` — per-source list with add/remove, rename/merge confirm, and session draft sources; server actions `admin/sources/actions.ts` (`updateCodexDoc` sources-only, `renameAdminCodexSource` calls `rename_codex_source` once); `lib/codex/sources.ts` membership helpers and `previewCodexSourceRename`; `admin-source-list.ts` + `admin-source-rows.ts` + `postgrest-pager.ts`; copy `admin/sources/admin-sources-copy.ts`; `sql/codex-rename-source.sql` applied on production 2026-10-18 (re-applied same day after control-character validation fix; function only; the first real rename has not run) |
-| Admin Official Library Editor | `admin/public-library/` — lists official created items **including unlisted** (`useOfficialLibrary(..., { includeUnlisted: true })`); Public ↔ Admin library toggle (`usePatchOfficialCatalogListing`, ADR-0027). Species tab uses the same official list rows as Creatures; Edit opens the species creator (86e3jmhkn) |
-| Admin Codex write contracts | **`lib/codex-columnar-keys.ts`** (admin column allowlists), **`lib/codex-persisted-contract.ts`** (per-field shape validation), **`lib/codex-mutation-validation.ts`** — wired through `admin/codex/codex-column-map.ts` / `createCodexDoc` / `updateCodexDoc`; **`lib/codex-archetype-path-save-validation.ts`** on **`saveArchetypeWithPath`** (persisted shape + **`validatePathDataForPublish`** publish rules). |
-| Admin Codex changelogs | `/admin/changelogs` + `GET /api/admin/changelogs` + `lib/codex-changelog.ts` / `lib/codex-changelog-display.ts` — compact content diffs; creates are name/kind only; deletes keep prior-state fields; no empty-equivalent rows; no `updated_at`/`created_at`; update snapshots still stored pending DEV-Q07 (TASK-874). A row that stored no name (source rename or merge) takes its list title from the live entity name; a stored name still wins; a missing row stays unnamed |
-| Account / profile | `my-account/layout.tsx` title + noindex (TASK-793); `my-account/page.tsx` facade (TASK-666) + `_components/` (`use-my-account-page`, helpers, role/profile/preferences/security/danger cards); tutorials on/off (TASK-388 localStorage) |
-| Post-activation onboarding (play together, sheet tour, level-up guides) | `components/onboarding/` (`PlayTogetherModal`, `SheetTourOfferModal`, `SheetTour`, `LevelUpGuideCard`); prefs `lib/onboarding-preferences.ts`; guide builder `lib/level-up-guide.ts`; highlight helper `lib/sheet-tour-highlight.ts` (`ONBOARDING_FLOATING_CARD_CLASS`); retake tour via `CharacterSheetSettingsModal`; wired from guided `reveal-step` + sheet page |
-| Rules / resources / about / privacy / terms | `rules` (Welcome + nested chapter nav + search at `/rules`, `/rules/[slug]` MDX — ADR-0021 / TASK-796 / TASK-905; Google Doc is `RULES_COPY.viewUrl` view-source only — TASK-853; crawlable `RULES_COPY.seoDescription` — TASK-793; Glossary / The Realms unfinished — WAITING TASK-823), `resources`, `about` (RSC + `AboutCarouselSection` island — TASK-789), `privacy`, `terms` |
-| Site / marketing copy (edit prose here) | `lib/constants/copy/*-copy.ts` via `lib/constants/site-copy.ts` (landing, auth, about + carousel, nav, rules, resources, privacy, terms, footer, guided creator, onboarding, archetype category Power/Martial/P-M; Discord URL + motto + contact email in `shared-copy.ts`). Tooltips: `public/tooltip-text.tsx`. Screenshot audit: `playwright.site-copy-audit.config.ts`. |
-| Root layout + Vercel Web Analytics | `src/app/layout.tsx` — fonts/metadata/providers; `<Analytics />` from `@vercel/analytics/next` (TASK-765). Enable in Vercel Dashboard (DEV-006); CSP hosts in `next.config.ts` via `src/lib/security/content-security-policy.ts` (86e1z8j9e); ops notes in `DEPLOYMENT_AND_SECRETS_SUPABASE.md` Step 3b |
-| Canonical site URL + SEO | `lib/site-url.ts` (`getCanonicalSiteUrl` / `NEXT_PUBLIC_SITE_URL` fallback `SITE_URL` = `https://realmsrpg.com`; `isProductionIndexingEnabled` noindexes preview/local); root `metadataBase` + Open Graph + Twitter + `alternates.canonical`; `opengraph-image.tsx`; `robots.ts` (`ROBOTS_DISALLOW`) + `sitemap.ts` (`SITEMAP_PATHS`); auth + admin + `/dev/styleguide` `robots: noindex` (TASK-771) |
-| Archetype category titles + descriptions (Power / Powered-Martial / Martial) | `lib/constants/copy/archetype-category-copy.ts` (`ARCHETYPE_CATEGORY_INFO`) — consumed by sheet Edit Archetype, Guided Custom Path L3, creature `ArchetypeSelector` (icons stay local) |
+`next.config.ts` `redirects()`:
 
-## Data hooks (`src/hooks/`, import from `@/hooks`)
+| From | To |
+|------|----|
+| `/browse` | `/library` |
+| `/signup` | `/register` |
+| `/encounter-tracker` | `/encounters` |
+| `/crafting/new` | `/crafting` |
+| `/characters/new/advanced` | `/characters/new` |
 
-| Need | Hook(s) |
-|------|---------|
-| Auth / current user | `useAuth`, `useAuthStore`, `useAuthCaptcha`, `useProfile`, `useAccountProfile`, `useAdmin` — `useAuth` listens to `onAuthStateChange` and does not call `getUser` on init; a null session does not clear a known user unless the event is `SIGNED_OUT` (86e3q9vhq). `queryClient.clear()` only when the user id changes or on `SIGNED_OUT` via `shouldClearQueryCacheOnAuthEvent` (not same-user tab-focus `SIGNED_IN` / `TOKEN_REFRESHED` / `INITIAL_SESSION`) (TASK-737 / TASK-903). Proxy and `getSession` verify with `getClaims` (local JWT; refresh still runs when the access token is near expiry) instead of per-request `getUser` (86e3q9vhe / 86e3qpeat). Account deletion, admin service-role mutations, and email or privilege changes call `requireLiveUser` (`getUser`) so a revoked or banned session cannot complete those writes. Sensitive my-account mutations re-verify on the server via `lib/auth/sensitive-account-auth.ts` (`assertSensitiveAccountReauth`). OAuth-only account delete: `beginGoogleDeleteReauthAction` starts Google OAuth on the server SSR client (`skipBrowserRedirect`), reads only the configured project's `sb-<ref>-auth-token-code-verifier` cookie (chunked/`base64-` decoded like `@supabase/ssr`), hashes that PKCE verifier into a signed reauth-intent cookie, and returns the provider URL — callback `redirectTo` uses `buildCanonicalAuthRedirectUrl` (`NEXT_PUBLIC_SITE_URL`, not forwarded Host/proto). `/auth/callback` binds intent to that verifier before exchange, then mints a session-bound delete grant only for `next=/my-account?deleteReauth=1` when uid matches, access token `amr` oauth is inside the intent window, and the Google identity `updated_at` is fresh for that window (GoTrue ~v2.197.0 does not advance `last_sign_in_at` on returning Google OAuth) (`oauth-delete-grant-core.ts`, `supabase-pkce-cookies.ts`, `oauth-google-delete-proof.ts`, `oauth-delete-grant.server.ts`; client sentinel in `oauth-delete-messages.ts`). Grants are HMAC-signed (HKDF from `SUPABASE_SERVICE_ROLE_KEY`), 5-minute TTL, session-bound — not strictly single-use; `deleteAccountAction` clears the grant cookie before destructive work and passes the read token into `assertSensitiveAccountReauth`. Post-auth redirect origins use `lib/auth-redirect.ts` (`buildAuthRedirectUrl` — allowlisted hosts only). In-app post-login paths use `lib/safe-redirect.ts` (`sanitizeRedirectPath`, `buildLoginRedirectUrl`) with query param **`returnTo`** (login/register also accept legacy `redirect`). Login/register shared client flows: `lib/auth/auth-page-client.ts`. Remember me: `lib/auth/session-persistence.ts` + `lib/supabase/supabase-auth-cookies.ts` + `lib/supabase/browser-auth-cookies.ts` (session cookies vs @supabase/ssr persistent maxAge via readable `realms-auth-remember`). Protected routes and resource preflight send users to `/login?returnTo=…`. Edge proxy misrouted OAuth `?code=` on `/` only: `lib/supabase/proxy-oauth-redirect.ts`. Profile `display_name` updates omit the field when callers pass `displayName: undefined` (`lib/profile-display-name.ts`). Signup CAPTCHA: `AuthTurnstile` + `lib/auth/captcha.ts` when `NEXT_PUBLIC_TURNSTILE_SITE_KEY` is set (TASK-899); inactive until owner completes DEV-015. |
-| Codex rules data (feats, skills, species, traits, parts, equipment, properties, archetypes) | The `useCodex*` family (aliased `useSkills`/`useSpecies`/`usePowerParts`/etc.) — one collection each via `codexKeys.collection(key)` / `fetchCodexCollection` → `GET /api/codex?collection=` (TASK-775 / ADR-0015). Species catalogs are **listed-only** unless `includeUnlisted=1` and admin (ADR-0027). Rows mapped by `lib/codex/row-map.ts` (same module as view enrichment; TASK-777; archetype path join stays in the route). `useCodexParts` / `usePowerParts` / `useTechniqueParts` share `['codex', 'parts']` and split with `lib/codex/part-type.ts`. `useCodexFull` (`['codex']`, whole payload) is the admin spreadsheet only. Admin Codex tabs pass `ADMIN_CODEX_QUERY_OPTIONS` (`includeUnlisted: true` → `['codex', key, 'all']`, private no-store GET). Creators use the collection hooks. `['codex']` invalidation still reaches every slice by prefix |
-| Game rules constants | `useGameRules` (`['codex', 'coreRules']` — not the full payload, TASK-775), `getGameRulesFallback` |
-| Trait / skill id↔name resolution | `resolveTraitIds`; skill maps via `buildSkillIdToName` / `findSkillByIdOrName`; ability column text via `formatSkillAbilityList` (`lib/codex/skill-list`) |
-| Official library (browse + add to my library) | `useOfficialLibrary`, `useOfficialLibraryCounts`, `useAddOfficialToLibrary`, `usePatchOfficialCatalogListing` (`hooks/use-official-library.ts`). Query keys `['official-library', type, 'listed'\|'all']`. Player catalogs omit `includeUnlisted`; admin editor / creator Load pass `includeUnlisted: true` (ADR-0027) |
-| User-created content (CRUD: powers/techniques/items/creatures/species) | `useUser*`, `useUserLibraryCounts`, `useDelete*`, `useDuplicate*` from `use-user-library` |
-| Characters CRUD | `hooks/use-characters.ts` (`useCharacters`, `useCharacter`, `useSaveCharacter`, `useDeleteCharacter`, `useDuplicateCharacter`; `characterKeys` scoped by signed-in user, `anon` for guests). Create: `createCharacter` in `services/character-service.ts` (`clientRequestId`) or `createGuestCharacter` / `persistFinishedCharacter` in `services/persist-finished-character.ts` for signed-out finalize (ADR-0026). PATCH: dirty-key + `updatedAt` lock (ADR-0013) via `saveCharacterWithConflictRetry` and `lib/character/save-lock.ts`; `local-` ids stay in localStorage and never hit `/api/characters`. Other-user GET includes `libraryForView` + `enrichment`; owner GET omits both. Guest migrate: `guest-character-migration.ts` on SIGNED_IN. One in-flight flight (`guest-migration-lock.ts`) shared by every `useAuth` listener and the login page; the local uuid is sent as `clientRequestId` (86e3jmw1m). |
-| Campaigns | `useCampaigns*` (`useCampaignsFull` gated on signed-in user — TASK-737), `useCampaign`, `useCampaignRolls`. RM character view: `useCampaignCharacterView` / `campaignKeys.characterView` → `getCampaignCharacterForView` (campaign route, not `characterKeys.detail` — TASK-761). Payload includes referenced `libraryForView` + `enrichment` (TASK-773). Combat/add `?scope=encounter`: `useCampaignCharacterEncounters` / `fetchCampaignCharacterForEncounter` / `campaignKeys.characterEncounter` → `getCampaignCharacterForEncounter` (minimal HP/EN/AP; not the RM-view GET — TASK-762) |
-| Encounters | `useEncounters`, `useEncounter`, `useCreate/Save/DeleteEncounter`. Guests use `guest-encounter-storage.ts` (`local-` ids). Sign-in migrate: `guest-encounter-migration.ts` (one in-flight flight, same lock as characters — 86e3jmw1m). Finished characters clone guest storage in `guest-character-storage.ts` (ADR-0026). |
-| Crafting + enhanced items | `useCraftingSession(s)`, `useEnhancedItems` + CRUD |
-| Save a creator's output | `useCreatorSave`; load into a modal: `useLoadModalLibrary` (incl. species/creature + `prefetch`) |
-| Archetype Path list filter | `usePathRecommendationIndex` / `usePathListFilter` (`hooks/use-path-recommendation-index.ts`) — memoized off `['codex', 'archetypes']`; browse lists pass `kind` (or `POWER_LIST_PATH_KINDS` / `EQUIPMENT_LIST_PATH_KINDS`); creator See more passes `autoSelectType` |
-| Guided creator path data | `useGuidedPathData` in `components/guided-creator/use-guided-path-data.ts` (returns `isLoading` while codex archetypes load for selected path — Loadout phase entry waits on it, TASK-527) |
-| Autosave (debounced) | `useAutoSave` — callbacks in refs so re-renders do not reset the debounce; failed saves retry 2s/5s/15s/60s; `pagehide` / hidden tab flush dirty data (TASK-736). Skill encounter flush sends that same PATCH with `keepalive` so a refresh during Unsaved changes keeps the roll, totals, and selected skill (86e3jrra4) |
-| Sheet ↔ encounter HP/EN/AP | `useCharacterResourceSync` + `lib/encounter/character-resource-sync.ts` — debounce 400ms; `skipLock` LWW; schedule only when HP/EN/AP change (`nextResourceSyncCursor`, TASK-786) |
-| Client-only mount (portals / theme) | `useIsClient` — prefer over `useEffect(() => setMounted(true))` (TASK-430) |
-| List sorting / modal list state | `useSort`, `sortByColumn`, `useModalListState` (rare non-USM — AdminTraitsTab browse list; nested choice picker in `admin-trait-edit-modal` uses ListHeader+GLR without the hook — TASK-572) |
-| Tooltips (canonical) | `InfoTippy` (`tone`: default `info` link-blue; `tp` on Training Points PointStatus; `current` on-chip — TASK-707). Trigger layout box is the 16px icon; 44px touch is `.hit-area-layout-neutral` (does not stretch filter labels / `GuidedSectionTitle` — TASK-725) + `WordHelpTip` (word-tied, no icon) + `public/tooltip-text.tsx` (`getAbilityHelp` / `getDefenseHelp`, `defenseScoreHelp`, `armamentProficiencyHelp`, `innateEnergyHelp` / `innatePowersHelp` — TASK-726; **power creator** `powerCreator*Help` + `guidedPowerCreator*` L1 placeholders — TASK-408). Intentional domain-copy exception: `STATE_FEAT_RESTRICTION_NOTICE` in `lib/codex/feat-restriction-notice.ts` is the one sentence for L1/L2 notices and creator/Codex/Admin filter tips (TASK-759; no duplicate in tooltip-text). See **`guide/04-floating-ui-tooltips.md`**. |
-| Floating UI (`@floating-ui/react`) | Engine inside `InfoTippy` only today; new anchored UI → shared primitive first — see same guide appendix |
+`src/lib/security/next-app-flags.ts` exports `ACCOUNT_PATH_ALIAS_REWRITE`: `/account` rewrites to `/my-account`. `next.config.ts` applies that rewrite. The same file exports `NEXT_APP_POWERED_BY_HEADER`. `next.config.ts` also imports `src/lib/security/content-security-policy.ts`. Those two security modules are not imported by a page.
 
-> Codex reads live under the **`['codex']` key prefix** (see `use-codex.ts` / `DATA_HANDLING.md`): `codexKeys.all` for the full payload, `codexKeys.collection(key)` for one collection. Do not add a codex fetch outside that prefix, and do not reach for `useCodexFull` to read a single collection.
+There is no `page.tsx` at the app root. Home is `src/app/(main)/page.tsx`, which imports `@/components/landing`.
 
-## Shared UI components (`src/components/patterns/`, import from `@/components/patterns`)
+`src/app/(main)/encounters/[id]/page.tsx` does not render a play view. After `useEncounter` returns, it calls `router.replace` with `` `/encounters/${id}/${encounter.type}` ``. Play pages that exist as files are combat, skill, and mixed (listed below). This file does not check that `encounter.type` is one of those three.
 
-| Need | Component |
-|------|-----------|
-| Expandable list row (Library/Codex/sheet/creator) | `GridListRow` facade (TASK-611: types/columns/detail/expanded/collapsed + chrome) — **fact policy (TASK-437/454/461):** dense browse keeps `ListHeader` columns when space allows (short **TP** headers OK on L3 tables); deep-dive/`DetailOptionList` omit columns → self-describing chips. **Fact catalog (TASK-806 / TASK-807 / ADR-0016):** `lib/glr/glr-fact-catalog.ts` + `glr-density.ts` + `resolve-glr-fact-layout.ts`; bind `{ entityType, mode, flags }` in `glr-surface-bindings.ts` and CI in `glr-fact-catalog.test.ts` when shipping a new GLR list. **Never-neither (TASK-814 / TASK-817 / TASK-818):** play/select `demoteFacts` skip column fill but still emit ranked chips via `glrSurfaceDetailSections` / `layout.chipFacts` (true omit is only `characterCreate` + feat `reqLevel`). Path More details power/technique catalogs bind `detail-option-power` / `detail-option-technique` (detail density: name column, description in expanded body, all valued facts as chips). Creature selected inventory reuses sheet play mappers (weapon/armor/shield/equipment TP chips when valued, no Total TP footer). Sheet Library derives Official-style display from parts. Gear/Codex equipment columns stay Category / Currency / Rarity (no Damage/DR/Weight fact chips; valued TP is a demoted chip — TASK-825). **Sheet Inventory Equipment (TASK-873 / TASK-909):** surface `character-sheet-gear` uses `layoutOverrides` (`SHEET_GEAR_PLAY_LAYOUT_OVERRIDES`) for catalog columns + Qty extra (description expanded-only); `buildEquipmentCatalogFactColumns` + `persistEquipmentCost` in `equipment-list.ts`; creature selected inventory binds `creature-inventory-equipment` (Type/Qty columns + chip-all). CI: `assertSurfaceColumnConfig` + row coverage in `glr-fact-catalog.test.ts`. **Chrome + spacing CI (TASK-631 / TASK-637 / TASK-674 / TASK-702 / TASK-710):** `lib/glr/glr-chrome-spacing-norms.ts` + `validate-glr-chrome-spacing.ts`; CI in `validate-glr-chrome-spacing.test.ts` (`npm test` + `ai-task-verifier.yml`) — register My Library tabs in `MY_LIBRARY_ENTITY_TAB_SOURCES`, Codex/Admin in `CODEX_BROWSE_SHELL_SOURCES`, USM in `USM_LIST_SHELL_SOURCES`, creator-embedded lists in `CREATOR_EMBEDDED_GLR_SOURCES`; keep shell `gap-1`, pair `rowChrome` edit/delete/leftSlot/rightSlot on **ListHeader and GridListRow** when slot content is conditional (e.g. patch sync), no `40px` grid action tracks in `GLR_GRID_COLUMN_SOURCES`. Guide: `guide/02-components-and-lists.md`. Helpers: `lib/chip/list-row-metadata.ts`, `lib/detail-option` `compact-facts` (`TP_COST_LABEL` / `TRAINING_POINTS_COST_LABEL`, `namedPropertyDescriptorChips`, combat+equipment builders). Dense GLR / ExpandableChip `costLabel` defaults to **TP** (`TP: N`); guided L1/L2 pass spelled-out Training Points. **Action chrome (TASK-622/624/630):** edit/delete all-or-nothing (never split hover); Library + OfficialEntityList + CodexBrowseListShell consumers omit leftover `40px` and use `ListHeader` `rowChrome` for edit/delete/add/rightSlot (incl. Creatures). Default list gap is shell `gap-1` — do not override with `space-y-3` on GLR lists. Suppress expanded Total TP when a TP column already exists (`columnsAlreadyShowTrainingPoints`). Parts chips: no `(0)` cost/level; `(Lv.N)` only when level is greater than 0. **Parts/Properties (TASK-583):** `MetadataDetailSection.defaultCollapsed` + `labelHelpKey` — Parts/Properties & Proficiencies start collapsed with chevron + family InfoTippy; descriptor sections stay open. **Mobile (TASK-536):** `buildMobileCollapsedGridColumns` collapses vacated `hideOnMobile` tracks below `lg` so names keep width beside X/+. Data-column templates use `--glr-desktop-grid` / `--glr-mobile-grid` — never inline `gridTemplateColumns` on that grid (inline styles override the mobile media query). Chrome stretch-grid may set its own template inline (TASK-710). **Body toggle (TASK-539 / 86e3jrjfg):** header, mobile summary, and non-interactive expanded panel all expand/collapse on a plain click (chip groups / buttons excluded). A drag that selects text in the open item does not close it. The name button still toggles. **descriptionAfter (TASK-783):** optional node inside the expanded description surface after a divider when both exist (sheet feat/trait play notes — not a second card). **Collapsed vs expanded (TASK-909):** column facts (Action, Damage, Uses, Recovery, Qty, …) stay in the ListHeader / row header / mobile summary even while expanded — never duplicated as labeled stats in the expanded body. Description is expanded-only (not a truncated header column). Interactive column values (Uses/Qty steppers) stay in their header tracks (no `truncate` on ReactNode cells). Blank / `-` / `none` values are omitted. **Row button (86e3k0ch6):** the collapsed name is the button and its hit area covers the row. Thumbnails, quantity, column controls, and action buttons are siblings, not inside that button. |
-| Descriptor chip + property tip | `DescriptorChipWithTip` — non-expanding chip with **InfoTippy inside** the chip when description exists (TASK-454/465); on-chip trigger uses `tone="current"` (TASK-707); guided cards use `GuidedFactChipRow`; GridListRow descriptors use the same tip path via `GridListChip` (TASK-461) |
-| Guided / Custom Loadout budget chrome | `patterns/chrome/loadout-budget-bar.tsx` → **`LoadoutBudgetBar`** — Currency (optional) + Training Points PointStatus with tip via `labelAccessory` (`tone="tp"` — TASK-707) (Guided phase layout / L2 footer / powers — TASK-606 / TASK-614 / **TASK-706**). Optional `align` + `leading` (Guided Powers Innate Energy + `innateEnergyHelp` — TASK-726) + `trailing`. Inline PointStatus is `text-base` (same as Skills / Ability Points). Import `@/components/patterns`. |
-| **Entity card art — click to enlarge (site-wide default)** | **`ExpandableImage`** (+ `ExpandableImageModal`); list thumbs: `ListRowThumbnail`. Also: sheet portrait (play), creature stat-block, campaign chips, account profile. Exceptions: `guide/03-entity-card-art.md` § Adoption inventory (TASK-478) |
-| **Entity card art — list thumb** (44px, D&D Beyond style) | `GridListRow.thumbnail` + `ListRowThumbnail`; `ListHeader.hasThumbnailColumn`; resolve via `resolveListRowThumbnail` (`list-row-image.ts`). Dark placeholders: `lib/placeholder-art.ts` + `usePlaceholderTheme` in `ListRowThumbnail`. Wired for all art-capable kinds: species, creature, equipment, power, technique — Library/Official/Codex/Admin lists, selection modals, character sheet library sections, advanced + creature creator selected lists, CreatureStatBlock nested lists. Enhanced items deferred (TASK-500). No thumbs on feats/skills/archetypes/parts/etc. |
-| **Portrait thumb** (campaign pickers, decorative identity) | `PortraitThumb` (`character/portrait-thumb.tsx`) — `useEffectivePortrait` + `bg-image-matte`; not expandable (nested in links/buttons). Sheet/campaign chips use `ExpandableImage` when browse-to-enlarge applies. |
-| **Entity card art — choice card hero** (guided creator) | `GuidedChoiceCard` (wraps `ExpandableImage`) |
-| **Entity card art — admin / creator** | **`RealmsImageField`** / **`RealmsImagePicker`** (`realms-image-picker.tsx`); bank APIs `POST /api/images` (+ replace/delete/usage); helpers `lib/realms-images.ts` (ADR-0003 / TASK-495–498). Legacy `CodexArtUploadField` + `/api/upload/codex-art` removed. |
-| **Realms Image Library (bank)** | `realms_images` + `realms_image_categories`; `GET/POST /api/images`, `GET/PATCH/DELETE /api/images/[id]`, `POST …/replace`, `GET …/usage` (`ADR-0003`, TASK-492). Admin UI: `/admin/images` (TASK-493). Schema: `SUPABASE_SCHEMA.md` §2.5a; SQL (was `sql/realms-image-library.sql`, deleted 2026-10-29) |
-| **Entity card art — product/schema** | REALMS §5.0.3 + `guide/03-entity-card-art.md` + `SUPABASE_SCHEMA.md` §2.5a |
-| Hub list row (Encounters/Crafting) | `HubListRow` — the title is the button; delete and other actions are siblings above that hit area (86e3k0ch6) |
-| Sortable column headers | `ListHeader` — data columns asc/desc by default; only spacer/action columns `sortable: false` (TASK-488). One `MobileSortMenu` for all three layout branches; active-sort chevron `text-primary-link-fg` (TASK-792) |
-| Selection modal (add/pick from library) | `UnifiedSelectionModal` facade ~344 LOC (**TASK-618**) + co-located `unified-selection-modal-{types,helpers,toolbar,list,footer,leave-prompt}` (default `flexLayout` + `fullScreenOnMobile`; list-first: Search + Filters toolbar; `scopeExtra` always-visible mode tabs + sheet Add equipment custom-item form (**TASK-815**); `headerExtra`/`filterContent` collapsed in `FilterSection`; Cancel/Add Selected via Modal `footer` flush under list (`pb-0`); optional one-line `description` or omit; leave-with-selection **Add selected?** / **Load selected?** prompt — TASK-574; `maxSelections` soft limit when max ≠ 1; `maxSelections={1}` replaces selection; optional `nextSelectedIds` remaps add-path (innate energy last-in swap — TASK-727); `confirmLabel` / optional `primaryActions` / `footerExtra`). Sheet add proficiency: `AddProficiencyModal` (thin USM wrapper; option levels in `footerExtra` — TASK-567). Admin species trait Add: USM in `admin-species-edit-modal.tsx` (TASK-572/619). |
-| AdminTraits choice-option picker | Inline **editor chrome** inside trait edit Modal (`admin-trait-edit-modal.tsx` — ListHeader + selectable GLR; TASK-572/619). Browse-tab search/sort uses `useModalListState` on `AdminTraitsTab.tsx`. Not an add-X USM — nesting a selection modal inside the edit Modal is wrong; keep search/sort/GLR grammar. |
-| Encounter / session participant picker | **`AddCombatantModal`** (`add-combatant-modal.tsx`) — intentional non-USM shell (TASK-571). Creature Library + Campaign Characters drill-down; qty + combatant type stay in content; primary **Add** is Modal `footer` (sticky, `size="lg"` — TASK-846). **Extend this** for combat/skill encounters (mixed reuses those views), VTT, downtime, and future session-play add-participant flows — do not fork and do not migrate onto USM. |
-| Campaign roster add-character | **`AddCharacterModal`** (`campaigns/[id]/_components/add-character-modal.tsx`) — intentional non-USM simple portrait picker (no search/filters/ListHeader). Do not migrate onto USM unless the roster needs catalog chrome. |
-| Mixed-species dual picker (sheet Edit Species + Guided Species L2 + Guided Ancestry mixed overview change) | **`MixedSpeciesModal`** (`patterns/select/mixed-species-modal.tsx`, ADR-0017) — intentional non-USM shell (TASK-605/641/720/714). Dual ordered species picks; source chrome is `SegmentedControl` typed with shared `SourceFilterValue` (species labels **Public species** / **My species** kept on purpose). Call sites: sheet `edit-species-modal`, Guided `species-step` L2 card, Guided Ancestry mixed overview **Change species**. **Do not** migrate onto USM or fork a parallel dual-select grammar. |
-| Mixed-species skill picker (sheet Edit Species) | **`MixedSpeciesSkillPicker`** (`patterns/select/mixed-species-skill-picker.tsx`, ADR-0018) — TraitSection-style selectable rows with truncated descriptions. Call site: sheet `edit-species-ancestry-step`. Guided mixed skills stay `GuidedChoiceCard` (TASK-670). Do not fork. |
-| + → ✓ selection button | `SelectionToggle` (coarse 44 square, compact on fine; GridListRow selection column is not an always-on `min-w-[44px]` `w-11` slab — TASK-851). Equipped: `EquipToggle` (coarse 44). Innate: `InnateToggle` (always-on 44 — do not retag). |
-| Source scope All / Realms / My Library | `SourceFilter` (on `SegmentedControl`); catalog merge `mergeLibraryBySource` in `lib/library/source-scope.ts` (`LibrarySourceScope`; `SourceFilterValue` is an alias). Guided catalogs pass keep-selected draft ids; creature pickers do not (TASK-705 / TASK-709 / **TASK-712**) |
-| 2–N pill toggle | `SegmentedControl` — hugs pills (`inline-flex`) unless `equalWidth` (TASK-720). Default size = SourceFilter chrome (`touch-tier-standard`: coarse Standard 44, fine compact — TASK-866); `size="compact"` for dense sheet toolbars (All/Proficient — TASK-778; mobile sheet Abilities/Skills/Archetype/Library switcher — TASK-907). Item-creator Item Type (TASK-918) and handedness (TASK-866) use this, not custom button grids. |
-| Section header with + / collapse | `SectionHeader` (default `size="md"` / `text-sm`; optional `headingLevel` 2–4, default h2; Library list subsections pass `lg` / `text-base`; size on title so collapse cannot shrink it; `collapsible` + inline chevron beside title; `+` far right; collapsible rows use modest `pb-1.5` + coarse-only 44px); `useLibrarySectionCollapse`; `LibraryCollapsibleSection`; entity list sections `collapsible` prop; cost badge: `SectionCostBadge` |
-| Path step guidance | **`PathHelpCard`** (`patterns/help/path-help-card.tsx`, ADR-0017) — Guided path steps + sheet `archetype-path-identity` |
-| Dice roll button | `RollButton` (`touch-tier-standard`, TASK-850; `data-roll-trigger` so an open RollLog does not close when starting another roll — TASK-895) |
-| Roll provider / log (sheet, encounters, campaigns, creatures) | `@/components/rolls` (`RollProvider`, `RollLog`, `useRolls` / `useRollsOptional`); die helpers `lib/rolls/die.ts` (`rollDie`, `DIE_IMAGES`) + `lib/rolls/modifier-label.ts` (`resolveRollModifierLabel` — TASK-893). RollLog registers `.floating-dock-bottom-right` (C4 / TASK-837); the panel is **unmounted when closed** (TASK-826 / C6 — `w-0` still laid out children past the viewport); open width is `min(22.5rem, 100svw − 2×gap)`. Outside pointer-down closes the panel (ignores `[data-roll-trigger]` — TASK-895). Bonus chip uses native `title` for the source name. Send uses shared `Button` (TASK-847). |
-| +/- steppers | `ValueStepper`, `DecrementButton`, `IncrementButton` share one `StepperGlyphButton` (pointer-capture + hold-repeat — TASK-792 / ADR-0002 / TASK-487); **Dense painted size + coarse `.hit-area-dense` height** (TASK-841 / ADR-0023 — not a 44×44 layout slab); a burst of clicks steps from `src/lib/stepper-value-memory.ts` so a slow commit cannot repeat the first step (86e3juy89); quantities: `QuantitySelector` (wraps ValueStepper), `QuantityBadge`; `UnifiedSelectionModal` `showQuantity` = in-row quantity-first |
-| Sheet Edit vs Temp Modifier (exclusive) | ADR-0006 (Amended TASK-782): sheet-level play / edit / temp — toolbar pencil vs `SlidersHorizontal` (mutually exclusive; do not nest Temp under Edit). **Per-section open/close:** Edit uses `EditSectionToggle` (blue / green remaining / red over-budget); Temp uses `TempModifierToggle` (blue none / gold + / danger −). Shared paint helper `sheetModeToggleClassName` (TASK-799). Header LargeStatBlocks + `Terminal: X` each have their own Temp sliders in Temp mode (not all steppers open at once). Persist `character.tempModifiers`; helpers `lib/character/temp-modifiers.ts` (`applyTempModifier`, `tempModifierValueClass`, `tempModifierTintFromDelta`, `sectionTempModifierTint`, `patchTempModifiers`, `withAbilitiesForResourceMaxima`, `hasAnyTempModifiers`). Library / Archetype keep `EditSectionToggle` in Edit only. |
-| Character schema save/load normalization | `lib/character/schema-normalize.ts` (TASK-663): canonical `defenseVals`, `mart_prof`/`pow_prof`, `archetype.type`; dual-read legacy on load; strip on save — wired in `cleanForSave`, `prepareCharacterForSave`, character API routes. Dirty-key PATCH helpers: `lib/character/dirty-patch.ts` (ADR-0013 / TASK-741; a `null` dirty value removes that key, 86e3juw04). Sheet postgres realtime: `mergeSheetRealtimePayload` (`lib/character/realtime-merge.ts`, TASK-747) overlays the remote blob via `mergeRemotePreservingDirty` (HP/EN/AP skipped); local dirty keys kept; adopted keys update the autosave baseline. |
-| Point allocation display | `PointStatus` (`inline` = creator tracker size); Guided Loadout/powers budgets: `patterns/chrome/loadout-budget-bar.tsx` → `LoadoutBudgetBar` (TASK-614 / TASK-706; `CreatorResourceBar` removed); powered/martial split: `PoweredMartialSlider` (tokenized thumb/track; sheet prof-point max is read-only — TASK-891). **Health/Energy pool:** `creator/health-energy-allocator.tsx` → `HealthEnergyAllocator` (PointStatus remaining/total; card labels Health/Energy on `md+`, HP/EN inline/narrow — TASK-729). |
-| Skill row / allocation | Creature + sheet: `SkillRow`, `SkillsAllocationPage`, `AddSkillModal`, `AddSubSkillModal`. Sheet Skills (`skills-section`): catalog-all Codex **base** skills + compact All/Proficient (`SegmentedControl` `size="compact"`) + **Sub-Skills** toggle (`hit-area-dense` label + `size-4` `.hit-area-layout-neutral` checkbox — TASK-836); merge/filter helpers `lib/character/sheet-skills-display.ts` (Codex name/description overlay so species-change rows never show raw ids — TASK-803); spend − clears value→prof (subs remove); no Add Skill / per-row X (TASK-584). Table `variant`: play view (`isEditing` false) hides `(species)` / `sourceLabel` and species-dimmed prof dots; edit/creator keep them (TASK-485). Proficiency dots stay 16px paint + `.hit-area-layout-neutral` (coarse row `py-4` for the Dense 8px gap — TASK-836). Skill **name** is `WordHelpTip` (`compact`) with the Codex skill description (TASK-803). Sheet spend/temp: `SkillRow` `editControlsPlacement="inline"` puts compact `ValueStepper` + bonus caption in the Bonus cell (no fifth column — TASK-800); creator/allocation keep `column`. Guided L1: `GuidedSkillsPanel` (base + sub rows, Ability chip or governing-Ability picker + Skill Bonus formula tip + `DefenseBonusesCard` — TASK-548 / TASK-790); Guided L2/L3 browse: `skills-step` + `GuidedLayerNav` → `AddSkillModal` (opt-in on custom chooser) → footer **Browse all Sub-Skills** → `AddSubSkillModal`; shared apply helpers `lib/game/skill-allocation-add.ts` |
-| Ability score grid | `AbilityScoreGrid` (`ability-score-grid.tsx`): display/edit tiles; `powerAbility` / `martialAbility` / `secondaryAbility` pills; `resolveDistinctSecondaryAbility`; display always shows full ability names (2-col phone / 3-col tablet / 6-col desktop — TASK-566); path pills: **Primary** / **Secondary** (guided UX for archetype vs recommended secondary); hybrids keep **Power** / **Martial** (both Archetype Abilities); full aria-label + single-line truncate; every tile reserves the same inner pill clearance while reduced grid top padding clears the outer straddle, keeping highlighted and unhighlighted display/edit tiles aligned (TASK-452, TASK-455, TASK-544, TASK-545, TASK-760); roomier edit grid; ability names use `WordHelpTip` + `getAbilityHelp` (TASK-547); `density="compact"` + `onlyAbilities` for Path More details recommended subset (TASK-578). Creator `AbilityScoreEditor` (non-sheet): same 2/3/6 tracks; compact short names + Dense steppers (TASK-828) — sheet `variant="sheet"` is unchanged. |
-| Guided path Primary/Secondary abilities | `resolvePathAbilityLabels` (`lib/game/path-ability-labels.ts`) + `buildPathAbilityChipLabels` (`lib/guided-creator/path-ability-labels.ts`); chip copy `formatPathPrimaryAbilityLabel` / `formatPathSecondaryAbilityLabel` (`lib/constants/copy/path-ability-copy.ts`) — Primary Ability chips for each Archetype Ability (two on powered-martial); Secondary only for distinct recommended; SoT for Guided path cards and More details (TASK-544/545) |
-| Guided path select + L1↔L3 | `path-selection-draft.ts` — `buildPathSelectionDraftPatch`, `buildOpenGuidedPathEntryPatch`, `buildOpenCustomPathEntryPatch`, `buildCreatorResetDraftPatch`, `buildEnterCustomArchetypeLayerPatch` / `buildEnterPathLayerPatch`, `buildCustomArchetypeDraftPatch`, `isGuidedCustomArchetypeComplete` (TASK-588/638/640/693; vitest) |
-| Custom chooser deep catalog landing | `creator-entry-mode.ts` (`prefersDeepCatalogEntry`, `canContinueGuidedAbilitiesStep`, `resolveGuidedRecommendedAbilitiesPatch`), `guided-deep-entry-landing.ts`, `use-guided-deep-entry-on-arrival.ts` — custom entry + no `archetypePathId` opens L2/browse/customize on first step arrival (except **Skills** = opt-in Browse all Skills; **Ancestry** always lands species overview via `landsOnFirstInnerScreen` → phase 0 — TASK-697; vitest on the intent predicate) |
-| Guided Species L2 + mixed Ancestry | `species-step.tsx` (L2 all species + `MixedSpeciesModal` card + **Create Species** via `GuidedLayerNav` below grid); `guided-species-resolve.ts`, `species-selection-draft.ts` (single/mixed draft patches), `guided-mixed-species-overview.tsx` (parent `GuidedChoiceCard`s + **Change species** → same `MixedSpeciesModal`; no granted-trait list — choices-ahead only), `ancestry-pick-tasks.ts` (`buildMixedAncestryPickTasks`); Ancestry Continue gate `ancestry-pick-gate.ts`; save via `build-character.ts` (TASK-641; vitest ancestry-pick-tasks + build-character + species-selection-draft). Ancestry overview granted traits: `GuidedChoiceCard` `readOnly` (TASK-711); species More details catalogs stay `GuidedTraitOptionList`. Size picker: `SegmentedControl` hugs few options (TASK-720). |
-| Guided layer nav button chrome | `guided-layer-nav.tsx` + `guided-nav-button-styles.ts` — below-content placement (one left / pair left-right); expand = outline hatch (`guidedNavExpandClassName`); collapse = outline; footer Continue = primary (TASK-640, TASK-695) |
-| Guided ancestry picks | `lib/guided-creator/ancestry-pick-tasks.ts` (`buildMixedAncestryPickTasks`, TASK-591) — Guided Ancestry chapter; sheet Edit Species uses `lib/ancestry/ancestry-selection.ts` |
-| Guided Continue one-screen advance | `nextGuidedSubStep` / `prevGuidedSubStep` / `landsOnFirstInnerScreen` (`lib/guided-creator/guided-substep-nav.ts`) — store footer nav + Ancestry/Loadout entry intent; never jumps to furthest (TASK-592; vitest sub-step index + intent predicate; UI landing human T059) |
-| Guided funnel integrity | derived rail `substep-satisfaction.ts`; skill prune + leftover remaining `skill-reconcile.ts` (`calculateGuidedSkillPointBudget` — Skills Continue and Your Hero Create); ancestry gate `ancestry-pick-gate.ts`; Loadout signed remainder + save `clampSavedCurrency` (`lib/character-save.ts`; Guided `build-character`, TASK-739; PATCH `prepareCharacterForSave` when `currency` is present, TASK-749); path `resolveArchetypeProficiencyStart`. Guided funnel rules: ClickUp TASK-592+ / git history (Aug 2026 remediation archive removed) |
-| Guided step footer | `GuidedStepFooter`: sticky Back/Continue only (layer hops use `GuidedLayerNav`); opaque `bg-surface` below `md`, frosted from `md+` (TASK-829). Chapter rail sticky chrome in `guided-creator-shell` is opaque `bg-background` below `md` (same frost from `md+`). `completionHint` stacks above actions below `sm`, centered mid-bar on `sm+` (one mount; TASK-453). Your Hero leftovers use `GuidedRevealReviewModal` from **Create character** (not a disabled button — TASK-911). |
-| Tab summary header section | `TabSummarySection`, `SummaryItem` (`labelAccessory` for InfoTippy), `SummaryRow` — solid theme fills (`bg-*-light` / `bg-surface-alt`, no gradients); sheet Inventory Currency + Armament Proficiency stack below `sm` (TASK-537); Armament tip via `armamentProficiencyHelp` (TASK-581). Currency focus without typing does not save over a newer value (`currency-field-commit.ts`, 86e3juw07) |
-| Chip roles (descriptor vs expandable) | `DescriptorChip`, `ExpandableChip` (`@/components/ui`); entity-row inline size `CHIP_ENTITY_INLINE_SIZE` / `chip-size-tokens.ts` (TASK-699); `GridListChip` + `lib/chip/expandable-chip-props.ts`; `ChipData.kind` + `descriptorChipData()` in `lib/chip/chip-data-helpers.ts`; optional `ChipData.onSelect` / `disabled` / `current` for control chips (sheet feat rank, TASK-780); metadata builders in `lib/chip/list-row-metadata.ts` (`rankedGlrFactChips` from `layout.chipFacts`, TASK-809). **Energy cost header is `N EN`, never EP** (TASK-755; Your Hero / sheet / Codex / creature chips that pass `energyCost`) |
-| Stable expand toggle (chips) | `ExpandableChip` + `ChipGroup` (`data-chip-group`); `applyFullRowExpandLayout` (`lib/chip/full-row-expand-layout.ts`) — grow into remaining row width; do not force `w-full` on wrap expand (TASK-445). Header **or** expanded body toggles; Options uses `data-expand-ignore` (TASK-539). |
-| Feat tags (normalize + taxonomy) | `lib/codex/feat-tags.ts`, `lib/codex/feat-list.ts` (`storedFeatCategoryLabel` — trimmed `codex_feats.category`; data fix `sql/codex-category-offense-to-offensive.sql`); live DB function `normalize_feat_tags()` (unification SQL (was `sql/feat-tags-unification-phase*.sql`, deleted 2026-10-29) in git history) |
-| Part/property chips | `ExpandableChip` + `expandableChipPropsFromPartData` (`lib/chip/expandable-chip-props.ts`); `PartData` in `lib/chip/part-data.ts` (re-exported from `@/components/patterns`); `partChipsFromDisplay` in `lib/chip/part-chips-from-display.ts` |
-| Part/property → PartData (library rows) | `lib/library/part-display.ts` — `characterPartsToPartData`, `itemPropertiesToPartData` |
-| Part TP math (powers/techniques) | `lib/calculators/part-training-points.ts` — `computePartTrainingPointsRaw` + `computePartTrainingPoints` (one round-up of the instance's raw sum is the GAME_RULES rounding exception), `PartTpVariant` |
-| Path loadout flatten | `lib/game/loadout-entries.ts` — `flattenLoadoutEntries` |
-| Dedupe saved parts / entity refs | `lib/game/dedupe-saved-parts.ts` — `dedupeSavedParts`, `dedupeEntityRefs` (item properties, part sync option cleanup, calc, sheet chips). Power and technique creator saves keep every identical part copy (86e3jx8wv). |
-| Empowered technique part chips (nested power + technique) | `lib/library/empowered-technique-display.ts` — `buildEmpoweredPowerDocument`, `deriveEmpoweredTechniquePartChips`, `empoweredTechniquePartsSection`; wired by Library empowered rows + `buildEmpoweredPowerSelectableItem` (TASK-626) |
-| Sheet trait assembly (no species/ancestry dupes) | `lib/character/collect-sheet-traits.ts` — `collectSheetTraits` (Feats tab). Sheet rows: `library-feat-rows` `mapTraitRows` — Ancestry / Characteristic / Flaw as expanded-only descriptor chips (TASK-779); species kind omitted. State-feat Archetype/Character stay collapsed `badges`. Play view: player `note` in `descriptionAfter` (no Customize / custom-name field); edit keeps Customize as shared `Button` `secondary`/`sm` with equal `mt-3`/`pt-3` around the rule (TASK-888); local draft until blur so the caret does not jump (TASK-805). Italic custom names use `pe-[0.35em]` so truncate does not clip the slant (TASK-783). Trait GLR ids use `traitRowId(category, traitKey)` (not list index). |
-| Ancestry selection (Guided Ancestry + sheet Edit Species) | `lib/ancestry/ancestry-selection.ts` — trait buckets, mixed size/skills, draft builders, continue gates, toggles; UI `patterns/chrome/trait-section.tsx` (picker, ADR-0017); sheet Edit Species = `edit-species-modal.tsx` + `use-edit-species-modal.ts` + `edit-species-species-step.tsx` / `edit-species-ancestry-step.tsx` (TASK-666f); mixed skills via `patterns/select/mixed-species-skill-picker.tsx` (TASK-670 / TASK-820, ADR-0018). Species-change skill rows: `migrateSkillsAfterSpeciesChange` (`lib/species-skill-migration.ts`) looks up Codex names via `findSkillByIdOrName` (TASK-803). |
-| Archetype path/forge edit helpers | `lib/game/archetype-edit.ts` — `listPlayerVisiblePaths`, `groupPathsByCategory`, `redistributeProficiency`, `buildPathSwitchResult`, forge ability gate; used by sheet Edit Archetype, Guided path-step; UI `patterns/select/ability-pick-button.tsx` (TASK-594 / ADR-0017) |
-| Path recommendation collectors + list filter (by archetype path) | `lib/game/archetype-path.ts` — `collectPathRecommendedIds(pathData, kind)` (union of level 1 + later `levels[]` + guidance groups; `remove*` excluded, `id:qty` collapsed) → `lib/game/path-recommendation-index.ts` (`buildPathRecommendationIndex`, `pathRecommendedEntityIds`, `pathNamesForEntity`, `PATH_FILTER_ALIAS` / `expandPathFilterSelection` / `addPathFilterSelection`, `pathIdsForArchetypeType`, `applyLivePathFilter`, optional multi-kind bags) → `hooks/use-path-recommendation-index.ts` / `usePathListFilter` (memoized off `['codex', 'archetypes']`; optional same-type auto-select via type-wide alias — TASK-878) → shared `ArchetypePathFilter` (Quick select aliases first; last sibling in the filter grid; flow position only — no `col-start` lock). Feats: `filterFeats(..., { pathRecommendedIds })` + `featPathChipNames` / `featFamilyIdsMatchingPath`. Skills / mixed equipment / official powers (powers+innatePowers) / techniques / armaments: same index, no second match rule (TASK-751–752 / **ADR-0014**). Creator L2/L3 + AddFeat/AddSkill/AddLibraryItemModal: same control (TASK-753; Empowered skipped). `PowerTechniqueFilters` / `ArmamentFilters` take optional `pathFilter`. Row chips use `GridListRow` `showBadgesInName`. |
-| Entity list sections (powers/techniques/weapons/armor/etc.) | `*ListSection` from `entity-library-sections` facade (TASK-611: columns/types/rows + powers-techniques / inventory / feats modules); multi-section tabs use `useLibrarySectionCollapse` + `SectionHeader` collapsible (empty closed; + Add expands). `EquipmentListSection` `layout="creature"` Qty uses `buildCreatureEquipmentColumns` (`-` when missing; **TASK-813**); creature creator selected Equipment and the stat-block both use that path. Sheet `characterSheet` layout keeps steppers (missing qty → 1). |
-| Species / trait catalogs | `DetailOptionList` + `traitToDetailOption` (species deep-dive catalogs). Selection picks: `GuidedChoiceCard`. Ancestry overview granted traits: `GuidedChoiceCard` `readOnly` (TASK-711). (`ItemCard` / `SpeciesTraitCard` deleted — `/debt` 2026-07-19.) |
-| Damage dice/type split (list cells) | `splitDamageDiceAndType` from `@/lib/utils` (single helper; sheet + entity lists + quick armaments) |
-| Item ability requirements | `deriveAbilityRequirementFromProperties` + `AbilityRequirement` (`lib/game/weapon-attack-ability.ts`) — enrichment, official library, guided equipment; attack ability: Finesse → Agility, Thrown/Reach → Strength, Heavy ranged → Strength, Range → Acuity (TASK-716 / **TASK-919** / **TASK-920**) |
-| Shared list filters | `@/components/patterns/filters` (`ChipSelect`, `ArchetypePathFilter`, `FilterSection`, `PowerTechniqueFilters`, `ArmamentFilters`, `CharacterFilter`, `FilterInput` / `FilterNativeSelect`, …) — not `@/components/codex`. `ChipSelect` takes an optional per-option `group` for `<optgroup>`, optional `chipLabel` for selected chips vs dropdown `label`, + `labelAccessory` (InfoTippy); `ArchetypePathFilter` composes it (union multi-select, no any/all toggle — ADR-0014). Filter number/text fields and native selects share `FILTER_CONTROL_CLASS` (`h-11` + `rounded-md`; TASK-725). Library + Codex feats/skills/equipment character id persistence: `lib/library/character-filter-persistence.ts`. `CharacterFilter` is a collapsible subsection (default collapsed; InfoTippy immediately after the title — TASK-781). Codex skills: known / not known / base-owned via `lib/codex/skill-list.ts` (TASK-722). Codex/Admin mixed equipment columns + chips: `lib/codex/equipment-list.ts` (TASK-723; `ArmamentFilters` `showEquipmentExtras`). Browse lists: FilterSection via ListSearchToolbar (TASK-721); `PowerTechniqueFilters` / `ArmamentFilters` are panel bodies only; optional `pathFilter` renders `ArchetypePathFilter` last (TASK-752). |
-| Library add-to-character (+ row action) | `useAddToCharacterFromLibrary` (`hooks/use-add-to-character-from-library.tsx`) + `map-library-to-character.ts`; `LibraryAddToLibraryButton` / `LibraryAddToCharacterButton` (`patterns/list/library-add-to-library-button.tsx`) + `LibraryRowActionSlot` (`patterns/list/library-row-action-slot.tsx`); wired on Library + Realms power/technique **and** weapons/armor/shields lists when character filter selected (TASK-679 / TASK-680). Icons: **BookPlus** = add to My Library; **UserPlus** = add to character (TASK-731 — not a second Plus). Save goes through `useSaveCharacter` (`updatedAt` lock + 409 re-apply, TASK-746 / ADR-0013). |
-| Creature stat block | `CreatureStatBlock` facade (TASK-611: types/helpers/section/display-data/panels) — Speed/Evasion via `calculateCreatureSpeed` / `calculateEvasion` (no size add; TASK-742); weapon Attack uses shared `getWeaponAttackBonusFromProperties` (`lib/game/weapon-attack-ability.ts`; same as sheet / quick armaments); level column/subline via `formatCreatureLevel*` (`lib/game/creature-level-display.ts`); inventory sections from kind buckets with mixed `armaments` migrate-on-read (**TASK-812**); Equipment uses `EquipmentListSection` (`layout="creature"` Qty; **TASK-813**) |
-| Creature library stat-block rows | `CreatureLibraryStatBlockRow` (single row) + `CreatureLibraryStatBlockRows` (My Library list) — both use `mapLibraryCreatureToStatBlockData`; Realms browse renders rows via `OfficialEntityList.renderRow` |
-| Filters | `ChipSelect`, `ArchetypePathFilter`, `TagFilter`, `SelectFilter`, `AbilityRequirementFilter`, `CharacterFilter`, `SourceFilter`, `FilterInput` (`patterns/filters`) |
-| List states | `EmptyState` / `LoadingState` (`@/components/ui`); `ErrorDisplay` (patterns) |
-| Search box | `SearchInput` (`@/components/ui`) |
-| List browse search row (+ Filters + trailing) | **`ListSearchToolbar`** (ADR-0011 / TASK-721) — `CodexBrowseListShell`, `UserLibraryEntityTabShell`, `OfficialEntityList`. When `filters` is set, composes FilterSection `toolbarStart` (Search + Filters one row; `trailing` after Filters). Optional `searchAriaLabel` is the search field's accessible name. **Filters** is Standard `size="md"` (TASK-847) — not a `max-md:` 44 slab. GuidedInlineCatalogList keeps its own `toolbarStart` (ADR-0012). |
-| Official library entity lists (browse + admin) | `OfficialEntityList` (+ optional `filters` slot) + thin wrappers: `OfficialPowerList` / `OfficialTechniqueList` / `OfficialItemList` (`armamentKind`: weapon \| armor \| shield; config in `lib/library/official-item-list.ts`; shared browse filter in `lib/library/official-catalog-row-filter.ts`; GLR browse chrome in `lib/glr/official-entity-browse-chrome.ts`; power/technique tab filter state in `hooks/use-official-power-technique-browse-filters.ts`; `ArmamentFilters` + character add-to-sheet TASK-680) / **`OfficialCreatureList`** (library variant = full `CreatureStatBlock` rows; admin = compact grid) / **`OfficialEnhancedList`** (TASK-575; helpers in `lib/library/official-*-list.ts`). Admin variant: All \| Public library \| Admin library filter + compact Public/Admin listing toggle (`onCatalogListingChange`, ADR-0027). Optional `searchTrailing` for admin Create beside search. Power/technique: `PowerTechniqueFilters` + `derivePartCategories` / Damage category for damaging powers (TASK-673) + `power-technique-character-context` + character/TP caps (TASK-676); **USM add-power/technique/item** reuses those panels as the FilterSection body with optional `pathFilter` (TASK-675 / TASK-753; Empowered skipped). |
-| Admin Codex + Codex browse list chrome | **`CodexBrowseListShell`** (ADR-0005) — SectionHeader (admin) + `ListSearchToolbar` (Search + Filters on one row when `filters` is set; TASK-721; `searchAriaLabel` names the Codex search field, 86e3jmdp9) + ListHeader + loading/empty/rows. Row children window-virtualize (`@tanstack/react-virtual`) past 40 rows; shorter lists and a single grouped child (Codex Archetypes) mount as before (TASK-775). Not for Official* grids or **Admin** Archetypes path rows. Admin Images bank list uses the same shell. Admin entity CRUD (save / row actions / edit-modal footer) is **not** this shell — see ADR-0025. |
-| Admin Codex entity CRUD chrome | **`useAdminCodexEntity`** + `resolveAdminCodexSaveTargetId` + `AdminCodexRowActions` + `AdminCodexEditModalFooter` + `AdminCodexDeleteModals` (TASK-842 / TASK-845; ADR-0025) + **`COPY_NAME_SUFFIX`** (`admin-codex-copy-suffix.ts`; TASK-849) + **`AdminCodexCopySourceBanner`** (`admin-codex-copy-source-banner.tsx`; TASK-852) + **`AdminCodexSourceField`** (`admin-codex-source-field.tsx`; open `sources` names from `getCodexSourceCatalog` in `lib/codex/source-catalog.ts`, shared `ChipSelect` plus the existing `Input`, many per item; species `is_starter` stays separate). Co-located under `app/(main)/admin/codex/`. Spreadsheet copy-suffix stays local. Not CodexBrowseListShell and not OfficialEntityList. First-step delete is `DeleteConfirmModal` (`deleteContext="Codex"`); still-referenced rows keep `ConfirmActionModal`. A dirty Codex record edit modal asks before Back, the X, or Escape discards the edits, and refresh uses the same beforeunload as a creator (`admin-codex-unsaved-leave.ts` + the creator leave blocker + `ConfirmActionModal`, 86e3jthxr). |
-| Confirm/delete/login modals | `ConfirmActionModal`; `DeleteConfirmModal` wraps it with delete copy (TASK-799 / TASK-841). `LoginPromptModal` (guest Save/Load; Log In / Create Account / dismiss tertiary in Modal `footer`). Character finalize/reveal pass `onContinueWithoutSigningIn` (ADR-0026 / TASK-904) so tertiary is **Continue without signing in** and writes a local sheet. Library / creator Load omit that callback (Continue Without Loading / Saving). |
-| Standalone creator page shell (auth/load/save) | `CreatorPageShell` (+ `CreatorLayout`, `CreatorSaveToolbar`, `CollapsibleSection`, **`AdvancedCalculationsPanel`** `groups` — TASK-922 / **TASK-923**) from `@/components/creator`. Admin three-way save: My library \| Public library \| Admin library (`CreatorSaveTarget`, ADR-0027). Expanded `CollapsibleSection` headers keep original title/padding (`p-4`, `font-bold` / global `h2` `text-title`) and drop the reserved empty summary line (TASK-764). Optional `toolbarHelp` / `CostStat.help` / `costHelp` for InfoTippy. |
-| Image upload + crop | `ImageUploadModal` |
-| Creator portrait (Guided reveal) | `CreatorPortraitUpload` (`patterns/chrome/creator-portrait-upload.tsx`, ADR-0017) — wrapper `GuidedPortraitUpload`; draft compress + Storage via `lib/portrait.ts`; **display matte** `bg-image-matte` only (crops preserve alpha PNG/WebP, no theme bake) |
-| Realms Image Library picker | `RealmsImagePicker` — bank browse/select; admin upload-into-bank (`resolveRealmsImagePickerCategories` in `lib/realms-images.ts`) |
-| Theme switch | `ThemeToggle` |
-| Help tooltips | `InfoTippy` (`tone` API: `info` / `tp` / `current` — TASK-707; layout-neutral hit overlay TASK-725) / `WordHelpTip` + `public/tooltip-text.tsx` — see `guide/04-floating-ui-tooltips.md` |
+---
 
-> UI primitives (Modal, Button, Chip, **DescriptorChip**, **ExpandableChip**, PageContainer (`PAGE_FILLS_VIEWPORT_CLASSNAME` — Combat, Codex, and Characters stay at least one viewport tall so the site footer starts below the fold; 86e3k9fyg), PageHeader, TabNavigation (`labelMobile` below `md`; `trailing` outside the tablist — TASK-827; C1 overflow fade + chevrons — TASK-840 / TASK-890 (2px slack + `overflow-y-hidden`; chevrons jump to list edges); `TabNavOverflowScroller` also on Guided chapter rail — TASK-848), SearchInput, **TableScroll** `relative min-w-0` — TASK-826) live in `@/components/ui`. **Button / IconButton** coarse-pointer tiers: Primary `size="lg"`/`xl` (modal/screen CTAs: Add Selected, Save, Continue, Confirm), Standard `md` (Cancel / standalone), Dense `sm`/`link` (TASK-841 / ADR-0023). **Input / Select / Textarea / SearchInput** Standard 44 (`touch-tier-standard`) under coarse pointer; fine pointer keeps compact `h-10` (TASK-830). Filter rows stay `FILTER_CONTROL_CLASS` `h-11`. Modal sizes: `full` for high-complexity editors (admin codex add/edit use `full` + `fullScreenOnMobile`; see DESIGN_SYSTEM). After close, Modal holds an invisible `z-overlay` sink for 200ms (TASK-804) so dismiss cannot click-through to Create/Save.
+## App entries
 
-## Game logic / calculators (`src/lib/`)
+Each path is a file. Group headings are only the URL prefix.
 
-| Need | File |
-|------|------|
-| Health/skill/derived calculations (current source) | `lib/game/calculations.ts` (`calculateMaxEnergyForArchetype` / `resolveEnergyArchetypeAbility`, `abilityDefenseBonusesFromAbilities` for allocation cards, `calculateCreatureSpeed` = player Speed with **no size add**; Energy and sheet Training Points use the Martial Ability on a pure Martial character, the Power Ability on a pure Power character, and the higher of the two on Powered-Martial (86e3jv2hr)) |
-| Game constants / formulas | `lib/game/constants.ts` (`CHARACTER_STARTING_CURRENCY` — Guided create; TASK-791; `DEFENSE_DISPLAY_NAMES` — GAME_RULES defense labels, TASK-835), `lib/character/appearance-age.ts` (`resolveCharacterAge` / `resolveCharacterAppearance` / `resolveCharacterBackstory` / `normalizeAgeAppearanceForSave`; live Appearance and Backstory keep spaces and line breaks via `appearanceDraftFromEdit` / `backstoryDraftFromEdit`, 86e3jvzre; legacy `parseAgeFromAppearance`; TASK-886), `lib/character/sheet-header-species-label.ts` (`resolveSheetHeaderSpeciesLabel` / `isMixedSpeciesHeaderLine` — mixed header uses `speciesNames`; TASK-884), `lib/game/formulas.ts` (`resolveArchetypeProficiencyStart` — path `*_prof_start` else type defaults; Guided save; `calculateMaxArchetypeFeats` delegates to `calculateArchetypeProgression` so Powered-Martial milestone feat picks count — TASK-742); Levels-by-Rarity: `LEVELS_BY_RARITY` + `maxRarityForCharacterLevel` / `rarityAtOrBelowMax` in `lib/game/creator-constants.ts` |
-| Skill allocation | `lib/game/skill-allocation.ts` (`canIncreaseDefense` caps **skill-point** defense at level; ability bonus unrestricted) |
-| Feat requirement checks | `lib/game/feat-requirements.ts` — `checkFeatRequirements`: hard `lvl_req` else character level ≥ 2 × feat level (feat rank 1 with no `lvl_req` stays legal at L1); used by creators, sheet, codex filter, L1 create legality (TASK-742) |
-| Leveled feat families | `lib/leveled-feats.ts` — family grouping, `formatFeatName` (Roman suffix II/III…; skips double-suffix when Codex name already matches `feat_lvl`), Codex other-rank chips (`buildFeatLevelChips`) on **`codex_feats` and `codex_creature_feats`** (after `mapCodexCreatureFeat` exposes `base_feat_id`), sheet play current-marked chips (`includeCurrent`), sheet edit rank via the same builder (`select` → `ChipData.onSelect`, TASK-780) |
-| Creator skill-save rows (Guided) | `lib/character/build-creator-skills.ts` (`buildCreatorSkillSaveRows` — preserves proficient skill_val 0 before `cleanForSave`; Guided `build-character`) |
-| Read-only sheet assemble (campaign RM view) | `character-sheet/read-only-sheet.ts` (`buildReadOnlySheetContextValue` / `buildReadOnlyLibraryHandlers`) + `useCharacterSheetDerived` + `CharacterSheetBody`. `isOwner` is the viewer check (owner and guest sheet edit; public, campaign, and Realm Master viewers do not). Play handlers are omitted via `whenSheetOwner` / `sheetLibraryAddActions` (`sheet-viewer-edits.ts`) inside `buildLibrarySectionData` — do not pass no-ops for HP, Energy, AP, XP, Use, equip, quantity, feat uses, add, notes, or Sync Proficiencies (86e3jryyp). The roll log stays; the dice builder is hidden when `canRoll` is false. Catalog args come from `sheetCatalogFromEnrichment` (`lib/character-view-enrichment.ts`) on the GET payload (TASK-773), not viewer `useUser*` / `useOfficialLibrary` / `useCodex*` |
-| Equipment vs Armaments vs Enhanced | GAME_RULES glossary. **Equipment** = `codex_equipment`. **Armaments** = Weapons / Armor / Shields (`official_items` / `user_items`). **Enhanced items** = later track (`official_enhanced_items`) — do not merge. Internal GLR `'gear'` and Loadout phase id `'gear'` = Equipment. No player-facing Gear (TASK-872). Kind labels: `formatInventoryKindLabel` in `lib/game/creature-inventory.ts`. |
-| Equipment equipped rules (single armor, create auto-equip) | `lib/game/equipment-equipped.ts` |
-| Armor Damage Reduction (canonical) | `lib/game/resolve-armor-damage-reduction.ts` → **`resolveArmorDamageReduction`** (TASK-644) — sheet equip, official list, enrichment, guided catalog, Guided create auto-equip. Creature total: **`creatureArmorDamageReduction`** — one armor, highest currency cost; currency tie keeps the earlier armor in the stored list (86e3t17av). Successive reductions in a turn: **`armorDamageReductionForHit`** / **`damageAfterArmorReduction`** (full DR, then half rounded up — 86e3pab12). Standard armor skips Psychic, Spiritual, and Sonic only (`standardArmorReducesDamageType` / `effectiveDamageReduction`); other Damage Reduction sources do not (86e3tcaf9). |
-| Sheet header DR / Critical Range vitals | `sheet-header.tsx` facade + `sheet-large-stat-block.tsx` (`LargeStatBlock`) + `sheet-header-identity` (`resolveSheetHeaderSpeciesLabel` — Level vs mixed `speciesNames` wrap groups; TASK-884) / `sheet-header-resources` (TASK-598 / **TASK-788** / **TASK-839** / **TASK-908**); C3 equal-track stat `grid` (2-col phones, 4-col from `md` and `xl`, 2×2 at `lg` so identity keeps width) + C5 three-column header from `lg` (identity `1.4fr` / auto / `minmax(15rem,1fr)`; `xl` `1.5fr` / auto / `1.1fr`; no 20rem identity cap). Cluster is `w-max` compact tiles (not `aspect-square`, not `h-full w-full` bars — TASK-885/908). Name uses `line-clamp-2` (not single-line truncate). Edit name stops at 100 characters (`character-name-limit.ts`); a longer name is left out of the save so other edits still persist. Sheet Library edit-mode hide-eyes are Dense `IconButton` `sm` (TASK-887). `ResourceInput` current Health/Energy uses Standard `touch-tier-standard` (44px min-h under coarse; `w-12` unchanged — TASK-836). play/edit show DR only when equipped armor (or a temp) changes DR; Critical Range only when armor Critical Range +1 / Increase (1 + op_1_lvl) or a crit temp applies. **Temp mode always shows both cards** so a temp can be added. Formula: `calculateCriticalRange` = Evasion + `COMBAT.criticalHitThreshold` (10) + increase (`getEquippedArmorQuickRef`; archetype `QuickArmorTable` uses the same helper) |
-| Archetype path / progression | `lib/game/archetype-path.ts` (incl. `pathHasPlayerVisibleLevel1`, `pathHiddenFromPlayerPicker`, `innatePowers`; `PathGuidanceGroup.audience` + `filterFeatGuidanceGroups` / `resolvePathGuidanceAudience` — TASK-514/ADR-0004; shared parsers `parseOptionalJsonField` / `parseIdQuantityStrings` / `serializeIdQuantityStrings` / `parseRecommendedAbilities` — TASK-476/570), `lib/game/archetype-display.ts`, `lib/game/archetype-edit.ts` (sheet + Guided path list/group + path-switch save — TASK-594), `lib/game/innate-eligibility.ts` (**TASK-879:** `isPowerInnateEligible` — Basic, ≤1 min (6 rounds), Adaptation + heal bans; uses `deriveStructuredDuration` + `resolvePartCategoryList`), `lib/game/path-validation.ts` (Appendix G innate + Level 1 skills warn-cap — TASK-515), `lib/constants/creator-layer-governance.ts` (`LAYER1_GOVERNANCE.maxPathRecommendedBaseSkills` = 3), `components/character-sheet/path-level-guidance.tsx` (`indexDisplayNamesByNormalizedIds` — TASK-732), `components/character-sheet/archetype-path-identity.tsx`, `components/character-sheet/edit-archetype-modal.tsx`, `app/(main)/codex/CodexArchetypesTab.tsx`, `app/(main)/admin/codex/AdminArchetypesTab.tsx` + `admin-archetype-path-form.ts` + `admin-archetype-path-rows.tsx` + `admin-archetype-editor.tsx` (facade ~98 LOC; TASK-609 sections: `admin-archetype-editor-{config,meta,level1,guided,progression}.tsx`) + `use-admin-archetype-workspace.ts` (facade ~242 LOC; TASK-617: `admin-archetype-workspace-{open,save,mutators,unknown-selections}.ts`) + `use-admin-archetype-selection-options.ts` (TASK-381 Phase 6a–6c; feat guidance groups character vs archetype; L1 skills ≤3 base + warn; armaments weapons/shields vs armor UI — TASK-514–516; no path-recommended species — TASK-517; recommended-ability steppers + loadout — TASK-404; Advanced Path JSON escape hatch for rare fields; selected feats expandable GridListRows + full-width qty rows — TASK-534), creator `skills-step` / `feats-step` apply actions; species L1 = `is_starter` only |
-| Admin codex spreadsheet | `CodexSpreadsheetView.tsx` (facade ~115 LOC; **TASK-617**) + `use-codex-spreadsheet.ts` + `codex-spreadsheet-{config,helpers,toolbar,table,table-row,virtualization}.tsx` — raw tab spreadsheet edit/find-replace/save; table body window-virtualizes past 40 rows (`@tanstack/react-virtual`, **86e3meznt**). Toolbar hits use pointer tiers (`touch-tier-standard` / Dense `Button size="sm"`) not viewport `md:min-h-0` slabs (TASK-847). Collection allowlist / id retirement / delete probes: `lib/codex/{collections,id-allocation,references}.ts` |
-| Admin codex species editor | `AdminSpeciesTab.tsx` (facade ~321 LOC; **TASK-619** / **TASK-927**) + `admin-species-form.ts` + `admin-species-edit-modal.tsx` — CodexBrowseListShell list + full modal editor; Public/Admin library listing (`catalog_listing`, ADR-0027) |
-| Admin codex properties editor | `AdminPropertiesTab.tsx` (facade ~357 LOC; **TASK-619**) + `admin-property-form.ts` + `admin-property-edit-modal.tsx` |
-| Admin codex traits editor | `AdminTraitsTab.tsx` (facade ~296 LOC; **TASK-619**) + `admin-trait-form.ts` + `admin-trait-edit-modal.tsx` (+ nested create-trait modal) |
-| Admin codex feats editor | `AdminFeatsTab.tsx` (facade ~368 LOC; TASK-609) + `admin-feat-form.ts` + `admin-feat-edit-modal.tsx` (facade ~265 LOC; **TASK-619**) + `admin-feat-edit-modal-fields.tsx` |
-| Admin codex parts editor | `AdminPartsTab.tsx` (facade ~390 LOC; TASK-609) + `admin-part-form.ts` + `admin-part-edit-modal.tsx` (facade ~305 LOC; **TASK-619**) + `admin-part-edit-modal-options.tsx` |
-| Admin codex skills editor | `AdminSkillsTab.tsx` + `admin-skill-edit-modal.tsx` (TASK-849) — CodexBrowseListShell list + full modal editor |
-| Admin codex equipment editor | `AdminEquipmentTab.tsx` + `admin-equipment-edit-modal.tsx` (TASK-849) |
-| Admin codex creature feats editor | `AdminCreatureFeatsTab.tsx` + `admin-creature-feat-form.ts` + `admin-creature-feat-edit-modal.tsx` (TASK-849). Add level, base feat, category, and the level selector share `admin-codex-feat-level-fields.tsx` and `use-admin-leveled-feat-session.ts` with the character feat modal. |
-| Admin core rules editor | `admin/core-rules/page.tsx` (facade ~142 LOC; TASK-609) + `core-rules-category-editor.tsx` facade (**TASK-666g**) + `core-rules-{tabs,field-editors,progression-preview,damage-types,progression,combat,archetypes,ability-skills,conditions,sizes,rarities,recovery-experience,armament,crafting-rules}-editor(s).tsx`. A dirty edit asks before Back, Escape, or another in-app link discards it, and refresh uses the same beforeunload as a creator (`core-rules-unsaved-leave.ts` + the creator leave blocker + `ConfirmActionModal`, 86e3jtrak). This page has no close button. Switching tabs uses that same dialog. The Conditions tab lists the stored CONDITIONS row when it is a flat name-and-description map (`core-rules-conditions.ts`, 86e3juy5z). |
-| Crafting / encounter helpers | `lib/game/crafting-utils.ts`, `lib/game/encounter-utils.ts` |
-| Creature level display (user-facing fractions) | `lib/game/creature-level-display.ts` — `formatCreatureLevel`, `formatCreatureLevelLabel`, `formatCreatureLevelShort`, `parseCreatureLevelSortValue` (list sort), `CREATURE_LEVEL_SELECT_OPTIONS`; export `@/lib/game` |
-| Creature inventory document (kind buckets) | `lib/game/creature-inventory.ts` — `resolveCreatureInventoryBuckets` migrates mixed `armaments[]` on read; save/load uses `weapons` / `armor` / `shields` / `equipment` (**TASK-812**); export `@/lib/game` |
-| Power / technique / item / empowered calc | `lib/calculators/*-calc.ts`, `mechanic-builder.ts` (`calculateDamageOptionLevel`; 1 round adds no duration-modifier Energy — 86e3jrhtq; day labels are 1 Day, 7 Days, and 14 Days — 86e3jrhvb), `empowered-overlap-parts.ts` (cheaper-EN pick — TASK-683). **Advanced Calculations display (TASK-922 / TASK-923):** `analyzePowerEnergy` + `power-energy-breakdown.ts`; `analyzeTechniqueEnergy` + `technique-energy-breakdown.ts`; `buildEmpoweredAdvancedCalculationGroups`; `analyzeItemMarketCurrency` + `item-cost-breakdown.ts` (sectioned IP/C; Rounded Down). Display-only — does not change cost totals. Empowered technique EN uses `dedupeSavedParts` on percentage parts (TASK-742). Item rarity from IP; display Currency is rarity-multiplied `resolveItemMarketPricing().currencyCost` (never property C sum `totalCurrency` — TASK-870). Item damage: `deriveItemDisplay` delegates to `formatDamageDisplay` (TASK-715). Item/weapon range display: `resolveWeaponRangeDisplay` / `deriveWeaponRangeConfig` (TASK-701 / **TASK-716** / **TASK-919** — Melee / Reach 2–6 / Thrown 3+2 / Ranged 8…64; Thrown+Reach are mechanic IDs). Ability utilized: Finesse/Heavy mechanic IDs (**TASK-920**). `formatRange` stays file-local in `item-calc.ts` (tests + `resolveWeaponRangeDisplay`) |
-| Data enrichment (minimal stored → full display) | `lib/data-enrichment.ts` facade → `lib/data-enrichment/*` (TASK-611: enrich powers/techniques/items/character + clean-for-save). Read-only other-user / RM catalog rows: `lib/character-view-enrichment.ts` (client collector + `sheetCatalogFromEnrichment`) + `lib/character-view-enrichment-server.ts` (referenced fetch; same P0-1 gate as `getOwnerLibraryForView`). Codex row map: `lib/codex/row-map.ts` (shared with GET `/api/codex`; TASK-777) |
-| Character sheet Library tab visibility defaults | `lib/character-library-tab-visibility.ts` (`defaultLibraryTabVisibilityForArchetype` → persisted `libraryTabVisibility`; power/martial-only create hides opposite tab) |
-| Notes tab section order / hide | `lib/character/notes-tab-sections.ts` (`notesSectionOrder`, `notesSectionVisibility`, named note `hidden`; edit-mode chrome in `notes-tab.tsx` / `notes-tab-edit-controls.tsx`) |
-| Library columnar mapping & sync | **`lib/library-columnar-keys.ts`** (shared columnar type/scalar metadata), `lib/library-columnar.ts` (`columnarViewSelect` for official/user view fetches; official `catalogListing` is a column, never `user_*` payload — ADR-0027), **`lib/library-persisted-contract.ts`** (write allowlist + shape validation aligned with `types/library.ts`), **`lib/library-mutation-validation.ts`**, **`lib/library-image-write.ts`** (bank `image_id` write policy), **`lib/crafting/crafting-session-persist.ts`** (crafting JSON persistence DTO), `lib/library-sync.ts`, **`lib/library-selectable-builders.ts`** (shared add+load SelectableItem pipeline; `libraryItemToPowerDocument` / `libraryItemToTechniqueDocument` + `buildPowerTechniqueBudgetDisplay` / `buildPowerTechniqueFilterableRow` for guided + Official list derive parity — TASK-691 / TASK-675 / **TASK-708**; vitest covers DEV-V-016-T001/T002/T003 column contracts). Armament Load/USM is per-kind (`weapon` / `armor` / `shield`); mixed `item` Type+Stat chrome is gone (**TASK-810**). Creature sync migrates mixed `armaments[]` into kind buckets; fingerprint field stays `armaments` (**TASK-812**) |
-| Official catalog listing (Public vs Admin library) | `lib/library/catalog-listing.ts` — `listed`/`unlisted`, `CreatorSaveTarget`, SegmentedControl option lists (`CATALOG_LISTING_SCOPE_OPTIONS`, `catalogListingClassOptions`, `CREATOR_SAVE_TARGET_OPTIONS`), `officialLibraryQueryPath` / `includeUnlisted=1` (ADR-0027 / TASK-927). List/count APIs default listed-only; enrichment-by-id stays unfiltered |
-| Load from library (creators) | `LoadFromLibraryModal` + `useLoadModalLibrary` (`itemKind` for armament Load; admin Load passes `includeUnlisted`); species/creature rows: `@/lib/library/creator-load-selectables` |
-| Tooltips (defaults + interpolation) | `lib/tooltips/` — **`lib/tooltips/README.md`** (PR #14 onboarding; legacy DB key map in that README) |
-| Roles / quotas / limits | `lib/role-policy.ts`, `lib/role-limits.ts`, `lib/role-quota-messages.ts`, `lib/admin.ts` |
-| API client / validation / rate limit | `lib/api-client.ts` (`apiFetch`, `apiUpload`, `ApiError` / `isConflictError`, `getErrorMessage`, `logClientError`), `lib/api-validation.ts`, `lib/validation/schemas.ts` (auth emails trim+lowercase), `lib/rate-limit.ts`, **`lib/server/resource-access-unavailable.ts`** + **`lib/server/assert-resource-http-access.ts`** (character/campaign detail layout preflight — **fail-closed**: 404 → `notFound`, 401 → `/login?returnTo=…`, network/5xx/429 → `ResourceAccessUnavailableError`, never render the page on a failed preflight) (Upstash Redis / Vercel KV when env set — TASK-645; **prod Redis live 2026-08-13** via `KV_REST_API_*` on Vercel, TASK-669) — client error convention: `ARCHITECTURE.md` § Client error handling |
-| Character save legality (server, B5) | `lib/game/character-legality.ts` — `findCharacterLegalityViolations` (required `CharacterLegalityRulesStatus`), `evaluateCharacterLegalityForSave` on `POST /api/characters` and `PATCH /api/characters/[id]`. **All levels:** warn and save — structured `legalityWarnings` on 200 (no legality 400), including feat-count caps (`archetype_feats_over_max`, `character_feats_over_max`) and HP+EN pool over-allocation (`health_energy_over_pool`). B5 = totals vs level budgets; B6 = level-up spend history. Cached feat catalog: `lib/codex/feat-requirement-catalog-server.ts`. PATCH skips feat catalog fetch unless dirty keys match `FEAT_CATALOG_PATCH_TRIGGER_KEYS` (exposes `feat_requirements_skipped`). `legalityUncomputable` codes only. Idempotent create replay (`clientRequestId`) re-reads stored `characters.data` for legality — not the retry POST body (`evaluateLegalityForReplayedCharacter` in `src/app/api/characters/route.ts`). Players do not see legality warnings in UI. Gate: `scripts/check-character-legality-all-levels.mjs` + `scripts/lib/character-legality-all-levels-gate.mjs` (route discovery for `characters.data` writes). |
-| `core_rules` on the server | `lib/core-rules-server.ts` → `fetchCoreRules(supabase)`; one authority, shared by `/api/codex` and character save legality (TASK-738 / B5). Client equivalent: `useGameRules` |
-| Auth error copy (login/register/reset/update-email/update-password/delete-account) | `lib/auth-errors.ts` (`getAuthErrorMessage`) — do not map every message containing “email” to invalid address; my-account uses `update-email` / `update-password` / `delete-account` |
-| Supabase clients (server/client/middleware) | `lib/supabase/*` — generated `Database` in `src/types/database.types.ts` (`npm run db:types`; ADR-0020). Cookie-less `createPublicClient` is parameterized (`public-client.ts`; ADR-0021; do not import from cookie `server.ts`). Browser/cookie/service-role factories are unparameterized. JSONB writes: `asDbJson` / `asDbInsert` / `asDbUpdate`; variable tables: `fromPublicTable` (`lib/supabase/database.ts`). Domain/API shapes stay `Library*` / `Codex*` / `Campaign`. Keep `asLibraryCountsClient` (TS2589). Helper `.from()` params use `TypedSupabaseClient` (TASK-822). **Public catalog GET CDN:** listed-only `GET /api/official/[type]` uses `createPublicClient` + `PUBLIC_CDN_CACHE_CONTROL` (`public, max-age=0, s-maxage=300, stale-while-revalidate=3600`; `lib/api/public-cdn-cache.ts`; 86e3t5bpt). Codex: `DATA_HANDLING.md`. `includeUnlisted=1`, admin unlisted payloads, `?debug=1`, and empty/error-shaped bodies stay `private, no-store` or `private, max-age=0` so the CDN cannot serve stale or privileged data. |
-| Rulebook chapter metadata | `lib/rules/rulebook.ts` (`RULEBOOK_CHAPTERS` from `src/content/rules/chapters.json`; nested `parentSlug` + `getRulebookNavTree` + `getRulebookChapterHref` — TASK-905; Welcome is `/rules`, not `/rules/welcome-to-realms`). Chrome: `components/rules/rulebook-nav.tsx` + `rulebook-shell.tsx` + `rulebook-article.tsx` + `rulebook-search.tsx`. Search: `lib/rules/rulebook-search.ts`. MDX map: `src/content/rules/index.ts`. 1-column MDX tables render as callouts (`src/mdx-components.tsx`); data `<table>` uses `TableScroll` (TASK-826 /cleanup). Character creation: a state's default duration is 1 minute (6 rounds) (86e3jrj8h). |
-| Codex browse (public URL) | `app/(main)/codex/page.tsx` — client browse list at `/codex` (no per-entry detail routes). Data via `useCodex*` → `GET /api/codex?collection=`. |
-| Generic utils (cn, string, number, object, motion, duration display) | `lib/utils/*` — indexed-access narrow: `defined()` / `isDefined()` (`defined.ts`; TASK-797 / ADR-0022); optional-prop widen: `AllowUndefinedOptionals<T>` (`exact-optional.ts`; TASK-824 / ADR-0024, flag in main `tsconfig.json`); JSON omit: `removeUndefined()` (`object.ts`); list column labels: `formatColumnKeyLabel()` in `string.ts`; item damage: `formatDamageDisplay()` (string / object / array — TASK-715); motion timing: `MOTION_DURATION_SLOW_MS` in `motion.ts`; duration layers in `duration.ts`: structured `formatDurationFromTypeAndValue` / `formatDurationWithModifiers`, any-shape `formatDurationDisplay`, compact `formatDurationCompact` (TASK-477); id lookup: `normalizeId` / `rowMatchesNormalizedId` / `findByNormalizedId` / `indexByNormalizedIds` / `indexDisplayNamesByNormalizedIds` / `resolveNormalizedRefLabel` in `normalize-id.ts` (id + `docId`; path `id:qty` names — TASK-732) |
-| Stable empty fallbacks for hook deps | `lib/empty.ts` (`EMPTY_STRING_ARRAY`, `EMPTY_STRING_RECORD`, `EMPTY_GUIDANCE_GROUPS`) — never mutate |
+### Auth
 
-## Services (`src/services/`, deep import e.g. `@/services/character-service`)
+- `src/app/(auth)/layout.tsx`
+- `src/app/(auth)/login/page.tsx`
+- `src/app/(auth)/register/page.tsx`
+- `src/app/(auth)/forgot-password/page.tsx`
+- `src/app/(auth)/reset-password/page.tsx`
+- `src/app/auth/callback/route.ts`
+- `src/app/auth/confirm/route.ts`
 
-| Need | Service |
-|------|---------|
-| Character persistence | Client HTTP contract: `character-service`; server relational DB boundary: `lib/character-persistence-server.ts` (`getRelationalCharacterDocument`, atomic campaign-authorized read, transactional create/patch and campaign roster+visibility mutation RPCs, service-role provisioning). Runtime code has no dependency on the removed legacy character document column. |
-| Library entity types (official + user) | `src/types/library.ts` (`LibraryPower`, `LibraryTechnique`, `LibraryItem`, …); hooks re-export |
-| Official / user enhanced items | `src/types/crafting.ts` (`OfficialEnhancedItem`, `OfficialEnhancedItemPayload`, `CreateOfficialEnhancedItemInput`); `useEnhancedItems` |
-| Library fetch/save (official + user) | `library-service` (use `fetchOfficialLibrary`, not removed `fetch*Public*` aliases). Official GET is listed-only unless `{ includeUnlisted: true }` (admin editor / creator Load) |
+Login, register, and forgot-password import `@/app/(auth)/auth-actions`. Register also imports `@/app/(auth)/actions`. Those are two server-action modules. See [Same filename](#same-filename-different-module).
 
-## Stores (`src/stores/`)
+### Home, account, legal, rules, resources
 
-Zustand stores live in `src/stores/`. Check there before adding client-side global state (auth state is via `useAuthStore`).
+- `src/app/(main)/layout.tsx`
+- `src/app/(main)/page.tsx`
+- `src/app/(main)/loading.tsx`
+- `src/app/(main)/error.tsx`
+- `src/app/(main)/my-account/layout.tsx`
+- `src/app/(main)/my-account/page.tsx`
+- `src/app/(main)/about/layout.tsx`
+- `src/app/(main)/about/page.tsx`
+- `src/app/(main)/privacy/page.tsx`
+- `src/app/(main)/terms/page.tsx`
+- `src/app/(main)/resources/layout.tsx`
+- `src/app/(main)/resources/page.tsx`
+- `src/app/(main)/rules/layout.tsx`
+- `src/app/(main)/rules/page.tsx`
+- `src/app/(main)/rules/[slug]/page.tsx`
+
+Privacy and terms import `@/components/legal/legal-document-body` and `@/lib/constants/site-copy`. Rules pages import `@/components/rules/rulebook-shell`, `@/components/rules/rulebook-article`, `@/components/rules/rulebook-pager`, `@/lib/rules/rulebook`, and `@/content/rules`.
+
+### Characters
+
+- `src/app/(main)/characters/layout.tsx`
+- `src/app/(main)/characters/page.tsx` — imports `@/components/character` (the card barrel, not the sheet barrel).
+- `src/app/(main)/characters/new/page.tsx`
+- `src/app/(main)/characters/new/guided/page.tsx` — imports `@/components/guided-creator` and `@/stores/guided-creator-store`.
+- `src/app/(detail)/characters/[id]/layout.tsx`
+- `src/app/(detail)/characters/[id]/page.tsx` — imports `./character-sheet-route`.
+- `src/app/(detail)/characters/[id]/character-sheet-route.tsx` — imports `@/components/character-sheet` and `./use-character-sheet-page`.
+- `src/app/(detail)/characters/[id]/use-character-sheet-page.ts` — imports `./use-character-sheet-page-data` and `./use-character-sheet-page-ui`.
+- `src/app/(detail)/characters/[id]/use-character-sheet-page-data.ts`
+- `src/app/(detail)/characters/[id]/use-character-sheet-page-ui.ts`
+
+The sheet route also imports `@/components/onboarding` and `@/components/rolls`.
+
+### Campaigns and tabletop
+
+- `src/app/(main)/campaigns/layout.tsx`
+- `src/app/(main)/campaigns/page.tsx`
+- `src/app/(detail)/campaigns/[id]/layout.tsx`
+- `src/app/(detail)/campaigns/[id]/page.tsx` — imports `./campaign-detail-route`.
+- `src/app/(detail)/campaigns/[id]/campaign-detail-route.tsx` — imports `./_components/use-campaign-detail-page`.
+- `src/app/(detail)/campaigns/[id]/_components/use-campaign-detail-page.ts`
+- `src/app/(detail)/campaigns/[id]/view/[userId]/[characterId]/page.tsx` — imports `@/components/character-sheet` and `@/components/character-sheet/read-only-sheet`.
+- `src/app/(main)/campaigns/[id]/tabletop/page.tsx` — imports `@/components/tabletop/tabletop-canvas` and `@/components/tabletop/add-monster-token-modal`.
+
+### Library, codex, creators, crafting, encounters
+
+- `src/app/(main)/library/layout.tsx`
+- `src/app/(main)/library/page.tsx` — imports `./LibraryPowersTab`, `./LibraryTechniquesTab`, `./LibraryItemsTab`, `./LibraryCreaturesTab`, `./LibraryEnhancedTab`, `./LibraryPublicContent`, `./library-guest-notice`.
+- `src/app/(main)/library/LibraryPowersTab.tsx`
+- `src/app/(main)/library/LibraryTechniquesTab.tsx`
+- `src/app/(main)/library/LibraryItemsTab.tsx`
+- `src/app/(main)/library/LibraryCreaturesTab.tsx`
+- `src/app/(main)/library/LibraryEnhancedTab.tsx`
+- `src/app/(main)/library/LibraryPublicContent.tsx`
+- `src/app/(main)/library/library-guest-notice.tsx`
+- `src/app/(main)/codex/layout.tsx`
+- `src/app/(main)/codex/page.tsx` — imports `./CodexFeatsTab`, `./CodexSkillsTab`, `./CodexSpeciesTab`, `./CodexEquipmentTab`, `./CodexPropertiesTab`, `./CodexPartsTab`, `./CodexTraitsTab`, `./CodexCreatureFeatsTab`, `./CodexArchetypesTab`.
+- `src/app/(main)/codex/CodexFeatsTab.tsx`
+- `src/app/(main)/codex/CodexSkillsTab.tsx`
+- `src/app/(main)/codex/CodexSpeciesTab.tsx`
+- `src/app/(main)/codex/CodexEquipmentTab.tsx`
+- `src/app/(main)/codex/CodexPropertiesTab.tsx`
+- `src/app/(main)/codex/CodexPartsTab.tsx`
+- `src/app/(main)/codex/CodexTraitsTab.tsx`
+- `src/app/(main)/codex/CodexCreatureFeatsTab.tsx`
+- `src/app/(main)/codex/CodexArchetypesTab.tsx`
+- `src/app/(main)/codex/CodexMyCodexEmpty.tsx` — imported by the feats, skills, parts, properties, traits, creature-feats, and archetypes tabs above. The species and equipment tabs do not import it.
+- `src/app/(main)/power-creator/layout.tsx`
+- `src/app/(main)/power-creator/page.tsx`
+- `src/app/(main)/technique-creator/layout.tsx`
+- `src/app/(main)/technique-creator/page.tsx`
+- `src/app/(main)/empowered-technique-creator/layout.tsx`
+- `src/app/(main)/empowered-technique-creator/page.tsx`
+- `src/app/(main)/item-creator/layout.tsx`
+- `src/app/(main)/item-creator/page.tsx`
+- `src/app/(main)/species-creator/layout.tsx`
+- `src/app/(main)/species-creator/page.tsx`
+- `src/app/(main)/creature-creator/layout.tsx`
+- `src/app/(main)/creature-creator/page.tsx`
+- `src/app/(main)/crafting/layout.tsx`
+- `src/app/(main)/crafting/page.tsx`
+- `src/app/(main)/crafting/[id]/page.tsx`
+- `src/app/(main)/encounters/layout.tsx`
+- `src/app/(main)/encounters/page.tsx`
+- `src/app/(main)/encounters/[id]/page.tsx`
+- `src/app/(main)/encounters/[id]/combat/page.tsx`
+- `src/app/(main)/encounters/[id]/skill/page.tsx`
+- `src/app/(main)/encounters/[id]/mixed/page.tsx`
+
+The power, technique, empowered-technique, item, species, and creature creator pages, and `src/app/(main)/crafting/[id]/page.tsx`, import `@/components/creator`. The crafting hub page does not. The guided character page imports `@/components/guided-creator`, not the creator barrel. Those barrels export different components (`CreatorPageShell` vs `GuidedCreatorShell`).
+
+### Admin
+
+- `src/app/(main)/admin/layout.tsx`
+- `src/app/(main)/admin/page.tsx`
+- `src/app/(main)/admin/codex/page.tsx` — imports `./AdminFeatsTab`, `./AdminTraitsTab`, `./AdminSpeciesTab`, `./AdminSkillsTab`, `./AdminPartsTab`, `./AdminPropertiesTab`, `./AdminEquipmentTab`, `./AdminArchetypesTab`, `./AdminCreatureFeatsTab`, `./CodexSpreadsheetView`.
+- `src/app/(main)/admin/codex/AdminFeatsTab.tsx`
+- `src/app/(main)/admin/codex/AdminTraitsTab.tsx`
+- `src/app/(main)/admin/codex/AdminSpeciesTab.tsx`
+- `src/app/(main)/admin/codex/AdminSkillsTab.tsx`
+- `src/app/(main)/admin/codex/AdminPartsTab.tsx`
+- `src/app/(main)/admin/codex/AdminPropertiesTab.tsx`
+- `src/app/(main)/admin/codex/AdminEquipmentTab.tsx`
+- `src/app/(main)/admin/codex/AdminArchetypesTab.tsx`
+- `src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx`
+- `src/app/(main)/admin/codex/CodexSpreadsheetView.tsx`
+- `src/app/(main)/admin/core-rules/page.tsx`
+- `src/app/(main)/admin/images/page.tsx`
+- `src/app/(main)/admin/public-library/page.tsx` — imports `./AdminPublicPowersTab`, `./AdminPublicTechniquesTab`, `./AdminPublicItemsTab`, `./AdminPublicCreaturesTab`, `./AdminPublicSpeciesTab`, `./AdminPublicEnhancedItemsTab`.
+- `src/app/(main)/admin/public-library/AdminPublicPowersTab.tsx`
+- `src/app/(main)/admin/public-library/AdminPublicTechniquesTab.tsx`
+- `src/app/(main)/admin/public-library/AdminPublicItemsTab.tsx`
+- `src/app/(main)/admin/public-library/AdminPublicCreaturesTab.tsx`
+- `src/app/(main)/admin/public-library/AdminPublicSpeciesTab.tsx`
+- `src/app/(main)/admin/public-library/AdminPublicEnhancedItemsTab.tsx`
+- `src/app/(main)/admin/roles/page.tsx`
+- `src/app/(main)/admin/sources/page.tsx`
+- `src/app/(main)/admin/users/page.tsx`
+- `src/app/(main)/admin/changelogs/page.tsx`
+
+Admin codex also has edit modals and archetype editor sections next to the tabs. They were not opened one by one on this pass. Start from the tab file the page imports.
+
+### Dev and root shell
+
+- `src/app/dev/styleguide/layout.tsx`
+- `src/app/dev/styleguide/page.tsx`
+- `src/app/layout.tsx`
+- `src/app/error.tsx`
+- `src/app/global-error.tsx`
+- `src/app/not-found.tsx`
+- `src/app/(detail)/error.tsx`
+- `src/app/opengraph-image.tsx`
+- `src/app/robots.ts`
+- `src/app/sitemap.ts`
+- `src/proxy.ts` — exports `proxy`. It calls `redirectOAuthCodeToCallback` on `/`, `rejectCrossOriginApiMutation` on `/api/`, then `updateSession`.
+- `src/instrumentation.ts`
+- `src/instrumentation-client.ts`
+
+---
+
+## HTTP handlers
+
+Auth callbacks are also listed with the auth pages.
+
+- `src/app/api/admin/changelogs/route.ts`
+- `src/app/api/admin/check/route.ts`
+- `src/app/api/admin/role-policies/route.ts`
+- `src/app/api/admin/users/route.ts`
+- `src/app/api/admin/users/update-role/route.ts`
+- `src/app/api/campaigns/route.ts`
+- `src/app/api/campaigns/[id]/route.ts`
+- `src/app/api/campaigns/[id]/rolls/route.ts`
+- `src/app/api/campaigns/[id]/characters/[userId]/[characterId]/route.ts`
+- `src/app/api/campaigns/invite/[code]/route.ts`
+- `src/app/api/characters/route.ts`
+- `src/app/api/characters/[id]/route.ts`
+- `src/app/api/codex/route.ts`
+- `src/app/api/crafting/route.ts`
+- `src/app/api/crafting/[id]/route.ts`
+- `src/app/api/encounters/route.ts`
+- `src/app/api/encounters/[id]/route.ts`
+- `src/app/api/encounters/[id]/tabletop/route.ts`
+- `src/app/api/images/route.ts`
+- `src/app/api/images/[id]/route.ts`
+- `src/app/api/images/[id]/replace/route.ts`
+- `src/app/api/images/[id]/usage/route.ts`
+- `src/app/api/official/[type]/route.ts`
+- `src/app/api/official/counts/route.ts`
+- `src/app/api/official/enhanced-items/route.ts`
+- `src/app/api/tabletop/actions/[actionId]/route.ts`
+- `src/app/api/tabletop/campaigns/[campaignId]/active-scene/route.ts`
+- `src/app/api/tabletop/scenes/[sceneId]/route.ts`
+- `src/app/api/tabletop/scenes/[sceneId]/actions/route.ts`
+- `src/app/api/tabletop/scenes/[sceneId]/tokens/route.ts`
+- `src/app/api/upload/portrait/route.ts`
+- `src/app/api/upload/profile-picture/route.ts`
+- `src/app/api/upload/vtt-map/route.ts`
+- `src/app/api/user/enhanced-items/route.ts`
+- `src/app/api/user/enhanced-items/[id]/route.ts`
+- `src/app/api/user/library/counts/route.ts`
+- `src/app/api/user/library/[type]/route.ts`
+- `src/app/api/user/library/[type]/[id]/route.ts`
+- `src/app/auth/callback/route.ts`
+- `src/app/auth/confirm/route.ts`
+
+---
+
+## Barrels
+
+`scripts/generate-feature-index-barrels.js` reads only these four:
+
+- `src/components/patterns/index.ts`
+- `src/components/ui/index.ts`
+- `src/hooks/index.ts`
+- `src/services/index.ts`
+
+Other barrels (the generator does not list their exports):
+
+- `src/components/auth/index.ts`
+- `src/components/character/index.ts` — exports `CharacterCard` and `AddCharacterCard`.
+- `src/components/character-sheet/index.ts` — exports the sheet shell (`SheetHeader`, `CharacterSheetBody`, `CharacterSheetProvider`, and the modals named in that file). It does not re-export the tab files inside the folder.
+- `src/components/codex/index.ts`
+- `src/components/creator/index.ts`
+- `src/components/guided-creator/index.ts` — exports `GuidedCreatorShell` only.
+- `src/components/guided-creator/steps/index.ts`
+- `src/components/landing/index.ts`
+- `src/components/layout/index.ts`
+- `src/components/onboarding/index.ts`
+- `src/components/patterns/filters/index.ts`
+- `src/components/patterns/guided-choice/index.ts`
+- `src/components/patterns/stat-tiles/index.ts`
+- `src/components/providers/index.ts`
+- `src/components/rolls/index.ts`
+- `src/content/rules/index.ts`
+- `src/lib/calculators/index.ts`
+- `src/lib/constants/copy/index.ts`
+- `src/lib/detail-option/index.ts`
+- `src/lib/game/index.ts` — `export *` from `constants`, `formulas`, `calculations`, `creature-level-display`, `creature-inventory`, and `unarmed-prowess` only.
+- `src/lib/glr/index.ts`
+- `src/lib/observability/index.ts`
+- `src/lib/utils/index.ts`
+- `src/lib/validation/index.ts`
+- `src/stores/index.ts` — exports `useAuthStore` from `./auth-store` only.
+- `src/types/index.ts`
+
+`src/services/index.ts` re-exports `./character-service`, `./library-service`, and `./tabletop-service`. No TypeScript file imports `@/services` or this barrel. The generator reads it as text. The service modules are imported by their own paths.
+
+`src/hooks/use-auth.ts` imports `useAuthStore` from `src/stores/auth-store.ts` and re-exports it. `src/hooks/index.ts` re-exports that name again. One store, two import paths (`@/hooks` and `@/stores`).
+
+### Named exports left off a barrel that does import the file
+
+`src/hooks/index.ts` imports `src/hooks/use-characters.ts` but the export list is `useCharacters`, `useCharacter`, `useDeleteCharacter`, `useDuplicateCharacter`, `characterViewerId`, `patchCharacterDetailQuery`, `invalidateCharacterLists`. The same file also exports `useSaveCharacter`, `nextCharacterDetailQueryData`, and `mergeCharacterDetailQueryData`.
+
+`src/hooks/index.ts` imports types from `src/hooks/use-add-library-item-data.ts` and does not export `useAddLibraryItemData`. That file re-exports the function from `src/hooks/add-library-item/use-add-library-item-data.ts`.
+
+`src/hooks/index.ts` exports `UseModalListStateOptions` from `src/hooks/use-modal-list-state.ts` and does not export `useModalListState`.
+
+`src/hooks/index.ts` exports `LibrarySectionCollapseHeaderProps` from `src/hooks/use-library-section-collapse.ts` and does not export `useLibrarySectionCollapse`.
+
+`usePathRecommendationIndex` in `src/hooks/use-path-recommendation-index.ts` is not exported from that file. `usePathListFilter` in the same file is exported, and the hooks barrel re-exports it.
+
+---
+
+## Not re-exported by the six checked barrels
+
+These siblings exist. The folder's `index.ts` does not `export ... from` them. They are still imported somewhere unless noted. Do not add a second copy because the barrel omitted them.
+
+### `src/lib/game`
+
+- `src/lib/game/archetype-display.ts`
+- `src/lib/game/archetype-edit.ts`
+- `src/lib/game/archetype-path.ts`
+- `src/lib/game/character-legality.ts`
+- `src/lib/game/crafting-utils.ts`
+- `src/lib/game/creator-cache.ts`
+- `src/lib/game/creator-constants.ts`
+- `src/lib/game/creature-ability-bounds.ts`
+- `src/lib/game/creature-power-instances.ts`
+- `src/lib/game/dedupe-saved-parts.ts`
+- `src/lib/game/encounter-utils.ts`
+- `src/lib/game/equipment-equipped.ts`
+- `src/lib/game/feat-requirements.ts`
+- `src/lib/game/innate-eligibility.ts`
+- `src/lib/game/loadout-entries.ts`
+- `src/lib/game/mixed-encounter-view-tab.ts`
+- `src/lib/game/path-ability-labels.ts`
+- `src/lib/game/path-recommendation-index.ts`
+- `src/lib/game/path-validation.ts`
+- `src/lib/game/resolve-armor-damage-reduction.ts`
+- `src/lib/game/saved-part-id.ts`
+- `src/lib/game/size-table.ts`
+- `src/lib/game/skill-allocation-add.ts`
+- `src/lib/game/skill-allocation.ts`
+- `src/lib/game/suggested-abilities.ts`
+- `src/lib/game/targeted-defenses.ts`
+- `src/lib/game/weapon-attack-ability.ts`
+
+### `src/lib/calculators`
+
+- `src/lib/calculators/action-type.ts` — exports `deriveActionType`. This is not `src/lib/utils/action-type.ts`.
+- `src/lib/calculators/dice-splits.ts`
+- `src/lib/calculators/part-training-points.ts`
+- `src/lib/calculators/power-composition.fixture.ts` — imported by tests, not by app pages.
+
+### `src/hooks`
+
+- `src/hooks/use-add-to-character-from-library.tsx`
+- `src/hooks/use-auth-captcha.ts`
+- `src/hooks/use-browser-offline.ts`
+- `src/hooks/use-codex-source-catalog.ts`
+- `src/hooks/use-creator-unsaved-guard.ts`
+- `src/hooks/use-effective-portrait.ts`
+- `src/hooks/use-official-power-technique-browse-filters.ts`
+- `src/hooks/use-placeholder-theme.ts`
+- `src/hooks/use-portrait-fallback-url.ts`
+- `src/hooks/use-sort.ts` — exports `useSort`, `sortByColumn`, and `toggleSort`. Callers include library, codex, and admin tabs, which import this file directly.
+
+### `src/services`
+
+Not on `src/services/index.ts`. Import the file.
+
+- `src/services/campaign-roll-service.ts`
+- `src/services/campaign-service.ts`
+- `src/services/crafting-service.ts`
+- `src/services/encounter-service.ts`
+- `src/services/enhanced-items-service.ts`
+- `src/services/persist-finished-character.ts`
+- `src/services/resource-client.ts`
+
+### `src/stores`
+
+- `src/stores/guided-creator-store.ts` — imported by `src/app/(main)/characters/new/guided/page.tsx`. Not exported from `src/stores/index.ts`.
+
+### `src/components/ui`
+
+- `src/components/ui/chip-options-panel.tsx` — imported by `src/components/ui/expandable-chip.tsx`. Not exported from `src/components/ui/index.ts`. There is no `chip-options-panel` file under `src/lib/chip` (asserted by `src/components/ui/chip-options-panel.lib1-044.test.ts`).
+
+---
+
+## Same filename, different module
+
+| File name | What was opened |
+|-----------|-----------------|
+| `actions.ts` | Four `'use server'` modules, plus a fifth auth module with a different name: `src/app/(auth)/actions.ts` (profile, email, password, delete account), `src/app/(auth)/auth-actions.ts` (remember-me, password login, sign-up, password reset, resend confirmation), `src/app/(main)/admin/codex/actions.ts`, `src/app/(main)/admin/sources/actions.ts` (imports `updateCodexDoc` from the codex actions), `src/app/(main)/campaigns/actions.ts`. |
+| `action-type.ts` | `src/lib/calculators/action-type.ts` exports `deriveActionType`. `src/lib/utils/action-type.ts` exports `formatActionTypeForDisplay` and `formatSavedActionTypeForDisplay`. |
+| `path-ability-labels.ts` | `src/lib/guided-creator/path-ability-labels.ts` imports `resolvePathAbilityLabels` from `src/lib/game/path-ability-labels.ts` and exports `buildPathAbilityChipLabels`. |
+| `server.ts` | `src/lib/tabletop/server.ts` imports `createServiceRoleClient` from `src/lib/supabase/server.ts`. |
+| `skills.ts` | `src/lib/constants/skills.ts` exports ability abbreviation constants. `src/types/skills.ts` exports skill row types. |
+| `use-add-library-item-data.ts` | `src/hooks/use-add-library-item-data.ts` re-exports `src/hooks/add-library-item/use-add-library-item-data.ts`. One implementation. |
+
+`src/components/character/index.ts` and `src/components/character-sheet/index.ts` are different barrels (list cards vs sheet shell).
+
+---
+
+## Two help widgets
+
+`src/components/patterns/help/info-tippy.tsx` exports `InfoTippy`. Product pages import it (codex feats, creature creator, campaigns list, and others).
+
+`src/components/ui/tooltip.tsx` exports `Tooltip`. The file's own comment says it is the styleguide tooltip. The only JSX use found is `src/app/dev/styleguide/page.tsx`. The ui barrel still exports it.
+
+Both call `useFloatingHelpPopover` / `FloatingHelpPanel` from `src/lib/tooltips/floating-help.tsx`.
+
+`HelpTooltip` and `ContextHelpTooltip` are named in a comment in `info-tippy.tsx`. No function with either name is defined under `src`.
+
+---
+
+## Imported by tests or by `next.config.ts`, not by a page
+
+Not dead. Not part of a screen. The static walk from app entries did not reach these, or reached them only through tests. No other `src` source file was in that leftover set.
+
+- `src/services/index.ts` — no TypeScript importer. `scripts/generate-feature-index-barrels.js` reads the file as text.
+- `src/lib/api-input-validation-guard.ts` — imported by `src/lib/api-input-validation-scan.ts`.
+- `src/lib/api-input-validation-scan.ts` — imported by its tests.
+- `src/lib/api-mutation-guard-route-scan.ts` — imported by route-scan tests. `src/proxy.ts` imports `src/lib/api-mutation-guard.ts`, not this scan file.
+- `src/lib/codex/fake-supabase.ts` — imported by action tests.
+- `src/lib/glr/glr-chrome-spacing-norms.ts`
+- `src/lib/glr/validate-glr-chrome-spacing.ts` — imported by `src/lib/glr/validate-glr-chrome-spacing.test.ts`.
+- `src/lib/calculators/power-composition.fixture.ts` — test fixture.
+- `src/lib/security/content-security-policy.ts` and `src/lib/security/next-app-flags.ts` — imported by `next.config.ts`.
+
+`src/types/css.d.ts`, `src/types/mdx.d.ts`, and `src/types/source-raw.d.ts` are ambient declarations.
+
+---
+
+## Left for a later pass
+
+Open these before treating this index as a complete "do not build another one" list:
+
+- `src/components/patterns/` (subfolders `chrome`, `list`, `select`, `filters`, `help`, `guided-choice`, `stat-tiles`). The generated barrel file lists export names. It was not checked against every file in those folders.
+- `src/components/character-sheet/`, `src/components/guided-creator/`, and the creator page folders under `src/app/(main)/`.
+- Modules directly under `src/lib/` that are not in `game/` or `calculators/` (codex, character, library, guided-creator, auth, and the rest).
+- Unused exports inside files that something already imports.

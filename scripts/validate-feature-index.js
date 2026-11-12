@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Validate FEATURE_INDEX.md paths exist + barrel inventory is up to date.
+ * Validate FEATURE_INDEX.md paths exist, the route/barrel/gap lists are
+ * complete, and the barrel inventory is up to date.
  */
 const { spawnSync } = require('child_process');
 const fs = require('fs');
@@ -8,6 +9,85 @@ const path = require('path');
 
 const repoRoot = path.resolve(__dirname, '..');
 const indexPath = path.join(repoRoot, 'src/docs/ai/FEATURE_INDEX.md');
+
+const APP_ENTRY = new Set([
+  'page.tsx',
+  'page.ts',
+  'route.ts',
+  'route.tsx',
+  'layout.tsx',
+  'layout.ts',
+  'loading.tsx',
+  'error.tsx',
+  'not-found.tsx',
+  'template.tsx',
+  'default.tsx',
+  'global-error.tsx',
+  'opengraph-image.tsx',
+  'robots.ts',
+  'sitemap.ts',
+]);
+
+const BARREL_GAP_DIRS = [
+  'src/lib/game',
+  'src/lib/calculators',
+  'src/hooks',
+  'src/services',
+  'src/stores',
+  'src/components/ui',
+];
+
+function walk(dir, acc = []) {
+  for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (ent.name === 'node_modules' || ent.name === '.next') continue;
+    const abs = path.join(dir, ent.name);
+    if (ent.isDirectory()) walk(abs, acc);
+    else acc.push(abs);
+  }
+  return acc;
+}
+
+function toRel(root, abs) {
+  return path.relative(root, abs).replaceAll('\\', '/');
+}
+
+function barrelSources(indexFile) {
+  const text = fs.readFileSync(indexFile, 'utf8');
+  const specs = new Set();
+  const re = /from\s+['"](\.[^'"]+)['"]/g;
+  let match;
+  while ((match = re.exec(text))) {
+    specs.add(match[1].replace(/^\.\//, '').replace(/\.(ts|tsx)$/, ''));
+  }
+  return specs;
+}
+
+function requiredFeatureIndexPaths(root) {
+  const appEntries = walk(path.join(root, 'src/app'))
+    .filter((abs) => APP_ENTRY.has(path.basename(abs)))
+    .map((abs) => toRel(root, abs));
+  const rootEntries = ['src/proxy.ts', 'src/instrumentation.ts', 'src/instrumentation-client.ts'];
+  const barrels = walk(path.join(root, 'src'))
+    .filter((abs) => {
+      const base = path.basename(abs);
+      return base === 'index.ts' || base === 'index.tsx';
+    })
+    .map((abs) => toRel(root, abs));
+  const gaps = [];
+  for (const dirRel of BARREL_GAP_DIRS) {
+    const dir = path.join(root, dirRel);
+    const specs = barrelSources(path.join(dir, 'index.ts'));
+    for (const name of fs.readdirSync(dir)) {
+      if (!/\.(ts|tsx)$/.test(name)) continue;
+      if (name.endsWith('.d.ts') || /\.(test|spec)\./.test(name)) continue;
+      if (name === 'index.ts' || name === 'index.tsx') continue;
+      const abs = path.join(dir, name);
+      if (!fs.statSync(abs).isFile()) continue;
+      if (!specs.has(name.replace(/\.(ts|tsx)$/, ''))) gaps.push(`${dirRel}/${name}`);
+    }
+  }
+  return [...appEntries, ...rootEntries, ...barrels, ...gaps];
+}
 
 const indexText = fs.readFileSync(indexPath, 'utf8');
 const pathRe = /(?:`|(?:\[[^\]]*\]\())((?:src\/)[^`)\s]+\.[a-zA-Z0-9]+)(?:`|\))/g;
@@ -27,6 +107,16 @@ if (missingFiles.length) {
 }
 
 console.log(`FEATURE_INDEX path check OK (${listedPaths.size} paths).`);
+
+const required = requiredFeatureIndexPaths(repoRoot);
+const omitted = required.filter((file) => !indexText.includes(file)).sort();
+if (omitted.length) {
+  console.error('FEATURE_INDEX omits files the coverage check requires:');
+  omitted.forEach((p) => console.error(' ', p));
+  process.exit(2);
+}
+
+console.log(`FEATURE_INDEX coverage check OK (${required.length} required paths).`);
 
 const gen = spawnSync(
   process.execPath,
