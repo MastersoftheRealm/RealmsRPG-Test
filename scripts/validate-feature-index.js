@@ -326,6 +326,10 @@ const CRAFTING_COST_MATH_UNCLASSIFIED_IDS = [
   'crafting-hub-currency-column-vs-requirements-market-price',
 ];
 
+const SIZE_PATH_MATH_UNCLASSIFIED_IDS = [
+  'size-hardcoded-carry-vs-core-rules-sizes',
+];
+
 function mathSectionSlice(text, heading) {
   const start = text.indexOf(heading);
   if (start < 0) return null;
@@ -516,6 +520,34 @@ requireDisagreementTokens(
   'crafting cost unclassified',
 );
 
+const sizePathSection = mathSectionSlice(
+  indexText,
+  '## Size and path recommendation math',
+);
+if (!sizePathSection) {
+  console.error('FEATURE_INDEX is missing the size and path recommendation math section.');
+  process.exit(2);
+}
+if (!sizePathSection.includes('### Disagreements')) {
+  console.error('FEATURE_INDEX size/path section is missing ### Disagreements.');
+  process.exit(2);
+}
+if (!sizePathSection.includes('### Read to the end')) {
+  console.error('FEATURE_INDEX size/path section is missing ### Read to the end.');
+  process.exit(2);
+}
+const sizePathDisagreements = disagreementsSubsection(sizePathSection);
+if (!sizePathDisagreements) {
+  console.error('FEATURE_INDEX size/path section has no ### Disagreements body.');
+  process.exit(2);
+}
+requireDisagreementTokens(
+  sizePathDisagreements,
+  'math-disagree-unclassified',
+  SIZE_PATH_MATH_UNCLASSIFIED_IDS,
+  'size/path unclassified',
+);
+
 const mathDisagreementCount =
   MATH_DISAGREEMENT_INTENTIONAL_IDS.length +
   MATH_DISAGREEMENT_BUG_IDS.length +
@@ -524,7 +556,8 @@ const mathDisagreementCount =
   CREATURE_BUDGET_MATH_UNCLASSIFIED_IDS.length +
   PROFICIENCY_TRAINING_MATH_UNCLASSIFIED_IDS.length +
   DEFENSE_WEAPON_MATH_UNCLASSIFIED_IDS.length +
-  CRAFTING_COST_MATH_UNCLASSIFIED_IDS.length;
+  CRAFTING_COST_MATH_UNCLASSIFIED_IDS.length +
+  SIZE_PATH_MATH_UNCLASSIFIED_IDS.length;
 console.log(`FEATURE_INDEX math-disagreement check OK (${mathDisagreementCount} guarded lines).`);
 
 const gen = spawnSync(

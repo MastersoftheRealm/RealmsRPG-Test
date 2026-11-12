@@ -2154,7 +2154,7 @@ Every non-test file under `src/lib/game` and `src/lib/calculators` is already re
 ### Not read line by line
 
 - Health, energy, and cost formulas in the section above are read through that pass’s scope. Skill helpers in `formulas.ts` after innate energy and `skill-allocation.ts` cost helpers are in **Skill and allocation math** below.
-- Character-check and path math is in **Character-check and path math** below. Creature creator budgets are in **Creature creator budget math**. Player proficiency caps and guided TP wiring are in **Player proficiency and training math**. Defense targeting and weapon attack helpers are in **Defense targeting and weapon attack math**. Crafting tables, requirements, and outcome math are in **Crafting cost math**. Still unread: `path-recommendation-index.ts`, `size-table.ts` past `calculateCarryingCapacityKg`, and `creator-cache.ts`.
+- Character-check and path math is in **Character-check and path math** below. Creature creator budgets are in **Creature creator budget math**. Player proficiency caps and guided TP wiring are in **Player proficiency and training math**. Defense targeting and weapon attack helpers are in **Defense targeting and weapon attack math**. Crafting tables, requirements, and outcome math are in **Crafting cost math**. Size categories and carrying capacity are in **Size and path recommendation math**. `creator-cache.ts` has no cost or point formulas (skipped).
 
 ---
 
@@ -2396,6 +2396,38 @@ General, enhanced, consumable-enhanced, and upgrade crafting requirements; succe
 - `getLibraryItemMarketPrice`, item creator `useItemCreatorCostDerivation` pricing, and crafting picker rows all call `resolveItemMarketPricing` when properties are available (same item-calc path).
 - `buildCraftingPowerOptions` energy matches power creator totals for the same parts because `derivePowerDisplay` uses `calculatePowerCosts` internally.
 - Creator section-cost hooks slice payloads then call the same calculator functions as their totals; they do not reimplement point formulas in the page files.
+
+## Size and path recommendation math (line-by-line pass)
+
+Creature size table, carrying-capacity kg formula, and archetype-path browse filtering (ref → entity id union). Not combat grid placement. Not a rules balance sign-off.
+
+### Read to the end
+
+- `SIZE_TABLE_BASE`, `CREATURE_SIZES`, `formatSizeHeightRangeCm`, `findSizeTableRow`, `sizeLabelForKey`, `calculateCarryingCapacityKg`, and `reconcileSizeWithAllowedOptions` in `src/lib/game/size-table.ts`. Carrying capacity is `baseCarry + perStrCarry × Strength`, floored at `minCarry` for the matched size row (`Math.max`). Size lookup is case/whitespace-insensitive on value or label. `reconcileSizeWithAllowedOptions` picks allowed species sizes; no numeric formulas beyond table fields.
+- `character-size.ts` (size slice): `resolveEffectiveCharacterSize` and labels call `reconcileSizeWithAllowedOptions` / `findSizeTableRow` only; **no** carrying-capacity math.
+- `creator-constants.ts` re-exports `CREATURE_SIZES` and `CARRYING_CAPACITY_HALF_LOAD_RULE` from `size-table` (single table source for creator dropdowns).
+- `FALLBACK_RULES.SIZES` in `use-game-rules.ts` copies the same `CREATURE_SIZES` carry/spaces fields into the default core-rules payload; `mergeCoreRules` lets DB `SIZES` override that document client-side.
+- `notes-tab.tsx` carrying display calls `calculateCarryingCapacityKg(characterSize, strength)` only (does not read `rules.SIZES` from the hook).
+- Full `path-recommendation-index.ts`: filter alias expansion, `buildPathRecommendationIndex` (`indexByNormalizedIds` + name map, then `collectPathRecommendedIds` per path/kind), union/intersection helpers (`pathRecommendedEntityIds`, `rowMatchesPathRecommendedIds`, `applyLivePathFilter`). **No** TP, skill, energy, or currency arithmetic—only id/name resolution.
+- `normalize-id.ts` (`normalizeId`, `indexByNormalizedIds`) read for path index lookups.
+- `use-path-recommendation-index.ts` (full): memo wrapper around `buildPathRecommendationIndex` and `pathRecommendedEntityIds`; no extra formulas.
+- `collectPathRecommendedIds` in `archetype-path.ts` was already read in **Character-check and path math**; path index calls it verbatim.
+
+### Still not read line by line (size / path scope)
+
+- None in this slice.
+- `src/lib/game/creator-cache.ts`: localStorage draft helpers only (no cost/point math; not opened for formulas).
+
+### Disagreements
+
+- math-disagree-unclassified:size-hardcoded-carry-vs-core-rules-sizes: **Second copy for carrying coefficients.** `calculateCarryingCapacityKg` always reads `CREATURE_SIZES` baked into `size-table.ts`. `useGameRules` can serve admin-edited `SIZES.categories` (`baseCarry`, `perStrCarry`, `minCarry`) from `core_rules`. The sheet notes tab uses the hardcoded function, so live DB size edits can disagree with displayed capacity.
+
+### Same math, separate copies
+
+- `creator-constants` and `use-game-rules` fallback both source size rows from the same `size-table` export at build time; only the hook path can diverge after a DB edit (see disagreement above).
+- Path browse lists share one `buildPathRecommendationIndex` via `usePathRecommendationIndex` / `usePathListFilter`; `guided-creator/feats-l2.ts` and codex list pages consume the same index helpers.
+- Path filter chip logic (`expandPathFilterSelection`, `addPathFilterSelection`) does not duplicate entity resolution; matching uses the prebuilt `entityIdsByPathId` map.
+- Character size pickers and sheet height hints use `findSizeTableRow` / `reconcileSizeWithAllowedOptions` from this module without a second carry table.
 
 ## Unused exports outside game and calculators
 
