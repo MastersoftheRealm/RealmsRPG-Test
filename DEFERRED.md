@@ -10,9 +10,10 @@ These trees are out of scope as **pattern sources** for new work elsewhere in th
 - `src/components/crafting/`
 - `src/app/api/crafting/`
 
-## Encounter tracker
+## Encounter tracker (legacy helpers)
 
-- `src/app/(main)/encounters/`
+Play pages under `src/app/(main)/encounters/[id]/` are active pattern targets after the shared shell work; do not copy from these legacy trees:
+
 - `src/components/encounters/`
 - `src/lib/encounter/`
 

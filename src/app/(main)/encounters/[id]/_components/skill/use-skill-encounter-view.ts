@@ -6,13 +6,12 @@
 
 'use client';
 
-import { useState, useCallback, useMemo, DragEvent } from 'react';
+import { useState, useCallback, useMemo, type DragEvent } from 'react';
 import { useCodexSkills } from '@/hooks';
 import { computeSkillRollResult } from '@/lib/game/encounter-utils';
-import {
-  filterDuplicateCampaignCharacterEntries,
-  getCampaignCharacterIds,
-} from '@/lib/encounter/unique-campaign-characters';
+import { filterDuplicateCampaignCharacterEntries } from '@/lib/encounter/unique-campaign-characters';
+import { useLinkedCampaignCharacters } from '../hooks/use-linked-campaign-characters';
+import { useReorderableListDrag } from '../hooks/use-reorderable-list-drag';
 import type {
   Encounter,
   SkillParticipant,
@@ -20,7 +19,6 @@ import type {
   TrackedCombatant,
   SkillParticipantType,
 } from '@/types/encounter';
-import type { Campaign } from '@/types/campaign';
 import { generateId, rollInitiative } from '../encounter-view-helpers';
 import type { SkillEncounterViewProps } from './skill-encounter-view-props';
 
@@ -116,20 +114,12 @@ export function useSkillEncounterView({
     setShowAddModal(false);
   };
 
-  const linkedCampaign = encounter.campaignId
-    ? campaignsFull.find((c: Campaign) => c.id === encounter.campaignId)
-    : undefined;
-  const existingCampaignCharacterIds = useMemo(
-    () => getCampaignCharacterIds(skill.participants),
-    [skill.participants],
-  );
-  const availableCampaignCharacters = useMemo(
-    () =>
-      (linkedCampaign?.characters ?? []).filter(
-        (c) => !existingCampaignCharacterIds.has(c.characterId),
-      ),
-    [existingCampaignCharacterIds, linkedCampaign?.characters],
-  );
+  const { linkedCampaign, existingCampaignCharacterIds, availableCampaignCharacters } =
+    useLinkedCampaignCharacters({
+      campaignId: encounter.campaignId,
+      campaignsFull,
+      rosterEntries: skill.participants,
+    });
 
   const addAllCampaignCharacters = useCallback(async () => {
     if (!encounter.campaignId || availableCampaignCharacters.length === 0) return;
@@ -392,33 +382,21 @@ export function useSkillEncounterView({
   };
 
   const useInitiative = skill.useInitiative ?? false;
-  const [draggedId, setDraggedId] = useState<string | null>(null);
-  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const {
+    draggedId,
+    dragOverId,
+    handleDragStart,
+    handleDragEnd,
+    handleDragOver,
+    handleDragLeave,
+    clearDragState,
+  } = useReorderableListDrag();
 
-  const handleDragStart = useCallback((e: DragEvent<HTMLDivElement>, id: string) => {
-    setDraggedId(id);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', id);
-  }, []);
-  const handleDragEnd = useCallback(() => {
-    setDraggedId(null);
-    setDragOverId(null);
-  }, []);
-  const handleDragOver = useCallback(
-    (e: DragEvent<HTMLDivElement>, id: string) => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      if (id !== draggedId) setDragOverId(id);
-    },
-    [draggedId],
-  );
-  const handleDragLeave = useCallback(() => setDragOverId(null), []);
   const handleDrop = useCallback(
     (e: DragEvent<HTMLDivElement>, targetId: string) => {
       e.preventDefault();
       if (!draggedId || draggedId === targetId) {
-        setDraggedId(null);
-        setDragOverId(null);
+        clearDragState();
         return;
       }
       setEncounter((prev) => {
@@ -435,10 +413,9 @@ export function useSkillEncounterView({
           skillEncounter: { ...prev.skillEncounter, participants },
         };
       });
-      setDraggedId(null);
-      setDragOverId(null);
+      clearDragState();
     },
-    [draggedId, setEncounter],
+    [clearDragState, draggedId, setEncounter],
   );
 
   const sortedParticipants = useMemo(() => {
