@@ -42,6 +42,16 @@ const FOLDER_FILE_DIRS = [
   'src/components/patterns',
   'src/components/character-sheet',
   'src/components/guided-creator',
+  'src/components/creator',
+  'src/components/crafting',
+  'src/components/encounters',
+  'src/app/(main)/power-creator',
+  'src/app/(main)/technique-creator',
+  'src/app/(main)/empowered-technique-creator',
+  'src/app/(main)/item-creator',
+  'src/app/(main)/species-creator',
+  'src/app/(main)/creature-creator',
+  'src/app/(main)/crafting',
 ];
 
 function walk(dir, acc = []) {

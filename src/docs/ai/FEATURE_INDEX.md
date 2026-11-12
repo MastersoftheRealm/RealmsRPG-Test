@@ -9,18 +9,20 @@ Checked on this pass:
 - Sibling source files that these barrels do **not** re-export: `src/lib/game/index.ts`, `src/lib/calculators/index.ts`, `src/hooks/index.ts`, `src/services/index.ts`, `src/stores/index.ts`, `src/components/ui/index.ts`.
 - Same-name modules and the two help widgets, by opening those files.
 - Every non-test `.ts` / `.tsx` file under `src/components/patterns`, `src/components/character-sheet`, and `src/components/guided-creator`: static imports, plus the pairs named in that section, which were opened. The other files in those folders were not read line by line.
+- Every non-test `.ts` / `.tsx` file under `src/components/creator`, `src/components/crafting`, `src/components/encounters`, and the creator and crafting page folders named in that section. The pairs in that section were opened. The files listed there as not read line by line were not.
 - A static import walk from app entries. A file loaded only by a variable `import()` would not show up. `knip` was not run, so unused exports inside a file that is imported were not measured.
 
 Not checked, so silence here is not "it does not exist" and not "there is no fork":
 
-- Behavior of calculators, saves, creators, or admin editors.
-- Creator page folders under `src/app/(main)`, encounter and campaign `_components`, and admin codex edit modals.
+- Behavior of calculators, saves, or admin editors.
+- Encounter play, campaign, admin codex, and my-account folders under `src/app` beyond the page file each route imports.
+- `src/components/about`, `auth`, `character`, `codex`, `landing`, `layout`, `legal`, `onboarding`, `providers`, `rolls`, `rules`, and `tabletop`.
 - Loose modules under `src/lib/` outside `game/` and `calculators/`.
-- Pairs of files in the three component folders that are not named in the fork section below.
+- Pairs of files that are not named in a fork section below.
 
 Export **names** for patterns, ui, hooks, and services are in [`FEATURE_INDEX_BARRELS.generated.md`](FEATURE_INDEX_BARRELS.generated.md). That generated file is not a list of what is used, and it does not read the other barrels.
 
-`scripts/validate-feature-index.js` checks that backticked `src/...` paths in this file exist. The same script fails if an app entry, a `src` barrel, a sibling missing from the six barrels above, or a non-test source file in the three component folders is absent from this file.
+`scripts/validate-feature-index.js` checks that backticked `src/...` paths in this file exist. The same script fails if an app entry, a `src` barrel, a sibling missing from the six barrels above, or a non-test source file in the covered component and creator folders is absent from this file.
 
 ---
 
@@ -432,7 +434,7 @@ Static imports were resolved for every non-test `.ts` / `.tsx` file in these thr
 
 ### Two implementations, not one component
 
-- Ability tiles. `src/components/character-sheet/abilities-section.tsx` renders `src/components/character-sheet/ability-stat-tile.tsx`. `src/components/patterns/list/ability-score-grid.tsx` does not render `AbilityStatTile`. Callers that render `AbilityScoreGrid`: `src/components/guided-creator/guided-path-detail-overview.tsx`, `src/components/guided-creator/guided-reveal-summary.tsx`, `src/components/guided-creator/steps/abilities-step.tsx`, and `src/components/creator/ability-score-editor.tsx`. `src/components/guided-creator/guided-abilities-customize-panel.tsx` renders `AbilityScoreEditor`. The creator editor was not read past that render. `AbilityScoreGrid` keeps its own `ABILITY_DISPLAY_ORDER` and `ABILITY_DISPLAY_INFO`. `src/components/patterns/stat-tiles/ability-defense-stat-model.ts` keeps `ABILITY_ORDER` and `ABILITY_INFO`. The six keys are the same and in the same order. The grid's class string is written out in the grid file. The sheet section uses `SHEET_STAT_GRID_CLASS` from the stat model. Those class strings are not the same constant.
+- Ability tiles. `src/components/character-sheet/abilities-section.tsx` renders `src/components/character-sheet/ability-stat-tile.tsx`. `src/components/patterns/list/ability-score-grid.tsx` does not render `AbilityStatTile`. Callers that render `AbilityScoreGrid`: `src/components/guided-creator/guided-path-detail-overview.tsx`, `src/components/guided-creator/guided-reveal-summary.tsx`, `src/components/guided-creator/steps/abilities-step.tsx`, and the `variant="sheet"` branch of `src/components/creator/ability-score-editor.tsx`. `src/components/guided-creator/guided-abilities-customize-panel.tsx` passes that variant. The default branch of `AbilityScoreEditor` is a third tile grid; see the creator section. `AbilityScoreGrid` keeps its own `ABILITY_DISPLAY_ORDER` and `ABILITY_DISPLAY_INFO`. `src/components/patterns/stat-tiles/ability-defense-stat-model.ts` keeps `ABILITY_ORDER` and `ABILITY_INFO`. The six keys are the same and in the same order. The grid's class string is written out in the grid file. The sheet section uses `SHEET_STAT_GRID_CLASS` from the stat model. Those class strings are not the same constant.
 - Skill rows. `src/components/character-sheet/skills-section.tsx` renders `SkillRow` from `src/components/patterns/list/skill-row.tsx`. `src/components/guided-creator/guided-skills-panel.tsx` defines `GuidedSkillRow` in that file and does not render `SkillRow`.
 - Armor display. `src/components/character-sheet/archetype-section.tsx` renders `QuickArmorTable` from `src/components/patterns/list/quick-armaments-sections.tsx` (an HTML table). `src/components/character-sheet/library-inventory-panel.tsx` renders `ArmorListSection` from `src/components/patterns/list/entity-library-inventory.tsx`. Neither file imports the other.
 - `CodexPart` and `CodexProperty` are each declared twice. `src/components/patterns/list/creature-stat-block-helpers.ts` declares both with optional `name`. That `CodexPart` has no `defense` field. `src/components/character-sheet/library-list-helpers.ts` aliases both names to `CodexPartRow` and `CodexPropertyRow` from `src/lib/library/part-display.ts`. Those rows require `name`. `CodexPartRow` also has `defense`.
@@ -727,13 +729,238 @@ Every path below is a non-test source file. The checker fails if one is missing 
 
 ---
 
+## Creator pages, crafting, and encounters
+
+131 non-test `.ts` / `.tsx` files. `page.tsx` and `layout.tsx` files have no TypeScript importer. Next loads them. Every other file in this slice has a production importer. None of those files are unused.
+
+`src/app/(main)/crafting/DEFERRED.md` and `src/app/(main)/empowered-technique-creator/DEFERRED.md` are present. They were not opened.
+
+### Second implementations
+
+- Ability tiles, a third grid. `src/components/creator/ability-score-editor.tsx` renders `AbilityScoreGrid` only when `variant` is `sheet`. The default branch draws its own tiles and keeps its own `ABILITY_ORDER` and `ABILITY_INFO`, including a description string. `src/app/(main)/creature-creator/creature-creator-editor.tsx` renders `AbilityScoreEditor` without `variant`, so it uses that default grid. Guided customize passes `variant="sheet"`.
+- Action and attack controls. Three files, and none renders another. `src/app/(main)/power-creator/power-creator-editor-action-profile.tsx` is two sections (Action Type, Attack). `src/app/(main)/empowered-technique-creator/empowered-technique-editor-action-profile.tsx` is one Shared Action Profile section. `src/app/(main)/technique-creator/technique-creator-editor.tsx` has a Combat Configuration section with its own attack select and reaction checkbox. They share `ACTION_OPTIONS` and `ATTACK_MODE_SELECT_OPTIONS`.
+- Damage dice controls. Each file has its own `ValueStepper` and `DIE_SIZES` select. None renders another: `src/app/(main)/power-creator/power-creator-editor-power-damage.tsx`, `src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-damage.tsx`, `src/app/(main)/empowered-technique-creator/empowered-technique-editor-technique-parts.tsx`, the Additional Damage section in `technique-creator-editor.tsx`, `src/app/(main)/item-creator/item-creator-editor-weapon-shield.tsx`, and `src/app/(main)/item-creator/item-creator-editor-shield-panels.tsx` (shield block and shield damage).
+- Range, area, and duration. `src/app/(main)/power-creator/power-creator-editor-power-config.tsx` is three sections (Range, Area of Effect, Duration). `src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-config.tsx` is one Power Configuration section. Both use `ValueStepper`, `AREA_TYPES`, `DURATION_TYPES`, and `DURATION_VALUES`. Neither renders the other.
+- Part lists. `src/app/(main)/power-creator/power-creator-editor-power-parts.tsx`, `src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-parts.tsx`, and `technique-creator-editor.tsx` each map rows onto `PowerPartCard` inside their own `CollapsibleSection`.
+- Add-part handlers. `addPart` in `src/app/(main)/power-creator/power-creator-part-actions.ts` and `addPowerPart` in `src/app/(main)/empowered-technique-creator/empowered-technique-part-actions.ts` both append the first list entry with the same option-level fields. Power's mechanic add calls `nextMechanicPartToAdd`, which skips an id already selected. Empowered's mechanic add takes the first list entry and does not call that function.
+- Name and description cards. `src/app/(main)/power-creator/power-creator-editor-meta.tsx`, `src/app/(main)/empowered-technique-creator/empowered-technique-editor-meta.tsx`, and `src/app/(main)/item-creator/item-creator-editor-meta.tsx` each render `CreatorNameField` and `CreatorDescriptionField`. They do not render each other. The item card also has an item-type `SegmentedControl`.
+- Reset helpers. `applySpeciesCreatorReset` in `src/app/(main)/species-creator/species-creator-reset.ts` and `applyTechniqueCreatorReset` in `src/app/(main)/technique-creator/technique-creator-reset.ts` are separate functions. Both clear the draft, reset the form, forget the loaded library row, and clear the save message. Technique also calls `acceptDraft`. Species does not.
+- Condition names. `CONDITIONS` in `src/lib/game/creator-constants.ts` and `CONDITION_OPTIONS` in `src/components/encounters/encounter-constants.ts` are the same 23 names in the same order. Only the encounter list stores `leveled` and `description`. `src/app/(main)/creature-creator/creature-creator-editor-traits-section.tsx` imports `CONDITIONS`. The description strings were not compared to anything else.
+- Creature feats. `src/app/(main)/creature-creator/creature-creator-editor-loadout-sections.tsx` renders `GridListRow` for feats. It does not render `FeatsTraitsListSection`.
+
+### Calls a shared component
+
+- `src/components/creator/CreatorPageShell.tsx` renders `CreatorLayout`, `CreatorSaveToolbar`, `LoadFromLibraryModal`, `LoginPromptModal`, and `ConfirmActionModal`. The power, technique, empowered technique, item, species, and creature pages render `CreatorPageShell`.
+- `src/components/creator/LoadFromLibraryModal.tsx` renders `UnifiedSelectionModal`. The creator barrel does not export this file. `CreatorPageShell` imports it by path.
+- The creator barrel exports `CreatorSaveToolbarProps` and does not export the `CreatorSaveToolbar` function. `CreatorPageShell` imports the function by path.
+- `src/components/creator/creator-text-fields.tsx` is not on the creator barrel. The meta cards and `technique-creator-editor.tsx` import it by path.
+- `src/components/creator/targeted-defenses-section.tsx` renders `ChipSelect`.
+- `src/components/crafting/CraftingItemSelectModal.tsx` renders `UnifiedSelectionModal`. `src/components/crafting/get-crafting-market-price.ts` calls `equipmentCurrency` and `resolveItemMarketPricing`.
+- `src/app/(main)/crafting/[id]/page.tsx` renders `CreatorLayout` and the section files under `_components`. It does not render `CreatorPageShell`. `src/app/(main)/crafting/[id]/_components/crafting-summary-sidebar.tsx` renders `CreatorSummaryPanel`. `src/app/(main)/crafting/page.tsx` renders `PageContainer` and `PageHeader`.
+- `src/app/(main)/creature-creator/AddCreatureFeatModal.tsx` renders `UnifiedSelectionModal`. The selection rules in that file were not read.
+- `src/app/(main)/creature-creator/creature-creator-editor-inventory-section.tsx` renders `WeaponsListSection`, `ShieldsListSection`, `ArmorListSection`, and `EquipmentListSection`.
+- `src/app/(main)/creature-creator/creature-creator-editor.tsx` renders `ArchetypeSelector`, `HealthEnergyAllocator`, `AbilityScoreEditor`, and `SkillsAllocationPage`.
+- `src/app/(main)/power-creator/power-creator-editor.tsx`, `src/app/(main)/empowered-technique-creator/empowered-technique-creator-editor.tsx`, and `src/app/(main)/item-creator/item-creator-editor.tsx` only compose their section files.
+- `src/app/(main)/empowered-technique-creator/use-empowered-technique-creator-workspace.ts` imports `EXCLUDED_PARTS` from `src/app/(main)/power-creator/power-creator-constants.ts`. That constant is `POWER_AUTO_MECHANIC_PART_NAMES`.
+- `src/app/(main)/power-creator/power-creator-cost-derivation.ts` imports `calculatePowerCosts` from `@/lib/calculators`. `src/app/(main)/empowered-technique-creator/empowered-technique-cost-derivation.ts` imports `calculatePowerCosts`, `calculateTechniqueCosts`, and `calculateEmpoweredTechniqueCosts`. `src/app/(main)/item-creator/item-creator-cost-derivation.ts` imports `calculateItemCosts`. Those function bodies were not read.
+- Species base skills in `src/app/(main)/species-creator/species-creator-editor.tsx` are two `select` elements. They do not render `SkillRow`.
+- `src/components/encounters/CombatantCard.tsx` renders `CombatantCardInitiative`, `CombatantCardHeader`, `CombatantCardResources`, `CombatantCardConditionChips`, `CombatantCardResourceQuickActions`, and `CombatantCardConditionsPanel`.
+- `src/components/encounters/add-combatant-modal.tsx` renders `Modal`. It does not render `UnifiedSelectionModal`. The picker body was not read.
+
+### Not read line by line
+
+- `src/app/(main)/power-creator/use-power-creator-workspace.ts`, `use-power-creator-composition.ts`, `power-creator-bootstrap.ts`, `power-creator-composition.ts`, `power-creator-composition-band.tsx`, `power-creator-help.tsx`, `power-creator-from-shared.tsx`, `power-creator-innate-label.ts`, `power-creator-types.ts`, `power-creator-editor-config.ts`, and `page.tsx` past the `CreatorPageShell` render.
+- `src/app/(main)/technique-creator/use-technique-creator-workspace.ts`, `technique-creator-bootstrap.ts`, and `page.tsx` past the shell.
+- `src/app/(main)/empowered-technique-creator/use-empowered-technique-creator-workspace.ts` past the `EXCLUDED_PARTS` import, `empowered-technique-bootstrap.ts`, `empowered-technique-editor-config.ts`, and `page.tsx` past the shell.
+- `src/app/(main)/item-creator/use-item-creator-workspace.ts`, `item-creator-bootstrap.ts`, `item-creator-helpers.tsx`, `item-creator-property-actions.ts`, `item-creator-property-options.ts`, `item-creator-save-reset.ts`, `item-creator-editor-config.ts`, `item-creator-editor-ability-properties.tsx`, `item-creator-editor-armor.tsx` past the steppers, and `page.tsx` past the shell.
+- `src/app/(main)/species-creator/use-species-creator-workspace.ts`, `species-creator-bootstrap.ts`, `species-creator-editor.tsx` past the section titles and the base-skill selects, and `page.tsx` past the shell.
+- `src/app/(main)/creature-creator/use-creature-creator-workspace.ts`, `creature-creator-bootstrap.ts`, `creature-creator-derived-stats.ts`, `creature-creator-feat-armament-display.ts`, `creature-creator-library-selectables.ts`, `creature-creator-skill-bonus.ts`, `creature-skill-utils.ts`, `creature-creator-training-spent.ts`, `transformers.ts`, `creature-creator-workspace-persistence.ts`, `creature-damage-modifiers.ts`, `creature-ability-points-display.ts`, `creature-feat-utils.ts`, `creature-over-budget-notification.ts`, `creature-sub-skill-highest-ability-label.ts`, `creature-trait-labels.ts`, `map-creature-inventory-rows.ts`, `creature-creator-types.ts`, `creature-creator-summaries.ts`, `creature-creator-remove-section-confirm-placeholder.ts`, `creature-creator-constants.ts`, `CreatureCreatorHelpers.tsx` past `ChipList` (its rows are spans; the cost label renders `DescriptorChip`), `AddCreatureFeatModal.tsx` past the `UnifiedSelectionModal` render, and `page.tsx` past the shell.
+- `src/app/(main)/crafting/[id]/_components/use-crafting-tool-page.ts`, `crafting-tool-derived.ts`, `crafting-tool-helpers.ts`, and the section bodies in `crafting-adjustments-section.tsx`, `crafting-item-options-section.tsx`, `crafting-optional-rules-section.tsx`, `crafting-rolls-section.tsx`, and `crafting-outcome-card.tsx`.
+- `src/components/encounters/combatant-card-initiative.tsx`, `combatant-card-header.tsx`, `combatant-card-conditions.tsx`, `combatant-card-quick-actions.tsx`, `combatant-card-helpers.ts`, `combatant-card-resources.tsx` past its props, and `add-combatant-modal.tsx` past the `Modal` render.
+- `src/components/creator/health-energy-allocator.tsx`, `archetype-selector.tsx`, `power-part-card.tsx`, `creator-summary-panel.tsx`, and `collapsible-section.tsx` past their imports and the components named above.
+
+### Files
+
+Every path below is a non-test source file. The checker fails if one is missing from this document.
+
+### `src/app/(main)/crafting/[id]/_components`
+
+- `src/app/(main)/crafting/[id]/_components/crafting-adjustments-section.tsx`
+- `src/app/(main)/crafting/[id]/_components/crafting-item-options-section.tsx`
+- `src/app/(main)/crafting/[id]/_components/crafting-optional-rules-section.tsx`
+- `src/app/(main)/crafting/[id]/_components/crafting-outcome-card.tsx`
+- `src/app/(main)/crafting/[id]/_components/crafting-rolls-section.tsx`
+- `src/app/(main)/crafting/[id]/_components/crafting-summary-sidebar.tsx`
+- `src/app/(main)/crafting/[id]/_components/crafting-tool-derived.ts`
+- `src/app/(main)/crafting/[id]/_components/crafting-tool-helpers.ts`
+- `src/app/(main)/crafting/[id]/_components/use-crafting-tool-page.ts`
+
+### `src/app/(main)/crafting/[id]`
+
+- `src/app/(main)/crafting/[id]/page.tsx`
+
+### `src/app/(main)/crafting`
+
+- `src/app/(main)/crafting/crafting-bootstrap.ts`
+- `src/app/(main)/crafting/layout.tsx`
+- `src/app/(main)/crafting/page.tsx`
+
+### `src/app/(main)/creature-creator`
+
+- `src/app/(main)/creature-creator/AddCreatureFeatModal.tsx`
+- `src/app/(main)/creature-creator/CreatureCreatorHelpers.tsx`
+- `src/app/(main)/creature-creator/creature-ability-points-display.ts`
+- `src/app/(main)/creature-creator/creature-creator-bootstrap.ts`
+- `src/app/(main)/creature-creator/creature-creator-constants.ts`
+- `src/app/(main)/creature-creator/creature-creator-derived-stats.ts`
+- `src/app/(main)/creature-creator/creature-creator-editor-inventory-section.tsx`
+- `src/app/(main)/creature-creator/creature-creator-editor-loadout-sections.tsx`
+- `src/app/(main)/creature-creator/creature-creator-editor-traits-section.tsx`
+- `src/app/(main)/creature-creator/creature-creator-editor.tsx`
+- `src/app/(main)/creature-creator/creature-creator-feat-armament-display.ts`
+- `src/app/(main)/creature-creator/creature-creator-library-selectables.ts`
+- `src/app/(main)/creature-creator/creature-creator-remove-section-confirm-placeholder.ts`
+- `src/app/(main)/creature-creator/creature-creator-skill-bonus.ts`
+- `src/app/(main)/creature-creator/creature-creator-summaries.ts`
+- `src/app/(main)/creature-creator/creature-creator-training-spent.ts`
+- `src/app/(main)/creature-creator/creature-creator-types.ts`
+- `src/app/(main)/creature-creator/creature-creator-workspace-persistence.ts`
+- `src/app/(main)/creature-creator/creature-damage-modifiers.ts`
+- `src/app/(main)/creature-creator/creature-feat-utils.ts`
+- `src/app/(main)/creature-creator/creature-over-budget-notification.ts`
+- `src/app/(main)/creature-creator/creature-skill-utils.ts`
+- `src/app/(main)/creature-creator/creature-sub-skill-highest-ability-label.ts`
+- `src/app/(main)/creature-creator/creature-trait-labels.ts`
+- `src/app/(main)/creature-creator/layout.tsx`
+- `src/app/(main)/creature-creator/map-creature-inventory-rows.ts`
+- `src/app/(main)/creature-creator/page.tsx`
+- `src/app/(main)/creature-creator/transformers.ts`
+- `src/app/(main)/creature-creator/use-creature-creator-workspace.ts`
+
+### `src/app/(main)/empowered-technique-creator`
+
+- `src/app/(main)/empowered-technique-creator/empowered-technique-bootstrap.ts`
+- `src/app/(main)/empowered-technique-creator/empowered-technique-cost-derivation.ts`
+- `src/app/(main)/empowered-technique-creator/empowered-technique-creator-editor.tsx`
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-action-profile.tsx`
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-config.ts`
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-meta.tsx`
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-config.tsx`
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-damage.tsx`
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-parts.tsx`
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-technique-parts.tsx`
+- `src/app/(main)/empowered-technique-creator/empowered-technique-part-actions.ts`
+- `src/app/(main)/empowered-technique-creator/layout.tsx`
+- `src/app/(main)/empowered-technique-creator/page.tsx`
+- `src/app/(main)/empowered-technique-creator/use-empowered-technique-creator-workspace.ts`
+
+### `src/app/(main)/item-creator`
+
+- `src/app/(main)/item-creator/item-creator-bootstrap.ts`
+- `src/app/(main)/item-creator/item-creator-cost-derivation.ts`
+- `src/app/(main)/item-creator/item-creator-editor-ability-properties.tsx`
+- `src/app/(main)/item-creator/item-creator-editor-armor.tsx`
+- `src/app/(main)/item-creator/item-creator-editor-config.ts`
+- `src/app/(main)/item-creator/item-creator-editor-meta.tsx`
+- `src/app/(main)/item-creator/item-creator-editor-shield-panels.tsx`
+- `src/app/(main)/item-creator/item-creator-editor-weapon-shield.tsx`
+- `src/app/(main)/item-creator/item-creator-editor.tsx`
+- `src/app/(main)/item-creator/item-creator-helpers.tsx`
+- `src/app/(main)/item-creator/item-creator-property-actions.ts`
+- `src/app/(main)/item-creator/item-creator-property-options.ts`
+- `src/app/(main)/item-creator/item-creator-save-reset.ts`
+- `src/app/(main)/item-creator/layout.tsx`
+- `src/app/(main)/item-creator/page.tsx`
+- `src/app/(main)/item-creator/use-item-creator-workspace.ts`
+
+### `src/app/(main)/power-creator`
+
+- `src/app/(main)/power-creator/layout.tsx`
+- `src/app/(main)/power-creator/page.tsx`
+- `src/app/(main)/power-creator/power-creator-bootstrap.ts`
+- `src/app/(main)/power-creator/power-creator-composition-band.tsx`
+- `src/app/(main)/power-creator/power-creator-composition.ts`
+- `src/app/(main)/power-creator/power-creator-constants.ts`
+- `src/app/(main)/power-creator/power-creator-cost-derivation.ts`
+- `src/app/(main)/power-creator/power-creator-editor-action-profile.tsx`
+- `src/app/(main)/power-creator/power-creator-editor-config.ts`
+- `src/app/(main)/power-creator/power-creator-editor-meta.tsx`
+- `src/app/(main)/power-creator/power-creator-editor-power-config.tsx`
+- `src/app/(main)/power-creator/power-creator-editor-power-damage.tsx`
+- `src/app/(main)/power-creator/power-creator-editor-power-parts.tsx`
+- `src/app/(main)/power-creator/power-creator-editor.tsx`
+- `src/app/(main)/power-creator/power-creator-from-shared.tsx`
+- `src/app/(main)/power-creator/power-creator-help.tsx`
+- `src/app/(main)/power-creator/power-creator-innate-label.ts`
+- `src/app/(main)/power-creator/power-creator-part-actions.ts`
+- `src/app/(main)/power-creator/power-creator-types.ts`
+- `src/app/(main)/power-creator/use-power-creator-composition.ts`
+- `src/app/(main)/power-creator/use-power-creator-workspace.ts`
+
+### `src/app/(main)/species-creator`
+
+- `src/app/(main)/species-creator/layout.tsx`
+- `src/app/(main)/species-creator/page.tsx`
+- `src/app/(main)/species-creator/species-creator-bootstrap.ts`
+- `src/app/(main)/species-creator/species-creator-editor.tsx`
+- `src/app/(main)/species-creator/species-creator-reset.ts`
+- `src/app/(main)/species-creator/use-species-creator-workspace.ts`
+
+### `src/app/(main)/technique-creator`
+
+- `src/app/(main)/technique-creator/layout.tsx`
+- `src/app/(main)/technique-creator/page.tsx`
+- `src/app/(main)/technique-creator/technique-creator-bootstrap.ts`
+- `src/app/(main)/technique-creator/technique-creator-editor.tsx`
+- `src/app/(main)/technique-creator/technique-creator-reset.ts`
+- `src/app/(main)/technique-creator/use-technique-creator-workspace.ts`
+
+### `src/components/crafting`
+
+- `src/components/crafting/CraftingItemSelectModal.tsx`
+- `src/components/crafting/get-crafting-market-price.ts`
+
+### `src/components/creator`
+
+- `src/components/creator/CreatorLayout.tsx`
+- `src/components/creator/CreatorPageShell.tsx`
+- `src/components/creator/CreatorSaveToolbar.tsx`
+- `src/components/creator/LoadFromLibraryModal.tsx`
+- `src/components/creator/ability-score-editor.tsx`
+- `src/components/creator/advanced-calculations-panel.tsx`
+- `src/components/creator/archetype-selector.tsx`
+- `src/components/creator/collapsible-section.tsx`
+- `src/components/creator/creator-summary-panel.tsx`
+- `src/components/creator/creator-text-fields.tsx`
+- `src/components/creator/health-energy-allocator.tsx`
+- `src/components/creator/index.ts`
+- `src/components/creator/power-part-card.tsx`
+- `src/components/creator/targeted-defenses-section.tsx`
+
+### `src/components/encounters`
+
+- `src/components/encounters/CombatantCard.tsx`
+- `src/components/encounters/add-combatant-modal.tsx`
+- `src/components/encounters/combatant-card-conditions.tsx`
+- `src/components/encounters/combatant-card-header.tsx`
+- `src/components/encounters/combatant-card-helpers.ts`
+- `src/components/encounters/combatant-card-initiative.tsx`
+- `src/components/encounters/combatant-card-quick-actions.tsx`
+- `src/components/encounters/combatant-card-resources.tsx`
+- `src/components/encounters/encounter-combatant-types.ts`
+- `src/components/encounters/encounter-constants.ts`
+
+
+---
+
 ## Left for a later pass
 
 Still not opened file by file:
 
-- Creator implementation folders under `src/app/(main)/power-creator`, `technique-creator`, `empowered-technique-creator`, `item-creator`, `species-creator`, `creature-creator`, and `crafting`.
-- Encounter, campaign, admin codex, and my-account folders under `src/app` beyond the page file each route imports.
-- `src/components/creator` (seen only where the three folders import `AbilityScoreEditor` and `HealthEnergyAllocator`). The rest of that folder was not opened.
-- Modules under `src/lib/` other than the `game/` and `calculators/` sibling lists above (`codex`, `character`, `library`, `guided-creator`, `auth`, and the rest).
+- `src/components/about`, `auth`, `character`, `codex`, `landing`, `layout`, `legal`, `onboarding`, `providers`, `rolls`, `rules`, and `tabletop`.
+- `src/components/ui` beyond the files its barrel does not re-export.
+- `src/app/(main)/encounters/[id]/_components`, `src/app/(detail)/campaigns/[id]/_components`, `src/app/(main)/my-account/_components`, and admin codex screens beyond the page file each route imports.
+- Modules under `src/lib/` other than the `game/` and `calculators/` sibling lists above (`codex`, `character`, `library`, `guided-creator`, `auth`, and the rest). `src/lib/game/creator-constants.ts` was opened only for `CONDITIONS`.
 - Unused exports inside files that something already imports.
-- Line-by-line comparison of files in the three component folders that are not named in the fork section above.
+- Line-by-line comparison of files in `src/components/patterns`, `src/components/character-sheet`, and `src/components/guided-creator` that are not named in that fork section.
+- The files named under "Not read line by line" in the creator section above.
