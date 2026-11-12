@@ -2154,7 +2154,7 @@ Every non-test file under `src/lib/game` and `src/lib/calculators` is already re
 ### Not read line by line
 
 - Health, energy, and cost formulas in the section above are read through that pass’s scope. Skill helpers in `formulas.ts` after innate energy and `skill-allocation.ts` cost helpers are in **Skill and allocation math** below.
-- Character-check and path math is in **Character-check and path math** below. Creature creator budgets are in **Creature creator budget math**. Player proficiency caps and guided TP wiring are in **Player proficiency and training math**. Defense targeting and weapon attack helpers are in **Defense targeting and weapon attack math**. Still unread: `crafting-utils.ts` past the four apply functions, `path-recommendation-index.ts`, `size-table.ts` past `calculateCarryingCapacityKg`, and `creator-cache.ts`.
+- Character-check and path math is in **Character-check and path math** below. Creature creator budgets are in **Creature creator budget math**. Player proficiency caps and guided TP wiring are in **Player proficiency and training math**. Defense targeting and weapon attack helpers are in **Defense targeting and weapon attack math**. Crafting tables, requirements, and outcome math are in **Crafting cost math**. Still unread: `path-recommendation-index.ts`, `size-table.ts` past `calculateCarryingCapacityKg`, and `creator-cache.ts`.
 
 ---
 
@@ -2359,6 +2359,36 @@ Power/technique “can target” defense lists and weapon attack ability / bonus
 - `defensesFromPart`, power/technique chip formatters, and library `part-display` all call the same targeted-defense helpers; no second parse implementation.
 - `getWeaponAttackBonusFromProperties` does not reimplement ability pick; it always calls `getWeaponAttackAbility`.
 - `meetsAbilityRequirement` is the single threshold check for derived requirements on weapons (no duplicate in this slice).
+
+## Crafting cost math (line-by-line pass)
+
+General, enhanced, consumable-enhanced, and upgrade crafting requirements; successes-table outcome; crafting tool wiring. Skips size tables, path recommendations, and creator cache. Not a rules balance sign-off.
+
+### Read to the end
+
+- `findGeneralRow`, `getCraftingRequirements`, `getCraftingSessionLabels`, `getSuccessesTableEffect`, `calculateCraftingOutcome`, enhanced row lookup, `getMultipleUseAdjustedEnergy`, `getEnhancedCraftingRequirements`, `getConsumableEnhancedRequirements`, `getEnhancedMarketPrice`, `getUpgradeRequirements`, and all four optional modifiers in `src/lib/game/crafting-utils.ts`. General material cost is market price × `craftingCostMultiplier`; consumable time uses `Math.max(1, Math.ceil(time × consumableTimeMultiplier))`. Outcome applies successes-table percents to material retained, final cost, item worth, and extra items when delta > 7. Enhanced material cost is effective energy × table `currencyPerEnergy` or consumable `costPerEnergy`. Upgrade uses 75% of price delta, DS from the upgraded row, successes as row difference, and time delta in days (`8` hours = 1 day via `craftingDayHours`).
+- `getCodexEquipmentMarketPrice`, `getLibraryItemMarketPrice`, and helpers in `src/components/crafting/get-crafting-market-price.ts`. Codex rows use `equipmentCurrency` (`currency` / `gold_cost` only). Library and public items use `resolveItemMarketPricing` from `item-calc` (same path as Library and equipment-step).
+- `equipmentCurrency` and `persistEquipmentCost` in `src/lib/codex/equipment-list.ts` (read for crafting currency inputs only).
+- `computeCraftingRequirements`, `computeRequirementsBreakdown`, optional-modifier max-step helpers, multiple-use index/energy wrappers, and `getEffectiveCraftingEnergy` in `src/app/(main)/crafting/[id]/_components/crafting-tool-helpers.ts`. This file applies bulk quantity multipliers, stacks optional modifiers, and merges base-item + enhancement requirements when `craftBaseItemAlso` (combined time in hours/days, summed successes and material, `Math.max` DS).
+- `buildRequirementsSyncPatch`, `computeLiveCraftingOutcome`, `computeBaseOutcomeForDisplay`, session tallies, and roll DS routing in `src/app/(main)/crafting/[id]/_components/crafting-tool-derived.ts` (calls `computeSkillRollResult` from encounter-utils for roll parsing only).
+- `handleComplete` in `use-crafting-tool-page.ts` was read only for whether it duplicates outcome math (it calls the same `calculateCraftingOutcome` path as `computeLiveCraftingOutcome`).
+
+### Still not read line by line (crafting cost scope)
+
+- `src/lib/crafting/crafting-session-persist.ts`, crafting API routes, and `crafting-bootstrap.ts` (persistence, not requirement math).
+- `src/components/crafting/CraftingItemSelectModal.tsx` beyond confirming it calls the market-price helpers (UI wiring).
+- Creator **cost-derivation** wrappers under power/technique/item creators listed elsewhere in this file.
+
+### Disagreements
+
+- math-disagree-unclassified:crafting-codex-stored-currency-vs-library-resolve-market: **Second copy for crafting market price.** `getCodexEquipmentMarketPrice` uses `equipmentCurrency` (stored `currency` / `gold_cost` on the codex row). `getLibraryItemMarketPrice` uses `resolveItemMarketPricing` from property rows and stored cost sums. The item picker uses both for the same “market price” column depending on source, so two items with the same properties can disagree if codex storage and item-calc diverge.
+- math-disagree-unclassified:crafting-codex-currency-vs-persist-equipment-cost: **Second copy for codex equipment currency.** `getCodexEquipmentMarketPrice` stops at `equipmentCurrency`. `persistEquipmentCost` (sheet/catalog persist) falls back to a positive `cost` field when catalog currency is zero. Crafting can show **0** currency for a codex row that still carries a nonzero `cost` elsewhere.
+
+### Same math, separate copies
+
+- `crafting-tool-helpers` and `crafting-utils` share one implementation for table lookup, upgrade, enhanced/consumable enhanced reqs, multiple-use energy, and optional modifiers; the tool file only orchestrates session state and bulk/merge.
+- `computeLiveCraftingOutcome`, `computeBaseOutcomeForDisplay`, and `handleComplete` all call `calculateCraftingOutcome` with the same market-price rules (`getEnhancedMarketPrice` when enhanced, else stored session item price).
+- Enhanced save UI in `crafting-outcome-card.tsx` uses the same `getEnhancedMarketPrice(materialCost)` as live outcome for enhanced items (not a second multiplier formula).
 
 ## Unused exports outside game and calculators
 

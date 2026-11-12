@@ -320,6 +320,11 @@ const DEFENSE_WEAPON_MATH_UNCLASSIFIED_IDS = [
   'weapon-derive-utilized-vs-get-attack-ability',
 ];
 
+const CRAFTING_COST_MATH_UNCLASSIFIED_IDS = [
+  'crafting-codex-stored-currency-vs-library-resolve-market',
+  'crafting-codex-currency-vs-persist-equipment-cost',
+];
+
 function mathSectionSlice(text, heading) {
   const start = text.indexOf(heading);
   if (start < 0) return null;
@@ -485,6 +490,31 @@ requireDisagreementTokens(
   'defense/weapon unclassified',
 );
 
+const craftingCostSection = mathSectionSlice(indexText, '## Crafting cost math');
+if (!craftingCostSection) {
+  console.error('FEATURE_INDEX is missing the crafting cost math section.');
+  process.exit(2);
+}
+if (!craftingCostSection.includes('### Disagreements')) {
+  console.error('FEATURE_INDEX crafting cost section is missing ### Disagreements.');
+  process.exit(2);
+}
+if (!craftingCostSection.includes('### Read to the end')) {
+  console.error('FEATURE_INDEX crafting cost section is missing ### Read to the end.');
+  process.exit(2);
+}
+const craftingCostDisagreements = disagreementsSubsection(craftingCostSection);
+if (!craftingCostDisagreements) {
+  console.error('FEATURE_INDEX crafting cost section has no ### Disagreements body.');
+  process.exit(2);
+}
+requireDisagreementTokens(
+  craftingCostDisagreements,
+  'math-disagree-unclassified',
+  CRAFTING_COST_MATH_UNCLASSIFIED_IDS,
+  'crafting cost unclassified',
+);
+
 const mathDisagreementCount =
   MATH_DISAGREEMENT_INTENTIONAL_IDS.length +
   MATH_DISAGREEMENT_BUG_IDS.length +
@@ -492,7 +522,8 @@ const mathDisagreementCount =
   CHARACTER_PATH_MATH_UNCLASSIFIED_IDS.length +
   CREATURE_BUDGET_MATH_UNCLASSIFIED_IDS.length +
   PROFICIENCY_TRAINING_MATH_UNCLASSIFIED_IDS.length +
-  DEFENSE_WEAPON_MATH_UNCLASSIFIED_IDS.length;
+  DEFENSE_WEAPON_MATH_UNCLASSIFIED_IDS.length +
+  CRAFTING_COST_MATH_UNCLASSIFIED_IDS.length;
 console.log(`FEATURE_INDEX math-disagreement check OK (${mathDisagreementCount} guarded lines).`);
 
 const gen = spawnSync(
