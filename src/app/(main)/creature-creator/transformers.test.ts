@@ -5,11 +5,37 @@ import {
   appendCreatureInventoryItems,
   splitCreatureInventoryByKind,
 } from '@/lib/game/creature-inventory';
+import type { CodexCreatureFeat } from '@/types/codex';
 import {
   customEquipmentItemToCreatureArmament,
   displayItemToCreaturePower,
+  transformCreatureFeatToDisplayItem,
   transformUserPowerToDisplayItem,
 } from './transformers';
+
+function creatureFeat(
+  partial: Partial<CodexCreatureFeat> & Pick<CodexCreatureFeat, 'id' | 'name'>,
+): CodexCreatureFeat {
+  return { description: '', points: 1, ...partial };
+}
+
+describe('transformCreatureFeatToDisplayItem mechanic flag', () => {
+  it('hides a creature feat only when mechanic is true', () => {
+    expect(
+      transformCreatureFeatToDisplayItem(
+        creatureFeat({ id: '36', name: 'Speedy', mechanic: true }),
+      ),
+    ).toBeNull();
+    expect(
+      transformCreatureFeatToDisplayItem(
+        creatureFeat({ id: '36', name: 'Speedy', mechanic: false }),
+      )?.name,
+    ).toBe('Speedy');
+    expect(
+      transformCreatureFeatToDisplayItem(creatureFeat({ id: '18', name: 'Bounding' }))?.name,
+    ).toBe('Bounding');
+  });
+});
 
 describe('transformUserPowerToDisplayItem variants (86e3kfkc2)', () => {
   it('stores variant chips on the creature power so the row can expand', () => {

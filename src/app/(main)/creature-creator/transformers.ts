@@ -297,13 +297,10 @@ export function displayItemToCreatureTechnique(item: DisplayItem): CreatureTechn
 export function transformCreatureFeatToDisplayItem(
   feat: CodexCreatureFeat,
   selectedIds: Set<string> = new Set(),
-  mechanicalFeatIds: Set<number> = new Set(),
 ): DisplayItem | null {
-  // Exclude already selected feats and mechanical feats
+  // Already on the creature, or the stored mechanic toggle marks it as not a picker row.
   if (selectedIds.has(feat.id)) return null;
-
-  const numId = parseInt(feat.id, 10);
-  if (!isNaN(numId) && mechanicalFeatIds.has(numId)) return null;
+  if (feat.mechanic === true) return null;
 
   const points = feat.points ?? 1;
 

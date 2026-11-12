@@ -17,8 +17,6 @@
 
 Official creature feats (Speedy, Speedy II, …) are separate rows with a level number but no link to the first row in the family. Character feats use `base_feat_id` plus one shared library/creator pattern.
 
-The site also keeps a **hard-coded name list** (`creature-trait-tiers.ts`) so movement/sense **chip labels** (for example `Fly Half`, not codex name “Flying”) do not stack. That list is separate from the creature **feat picker** list.
-
 ### What we are not doing
 
 - **Not** writing `base_feat_id` into saved creature JSON (`transformers.ts:130-136` — payload stays `{ id, name, points, description, featSourceType }`).
@@ -297,18 +295,9 @@ Character `CodexFeatRow` (`codex-feat-row.tsx:13-38`) uses character columns fro
 - **`AddCreatureFeatModal.tsx`**: creature tab — `groupFeatFamilies`; one selectable row per family = **highest `feat_lvl` whose creature `lvl_req` is met** (`lvl_req` null OR `creature.level >= lvl_req`). **Do not** use `getMaxQualifiedFeatLevel` / `checkFeatRequirements`. Merge on confirm via `mergeFeatsInFamilyOnAdd` with both maps (`:348-378`).
 - **`creature-creator-feat-armament-display.ts`**: level chips for `featSourceType === 'creature'` using creature catalog map only; **no** `checkFeatRequirements` (`feat-requirements.ts:303-315` is for character feats).
 
-### 4.5 Movement / sense chips (replace `creature-trait-tiers.ts`)
+### 4.5 Movement / sense name lists
 
-**Delete** `creature-trait-tiers.ts` after replacement.
-
-New helper (location TBD, likely `creature-creator/`): chip string → feat id via **`MOVEMENT_TO_FEAT_ID` / `SENSE_TO_FEAT_ID`** (`creature-creator-constants.ts:153-180`), resolve family via **`getFeatFamilyId`** on creature feat defs, remove other tiers in same family, **write back the same chip string** (`Fly Half` stays `Fly Half`; codex names remain Flying / Flying II).
-
-**Consumers to keep working (add to file list):**
-
-- `use-creature-creator-workspace.ts:420-432`
-- `creature-creator-derived-stats.ts:117-133` (feat point costs from id maps)
-- `creature-trait-labels.ts` (display labels for chips)
-- `calculations.ts:93-108` — speed numbers unchanged in this task (B2 owns effect values)
+`creature-trait-tiers.ts`, `MOVEMENT_TYPES`, `SENSES`, `MOVEMENT_TO_FEAT_ID`, and `SENSE_TO_FEAT_ID` are gone. Do not restore them. Saved `movementTypes` names still change speed in `calculations.ts`.
 
 ### 4.6 Docs
 
@@ -350,7 +339,7 @@ After implementation: `npx vitest run src/lib/codex/row-map.test.ts src/lib/leve
 - [ ] Shared merge reducer; **separate** creature vs character maps; payload unchanged.
 - [ ] Creature-tab / movement chip replace works for families with **confirmed distinct `feat_lvl`** (§2 table).
 - [ ] Spectral Movement replace-on-add after §3.2 (116 = 1, 137 = 2).
-- [ ] Tests in §5 green; `creature-trait-tiers.ts` removed.
+- [ ] Tests in §5 green.
 
 ### C. Follow-up (may be same PR or small sibling task)
 
@@ -393,15 +382,13 @@ High: `sql/`, official `codex_creature_feats`, admin codex, creature creator. Ka
 | Display | `leveled-feats.ts` — `formatFeatName`, `parseFeatNameRomanSuffix`, `levelToRomanNumeral` | UI shows `Speedy II` when `name` is `Speedy` and `feat_lvl` is 2; after rename, display stays via `feat_lvl` alone |
 | Creature picker / save | `creature-feat-utils.ts:53`, `AddCreatureFeatModal.tsx:100`, `:358` | `formatFeatName` when adding or listing feats |
 | Character sheet / codex (character feats) | `feats-tab.tsx`, `add-feat-modal.tsx`, `codex-feat-row.tsx`, `AdminFeatsTab.tsx`, `admin-archetype-path-rows.tsx` | Same display helper (creature rename should not break these) |
-| Movement chip **values** (stored on creature) | `creature-creator-constants.ts` — `MOVEMENT_TYPES[]` | `value` strings: `Speedy`, `Speedy II`, `Speedy III`, `Burrow II`, `Jump II`, …; labels/descriptions duplicate roman levels |
-| Sense chip **values** | `SENSES` in same file | `Darkvision II`, `Blindsense II`, `Telepathy II`, … |
-| Chip → feat id maps | `MOVEMENT_TO_FEAT_ID`, `SENSE_TO_FEAT_ID` (`creature-creator-constants.ts:153-180`) | Record keys include roman numerals; **Fly Half** / **Fly** are separate from codex “Flying” names |
-| Feat point budget | `creature-creator-derived-stats.ts:117-133` | Looks up cost by map keys above |
-| Chip labels / descriptions | `creature-trait-labels.ts` | `MOVEMENT_BY_VALUE` / `SENSE_BY_VALUE` keyed by chip `value` strings |
-| Speed calculation (movement strings) | `calculations.ts:93-108` — keys `Speedy`, `Speedy II`, `Speedy III`, `Slow`, … | Creature `movementTypes` array uses chip values, not codex row names |
-| Tests | `calculations.test.ts`, `creature-creator-derived-stats.test.ts`, `creature-trait-tiers.test.ts` | Assert on `Speedy II` style strings |
-| Mechanical ids | `lib/id-constants.ts` — `CREATURE_FEAT_IDS` (`SPEEDY_II`, …) | Constant **names** only; values are numeric ids — stable across rename |
-| Name-based tier hack (removed in Stage 2) | `creature-trait-tiers.ts` | Hard-coded roman name families — deleted here, not a long-term dependency |
+| Movement / sense name lists | removed | `MOVEMENT_TYPES`, `SENSES`, `MOVEMENT_TO_FEAT_ID`, and `SENSE_TO_FEAT_ID` are gone. Do not restore them. |
+| Feat point budget | `creature-creator-derived-stats.ts` | Stored movement and sense names no longer add feat points. |
+| Chip labels / descriptions | removed | The sense and movement label maps are gone. |
+| Speed calculation (movement strings) | `calculations.ts` — keys `Speedy`, `Speedy II`, `Speedy III`, `Slow` | Saved `movementTypes` names still change speed. |
+| Tests | `calculations.test.ts`, `creature-creator-derived-stats.test.ts` | Speed tests still use `Speedy` / `Slow` names. `creature-trait-tiers.test.ts` is gone. |
+| Feat id catalog | `lib/id-constants.ts` — `CREATURE_FEAT_IDS` | Numeric ids only. Not a picker hide list. |
+| Name-based tier hack | removed | `creature-trait-tiers.ts` is gone. |
 | Official data | `codex_creature_feats.name` column (all 26 families) | Row names still `Foo II` until follow-up `UPDATE` + Editor/changelog |
 | Saved library JSON | `user_creatures` / `official_creatures` payload `feats[].name`, `movementTypes[]`, `senses[]` | May embed old strings; follow-up needs read compat or one-time normalize |
 

@@ -1,5 +1,5 @@
 /**
- * Creature Creator — resistances, senses, movement, conditions, languages (TASK-610)
+ * Creature Creator — resistances, weaknesses, immunities, condition immunities, languages (TASK-610)
  */
 
 'use client';
