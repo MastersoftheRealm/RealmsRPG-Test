@@ -27,12 +27,14 @@ Do **not** treat the writer's PR description, survey, or reasoning as evidence. 
 
 You are a critic. Think like a developer who wants the long-term best version of this codebase, not a pass for the person who opened the pull request. Question the rationale. Trust nothing that is only claimed: not the PR body, not the REAL FIX label, not “this matches the task,” not a green check. The code, the task’s done-when, and a test you ran are what count.
 
+Watch for **AI bloat**: oversized diffs, redundant or vanity tests, plan dumps, comment fluff, doc prose that restates the PR, extra helpers that duplicate `src/lib/` or barrels, and “while I’m here” files. Bug-fix and refine PRs should **lean net-negative** when that is honest (delete or fold what the fix replaces). Net-negative is not required on every PR, but bloat on a small fix is a **REQUEST CHANGES** or a blocking note when it hides the real change.
+
 ## Five questions
 
 Answer each. A fail needs `file:line`. These five are the critic’s questions (Kadin, Nov 12, 2026). They do not replace the constitution checklist below.
 
 1. **Real task, real cause.** Is there a real task with a clear outline and a done-when? Did the change find the root cause in the code path, and remove it? A missing task, a vague done-when, or a fix that leaves the cause in place fails. That last case is a PATCH, not a REAL FIX.
-2. **Does the job, at the right size.** Does the diff do what that done-when asked, without building extra machinery and without a shortcut that will break the next similar change?
+2. **Does the job, at the right size.** Does the diff do what that done-when asked, without building extra machinery and without a shortcut that will break the next similar change? Fail obvious **AI bloat** (unnecessary tests, bulk docs, duplicate logic, huge `+` lines unrelated to the cause). On fix/refine work, ask whether the PR should be **smaller or net-negative** and name what to delete or merge.
 3. **No second copy.** Does it extend the existing helper, component, or pattern? Fail a new fork, pasted logic, or a duplicate component that should have been shared or deleted.
 4. **Same practice as the rest of the codebase.** Does it use the current shared components, barrels, and patterns the neighboring code already uses? Fail a private copy of something `FEATURE_INDEX.md` or `src/lib/` already has.
 5. **The rest of the bar.** Grade constitution items 1–15 in `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` (pass / fail / n/a, `file:line` on every fail). The five questions above do not cover all of that. Do not skip:
@@ -57,7 +59,14 @@ When Kadin has invoked the Collin-unavailable fallback (`AGENTS.md`), run this c
 
 If the task crosses systems, stop and say to split it. Do not jump to a bigger model to finish a wide task.
 
-After **`/remediate`**, a second `/audit` checks only the prior **Required changes**. Two audit↔remediate cycles maximum (`AGENTS.md`, Review); then escalate.
+After **`/remediate`**, the next `/audit` checks prior **Required changes** first, then the whole diff again for new bloat.
+
+### Audit rounds (no hard stop at two)
+
+Typical loop: write → audit (1) → remediate → audit (2) → … (`AGENTS.md`).
+
+- **Rounds 1–2:** normal **REQUEST CHANGES** / **APPROVE** / **HOLD**.
+- **Round 3+** and still **REQUEST CHANGES** or **HOLD:** you **must** add a **For Kadin** escalation block (plain language): what is still wrong, whether the problem looks **bigger than the PR** (wrong approach, crossed systems, unclear done-when), **two or more options** (including split task, revert slice, one more remediate, stop), and whether **another `/remediate` is likely to finish** or would be churn. Do not forbid round 3 or another remediate; **warn** so Kadin can choose. Only quote his words if he already decided on the task or PR.
 
 ## Verdict
 
@@ -66,7 +75,7 @@ Use the reviewer verdict block in `ARCHITECTURE_CONSTITUTION.md` (APPROVE, REQUE
 Before the checklist lines, answer the five questions in one line each (pass or fail, with `file:line` on a fail).
 
 - **APPROVE** when blocking items pass, the repro was run, CI is green, the label is not an unaccepted PATCH, and either (a) you are not the writer, or (b) Kadin recorded on the task or PR that this full `/audit` satisfies separate critic for this PR.
-- **REQUEST CHANGES** lists required changes the writer must fix. **`/remediate`** (`.cursor/commands/remediate.md`) applies only those items, then another `/audit` runs (max two audit↔remediate cycles per PR; then escalate — `AGENTS.md`).
+- **REQUEST CHANGES** lists required changes the writer must fix (including **trim bloat** when Q2 fails). **`/remediate`** applies those items, then another `/audit` runs. Round 3+ with remaining blockers needs the **For Kadin** escalation block above.
 - **HOLD FOR HUMAN** when the path is high-risk, a rule is missing or conflicting, a product decision is open, you are the writer without the owner override, or your label is PATCH.
 
 ## Do not

@@ -15,19 +15,21 @@ Authority: `AGENTS.md` (Review, write/check/write loop). Critic procedure: `.cur
 - **HOLD FOR HUMAN** (get the human decision on the task or PR first).
 - **PATCH** without Kadin’s acceptance on the PR when the audit said PATCH veto applies.
 
-## Audit ↔ remediate loop (two cycles max)
+## Audit ↔ remediate loop
 
-Per PR, at most **two** full cycles:
+Typical path:
 
 1. Write (Phase 2) → `/audit` (round 1)
 2. `/remediate` → `/audit` (round 2)
-3. If round-2 audit is still **REQUEST CHANGES**, **HOLD FOR HUMAN**, or an unaccepted **PATCH**, **stop**. Escalate to Collin (how) or Kadin (what / rule / merge) with the audit table and what remediate already tried. Do not start audit round 3 on the same PR unless Kadin waives the limit on the task or PR or splits the work.
+3. Repeat while audits stay **REQUEST CHANGES** and remediate is closing real gaps.
 
-Commands exist so agents follow this loop consistently; do not improvise a third rewrite pass on the same model without that waiver.
+There is **no automatic hard stop** at two cycles. After **two** full audit↔remediate cycles, if the next audit still blocks, that audit **must** flag Kadin (see `audit.md`, round 3+). **Pause** another large remediate until he picks an option — unless the audit says one more narrow remediate will likely finish.
+
+Prefer **deleting** bloat the audit named over adding compensating code. Net-negative remediate is good when the audit cited AI bulk on a fix/refine PR.
 
 ## Scope
 
-Only what the audit **Required changes** section names (file:line and fix). Do not refactor unrelated code, refresh docs for doc-only nits, or “clean up while here.”
+Only what the audit **Required changes** section names (file:line and fix), including **remove** tests, docs, files, or helpers the audit flagged as bloat. Do not refactor unrelated code beyond that list, refresh doc-only nits the audit did not require, or “clean up while here” with new files.
 
 If a required change is not fixable without a product or rule decision, **stop** and report; do not patch around it.
 
@@ -67,5 +69,5 @@ You are the **implementer** again: extend existing patterns, smallest diff that 
 - …
 
 ### Next
-- `/audit` round N+1, or escalate if N was 2 and audit still blocks.
+- `/audit` round N+1. If N ≥ 2 and gaps remain, expect the audit to escalate to Kadin; wait for his choice before a broad third remediate.
 ```

@@ -48,10 +48,10 @@ Commands carry this loop more reliably than prose alone. Default PR path:
 | 1 | Phase 2 build | **Writer** (implementer) |
 | 2 | `/audit` (round 1) | **Critic** — `.cursor/commands/audit.md`; checklist in `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` |
 | 3 | `/remediate` if **REQUEST CHANGES** | **Writer** again — `.cursor/commands/remediate.md`; only audit **Required changes** |
-| 4 | `/audit` (round 2) | **Critic** — checks prior gaps only |
+| 4 | `/audit` (round 2+) | **Critic** — prior gaps, then whole diff (incl. AI bloat / net-negative lean on fix/refine PRs) |
 | 5 | **APPROVE** + green CI | Merge per [Merge](#merge) |
 
-**Two audit↔remediate cycles at most** per PR. After round-2 audit still blocks, stop and escalate to Collin (how) or Kadin (what / rule / merge decision). Do not start a third cycle unless Kadin waives the limit on the task or PR or splits the work.
+**Typical loop is two audit↔remediate cycles**; there is **no hard stop** at two. If a **third or later audit** still blocks, the audit **must** warn Kadin in plain language: likely bigger issue, options (split task, revert, one more remediate, stop), and whether another remediate is worthwhile. Pause a large third remediate until he chooses unless the audit says one narrow remediate should finish it. Collin still owns **how** when engineering approach is stuck.
 
 `/cleanup` in chat is an alias for **`/remediate`** (`.cursor/commands/cleanup.md` points here).
 
