@@ -22,7 +22,7 @@ Stack: Next.js App Router, React, Tailwind, Supabase (no Prisma), Vercel. Repo `
 ### Phase 1 — Survey (read-only, always)
 
 1. Read the ClickUp task, its latest comments, and `src/docs/ai/DECISIONS.md` for rulings on the topic. Writers and reviewers read the **same** sources.
-2. Read every file in the affected area, its callers and what it depends on. Search `src/docs/ai/FEATURE_INDEX.md`, the barrels and `src/lib/` for existing helpers before proposing anything new.
+2. Read every file in the affected area, its callers and what it depends on. Search the barrels and `src/lib/` and open the file before proposing anything new. `src/docs/ai/FEATURE_INDEX.md` may only give you a path. A sentence in that index is not proof the helper exists or behaves that way.
 3. Write the survey in plain English on the ClickUp task (or the draft PR):
    - **Root cause** (traced through the real code path, not guessed).
    - **Area health:** forks, duplicates, dead code, rule literals, missing tests, unclear done-when.
@@ -33,11 +33,12 @@ Stack: Next.js App Router, React, Tailwind, Supabase (no Prisma), Vercel. Repo `
 
 ### Phase 2 — Build
 
-1. One task, one branch, one PR. Branch from current `origin/master`; include the ClickUp id in the branch name (a platform prefix such as `cursor/` is fine). Never push `master`.
-2. Write a test that **fails before** the fix and **passes after**, from the repro, when feasible. Run it locally; CI runs the rest.
-3. Make the smallest change that removes the root cause. Extend existing code; do not add a parallel helper. Delete what you replace.
-4. Update or delete any doc text your change makes stale, in the same PR.
-5. Fill in `.github/PULL_REQUEST_TEMPLATE.md` completely. Open the PR as a draft so CI starts.
+1. One task, one branch, one PR. Branch from current `origin/master`; include the ClickUp id in the branch name (a platform prefix such as `cursor/` is fine). Never push `master`. Put the same task id and link in the PR **ClickUp** section (`.github/PULL_REQUEST_TEMPLATE.md`).
+2. When coding starts, move the linked ClickUp task to **in progress** and add the one-line start comment (see [ClickUp](#clickup)). Use the ClickUp MCP when it is connected; otherwise `CLICKUP_API_TOKEN` in `.env.local` (API v2). Never print the token.
+3. Write a test that **fails before** the fix and **passes after**, from the repro, when feasible. Run it locally; CI runs the rest.
+4. Make the smallest change that removes the root cause. Extend existing code; do not add a parallel helper. Delete what you replace.
+5. Update or delete any doc text your change makes stale, in the same PR.
+6. Fill in `.github/PULL_REQUEST_TEMPLATE.md` completely. Open the PR as a draft so CI starts; comment on the ClickUp task with the PR link.
 
 ### Review
 
@@ -53,13 +54,13 @@ Commands carry this loop more reliably than prose alone. Default PR path:
 
 **Typical loop is two audit↔remediate cycles**; there is **no hard stop** at two. If a **third or later audit** still blocks, the audit **must** warn Kadin in plain language: likely bigger issue, options (split task, revert, one more remediate, stop), and whether another remediate is worthwhile. Pause a large third remediate until he chooses unless the audit says one narrow remediate should finish it. Collin still owns **how** when engineering approach is stuck.
 
-`/cleanup` in chat is an alias for **`/remediate`** (`.cursor/commands/cleanup.md` points here).
+`/cleanup` is removed. It is not an alias. The writer pass after **REQUEST CHANGES** is `/remediate` only.
 
 Additional rules:
 
 1. Default critic model routing and the owner override for a full `/audit` are in `.cursor/commands/audit.md`; this file does not restate them.
 2. The critic **runs** the repro test and checks CI; reading the diff alone is not enough.
-3. Only correctness, security, data-safety and checklist failures block. Anything else is a note; it becomes a ClickUp task only if Kadin or Collin chooses.
+3. Only correctness, security, data-safety and checklist failures block. A checklist miss is not a note: if the review names a stale doc line, a missing test, a swallowed error, or any other checklist miss, that item fails and the verdict cannot be APPROVE. Anything that is not a checklist item is a note; it becomes a ClickUp task only if Kadin or Collin chooses.
 4. **PATCH veto.** If the reviewer judges the change a PATCH (whatever the writer labelled it), it does not merge unless Kadin explicitly accepts it as a patch in his own comment on the PR ("I accept this as a PATCH because …"). An agent relaying his acceptance does not count.
 5. Rules-math or rules-value PRs also go to the Rules Balance Analyst for a ruling check before Kadin signs off.
 
@@ -88,7 +89,22 @@ The merge button is not a code review. Kadin does not read code, so his click is
 
 ### ClickUp
 
-ClickUp is the only work queue. Statuses: **to do** → **in progress** (one comment: agent, time, model, one line) → **in review** (PR open, reviewer passed, CI green) → **testing** (merged; QA steps in a comment) → **complete** (humans only). Stopping with no PR returns the task to **to do**. Already fixed on master: no branch, move to **testing** with evidence. Covered or superseded: stays **to do** with a comment. A vague task is split by whoever filed it, or stays **to do** with a comment; do not invent the split. Do not write `ACTIVE_TASKS.md`, `AI_TASK_QUEUE.md` or `AI_CHANGELOG.md`, and do not put `TASK-###` in commit subjects. Write to ClickUp only when Kadin has said to, using `CLICKUP_API_TOKEN` from `.env.local`; never print it. Priority order: urgent, high, normal, low; skip tasks with unfinished dependencies. Assign Bob (`95261690`; legally James Owenby) only for high-importance or obvious visual QA. Collin Morrison is `44381886`.
+ClickUp is the only work queue. **Coding agents must keep the linked task current** — status moves and workflow comments — for every task they implement. Status detail: `.cursor/rules/realms-tasks.mdc`. ClickUp MCP (preferred when connected in Cursor) or `CLICKUP_API_TOKEN` in `.env.local` (API v2). Never print the token.
+
+**Status order:** **to do** → **in progress** → **in review** → **testing** → **complete** (humans only).
+
+| When | ClickUp update |
+|------|----------------|
+| Phase 2 starts | **in progress** + one-line comment: agent name, date/time (America/New_York), model |
+| Phase 1 survey (when it goes on the task, not only the PR) | Survey comment on the task |
+| Draft PR opened | Comment with PR link; task id must match PR **ClickUp** section |
+| `/audit` **APPROVE** + green CI | **in review** (writer or merge bot — not the critic during `/audit`) |
+| Merge | **testing** + QA steps comment when the change is user-facing |
+| Stop with no PR | **to do** + short reason |
+
+Stopping with no PR returns the task to **to do**. Already fixed on master: no branch, move to **testing** with evidence. Covered or superseded: stays **to do** with a comment. A vague task is split by whoever filed it, or stays **to do** with a comment; do not invent the split. Agents never move **complete**. Do not write `ACTIVE_TASKS.md`, `AI_TASK_QUEUE.md` or `AI_CHANGELOG.md`, and do not put `TASK-###` in commit subjects.
+
+Priority order: urgent, high, normal, low; skip tasks with unfinished dependencies. Assign Bob (`95261690`; legally James Owenby) only for high-importance or obvious visual QA. Collin Morrison is `44381886`.
 
 ## Risk by path
 
@@ -136,7 +152,7 @@ One fact, one place. Other docs link; they do not restate.
 | Settled product rulings, open rule conflicts | `src/docs/ai/DECISIONS.md`. Coding agents follow the repo. The Editor copies new rulings to Drive. |
 | Game terms and formulas | `src/docs/GAME_RULES.md`; live values in the `core_rules` table. A newer ruling in `DECISIONS.md` wins. Drive rulebook text that still disagrees is flagged for the Editor, not followed over the repo. |
 | Schema | `src/docs/SUPABASE_SCHEMA.md` |
-| Does it already exist? | `src/docs/ai/FEATURE_INDEX.md` and the barrels |
+| Does it already exist? | The barrels and `src/lib/` (open the file). `src/docs/ai/FEATURE_INDEX.md` is a path map only. |
 | Areas not to copy from | `DEFERRED.md` |
 | UI, responsive, accessibility | `src/docs/MOBILE_UX.md`, `src/docs/DESIGN_SYSTEM.md`, `src/docs/ACCESSIBILITY.md` (UI rules attach automatically for `.tsx`) |
 | Component patterns | `src/docs/ai/AGENT_GUIDE.md` and its `guide/` appendices |

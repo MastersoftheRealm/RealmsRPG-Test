@@ -4,6 +4,8 @@ Switch from **critic** to **writer**. Take the latest `/audit` findings and fix 
 
 Authority: `AGENTS.md` (Review, write/check/write loop). Critic procedure: `.cursor/commands/audit.md`.
 
+`/cleanup` is removed. It is not an alias. Do not tidy, sweep docs, or clean up while here because someone typed `/cleanup`. The writer pass after **REQUEST CHANGES** is this command only.
+
 ## When to run
 
 - The latest `/audit` verdict is **REQUEST CHANGES** and lists **Required changes** (blocking checklist or five-question fails).
@@ -31,6 +33,8 @@ Prefer **deleting** bloat the audit named over adding compensating code. Net-neg
 
 Only what the audit **Required changes** section names (file:line and fix), including **remove** tests, docs, files, or helpers the audit flagged as bloat. Do not refactor unrelated code beyond that list, refresh doc-only nits the audit did not require, or “clean up while here” with new files.
 
+A required change that names a stale doc line: edit or delete that sentence so it matches the code you opened. Do not leave the old sentence and add a second one beside it. Do not copy the old index wording forward. `FEATURE_INDEX.md` is a path map; fix the line against the file, not against the index.
+
 If a required change is not fixable without a product or rule decision, **stop** and report; do not patch around it.
 
 ## Procedure
@@ -48,6 +52,7 @@ You are the **implementer** again: extend existing patterns, smallest diff that 
 ## Do not
 
 - Expand beyond Required changes.
+- Treat `/cleanup` as a command or an alias of this one.
 - Re-audit your own diff in this turn (that is `/audit`).
 - Rewrite the whole task because round 1 failed broadly.
 - Type approvals for Kadin or Collin.

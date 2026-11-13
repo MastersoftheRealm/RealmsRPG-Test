@@ -1299,6 +1299,7 @@ Every path below is a non-test source file. The checker fails if one is missing 
 - `src/app/(main)/admin/codex/admin-codex-edit-modal-footer.tsx`
 - `src/app/(main)/admin/codex/admin-codex-feat-level-fields.tsx`
 - `src/app/(main)/admin/codex/admin-codex-level-save.ts`
+- `src/app/(main)/admin/codex/admin-pending-feat-level-id.ts`
 - `src/app/(main)/admin/codex/admin-codex-row-actions.tsx`
 - `src/app/(main)/admin/codex/admin-codex-save-target.ts`
 - `src/app/(main)/admin/codex/admin-codex-source-field.tsx`
@@ -3202,6 +3203,7 @@ No production file imports these names. A test import does not count. The file t
 
 - `src/app/(main)/admin/codex/admin-codex-unsaved-leave.ts`: `codexEditorWarning`, `CodexEditorExit` (type)
 - `src/app/(main)/admin/codex/admin-property-form.ts`: `normalizePropertyType`
+- `src/app/(main)/admin/codex/use-admin-leveled-feat-session.ts`: `resolveAdminLeveledFeatAddSource`
 - `src/app/(main)/admin/codex/codex-column-map.ts`: `columnarDbColumns`
 - `src/app/(main)/admin/codex/codex-spreadsheet-helpers.ts`: `rowDataWithoutId`
 - `src/app/(main)/admin/core-rules/core-rules-conditions.ts`: `LEVELED_CONDITION_NAMES`
@@ -3213,6 +3215,7 @@ No production file imports these names. A test import does not count. The file t
 - `src/app/(main)/creature-creator/creature-creator-remove-section-confirm-placeholder.ts`: `REMOVE_SECTION_CONFIRM_CONFIRM_LABEL`, `REMOVE_SECTION_CONFIRM_DESCRIPTION`
 - `src/app/(main)/creature-creator/map-creature-inventory-rows.ts`: `creatureArmamentToSheetItem`
 - `src/app/(main)/creature-creator/transformers.ts`: `customEquipmentItemToCreatureArmament`
+- `src/lib/encounter/character-resource-sync.ts`: `CharacterResourcePatch` (type)
 - `src/app/(main)/encounters/[id]/_components/combat/use-combat-round-actions.ts`: `encounterStateAfterEnd`, `encounterStateAfterStart`
 - `src/app/(main)/encounters/[id]/_components/encounter-play-page-shell.tsx`: `encounterPlayPageGatePhase`
 - `src/app/(main)/item-creator/item-creator-editor-armor.tsx`: `ARMOR_FIELD_GRID_CLASS`
@@ -3309,7 +3312,6 @@ No production file imports these names. A test import does not count. The file t
 - `src/lib/crop-image.ts`: `CROPPED_IMAGE_EXTENSION`
 - `src/lib/detail-option/combat-builder.ts`: `powerToDetailOption`, `techniqueToDetailOption`
 - `src/lib/detail-option/compact-facts.ts`: `capitalizeSpacesTerm`, `formatCriticalRangeIncreaseFact`, `formatCurrencyFact`, `formatEnergyFact`, `formatHandednessFact`, `formatRangeFact`, `formatSpacesFact`, `formatTrainingPointsFact`, `formatWeaponAbilityFact`, `propertyDescriptorChip`
-- `src/lib/encounter/character-resource-sync.ts`: `CharacterResourcePatch` (type)
 - `src/lib/encounter/unique-campaign-characters.ts`: `hasDuplicateCampaignCharacters`
 - `src/lib/glr/validate-glr-chrome-spacing.ts`: `assertGlrChromeSpacingSources`, `expectedRowChromeFromRowActions`, `resolvedRowChromeFlags`, `scanGlrChromeSpacingSources`, `validateCodexBrowseShellSource`, `validateCreatorEmbeddedGlrSource`, `validateGlrGridColumnSource`, `validateGlrListClassName`, `validateGlrPublicBarrelSource`, `validateGlrRowLayoutSource`, `validateMyLibraryEntityTabSource`, `validateUsmListShellSource`, `validateUsmQuantityChromeSource`
 - `src/lib/glr/validate-glr-facts.ts`: `assertRowFactCoverage`, `assertSurfaceColumnConfig`, `validateRowFactCoverage`, `validateSurfaceColumnConfig`
@@ -3388,6 +3390,7 @@ No production file imports these names. A test import does not count. The file t
 - `src/app/(main)/admin/codex/use-admin-archetype-selection-options.ts`: `AdminArchetypeSelectionOptionsInput` (type)
 - `src/app/(main)/admin/codex/use-admin-codex-delete.tsx`: `AdminCodexDelete` (type)
 - `src/app/(main)/admin/codex/use-admin-codex-entity.tsx`: `AdminCodexNamedEntity` (type)
+- `src/app/(main)/admin/codex/use-admin-leveled-feat-session.ts`: `AdminLeveledFeatFamilyEntry` (type)
 - `src/app/(main)/admin/codex/use-codex-spreadsheet.ts`: `PendingRowChange` (type)
 - `src/app/(main)/admin/core-rules/core-rules-conditions.ts`: `ConditionsEditorShape` (type)
 - `src/app/(main)/admin/core-rules/core-rules-number.ts`: `CoreRulesNumberResult` (type)
@@ -3578,6 +3581,7 @@ No production file imports these names. A test import does not count. The file t
 - `src/lib/creator/creator-edit-query.ts`: `CreatorEditClear` (type)
 - `src/lib/creator/creator-unsaved-guard.ts`: `CreatorBackLocation` (type)
 - `src/lib/creator/private-library-name-save.ts`: `PrivateLibraryNameSave` (type)
+- `src/lib/encounter/character-resource-sync.ts`: `buildResourcePatchFromCharacter`
 - `src/lib/encounter/unique-campaign-characters.ts`: `DuplicateCampaignCharacterReport` (type)
 - `src/lib/glr/glr-density.ts`: `GlrModeSpec` (type)
 - `src/lib/glr/glr-fact-catalog.ts`: `GlrEntityFactMeta` (type), `GlrFactDef` (type)

@@ -4,7 +4,11 @@
  */
 
 import type { CreatureFeat } from '@/hooks';
-import { computeNextLeveledFeatFields } from '@/lib/leveled-feats';
+import {
+  computeNextLeveledFeatFields,
+  maxFeatLevelInFamily,
+  type LeveledFeatLike,
+} from '@/lib/leveled-feats';
 import { codexSourcesOrCore, DEFAULT_CODEX_SOURCES } from '@/lib/codex/sources';
 import { storedFeatCategoryLabel } from '@/lib/codex/feat-list';
 
@@ -62,11 +66,17 @@ export function creatureFeatToFormState(feat: CreatureFeat): CreatureFeatFormSta
 export function computeNextCreatureFeatFormState(
   sourceForm: CreatureFeatFormState,
   sourceDbFeatId: string,
+  existingFamilyLevels?: readonly LeveledFeatLike[],
 ): CreatureFeatFormState {
+  const familyMax =
+    existingFamilyLevels && existingFamilyLevels.length > 0
+      ? maxFeatLevelInFamily(existingFamilyLevels)
+      : undefined;
   const next = computeNextLeveledFeatFields({
     sourceFeatLvl: sourceForm.feat_lvl,
     sourceBaseFeatId: sourceForm.base_feat_id.trim() || undefined,
     sourceDbFeatId,
+    existingFamilyMaxLevel: familyMax,
   });
   return {
     ...sourceForm,
