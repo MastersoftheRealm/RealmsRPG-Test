@@ -1,228 +1,3666 @@
-# Feature Index — "Does this already exist?"
+# Feature Index — files that exist
 
-**Purpose:** The anti-re-implementation guardrail. Before building a new component, hook, service, route, or util, scan this index first. Most accidental duplication in this repo came from agents not knowing a feature already existed.
+**Status: PATCH.** The previous text described how features behave. That prose was not re-read against the functions it named, so it was removed. This file is a map of files. It is not a description of game rules or of what a screen does, except for the few import and redirect lines cited below.
 
-**Also check:** generated barrel inventory [`FEATURE_INDEX_BARRELS.generated.md`](FEATURE_INDEX_BARRELS.generated.md) (`npm run tasks:generate-index` after changing barrel exports). CI fails if that file is stale.
+Checked on this pass:
 
-**How to use:** Find your topic below → open the listed file/barrel → extend it (add a prop/variant) rather than forking a parallel copy. If you add a new top-level feature/hook/shared component, add a line here **and** regenerate the barrel file if you changed an index.ts export.
+- Every `page`, `layout`, `route`, `loading`, `error`, `not-found`, `robots`, `sitemap`, and `opengraph-image` file under `src/app`, plus `src/proxy.ts`, `src/instrumentation.ts`, and `src/instrumentation-client.ts`.
+- Every `index.ts` / `index.tsx` under `src`.
+- Sibling source files that these barrels do **not** re-export: `src/lib/game/index.ts`, `src/lib/calculators/index.ts`, `src/hooks/index.ts`, `src/services/index.ts`, `src/stores/index.ts`, `src/components/ui/index.ts`.
+- Same-name modules and the two help widgets, by opening those files.
+- Every non-test `.ts` / `.tsx` file under `src/components/patterns`, `src/components/character-sheet`, and `src/components/guided-creator`: static imports, plus the pairs named in that section, which were opened. The other files in those folders were not read line by line.
+- Every non-test `.ts` / `.tsx` file under `src/components/creator`, `src/components/crafting`, `src/components/encounters`, and the creator and crafting page folders named in that section. The pairs in that section were opened. The files listed there as not read line by line were not.
+- Every non-test `.ts` / `.tsx` file under `src/components/character`, `src/components/codex`, `src/app/(main)/encounters/[id]/_components`, and `src/app/(detail)/campaigns/[id]/_components`. The pairs in that section were opened. The files listed there as not read line by line were not.
+- Every non-test `.ts` / `.tsx` file under `src/components/rolls`, `rules`, `tabletop`, `layout`, `landing`, `about`, `auth`, `legal`, `onboarding`, `providers`, and `src/app/(main)/my-account/_components`. The pairs in that section were opened. The files listed there as not read line by line were not.
+- Every non-test `.ts` / `.tsx` file under `src/components/ui` and `src/app/(main)/admin/codex`. The pairs in that section were opened. The files listed there as not read line by line were not.
+- Every non-test `.ts` / `.tsx` file under the other `src/app/(main)/admin` screens, `src/lib/codex`, `src/lib/character`, `src/lib/library`, `src/lib/auth`, `src/lib/guided-creator`, and `src/lib/password-policy.ts`. The pairs in that section were opened. The files listed there as not read line by line were not.
+- Every non-test `.ts` / `.tsx` file under `src/lib/character-sheet`, `crafting`, `creator`, `encounter`, `rolls`, `rules`, `tabletop`, `validation`, `constants`, and `utils`, plus `src/lib/admin.ts` and the other loose files directly under `src/lib/`. The pairs in that section were opened. The files listed there as not read line by line were not.
+- Every non-test `.ts` / `.tsx` file under `src/lib/ancestry`, `api`, `chip`, `data-enrichment`, `detail-option`, `glr`, `observability`, `routes`, `security`, `server`, `supabase`, `tooltips`, and `ui`. The pairs in that section were opened. The files listed there as not read line by line were not.
+- The modules `src/lib/game/index.ts` and `src/lib/calculators/index.ts` re-export. The pairs in that section were opened. The files listed there as not read line by line were not. The sibling files those barrels do not re-export were already named and were not re-read in that section.
+- Every non-test `.ts` / `.tsx` file under public codex, library (including `components` and `hooks`), character detail, the characters list, the campaigns list (including the tabletop page), campaign detail outside `_components`, auth, encounter mixed and skill, the profile-picture upload route, and the styleguide. The pairs in that section were opened. The files listed there as not read line by line were not.
+- Every non-test `.ts` / `.tsx` file under `src/hooks`, `src/services`, and `src/stores`. The pairs in that section were opened. The files listed there as not read line by line were not. The barrel-gap names already in this index were not re-read.
+- The game and calculator sibling files the barrels do not re-export, and the formula and cost files named in that section. The pairs in that section were opened. The files listed there as not read line by line were not.
+- Exported names outside `src/lib/game` and `src/lib/calculators`. A production import, including `import()`, counts. A test import does not. The names are in the unused-export section.
 
-> This is a map, not the source of truth for behavior. For schema use `SUPABASE_SCHEMA.md`, for formulas `GAME_RULES.md`, for data flow `ARCHITECTURE.md`.
+Not checked, so silence here is not "it does not exist" and not "there is no fork":
+
+- Behavior of calculators, saves, or admin editors. This file is a map of files and copies. It is not a re-check of how every screen behaves.
+- Pairs of files that are not named in a fork section below.
+- The bodies named under "Not read line by line".
+
+Export **names** for patterns, ui, hooks, and services are in [`FEATURE_INDEX_BARRELS.generated.md`](FEATURE_INDEX_BARRELS.generated.md). That generated file is not a list of what is used, and it does not read the other barrels.
+
+`scripts/validate-feature-index.js` checks that backticked `src/...` paths in this file exist. The same script fails if an app entry, a `src` barrel, a sibling missing from the six barrels above, a loose file directly under `src/lib`, or a non-test source file in the folders listed in that script is absent from this file. It also fails if the unused-export section does not match a production-import scan, or if a guarded `math-disagree-intentional`, `math-disagree-bug`, `math-disagree-deferred`, or `math-disagree-unclassified` line is dropped from a formula math section below.
 
 ---
 
-## Pages / features (`src/app/(main)/*`)
+## Routes with no page file
 
-| Feature | Route / page |
-|---------|--------------|
-| Home / marketing landing | `(main)/page.tsx` (RSC; `HeroSection` is the client island) + `components/landing/` — copy SoT `lib/constants/copy/landing-copy.ts`. Guest primary CTA **Create Character** → `/characters/new` (repeated after how-it-works). Steps: Create a character → Find a table (Discord invite) → Start playing (TASK-763). Closing tertiary **Join the Discord**. Do not reintroduce a root App Router page that wraps `(main)/layout` (chrome remount). |
-| Character list / dashboard | `characters/page.tsx` — square portrait cards (1:1 crop); no search/ListHeader. Signed-out users see browser-local characters (`local-` ids, ADR-0026 / TASK-904); signed-in list is the account plus any leftover unmigrated locals. |
-| Character sheet (view + edit) | `characters/[id]/page.tsx` facade + `use-character-sheet-page.ts` (composes data/ui hooks). Document SoT: `useCharacter` + `setQueryData` on `characterKeys.detail`. Other-user GET uses referenced `enrichment` (skip catalog hooks); owner keeps catalog hooks for add-X. Layout: `CharacterSheetBody` (single library mount; C1 `CharacterSheetColumn` carousel; C4 one dock — `sheet-mobile-action-dock` + RollLog). Below `md`, the column (`data-sheet-mobile-column`) is the vertical scroller (header in flow — TASK-907); inactive snap panels are height 0; carousel `touch-pan-x` with vertical pan forwarded to the column; snap panels share PageContainer width with the header (no carousel `-mx`/`scroll-px`); C1 affordance is a sticky compact `SegmentedControl` (not a carousel fade mask). Library: `library-section.tsx` + `LIBRARY_TAB_DEFS`. Those tabs share `character-sheet-library-panel` (`useTabGroup` + `TabContentPanel`) so each `aria-controls` resolves (86e3k0cfz). Sheet edit drops current Health or Energy to the new max when that max falls and current would stay above it (`lib/character/current-follows-max.ts`, 86e3juy8e). Full and partial recovery do not lower Health or Energy already above max, and the recovered amount is never negative (`lib/character/recovery-over-max.ts`, 86e3jv000). Extend this shell — do not fork a second body, library mount, or bottom dock. |
-| Character sheet Library → Powers | `character-sheet/library-powers-panel.tsx` — Innate Energy summary and Innate Powers heading reuse global `innateEnergyHelp` / `innatePowersHelp`; `PowersListSection.titleAddon` passes help through shared `SectionHeader` (TASK-733). Play spend is `library-entity-rows` `buildEnergyButton`; an innate power keeps its Energy number and does not spend current Energy (`lib/character/power-energy-spend.ts`, 86e3jvfmf). |
-| Character creator entry (Guided / Custom) | `characters/new/page.tsx` — copy in `GUIDED_CREATOR_COPY.chooser`. Custom card is player-facing (no Layer 3 / cohesive-creator jargon) — TASK-784. **Guided** → Path L1; **Custom** → `?entry=custom` Path L3. Retired Legacy `/characters/new/advanced` 308s to this chooser (TASK-912). |
-| Guided character preview strip/panel (TASK-686, TASK-694) | `character-preview-panel.tsx` + `lib/guided-creator/preview-ability-summary.ts` — path/type once in subtitle; ability chips gated until Abilities selection/completion; all six signed on strip (horizontal scroll on mobile); only `pow_abil`/`mart_abil` use power/martial chip highlight; feat labels via `indexByNormalizedIds` (no raw id fallback — TASK-732) |
-| Cohesive character creator (guided shell) | `characters/new/guided/page.tsx` + `guided-creator-shell.tsx` + `stores/guided-creator-store.ts` (`pathLayer` only in draft — **no persisted `creationMode`**; rail/Reveal from `lib/guided-creator/substep-satisfaction.ts`). Your Hero **Create character** stays clickable; leftovers (name, Health/Energy, unspent Skill/Ability points, unfinished chapters) open `GuidedRevealReviewModal` with jump-to-fix rows (`listGuidedRevealBlockers` — TASK-911). Save via `lib/guided-creator/build-character.ts` uses `archetypePathId` when a path was picked. Chooser **Guided** → Path L1 / **Custom** → `?entry=custom` Path L3. Lookups: `mergeLibraryBySource` + `indexByNormalizedIds` (official + user). Extend this shell — do not add a parallel guided store. |
-| Selection grammar (cards ↔ GridListRow; entity depth vs catalog breadth) | `REALMS_PRODUCT_OVERVIEW.md` §3.1; `guide/04-floating-ui-tooltips.md` § Related patterns; components: `GuidedChoiceCard`, `GuidedEntityDetailModal`, `GridListRow`, `GuidedLayerNav`, `DetailOptionList` |
-| Guided choice-card deep-dive (TASK-432+) | **See more…** = in-card deepen (truncated copy, expandedExtra / equipment mechanic chips); **More details** = entity modal (`onDetails` → `GuidedEntityDetailModal`, path/species Close \| Select via TASK-448); **See more options** = catalog Layer 2 (`GuidedLayerNav` / browse). Do not invent specialist verbs. Shared rows: `DetailOptionList` + `@/lib/detail-option`. Wrappers: `GuidedTraitOptionList` / `GuidedDetailOptionList`. Granted overview traits: `GuidedChoiceCard` `readOnly` (no select affordance; TASK-711). **See more / See less** stop card-select keys (target must be the card root); selection is announced in `aria-label` (“…, selected”) — no `aria-selected` on a generic div (TASK-734 / audit 03 P1-5). |
-| Guided skills suggestions (ability-tier curation) | `lib/guided-creator/curated-skills.ts` (`curateGuidedSkillIds`, `getGuidedAbilityRecommendationTiers`, `formatGuidedSkillAbilityTag`), `guided-skill-recommendations.ts` (`buildGuidedSkillSuggestions`); consumed by `steps/skills-step.tsx` + `AddSkillModal` badges via `guided-skills-panel.tsx`. L1 rows: name+chevron+chips inline (TASK-704); expand shows the Codex description and the same additional descriptions as Add Skill (`AssignedSkillDetails`, 86e2q66jv); contributing Ability chip or governing-Ability picker (multi-ability) + Skill Bonus `InfoTippy` (`getGuidedSkillBonusHelp` in `tooltip-text.tsx`) — TASK-548 / TASK-790. Defense Bonuses via shared `DefenseBonusesCard` → `patterns/stat-tiles/DefenseStatTile` + `SHEET_STAT_GRID_CLASS` (TASK-881); persist `defenseVals` + `skillAbilities` on save. |
-| Guided feat Layer 2 add modal | `guided-feats-l2-modal.tsx`, `lib/guided-creator/feats-l2.ts`, `feat-selection.ts`; wired in `archetype-feats-step.tsx` + `character-feat-step.tsx` via `GuidedLayerNav` → `UnifiedSelectionModal` (TASK-565; same grammar as skills/loadout/powers L2). Creator headers/cells compose Codex `featSelectable*` helpers but omit Req. Level because unmet `lvl_req` is hidden; Codex/Admin keep it (TASK-758). `GuidedFeatsFilterFields` composes Category, State Feats (shared restriction InfoTippy, TASK-759), and **Archetype Path** last (`usePathListFilter` / ADR-0014). Path flow See more auto-selects every player-visible path of `draft.archetypeType` with Filters expanded; custom/no-path inline catalogs get the control with no auto-select. Path-name chips replace Recommended while filtering; family ranks of a matching feat stay (TASK-753). |
-| Guided L1 curated feat eligibility | `selectableCuratedFeatIds` (`lib/guided-creator/feat-selection.ts`) — path-curated cards honour `checkFeatRequirements` like the L2/L3 catalog, keeping an already-selected unmet pick visible so it stays deselectable. Used by both feat steps; the character-feat step no longer auto-picks the first curated feat (TASK-738 / report 03 P1-10; vitest) |
-| Guided L3 inline catalog (no path — full Customize) | Shared **`GuidedInlineCatalogList`** (`patterns/guided-choice/guided-inline-catalog-list.tsx`). Gate: `prefersDeepCatalogEntry` (`lib/guided-creator/creator-entry-mode.ts`). Wired on archetype-feats, character-feat, loadout, and powers/techniques. Extend this list + Library/Codex GLR builders (ADR-0016 `characterCreate`; ADR-0012 allowlist) — do not fork a fourth catalog. |
-| Guided equipment phased sub-flow | Shipped in `steps/loadout-step.tsx` + `guided-equipment-l1-phase.tsx` / `guided-equipment-l2-modal.tsx`. Budget chrome: `patterns/chrome/loadout-budget-bar.tsx`. Eligibility: `lib/guided-creator/equipment-eligibility.ts` (`resolveArmorStepMode`: Power always `none`). Card-first L1; L2/L3 columns from Library armament builders. Path Power Equipment that skipped weapons: **See weapons** is `GuidedLayerNav` `trailingExpand` (same row as See more) into the existing weapon L2 modal — do not stack a second nav. Terminology: player **Equipment** / **Armaments** / **Enhanced items** (later); internal GLR id `'gear'` = Equipment (TASK-872). |
-| Guided powers/techniques L1 + L2 | `steps/powers-techniques-step.tsx` (facade; inner `powersPhase`) + `lib/guided-creator/powers-phase-nav.ts` + `use-powers-techniques-selection.ts`. L1: `guided-powers-techniques-l1-content.tsx`; L2: `guided-powers-techniques-l2-modal.tsx`. Official L2/L3 rows: `powers-techniques-l2.ts`. Lookups via `indexByNormalizedIds`; Energy kind-aware (`techniques` vs `powers`); L3 innate stays at energy cap. GLR `guided-powers-l3` / `guided-techniques-l3`. Extend this step + Library builders — do not fork a second powers phase. |
-| Unarmed Prowess TP (GAME_RULES) | `lib/game/unarmed-prowess.ts` (`computeUnarmedProwessTpCost`, level table) — sheet / library TP remaining (`power-technique-character-context`). Guided Loadout optional pick is `guided-unarmed-prowess-panel.tsx`. |
-| Library (user + official content browse) | `library/page.tsx` — tab badges from `GET /api/user/library/counts` / `GET /api/official/counts` (`useUserLibraryCounts` / `useOfficialLibraryCounts`); row lists fetch the active tab only (TASK-774 / ADR-0015). Player catalogs are **listed-only** (`catalog_listing`; ADR-0027 / TASK-927). Armaments split into **Weapons / Armor / Shields** tabs (type-specific columns in `lib/library/official-item-list.ts`; armor includes Abl. Req. + Crit +); labels in `lib/library/armament-library-labels.ts`. Overflowing `TabNavigation` strips fade + chevron (TASK-840). |
-| My Library entity tabs (sync/duplicate shell) | `library/components/UserLibraryEntityTabShell.tsx` (`enableSync` default true; `enableSync={false}` = list chrome only — no sync-all **or** duplicate modals), `library/hooks/use-library-entity-sync.ts`, `library/hooks/use-library-duplicate-confirm.ts` — sync tabs: `LibraryItemsTab` / `LibraryPowersTab` / `LibraryTechniquesTab` / `LibraryCreaturesTab`; basic: `LibraryEnhancedTab` (ADR-0001 / TASK-475) |
-| Codex (rules data browser) | `codex/page.tsx` — **Advanced** is `TabNavigation` `trailing` (stacked below `md`; in-bar from `md`, outside the tablist scrollport). `labelMobile` is the below-`md` tab label (TASK-827). Overflowing strips fade + chevron (TASK-840). |
-| Realms Library, guest read-only | `library/page.tsx` + `library/LibraryPublicContent.tsx` — guests see official "Realms" content with the My-Library toggle + "Add to library" hidden. (Former `/browse` was a redundant duplicate; removed and redirected to `/library` — TASK-336.) |
-| Power creator | `power-creator/page.tsx` (shell + bootstrap) + `use-power-creator-workspace.ts` + `power-creator-editor.tsx` + co-located `power-creator-cost-derivation.ts` / `power-creator-part-actions.ts` / editor section modules + `power-creator-help.tsx` (TASK-381, **TASK-616**, **TASK-408**, **TASK-921**, **TASK-922**, **TASK-925**) — chrome: `CreatorPageShell` + `CollapsibleSection` (no empty expanded summary line — TASK-764). **Targeted defenses:** compact `ChipSelect` in identity card (`creator/targeted-defenses-section.tsx` + `lib/game/targeted-defenses.ts`); `*` + this-entry part/damage/attack sources only. Damage rows show can-target; part cards use a Targets descriptor chip. **Advanced Calculations:** grouped Energy-only breakdown from `buildPowerAdvancedCalculationGroups` (`lib/calculators/power-energy-breakdown.ts`) via `AdvancedCalculationsPanel` `groups`. Guided power creator **not shipped** — deferred WAITING TASK-410–414 (owner 2026-08-14). **Variants (ADR-0029, TASK-930):** `power-creator-composition-band.tsx` (Structure `Select` + Reverse `Checkbox` + `TabNavigation` + die faces) in `CreatorPageShell` `aboveGrid`; tab state `use-power-creator-composition.ts`; form ↔ spec `power-creator-composition.ts`. |
-| Power variants (composition) | **Resolver:** `lib/calculators/power-composition.ts` — `resolvePowerComposition` (Choice = Shared plus the most expensive portion at that portion's footprint (a chip shows Shared plus that option; published energy is Codex parts plus this math); Alternate = selected; Modify = Shared once + each piece's parts at that piece's footprint; Randomize faces are independent and share only the action type (good face = full cost × chance, bad face = half its basic-action energy ÷ action multiplier, including Reaction, × chance; Shared adds no energy); Reverse uses that same reduction; the 1 EN floor applies only when positive energy is reduced below 1; deduped TP via `buildRequiredProficiencies`; character requirements via `composedPowerProficiencyParts` — every variant including every Alternate version, chip does not change them, TASK-934); `derivePowerDisplay(doc, db, { selectedVariantId })` resolves `payload.composition` for every surface. **Chips:** `lib/power-variant-chips.ts` (`buildPowerVariantChips` sibling of `buildFeatLevelChips`, `powerVariantsDetailSection`; Reverse drawbacks are description text via `withPowerReverseNote`, never a chip; structure rule text via `powerCompositionHelpText` → section `labelHelp`). **Play state:** `CharacterPower.selectedVariantId`. **Innate:** `snapshotOfficialPowerForInnate` (Alternate → `alternates[]`). ADR-0029 / TASK-929–933. |
-| Technique creator | `technique-creator/page.tsx` (shell + bootstrap) + `use-technique-creator-workspace.ts` + `technique-creator-editor.tsx` (TASK-601, **TASK-921**, **TASK-925**, **TASK-923**) — chrome: `CreatorPageShell`; targeted defenses in identity card (same ChipSelect). **Advanced Calculations:** grouped Energy from `buildTechniqueAdvancedCalculationGroups` (`lib/calculators/technique-energy-breakdown.ts`) via `AdvancedCalculationsPanel` `groups`. |
-| Empowered technique creator | `empowered-technique-creator/page.tsx` (shell) + `use-empowered-technique-creator-workspace.ts` + `empowered-technique-creator-editor.tsx` + co-located `empowered-technique-cost-derivation.ts` / `empowered-technique-part-actions.ts` / editor section modules (TASK-601, **TASK-610**, **TASK-683**, **TASK-921**, **TASK-925**, **TASK-923**) — Attack mode uses cheaper-EN overlap (`pickCheaperEnPart`) + No Attack; chrome: `CreatorPageShell`; targeted defenses in identity card. **Advanced Calculations:** `buildEmpoweredAdvancedCalculationGroups` (power-side + technique % + technique-side + Combined Energy). |
-| Item (armament) creator | `item-creator/page.tsx` (shell + bootstrap) + `use-item-creator-workspace.ts` + `item-creator-editor.tsx` + co-located `item-creator-cost-derivation.ts` / `item-creator-property-actions.ts` / editor section modules (TASK-381, **TASK-616**, **TASK-810**, **TASK-918**, **TASK-919**, **TASK-920**, **TASK-923**) — chrome: `CreatorPageShell`. Item Type + handedness use shared `SegmentedControl`. Weapon Range is a duration-style native `<select>` pair (Melee / Reach / Ranged / Thrown, then closed space ladders). Ability utilized is a native `<select>` (melee/reach/thrown: STR↔AGI via Finesse; ranged: ACU↔STR via Heavy, plus AGI/Finesse). **Advanced Calculations:** grouped IP/C from `buildItemAdvancedCalculationGroups` (`lib/calculators/item-cost-breakdown.ts`; Rounded Down). Load uses Weapons / Armor / Shields tabs (`useLoadModalLibrary` `itemKind`) with select-density catalog columns (no mixed Type+Stat list) |
-| Species creator | `species-creator/page.tsx` (shell) + `use-species-creator-workspace.ts` + `species-creator-editor.tsx` / bootstrap (TASK-601); Load ungated — chrome: `CreatorPageShell`; skill labels via `findByNormalizedId` (unmatched ids omitted, not raw UUID — TASK-732). `?edit=` reopens a saved species (`speciesCreatorEditHref`, 86e3jmhkn). An unknown `?edit=` id keeps the local draft (86e3mhqay) |
-| Creature creator | `creature-creator/page.tsx` (shell) + `use-creature-creator-workspace.ts` + `creature-creator-workspace-persistence.ts` + `creature-creator-editor.tsx` + `creature-movement.ts` + `creature-creator-movement-section.tsx` + co-located `creature-creator-{library-selectables,derived-stats,feat-armament-display,skill-bonus,summaries}.ts` + editor section modules (TASK-381, **TASK-610**, **TASK-615**, **TASK-712**, **TASK-810**, **TASK-812**) + `creature-skill-utils.ts`; Load/library pickers use `mergeLibraryBySource` (`lib/library/source-scope.ts`; public wins on id). Armament still hides selected `docId`s; empowered still dedupes on `docId`. Inventory picker is Weapons / Armor / Shields / Equipment (no All); selected inventory reuses sheet `WeaponsListSection` / `ArmorListSection` / `ShieldsListSection` / `EquipmentListSection`. Save/load uses kind buckets (`weapons` / `armor` / `shields` / `equipment`); mixed `data.armaments` migrates on read. Compact ability tiles share the non-compact 2/3/6 grid and Dense `size="sm"` steppers (TASK-828). `CreatorPageShell` + reset confirm |
-| Crafting (sessions + enhanced items) | `crafting/layout.tsx` title/description (TASK-793); `crafting/page.tsx`, `crafting/[id]/page.tsx` facade (TASK-607 / **TASK-666e**) + `_components/` (`use-crafting-tool-page`, `crafting-tool-helpers`, `crafting-tool-derived`, summary sidebar, item-options / adjustments / rolls / optional-rules / outcome panels); item picker `components/crafting/CraftingItemSelectModal` |
-| Encounters | `encounters/page.tsx`, `encounters/[id]/page.tsx`, `encounters/[id]/combat/page.tsx`, `encounters/[id]/mixed/page.tsx`, `encounters/[id]/skill/page.tsx`; play views `CombatEncounterView` / `SkillEncounterView` facades (TASK-608) + `_components/combat/` (`use-combat-encounter-view` facade ~78 LOC — **TASK-666a** + `use-combat-{linked-character-sync,roster-actions,round-actions}`, helpers, round controls, combatant list, add sidebar) + `_components/skill/` (`use-skill-encounter-view`, trackers, participant list/card, sidebar) + shared `encounter-view-helpers`, play routes `encounter-play-page-shell.tsx`, campaign roster chrome `EncounterCampaignRosterSection`, `encounters/[id]/_components/hooks/use-linked-campaign-characters` + `use-reorderable-list-drag`; `CombatantCard` facade ~149 LOC (**TASK-618**) + `combatant-card-{helpers,initiative,header,resources,conditions,quick-actions}`; combat turn order: the initiative number is a button, and Move up / Move down call `moveCombatantInTurnOrder` (86e3k0h3f); participant picker remains **`AddCombatantModal`**. Linked-character HP/EN/AP sync is `useCampaignCharacterEncounters` / `campaignKeys.characterEncounter` → `getCampaignCharacterForEncounter` (`?scope=encounter`; **TASK-762**) — not `useCampaignCharacterView` / the RM-view GET. Add Combatant and add-all use `fetchCampaignCharacterForEncounter` (same fetcher).
-| Campaigns | `campaigns/page.tsx`; create is `createCampaignAction` (supplies `id`, skips `INSERT … RETURNING`; owner row in `campaign_members` — **TASK-802**); detail `campaigns/[id]/page.tsx` facade (**TASK-666c**) + `_components/` (`use-campaign-detail-page`, header / invite / roster / roll-log sections, `character-chip`, `add-character-modal`); RM character view `campaigns/[id]/view/[userId]/[characterId]/page.tsx` — read-only `useCharacterSheetDerived` + `CharacterSheetBody` (TASK-597); mobile C1 frame without `.has-sheet-mobile-dock` (FAB-only gutter, no owner-dock strip — TASK-843); load is `useCampaignCharacterView` / `campaignKeys.characterView` → `getCampaignCharacterForView` (**TASK-761**; campaign-scoped + viewer-segmented key — not `characterKeys.detail` / `/api/characters/[id]`, which does not enforce roster + RM auth). Full RM GET returns referenced `libraryForView` + `enrichment` (**TASK-773**); the page does not fetch the viewer's library or official catalogs. `?scope=encounter` is still the minimal HP/EN/AP GET (TASK-762). |
-| Admin hub | `admin/page.tsx` — links Codex editor, sources, public-library, images, users, roles, core-rules, changelogs (no tooltips admin) |
-| Admin Sources (codex membership by pack) | `admin/sources/page.tsx` — per-source list with add/remove, rename/merge confirm, and session draft sources; server actions `admin/sources/actions.ts` (`updateCodexDoc` sources-only, `renameAdminCodexSource` calls `rename_codex_source` once); `lib/codex/sources.ts` membership helpers and `previewCodexSourceRename`; `admin-source-list.ts` + `admin-source-rows.ts` + `postgrest-pager.ts`; copy `admin/sources/admin-sources-copy.ts`; `sql/codex-rename-source.sql` applied on production 2026-10-18 (re-applied same day after control-character validation fix; function only; the first real rename has not run) |
-| Admin Official Library Editor | `admin/public-library/` — lists official created items **including unlisted** (`useOfficialLibrary(..., { includeUnlisted: true })`); Public ↔ Admin library toggle (`usePatchOfficialCatalogListing`, ADR-0027). Species tab uses the same official list rows as Creatures; Edit opens the species creator (86e3jmhkn) |
-| Admin Codex write contracts | **`lib/codex-columnar-keys.ts`** (admin column allowlists), **`lib/codex-persisted-contract.ts`** (per-field shape validation), **`lib/codex-mutation-validation.ts`** — wired through `admin/codex/codex-column-map.ts` / `createCodexDoc` / `updateCodexDoc`; **`lib/codex-archetype-path-save-validation.ts`** on **`saveArchetypeWithPath`** (persisted shape + **`validatePathDataForPublish`** publish rules). |
-| Admin Codex changelogs | `/admin/changelogs` + `GET /api/admin/changelogs` + `lib/codex-changelog.ts` / `lib/codex-changelog-display.ts` — compact content diffs; creates are name/kind only; deletes keep prior-state fields; no empty-equivalent rows; no `updated_at`/`created_at`; update snapshots still stored pending DEV-Q07 (TASK-874). A row that stored no name (source rename or merge) takes its list title from the live entity name; a stored name still wins; a missing row stays unnamed |
-| Account / profile | `my-account/layout.tsx` title + noindex (TASK-793); `my-account/page.tsx` facade (TASK-666) + `_components/` (`use-my-account-page`, helpers, role/profile/preferences/security/danger cards); tutorials on/off (TASK-388 localStorage) |
-| Post-activation onboarding (play together, sheet tour, level-up guides) | `components/onboarding/` (`PlayTogetherModal`, `SheetTourOfferModal`, `SheetTour`, `LevelUpGuideCard`); prefs `lib/onboarding-preferences.ts`; guide builder `lib/level-up-guide.ts`; highlight helper `lib/sheet-tour-highlight.ts` (`ONBOARDING_FLOATING_CARD_CLASS`); retake tour via `CharacterSheetSettingsModal`; wired from guided `reveal-step` + sheet page |
-| Rules / resources / about / privacy / terms | `rules` (Welcome + nested chapter nav + search at `/rules`, `/rules/[slug]` MDX — ADR-0021 / TASK-796 / TASK-905; Google Doc is `RULES_COPY.viewUrl` view-source only — TASK-853; crawlable `RULES_COPY.seoDescription` — TASK-793; Glossary / The Realms unfinished — WAITING TASK-823), `resources`, `about` (RSC + `AboutCarouselSection` island — TASK-789), `privacy`, `terms` |
-| Site / marketing copy (edit prose here) | `lib/constants/copy/*-copy.ts` via `lib/constants/site-copy.ts` (landing, auth, about + carousel, nav, rules, resources, privacy, terms, footer, guided creator, onboarding, archetype category Power/Martial/P-M; Discord URL + motto + contact email in `shared-copy.ts`). Tooltips: `public/tooltip-text.tsx`. Screenshot audit: `playwright.site-copy-audit.config.ts`. |
-| Root layout + Vercel Web Analytics | `src/app/layout.tsx` — fonts/metadata/providers; `<Analytics />` from `@vercel/analytics/next` (TASK-765). Enable in Vercel Dashboard (DEV-006); CSP hosts in `next.config.ts` via `src/lib/security/content-security-policy.ts` (86e1z8j9e); ops notes in `DEPLOYMENT_AND_SECRETS_SUPABASE.md` Step 3b |
-| Canonical site URL + SEO | `lib/site-url.ts` (`getCanonicalSiteUrl` / `NEXT_PUBLIC_SITE_URL` fallback `SITE_URL` = `https://realmsrpg.com`; `isProductionIndexingEnabled` noindexes preview/local); root `metadataBase` + Open Graph + Twitter + `alternates.canonical`; `opengraph-image.tsx`; `robots.ts` (`ROBOTS_DISALLOW`) + `sitemap.ts` (`SITEMAP_PATHS`); auth + admin + `/dev/styleguide` `robots: noindex` (TASK-771) |
-| Archetype category titles + descriptions (Power / Powered-Martial / Martial) | `lib/constants/copy/archetype-category-copy.ts` (`ARCHETYPE_CATEGORY_INFO`) — consumed by sheet Edit Archetype, Guided Custom Path L3, creature `ArchetypeSelector` (icons stay local) |
+`next.config.ts` `redirects()`:
 
-## Data hooks (`src/hooks/`, import from `@/hooks`)
+| From | To |
+|------|----|
+| `/browse` | `/library` |
+| `/signup` | `/register` |
+| `/encounter-tracker` | `/encounters` |
+| `/crafting/new` | `/crafting` |
+| `/characters/new/advanced` | `/characters/new` |
 
-| Need | Hook(s) |
-|------|---------|
-| Auth / current user | `useAuth`, `useAuthStore`, `useAuthCaptcha`, `useProfile`, `useAccountProfile`, `useAdmin` — `useAuth` listens to `onAuthStateChange` and does not call `getUser` on init; a null session does not clear a known user unless the event is `SIGNED_OUT` (86e3q9vhq). `queryClient.clear()` only when the user id changes or on `SIGNED_OUT` via `shouldClearQueryCacheOnAuthEvent` (not same-user tab-focus `SIGNED_IN` / `TOKEN_REFRESHED` / `INITIAL_SESSION`) (TASK-737 / TASK-903). Proxy and `getSession` verify with `getClaims` (local JWT; refresh still runs when the access token is near expiry) instead of per-request `getUser` (86e3q9vhe / 86e3qpeat). Account deletion, admin service-role mutations, and email or privilege changes call `requireLiveUser` (`getUser`) so a revoked or banned session cannot complete those writes. Sensitive my-account mutations re-verify on the server via `lib/auth/sensitive-account-auth.ts` (`assertSensitiveAccountReauth`). OAuth-only account delete: `beginGoogleDeleteReauthAction` starts Google OAuth on the server SSR client (`skipBrowserRedirect`), reads only the configured project's `sb-<ref>-auth-token-code-verifier` cookie (chunked/`base64-` decoded like `@supabase/ssr`), hashes that PKCE verifier into a signed reauth-intent cookie, and returns the provider URL — callback `redirectTo` uses `buildCanonicalAuthRedirectUrl` (`NEXT_PUBLIC_SITE_URL`, not forwarded Host/proto). `/auth/callback` binds intent to that verifier before exchange, then mints a session-bound delete grant only for `next=/my-account?deleteReauth=1` when uid matches, access token `amr` oauth is inside the intent window, and the Google identity `updated_at` is fresh for that window (GoTrue ~v2.197.0 does not advance `last_sign_in_at` on returning Google OAuth) (`oauth-delete-grant-core.ts`, `supabase-pkce-cookies.ts`, `oauth-google-delete-proof.ts`, `oauth-delete-grant.server.ts`; client sentinel in `oauth-delete-messages.ts`). Grants are HMAC-signed (HKDF from `SUPABASE_SERVICE_ROLE_KEY`), 5-minute TTL, session-bound — not strictly single-use; `deleteAccountAction` clears the grant cookie before destructive work and passes the read token into `assertSensitiveAccountReauth`. Post-auth redirect origins use `lib/auth-redirect.ts` (`buildAuthRedirectUrl` — allowlisted hosts only). In-app post-login paths use `lib/safe-redirect.ts` (`sanitizeRedirectPath`, `buildLoginRedirectUrl`) with query param **`returnTo`** (login/register also accept legacy `redirect`). Login/register shared client flows: `lib/auth/auth-page-client.ts`. Remember me: `lib/auth/session-persistence.ts` + `lib/supabase/supabase-auth-cookies.ts` + `lib/supabase/browser-auth-cookies.ts` (session cookies vs @supabase/ssr persistent maxAge via readable `realms-auth-remember`). Protected routes and resource preflight send users to `/login?returnTo=…`. Edge proxy misrouted OAuth `?code=` on `/` only: `lib/supabase/proxy-oauth-redirect.ts`. Profile `display_name` updates omit the field when callers pass `displayName: undefined` (`lib/profile-display-name.ts`). Signup CAPTCHA: `AuthTurnstile` + `lib/auth/captcha.ts` when `NEXT_PUBLIC_TURNSTILE_SITE_KEY` is set (TASK-899); inactive until owner completes DEV-015. |
-| Codex rules data (feats, skills, species, traits, parts, equipment, properties, archetypes) | The `useCodex*` family (aliased `useSkills`/`useSpecies`/`usePowerParts`/etc.) — one collection each via `codexKeys.collection(key)` / `fetchCodexCollection` → `GET /api/codex?collection=` (TASK-775 / ADR-0015). Species catalogs are **listed-only** unless `includeUnlisted=1` and admin (ADR-0027). Rows mapped by `lib/codex/row-map.ts` (same module as view enrichment; TASK-777; archetype path join stays in the route). `useCodexParts` / `usePowerParts` / `useTechniqueParts` share `['codex', 'parts']` and split with `lib/codex/part-type.ts`. `useCodexFull` (`['codex']`, whole payload) is the admin spreadsheet only. Admin Codex tabs pass `ADMIN_CODEX_QUERY_OPTIONS` (`includeUnlisted: true` → `['codex', key, 'all']`, private no-store GET). Creators use the collection hooks. `['codex']` invalidation still reaches every slice by prefix |
-| Game rules constants | `useGameRules` (`['codex', 'coreRules']` — not the full payload, TASK-775), `getGameRulesFallback` |
-| Trait / skill id↔name resolution | `resolveTraitIds`; skill maps via `buildSkillIdToName` / `findSkillByIdOrName`; ability column text via `formatSkillAbilityList` (`lib/codex/skill-list`) |
-| Official library (browse + add to my library) | `useOfficialLibrary`, `useOfficialLibraryCounts`, `useAddOfficialToLibrary`, `usePatchOfficialCatalogListing` (`hooks/use-official-library.ts`). Query keys `['official-library', type, 'listed'\|'all']`. Player catalogs omit `includeUnlisted`; admin editor / creator Load pass `includeUnlisted: true` (ADR-0027) |
-| User-created content (CRUD: powers/techniques/items/creatures/species) | `useUser*`, `useUserLibraryCounts`, `useDelete*`, `useDuplicate*` from `use-user-library` |
-| Characters CRUD | `hooks/use-characters.ts` (`useCharacters`, `useCharacter`, `useSaveCharacter`, `useDeleteCharacter`, `useDuplicateCharacter`; `characterKeys` scoped by signed-in user, `anon` for guests). Create: `createCharacter` in `services/character-service.ts` (`clientRequestId`) or `createGuestCharacter` / `persistFinishedCharacter` in `services/persist-finished-character.ts` for signed-out finalize (ADR-0026). PATCH: dirty-key + `updatedAt` lock (ADR-0013) via `saveCharacterWithConflictRetry` and `lib/character/save-lock.ts`; `local-` ids stay in localStorage and never hit `/api/characters`. Other-user GET includes `libraryForView` + `enrichment`; owner GET omits both. Guest migrate: `guest-character-migration.ts` on SIGNED_IN. One in-flight flight (`guest-migration-lock.ts`) shared by every `useAuth` listener and the login page; the local uuid is sent as `clientRequestId` (86e3jmw1m). |
-| Campaigns | `useCampaigns*` (`useCampaignsFull` gated on signed-in user — TASK-737), `useCampaign`, `useCampaignRolls`. RM character view: `useCampaignCharacterView` / `campaignKeys.characterView` → `getCampaignCharacterForView` (campaign route, not `characterKeys.detail` — TASK-761). Payload includes referenced `libraryForView` + `enrichment` (TASK-773). Combat/add `?scope=encounter`: `useCampaignCharacterEncounters` / `fetchCampaignCharacterForEncounter` / `campaignKeys.characterEncounter` → `getCampaignCharacterForEncounter` (minimal HP/EN/AP; not the RM-view GET — TASK-762) |
-| Encounters | `useEncounters`, `useEncounter`, `useCreate/Save/DeleteEncounter`. Guests use `guest-encounter-storage.ts` (`local-` ids). Sign-in migrate: `guest-encounter-migration.ts` (one in-flight flight, same lock as characters — 86e3jmw1m). Finished characters clone guest storage in `guest-character-storage.ts` (ADR-0026). |
-| Crafting + enhanced items | `useCraftingSession(s)`, `useEnhancedItems` + CRUD |
-| Save a creator's output | `useCreatorSave`; load into a modal: `useLoadModalLibrary` (incl. species/creature + `prefetch`) |
-| Archetype Path list filter | `usePathRecommendationIndex` / `usePathListFilter` (`hooks/use-path-recommendation-index.ts`) — memoized off `['codex', 'archetypes']`; browse lists pass `kind` (or `POWER_LIST_PATH_KINDS` / `EQUIPMENT_LIST_PATH_KINDS`); creator See more passes `autoSelectType` |
-| Guided creator path data | `useGuidedPathData` in `components/guided-creator/use-guided-path-data.ts` (returns `isLoading` while codex archetypes load for selected path — Loadout phase entry waits on it, TASK-527) |
-| Autosave (debounced) | `useAutoSave` — callbacks in refs so re-renders do not reset the debounce; failed saves retry 2s/5s/15s/60s; `pagehide` / hidden tab flush dirty data (TASK-736). Skill encounter flush sends that same PATCH with `keepalive` so a refresh during Unsaved changes keeps the roll, totals, and selected skill (86e3jrra4) |
-| Sheet ↔ encounter HP/EN/AP | `useCharacterResourceSync` + `lib/encounter/character-resource-sync.ts` — debounce 400ms; `skipLock` LWW; schedule only when HP/EN/AP change (`nextResourceSyncCursor`, TASK-786) |
-| Client-only mount (portals / theme) | `useIsClient` — prefer over `useEffect(() => setMounted(true))` (TASK-430) |
-| List sorting / modal list state | `useSort`, `sortByColumn`, `useModalListState` (rare non-USM — AdminTraitsTab browse list; nested choice picker in `admin-trait-edit-modal` uses ListHeader+GLR without the hook — TASK-572) |
-| Tooltips (canonical) | `InfoTippy` (`tone`: default `info` link-blue; `tp` on Training Points PointStatus; `current` on-chip — TASK-707). Trigger layout box is the 16px icon; 44px touch is `.hit-area-layout-neutral` (does not stretch filter labels / `GuidedSectionTitle` — TASK-725) + `WordHelpTip` (word-tied, no icon) + `public/tooltip-text.tsx` (`getAbilityHelp` / `getDefenseHelp`, `defenseScoreHelp`, `armamentProficiencyHelp`, `innateEnergyHelp` / `innatePowersHelp` — TASK-726; **power creator** `powerCreator*Help` + `guidedPowerCreator*` L1 placeholders — TASK-408). Intentional domain-copy exception: `STATE_FEAT_RESTRICTION_NOTICE` in `lib/codex/feat-restriction-notice.ts` is the one sentence for L1/L2 notices and creator/Codex/Admin filter tips (TASK-759; no duplicate in tooltip-text). See **`guide/04-floating-ui-tooltips.md`**. |
-| Floating UI (`@floating-ui/react`) | Engine inside `InfoTippy` only today; new anchored UI → shared primitive first — see same guide appendix |
+`src/lib/security/next-app-flags.ts` exports `ACCOUNT_PATH_ALIAS_REWRITE`: `/account` rewrites to `/my-account`. `next.config.ts` applies that rewrite. The same file exports `NEXT_APP_POWERED_BY_HEADER`. `next.config.ts` also imports `src/lib/security/content-security-policy.ts`. Those two security modules are not imported by a page.
 
-> Codex reads live under the **`['codex']` key prefix** (see `use-codex.ts` / `DATA_HANDLING.md`): `codexKeys.all` for the full payload, `codexKeys.collection(key)` for one collection. Do not add a codex fetch outside that prefix, and do not reach for `useCodexFull` to read a single collection.
+There is no `page.tsx` at the app root. Home is `src/app/(main)/page.tsx`, which imports `@/components/landing`.
 
-## Shared UI components (`src/components/patterns/`, import from `@/components/patterns`)
+`src/app/(main)/encounters/[id]/page.tsx` does not render a play view. After `useEncounter` returns, it calls `router.replace` with `` `/encounters/${id}/${encounter.type}` ``. Play pages that exist as files are combat, skill, and mixed (listed below). This file does not check that `encounter.type` is one of those three.
 
-| Need | Component |
-|------|-----------|
-| Expandable list row (Library/Codex/sheet/creator) | `GridListRow` facade (TASK-611: types/columns/detail/expanded/collapsed + chrome) — **fact policy (TASK-437/454/461):** dense browse keeps `ListHeader` columns when space allows (short **TP** headers OK on L3 tables); deep-dive/`DetailOptionList` omit columns → self-describing chips. **Fact catalog (TASK-806 / TASK-807 / ADR-0016):** `lib/glr/glr-fact-catalog.ts` + `glr-density.ts` + `resolve-glr-fact-layout.ts`; bind `{ entityType, mode, flags }` in `glr-surface-bindings.ts` and CI in `glr-fact-catalog.test.ts` when shipping a new GLR list. **Never-neither (TASK-814 / TASK-817 / TASK-818):** play/select `demoteFacts` skip column fill but still emit ranked chips via `glrSurfaceDetailSections` / `layout.chipFacts` (true omit is only `characterCreate` + feat `reqLevel`). Path More details power/technique catalogs bind `detail-option-power` / `detail-option-technique` (detail density: name column, description in expanded body, all valued facts as chips). Creature selected inventory reuses sheet play mappers (weapon/armor/shield/equipment TP chips when valued, no Total TP footer). Sheet Library derives Official-style display from parts. Gear/Codex equipment columns stay Category / Currency / Rarity (no Damage/DR/Weight fact chips; valued TP is a demoted chip — TASK-825). **Sheet Inventory Equipment (TASK-873 / TASK-909):** surface `character-sheet-gear` uses `layoutOverrides` (`SHEET_GEAR_PLAY_LAYOUT_OVERRIDES`) for catalog columns + Qty extra (description expanded-only); `buildEquipmentCatalogFactColumns` + `persistEquipmentCost` in `equipment-list.ts`; creature selected inventory binds `creature-inventory-equipment` (Type/Qty columns + chip-all). CI: `assertSurfaceColumnConfig` + row coverage in `glr-fact-catalog.test.ts`. **Chrome + spacing CI (TASK-631 / TASK-637 / TASK-674 / TASK-702 / TASK-710):** `lib/glr/glr-chrome-spacing-norms.ts` + `validate-glr-chrome-spacing.ts`; CI in `validate-glr-chrome-spacing.test.ts` (`npm test` + `ai-task-verifier.yml`) — register My Library tabs in `MY_LIBRARY_ENTITY_TAB_SOURCES`, Codex/Admin in `CODEX_BROWSE_SHELL_SOURCES`, USM in `USM_LIST_SHELL_SOURCES`, creator-embedded lists in `CREATOR_EMBEDDED_GLR_SOURCES`; keep shell `gap-1`, pair `rowChrome` edit/delete/leftSlot/rightSlot on **ListHeader and GridListRow** when slot content is conditional (e.g. patch sync), no `40px` grid action tracks in `GLR_GRID_COLUMN_SOURCES`. Guide: `guide/02-components-and-lists.md`. Helpers: `lib/chip/list-row-metadata.ts`, `lib/detail-option` `compact-facts` (`TP_COST_LABEL` / `TRAINING_POINTS_COST_LABEL`, `namedPropertyDescriptorChips`, combat+equipment builders). Dense GLR / ExpandableChip `costLabel` defaults to **TP** (`TP: N`); guided L1/L2 pass spelled-out Training Points. **Action chrome (TASK-622/624/630):** edit/delete all-or-nothing (never split hover); Library + OfficialEntityList + CodexBrowseListShell consumers omit leftover `40px` and use `ListHeader` `rowChrome` for edit/delete/add/rightSlot (incl. Creatures). Default list gap is shell `gap-1` — do not override with `space-y-3` on GLR lists. Suppress expanded Total TP when a TP column already exists (`columnsAlreadyShowTrainingPoints`). Parts chips: no `(0)` cost/level; `(Lv.N)` only when level is greater than 0. **Parts/Properties (TASK-583):** `MetadataDetailSection.defaultCollapsed` + `labelHelpKey` — Parts/Properties & Proficiencies start collapsed with chevron + family InfoTippy; descriptor sections stay open. **Mobile (TASK-536):** `buildMobileCollapsedGridColumns` collapses vacated `hideOnMobile` tracks below `lg` so names keep width beside X/+. Data-column templates use `--glr-desktop-grid` / `--glr-mobile-grid` — never inline `gridTemplateColumns` on that grid (inline styles override the mobile media query). Chrome stretch-grid may set its own template inline (TASK-710). **Body toggle (TASK-539 / 86e3jrjfg):** header, mobile summary, and non-interactive expanded panel all expand/collapse on a plain click (chip groups / buttons excluded). A drag that selects text in the open item does not close it. The name button still toggles. **descriptionAfter (TASK-783):** optional node inside the expanded description surface after a divider when both exist (sheet feat/trait play notes — not a second card). **Collapsed vs expanded (TASK-909):** column facts (Action, Damage, Uses, Recovery, Qty, …) stay in the ListHeader / row header / mobile summary even while expanded — never duplicated as labeled stats in the expanded body. Description is expanded-only (not a truncated header column). Interactive column values (Uses/Qty steppers) stay in their header tracks (no `truncate` on ReactNode cells). Blank / `-` / `none` values are omitted. **Row button (86e3k0ch6):** the collapsed name is the button and its hit area covers the row. Thumbnails, quantity, column controls, and action buttons are siblings, not inside that button. |
-| Descriptor chip + property tip | `DescriptorChipWithTip` — non-expanding chip with **InfoTippy inside** the chip when description exists (TASK-454/465); on-chip trigger uses `tone="current"` (TASK-707); guided cards use `GuidedFactChipRow`; GridListRow descriptors use the same tip path via `GridListChip` (TASK-461) |
-| Guided / Custom Loadout budget chrome | `patterns/chrome/loadout-budget-bar.tsx` → **`LoadoutBudgetBar`** — Currency (optional) + Training Points PointStatus with tip via `labelAccessory` (`tone="tp"` — TASK-707) (Guided phase layout / L2 footer / powers — TASK-606 / TASK-614 / **TASK-706**). Optional `align` + `leading` (Guided Powers Innate Energy + `innateEnergyHelp` — TASK-726) + `trailing`. Inline PointStatus is `text-base` (same as Skills / Ability Points). Import `@/components/patterns`. |
-| **Entity card art — click to enlarge (site-wide default)** | **`ExpandableImage`** (+ `ExpandableImageModal`); list thumbs: `ListRowThumbnail`. Also: sheet portrait (play), creature stat-block, campaign chips, account profile. Exceptions: `guide/03-entity-card-art.md` § Adoption inventory (TASK-478) |
-| **Entity card art — list thumb** (44px, D&D Beyond style) | `GridListRow.thumbnail` + `ListRowThumbnail`; `ListHeader.hasThumbnailColumn`; resolve via `resolveListRowThumbnail` (`list-row-image.ts`). Dark placeholders: `lib/placeholder-art.ts` + `usePlaceholderTheme` in `ListRowThumbnail`. Wired for all art-capable kinds: species, creature, equipment, power, technique — Library/Official/Codex/Admin lists, selection modals, character sheet library sections, advanced + creature creator selected lists, CreatureStatBlock nested lists. Enhanced items deferred (TASK-500). No thumbs on feats/skills/archetypes/parts/etc. |
-| **Portrait thumb** (campaign pickers, decorative identity) | `PortraitThumb` (`character/portrait-thumb.tsx`) — `useEffectivePortrait` + `bg-image-matte`; not expandable (nested in links/buttons). Sheet/campaign chips use `ExpandableImage` when browse-to-enlarge applies. |
-| **Entity card art — choice card hero** (guided creator) | `GuidedChoiceCard` (wraps `ExpandableImage`) |
-| **Entity card art — admin / creator** | **`RealmsImageField`** / **`RealmsImagePicker`** (`realms-image-picker.tsx`); bank APIs `POST /api/images` (+ replace/delete/usage); helpers `lib/realms-images.ts` (ADR-0003 / TASK-495–498). Legacy `CodexArtUploadField` + `/api/upload/codex-art` removed. |
-| **Realms Image Library (bank)** | `realms_images` + `realms_image_categories`; `GET/POST /api/images`, `GET/PATCH/DELETE /api/images/[id]`, `POST …/replace`, `GET …/usage` (`ADR-0003`, TASK-492). Admin UI: `/admin/images` (TASK-493). Schema: `SUPABASE_SCHEMA.md` §2.5a; SQL (was `sql/realms-image-library.sql`, deleted 2026-10-29) |
-| **Entity card art — product/schema** | REALMS §5.0.3 + `guide/03-entity-card-art.md` + `SUPABASE_SCHEMA.md` §2.5a |
-| Hub list row (Encounters/Crafting) | `HubListRow` — the title is the button; delete and other actions are siblings above that hit area (86e3k0ch6) |
-| Sortable column headers | `ListHeader` — data columns asc/desc by default; only spacer/action columns `sortable: false` (TASK-488). One `MobileSortMenu` for all three layout branches; active-sort chevron `text-primary-link-fg` (TASK-792) |
-| Selection modal (add/pick from library) | `UnifiedSelectionModal` facade ~344 LOC (**TASK-618**) + co-located `unified-selection-modal-{types,helpers,toolbar,list,footer,leave-prompt}` (default `flexLayout` + `fullScreenOnMobile`; list-first: Search + Filters toolbar; `scopeExtra` always-visible mode tabs + sheet Add equipment custom-item form (**TASK-815**); `headerExtra`/`filterContent` collapsed in `FilterSection`; Cancel/Add Selected via Modal `footer` flush under list (`pb-0`); optional one-line `description` or omit; leave-with-selection **Add selected?** / **Load selected?** prompt — TASK-574; `maxSelections` soft limit when max ≠ 1; `maxSelections={1}` replaces selection; optional `nextSelectedIds` remaps add-path (innate energy last-in swap — TASK-727); `confirmLabel` / optional `primaryActions` / `footerExtra`). Sheet add proficiency: `AddProficiencyModal` (thin USM wrapper; option levels in `footerExtra` — TASK-567). Admin species trait Add: USM in `admin-species-edit-modal.tsx` (TASK-572/619). |
-| AdminTraits choice-option picker | Inline **editor chrome** inside trait edit Modal (`admin-trait-edit-modal.tsx` — ListHeader + selectable GLR; TASK-572/619). Browse-tab search/sort uses `useModalListState` on `AdminTraitsTab.tsx`. Not an add-X USM — nesting a selection modal inside the edit Modal is wrong; keep search/sort/GLR grammar. |
-| Encounter / session participant picker | **`AddCombatantModal`** (`add-combatant-modal.tsx`) — intentional non-USM shell (TASK-571). Creature Library + Campaign Characters drill-down; qty + combatant type stay in content; primary **Add** is Modal `footer` (sticky, `size="lg"` — TASK-846). **Extend this** for combat/skill encounters (mixed reuses those views), VTT, downtime, and future session-play add-participant flows — do not fork and do not migrate onto USM. |
-| Campaign roster add-character | **`AddCharacterModal`** (`campaigns/[id]/_components/add-character-modal.tsx`) — intentional non-USM simple portrait picker (no search/filters/ListHeader). Do not migrate onto USM unless the roster needs catalog chrome. |
-| Mixed-species dual picker (sheet Edit Species + Guided Species L2 + Guided Ancestry mixed overview change) | **`MixedSpeciesModal`** (`patterns/select/mixed-species-modal.tsx`, ADR-0017) — intentional non-USM shell (TASK-605/641/720/714). Dual ordered species picks; source chrome is `SegmentedControl` typed with shared `SourceFilterValue` (species labels **Public species** / **My species** kept on purpose). Call sites: sheet `edit-species-modal`, Guided `species-step` L2 card, Guided Ancestry mixed overview **Change species**. **Do not** migrate onto USM or fork a parallel dual-select grammar. |
-| Mixed-species skill picker (sheet Edit Species) | **`MixedSpeciesSkillPicker`** (`patterns/select/mixed-species-skill-picker.tsx`, ADR-0018) — TraitSection-style selectable rows with truncated descriptions. Call site: sheet `edit-species-ancestry-step`. Guided mixed skills stay `GuidedChoiceCard` (TASK-670). Do not fork. |
-| + → ✓ selection button | `SelectionToggle` (coarse 44 square, compact on fine; GridListRow selection column is not an always-on `min-w-[44px]` `w-11` slab — TASK-851). Equipped: `EquipToggle` (coarse 44). Innate: `InnateToggle` (always-on 44 — do not retag). |
-| Source scope All / Realms / My Library | `SourceFilter` (on `SegmentedControl`); catalog merge `mergeLibraryBySource` in `lib/library/source-scope.ts` (`LibrarySourceScope`; `SourceFilterValue` is an alias). Guided catalogs pass keep-selected draft ids; creature pickers do not (TASK-705 / TASK-709 / **TASK-712**) |
-| 2–N pill toggle | `SegmentedControl` — hugs pills (`inline-flex`) unless `equalWidth` (TASK-720). Default size = SourceFilter chrome (`touch-tier-standard`: coarse Standard 44, fine compact — TASK-866); `size="compact"` for dense sheet toolbars (All/Proficient — TASK-778; mobile sheet Abilities/Skills/Archetype/Library switcher — TASK-907). Item-creator Item Type (TASK-918) and handedness (TASK-866) use this, not custom button grids. |
-| Section header with + / collapse | `SectionHeader` (default `size="md"` / `text-sm`; optional `headingLevel` 2–4, default h2; Library list subsections pass `lg` / `text-base`; size on title so collapse cannot shrink it; `collapsible` + inline chevron beside title; `+` far right; collapsible rows use modest `pb-1.5` + coarse-only 44px); `useLibrarySectionCollapse`; `LibraryCollapsibleSection`; entity list sections `collapsible` prop; cost badge: `SectionCostBadge` |
-| Path step guidance | **`PathHelpCard`** (`patterns/help/path-help-card.tsx`, ADR-0017) — Guided path steps + sheet `archetype-path-identity` |
-| Dice roll button | `RollButton` (`touch-tier-standard`, TASK-850; `data-roll-trigger` so an open RollLog does not close when starting another roll — TASK-895) |
-| Roll provider / log (sheet, encounters, campaigns, creatures) | `@/components/rolls` (`RollProvider`, `RollLog`, `useRolls` / `useRollsOptional`); die helpers `lib/rolls/die.ts` (`rollDie`, `DIE_IMAGES`) + `lib/rolls/modifier-label.ts` (`resolveRollModifierLabel` — TASK-893). RollLog registers `.floating-dock-bottom-right` (C4 / TASK-837); the panel is **unmounted when closed** (TASK-826 / C6 — `w-0` still laid out children past the viewport); open width is `min(22.5rem, 100svw − 2×gap)`. Outside pointer-down closes the panel (ignores `[data-roll-trigger]` — TASK-895). Bonus chip uses native `title` for the source name. Send uses shared `Button` (TASK-847). |
-| +/- steppers | `ValueStepper`, `DecrementButton`, `IncrementButton` share one `StepperGlyphButton` (pointer-capture + hold-repeat — TASK-792 / ADR-0002 / TASK-487); **Dense painted size + coarse `.hit-area-dense` height** (TASK-841 / ADR-0023 — not a 44×44 layout slab); a burst of clicks steps from `src/lib/stepper-value-memory.ts` so a slow commit cannot repeat the first step (86e3juy89); quantities: `QuantitySelector` (wraps ValueStepper), `QuantityBadge`; `UnifiedSelectionModal` `showQuantity` = in-row quantity-first |
-| Sheet Edit vs Temp Modifier (exclusive) | ADR-0006 (Amended TASK-782): sheet-level play / edit / temp — toolbar pencil vs `SlidersHorizontal` (mutually exclusive; do not nest Temp under Edit). **Per-section open/close:** Edit uses `EditSectionToggle` (blue / green remaining / red over-budget); Temp uses `TempModifierToggle` (blue none / gold + / danger −). Shared paint helper `sheetModeToggleClassName` (TASK-799). Header LargeStatBlocks + `Terminal: X` each have their own Temp sliders in Temp mode (not all steppers open at once). Persist `character.tempModifiers`; helpers `lib/character/temp-modifiers.ts` (`applyTempModifier`, `tempModifierValueClass`, `tempModifierTintFromDelta`, `sectionTempModifierTint`, `patchTempModifiers`, `withAbilitiesForResourceMaxima`, `hasAnyTempModifiers`). Library / Archetype keep `EditSectionToggle` in Edit only. |
-| Character schema save/load normalization | `lib/character/schema-normalize.ts` (TASK-663): canonical `defenseVals`, `mart_prof`/`pow_prof`, `archetype.type`; dual-read legacy on load; strip on save — wired in `cleanForSave`, `prepareCharacterForSave`, character API routes. Dirty-key PATCH helpers: `lib/character/dirty-patch.ts` (ADR-0013 / TASK-741; a `null` dirty value removes that key, 86e3juw04). Sheet postgres realtime: `mergeSheetRealtimePayload` (`lib/character/realtime-merge.ts`, TASK-747) overlays the remote blob via `mergeRemotePreservingDirty` (HP/EN/AP skipped); local dirty keys kept; adopted keys update the autosave baseline. |
-| Point allocation display | `PointStatus` (`inline` = creator tracker size); Guided Loadout/powers budgets: `patterns/chrome/loadout-budget-bar.tsx` → `LoadoutBudgetBar` (TASK-614 / TASK-706; `CreatorResourceBar` removed); powered/martial split: `PoweredMartialSlider` (tokenized thumb/track; sheet prof-point max is read-only — TASK-891). **Health/Energy pool:** `creator/health-energy-allocator.tsx` → `HealthEnergyAllocator` (PointStatus remaining/total; card labels Health/Energy on `md+`, HP/EN inline/narrow — TASK-729). |
-| Skill row / allocation | Creature + sheet: `SkillRow`, `SkillsAllocationPage`, `AddSkillModal`, `AddSubSkillModal`. Sheet Skills (`skills-section`): catalog-all Codex **base** skills + compact All/Proficient (`SegmentedControl` `size="compact"`) + **Sub-Skills** toggle (`hit-area-dense` label + `size-4` `.hit-area-layout-neutral` checkbox — TASK-836); merge/filter helpers `lib/character/sheet-skills-display.ts` (Codex name/description overlay so species-change rows never show raw ids — TASK-803); spend − clears value→prof (subs remove); no Add Skill / per-row X (TASK-584). Table `variant`: play view (`isEditing` false) hides `(species)` / `sourceLabel` and species-dimmed prof dots; edit/creator keep them (TASK-485). Proficiency dots stay 16px paint + `.hit-area-layout-neutral` (coarse row `py-4` for the Dense 8px gap — TASK-836). Skill **name** is `WordHelpTip` (`compact`) with the Codex skill description (TASK-803). Sheet spend/temp: `SkillRow` `editControlsPlacement="inline"` puts compact `ValueStepper` + bonus caption in the Bonus cell (no fifth column — TASK-800); creator/allocation keep `column`. Guided L1: `GuidedSkillsPanel` (base + sub rows, Ability chip or governing-Ability picker + Skill Bonus formula tip + `DefenseBonusesCard` — TASK-548 / TASK-790); Guided L2/L3 browse: `skills-step` + `GuidedLayerNav` → `AddSkillModal` (opt-in on custom chooser) → footer **Browse all Sub-Skills** → `AddSubSkillModal`; shared apply helpers `lib/game/skill-allocation-add.ts` |
-| Ability score grid | `AbilityScoreGrid` (`ability-score-grid.tsx`): display/edit tiles; `powerAbility` / `martialAbility` / `secondaryAbility` pills; `resolveDistinctSecondaryAbility`; display always shows full ability names (2-col phone / 3-col tablet / 6-col desktop — TASK-566); path pills: **Primary** / **Secondary** (guided UX for archetype vs recommended secondary); hybrids keep **Power** / **Martial** (both Archetype Abilities); full aria-label + single-line truncate; every tile reserves the same inner pill clearance while reduced grid top padding clears the outer straddle, keeping highlighted and unhighlighted display/edit tiles aligned (TASK-452, TASK-455, TASK-544, TASK-545, TASK-760); roomier edit grid; ability names use `WordHelpTip` + `getAbilityHelp` (TASK-547); `density="compact"` + `onlyAbilities` for Path More details recommended subset (TASK-578). Creator `AbilityScoreEditor` (non-sheet): same 2/3/6 tracks; compact short names + Dense steppers (TASK-828) — sheet `variant="sheet"` is unchanged. |
-| Guided path Primary/Secondary abilities | `resolvePathAbilityLabels` (`lib/game/path-ability-labels.ts`) + `buildPathAbilityChipLabels` (`lib/guided-creator/path-ability-labels.ts`); chip copy `formatPathPrimaryAbilityLabel` / `formatPathSecondaryAbilityLabel` (`lib/constants/copy/path-ability-copy.ts`) — Primary Ability chips for each Archetype Ability (two on powered-martial); Secondary only for distinct recommended; SoT for Guided path cards and More details (TASK-544/545) |
-| Guided path select + L1↔L3 | `path-selection-draft.ts` — `buildPathSelectionDraftPatch`, `buildOpenGuidedPathEntryPatch`, `buildOpenCustomPathEntryPatch`, `buildCreatorResetDraftPatch`, `buildEnterCustomArchetypeLayerPatch` / `buildEnterPathLayerPatch`, `buildCustomArchetypeDraftPatch`, `isGuidedCustomArchetypeComplete` (TASK-588/638/640/693; vitest) |
-| Custom chooser deep catalog landing | `creator-entry-mode.ts` (`prefersDeepCatalogEntry`, `canContinueGuidedAbilitiesStep`, `resolveGuidedRecommendedAbilitiesPatch`), `guided-deep-entry-landing.ts`, `use-guided-deep-entry-on-arrival.ts` — custom entry + no `archetypePathId` opens L2/browse/customize on first step arrival (except **Skills** = opt-in Browse all Skills; **Ancestry** always lands species overview via `landsOnFirstInnerScreen` → phase 0 — TASK-697; vitest on the intent predicate) |
-| Guided Species L2 + mixed Ancestry | `species-step.tsx` (L2 all species + `MixedSpeciesModal` card + **Create Species** via `GuidedLayerNav` below grid); `guided-species-resolve.ts`, `species-selection-draft.ts` (single/mixed draft patches), `guided-mixed-species-overview.tsx` (parent `GuidedChoiceCard`s + **Change species** → same `MixedSpeciesModal`; no granted-trait list — choices-ahead only), `ancestry-pick-tasks.ts` (`buildMixedAncestryPickTasks`); Ancestry Continue gate `ancestry-pick-gate.ts`; save via `build-character.ts` (TASK-641; vitest ancestry-pick-tasks + build-character + species-selection-draft). Ancestry overview granted traits: `GuidedChoiceCard` `readOnly` (TASK-711); species More details catalogs stay `GuidedTraitOptionList`. Size picker: `SegmentedControl` hugs few options (TASK-720). |
-| Guided layer nav button chrome | `guided-layer-nav.tsx` + `guided-nav-button-styles.ts` — below-content placement (one left / pair left-right); expand = outline hatch (`guidedNavExpandClassName`); collapse = outline; footer Continue = primary (TASK-640, TASK-695) |
-| Guided ancestry picks | `lib/guided-creator/ancestry-pick-tasks.ts` (`buildMixedAncestryPickTasks`, TASK-591) — Guided Ancestry chapter; sheet Edit Species uses `lib/ancestry/ancestry-selection.ts` |
-| Guided Continue one-screen advance | `nextGuidedSubStep` / `prevGuidedSubStep` / `landsOnFirstInnerScreen` (`lib/guided-creator/guided-substep-nav.ts`) — store footer nav + Ancestry/Loadout entry intent; never jumps to furthest (TASK-592; vitest sub-step index + intent predicate; UI landing human T059) |
-| Guided funnel integrity | derived rail `substep-satisfaction.ts`; skill prune + leftover remaining `skill-reconcile.ts` (`calculateGuidedSkillPointBudget` — Skills Continue and Your Hero Create); ancestry gate `ancestry-pick-gate.ts`; Loadout signed remainder + save `clampSavedCurrency` (`lib/character-save.ts`; Guided `build-character`, TASK-739; PATCH `prepareCharacterForSave` when `currency` is present, TASK-749); path `resolveArchetypeProficiencyStart`. Guided funnel rules: ClickUp TASK-592+ / git history (Aug 2026 remediation archive removed) |
-| Guided step footer | `GuidedStepFooter`: sticky Back/Continue only (layer hops use `GuidedLayerNav`); opaque `bg-surface` below `md`, frosted from `md+` (TASK-829). Chapter rail sticky chrome in `guided-creator-shell` is opaque `bg-background` below `md` (same frost from `md+`). `completionHint` stacks above actions below `sm`, centered mid-bar on `sm+` (one mount; TASK-453). Your Hero leftovers use `GuidedRevealReviewModal` from **Create character** (not a disabled button — TASK-911). |
-| Tab summary header section | `TabSummarySection`, `SummaryItem` (`labelAccessory` for InfoTippy), `SummaryRow` — solid theme fills (`bg-*-light` / `bg-surface-alt`, no gradients); sheet Inventory Currency + Armament Proficiency stack below `sm` (TASK-537); Armament tip via `armamentProficiencyHelp` (TASK-581). Currency focus without typing does not save over a newer value (`currency-field-commit.ts`, 86e3juw07) |
-| Chip roles (descriptor vs expandable) | `DescriptorChip`, `ExpandableChip` (`@/components/ui`); entity-row inline size `CHIP_ENTITY_INLINE_SIZE` / `chip-size-tokens.ts` (TASK-699); `GridListChip` + `lib/chip/expandable-chip-props.ts`; `ChipData.kind` + `descriptorChipData()` in `lib/chip/chip-data-helpers.ts`; optional `ChipData.onSelect` / `disabled` / `current` for control chips (sheet feat rank, TASK-780); metadata builders in `lib/chip/list-row-metadata.ts` (`rankedGlrFactChips` from `layout.chipFacts`, TASK-809). **Energy cost header is `N EN`, never EP** (TASK-755; Your Hero / sheet / Codex / creature chips that pass `energyCost`) |
-| Stable expand toggle (chips) | `ExpandableChip` + `ChipGroup` (`data-chip-group`); `applyFullRowExpandLayout` (`lib/chip/full-row-expand-layout.ts`) — grow into remaining row width; do not force `w-full` on wrap expand (TASK-445). Header **or** expanded body toggles; Options uses `data-expand-ignore` (TASK-539). |
-| Feat tags (normalize + taxonomy) | `lib/codex/feat-tags.ts`, `lib/codex/feat-list.ts` (`storedFeatCategoryLabel` — trimmed `codex_feats.category`; data fix `sql/codex-category-offense-to-offensive.sql`); live DB function `normalize_feat_tags()` (unification SQL (was `sql/feat-tags-unification-phase*.sql`, deleted 2026-10-29) in git history) |
-| Part/property chips | `ExpandableChip` + `expandableChipPropsFromPartData` (`lib/chip/expandable-chip-props.ts`); `PartData` in `lib/chip/part-data.ts` (re-exported from `@/components/patterns`); `partChipsFromDisplay` in `lib/chip/part-chips-from-display.ts` |
-| Part/property → PartData (library rows) | `lib/library/part-display.ts` — `characterPartsToPartData`, `itemPropertiesToPartData` |
-| Part TP math (powers/techniques) | `lib/calculators/part-training-points.ts` — `computePartTrainingPointsRaw` + `computePartTrainingPoints` (one round-up of the instance's raw sum is the GAME_RULES rounding exception), `PartTpVariant` |
-| Path loadout flatten | `lib/game/loadout-entries.ts` — `flattenLoadoutEntries` |
-| Dedupe saved parts / entity refs | `lib/game/dedupe-saved-parts.ts` — `dedupeSavedParts`, `dedupeEntityRefs` (item properties, part sync option cleanup, calc, sheet chips). Power and technique creator saves keep every identical part copy (86e3jx8wv). |
-| Empowered technique part chips (nested power + technique) | `lib/library/empowered-technique-display.ts` — `buildEmpoweredPowerDocument`, `deriveEmpoweredTechniquePartChips`, `empoweredTechniquePartsSection`; wired by Library empowered rows + `buildEmpoweredPowerSelectableItem` (TASK-626) |
-| Sheet trait assembly (no species/ancestry dupes) | `lib/character/collect-sheet-traits.ts` — `collectSheetTraits` (Feats tab). Sheet rows: `library-feat-rows` `mapTraitRows` — Ancestry / Characteristic / Flaw as expanded-only descriptor chips (TASK-779); species kind omitted. State-feat Archetype/Character stay collapsed `badges`. Play view: player `note` in `descriptionAfter` (no Customize / custom-name field); edit keeps Customize as shared `Button` `secondary`/`sm` with equal `mt-3`/`pt-3` around the rule (TASK-888); local draft until blur so the caret does not jump (TASK-805). Italic custom names use `pe-[0.35em]` so truncate does not clip the slant (TASK-783). Trait GLR ids use `traitRowId(category, traitKey)` (not list index). |
-| Ancestry selection (Guided Ancestry + sheet Edit Species) | `lib/ancestry/ancestry-selection.ts` — trait buckets, mixed size/skills, draft builders, continue gates, toggles; UI `patterns/chrome/trait-section.tsx` (picker, ADR-0017); sheet Edit Species = `edit-species-modal.tsx` + `use-edit-species-modal.ts` + `edit-species-species-step.tsx` / `edit-species-ancestry-step.tsx` (TASK-666f); mixed skills via `patterns/select/mixed-species-skill-picker.tsx` (TASK-670 / TASK-820, ADR-0018). Species-change skill rows: `migrateSkillsAfterSpeciesChange` (`lib/species-skill-migration.ts`) looks up Codex names via `findSkillByIdOrName` (TASK-803). |
-| Archetype path/forge edit helpers | `lib/game/archetype-edit.ts` — `listPlayerVisiblePaths`, `groupPathsByCategory`, `redistributeProficiency`, `buildPathSwitchResult`, forge ability gate; used by sheet Edit Archetype, Guided path-step; UI `patterns/select/ability-pick-button.tsx` (TASK-594 / ADR-0017) |
-| Path recommendation collectors + list filter (by archetype path) | `lib/game/archetype-path.ts` — `collectPathRecommendedIds(pathData, kind)` (union of level 1 + later `levels[]` + guidance groups; `remove*` excluded, `id:qty` collapsed) → `lib/game/path-recommendation-index.ts` (`buildPathRecommendationIndex`, `pathRecommendedEntityIds`, `pathNamesForEntity`, `PATH_FILTER_ALIAS` / `expandPathFilterSelection` / `addPathFilterSelection`, `pathIdsForArchetypeType`, `applyLivePathFilter`, optional multi-kind bags) → `hooks/use-path-recommendation-index.ts` / `usePathListFilter` (memoized off `['codex', 'archetypes']`; optional same-type auto-select via type-wide alias — TASK-878) → shared `ArchetypePathFilter` (Quick select aliases first; last sibling in the filter grid; flow position only — no `col-start` lock). Feats: `filterFeats(..., { pathRecommendedIds })` + `featPathChipNames` / `featFamilyIdsMatchingPath`. Skills / mixed equipment / official powers (powers+innatePowers) / techniques / armaments: same index, no second match rule (TASK-751–752 / **ADR-0014**). Creator L2/L3 + AddFeat/AddSkill/AddLibraryItemModal: same control (TASK-753; Empowered skipped). `PowerTechniqueFilters` / `ArmamentFilters` take optional `pathFilter`. Row chips use `GridListRow` `showBadgesInName`. |
-| Entity list sections (powers/techniques/weapons/armor/etc.) | `*ListSection` from `entity-library-sections` facade (TASK-611: columns/types/rows + powers-techniques / inventory / feats modules); multi-section tabs use `useLibrarySectionCollapse` + `SectionHeader` collapsible (empty closed; + Add expands). `EquipmentListSection` `layout="creature"` Qty uses `buildCreatureEquipmentColumns` (`-` when missing; **TASK-813**); creature creator selected Equipment and the stat-block both use that path. Sheet `characterSheet` layout keeps steppers (missing qty → 1). |
-| Species / trait catalogs | `DetailOptionList` + `traitToDetailOption` (species deep-dive catalogs). Selection picks: `GuidedChoiceCard`. Ancestry overview granted traits: `GuidedChoiceCard` `readOnly` (TASK-711). (`ItemCard` / `SpeciesTraitCard` deleted — `/debt` 2026-07-19.) |
-| Damage dice/type split (list cells) | `splitDamageDiceAndType` from `@/lib/utils` (single helper; sheet + entity lists + quick armaments) |
-| Item ability requirements | `deriveAbilityRequirementFromProperties` + `AbilityRequirement` (`lib/game/weapon-attack-ability.ts`) — enrichment, official library, guided equipment; attack ability: Finesse → Agility, Thrown/Reach → Strength, Heavy ranged → Strength, Range → Acuity (TASK-716 / **TASK-919** / **TASK-920**) |
-| Shared list filters | `@/components/patterns/filters` (`ChipSelect`, `ArchetypePathFilter`, `FilterSection`, `PowerTechniqueFilters`, `ArmamentFilters`, `CharacterFilter`, `FilterInput` / `FilterNativeSelect`, …) — not `@/components/codex`. `ChipSelect` takes an optional per-option `group` for `<optgroup>`, optional `chipLabel` for selected chips vs dropdown `label`, + `labelAccessory` (InfoTippy); `ArchetypePathFilter` composes it (union multi-select, no any/all toggle — ADR-0014). Filter number/text fields and native selects share `FILTER_CONTROL_CLASS` (`h-11` + `rounded-md`; TASK-725). Library + Codex feats/skills/equipment character id persistence: `lib/library/character-filter-persistence.ts`. `CharacterFilter` is a collapsible subsection (default collapsed; InfoTippy immediately after the title — TASK-781). Codex skills: known / not known / base-owned via `lib/codex/skill-list.ts` (TASK-722). Codex/Admin mixed equipment columns + chips: `lib/codex/equipment-list.ts` (TASK-723; `ArmamentFilters` `showEquipmentExtras`). Browse lists: FilterSection via ListSearchToolbar (TASK-721); `PowerTechniqueFilters` / `ArmamentFilters` are panel bodies only; optional `pathFilter` renders `ArchetypePathFilter` last (TASK-752). |
-| Library add-to-character (+ row action) | `useAddToCharacterFromLibrary` (`hooks/use-add-to-character-from-library.tsx`) + `map-library-to-character.ts`; `LibraryAddToLibraryButton` / `LibraryAddToCharacterButton` (`patterns/list/library-add-to-library-button.tsx`) + `LibraryRowActionSlot` (`patterns/list/library-row-action-slot.tsx`); wired on Library + Realms power/technique **and** weapons/armor/shields lists when character filter selected (TASK-679 / TASK-680). Icons: **BookPlus** = add to My Library; **UserPlus** = add to character (TASK-731 — not a second Plus). Save goes through `useSaveCharacter` (`updatedAt` lock + 409 re-apply, TASK-746 / ADR-0013). |
-| Creature stat block | `CreatureStatBlock` facade (TASK-611: types/helpers/section/display-data/panels) — Speed/Evasion via `calculateCreatureSpeed` / `calculateEvasion` (no size add; TASK-742); weapon Attack uses shared `getWeaponAttackBonusFromProperties` (`lib/game/weapon-attack-ability.ts`; same as sheet / quick armaments); level column/subline via `formatCreatureLevel*` (`lib/game/creature-level-display.ts`); inventory sections from kind buckets with mixed `armaments` migrate-on-read (**TASK-812**); Equipment uses `EquipmentListSection` (`layout="creature"` Qty; **TASK-813**) |
-| Creature library stat-block rows | `CreatureLibraryStatBlockRow` (single row) + `CreatureLibraryStatBlockRows` (My Library list) — both use `mapLibraryCreatureToStatBlockData`; Realms browse renders rows via `OfficialEntityList.renderRow` |
-| Filters | `ChipSelect`, `ArchetypePathFilter`, `TagFilter`, `SelectFilter`, `AbilityRequirementFilter`, `CharacterFilter`, `SourceFilter`, `FilterInput` (`patterns/filters`) |
-| List states | `EmptyState` / `LoadingState` (`@/components/ui`); `ErrorDisplay` (patterns) |
-| Search box | `SearchInput` (`@/components/ui`) |
-| List browse search row (+ Filters + trailing) | **`ListSearchToolbar`** (ADR-0011 / TASK-721) — `CodexBrowseListShell`, `UserLibraryEntityTabShell`, `OfficialEntityList`. When `filters` is set, composes FilterSection `toolbarStart` (Search + Filters one row; `trailing` after Filters). Optional `searchAriaLabel` is the search field's accessible name. **Filters** is Standard `size="md"` (TASK-847) — not a `max-md:` 44 slab. GuidedInlineCatalogList keeps its own `toolbarStart` (ADR-0012). |
-| Official library entity lists (browse + admin) | `OfficialEntityList` (+ optional `filters` slot) + thin wrappers: `OfficialPowerList` / `OfficialTechniqueList` / `OfficialItemList` (`armamentKind`: weapon \| armor \| shield; config in `lib/library/official-item-list.ts`; shared browse filter in `lib/library/official-catalog-row-filter.ts`; GLR browse chrome in `lib/glr/official-entity-browse-chrome.ts`; power/technique tab filter state in `hooks/use-official-power-technique-browse-filters.ts`; `ArmamentFilters` + character add-to-sheet TASK-680) / **`OfficialCreatureList`** (library variant = full `CreatureStatBlock` rows; admin = compact grid) / **`OfficialEnhancedList`** (TASK-575; helpers in `lib/library/official-*-list.ts`). Admin variant: All \| Public library \| Admin library filter + compact Public/Admin listing toggle (`onCatalogListingChange`, ADR-0027). Optional `searchTrailing` for admin Create beside search. Power/technique: `PowerTechniqueFilters` + `derivePartCategories` / Damage category for damaging powers (TASK-673) + `power-technique-character-context` + character/TP caps (TASK-676); **USM add-power/technique/item** reuses those panels as the FilterSection body with optional `pathFilter` (TASK-675 / TASK-753; Empowered skipped). |
-| Admin Codex + Codex browse list chrome | **`CodexBrowseListShell`** (ADR-0005) — SectionHeader (admin) + `ListSearchToolbar` (Search + Filters on one row when `filters` is set; TASK-721; `searchAriaLabel` names the Codex search field, 86e3jmdp9) + ListHeader + loading/empty/rows. Row children window-virtualize (`@tanstack/react-virtual`) past 40 rows; shorter lists and a single grouped child (Codex Archetypes) mount as before (TASK-775). Not for Official* grids or **Admin** Archetypes path rows. Admin Images bank list uses the same shell. Admin entity CRUD (save / row actions / edit-modal footer) is **not** this shell — see ADR-0025. |
-| Admin Codex entity CRUD chrome | **`useAdminCodexEntity`** + `resolveAdminCodexSaveTargetId` + `AdminCodexRowActions` + `AdminCodexEditModalFooter` + `AdminCodexDeleteModals` (TASK-842 / TASK-845; ADR-0025) + **`COPY_NAME_SUFFIX`** (`admin-codex-copy-suffix.ts`; TASK-849) + **`AdminCodexCopySourceBanner`** (`admin-codex-copy-source-banner.tsx`; TASK-852) + **`AdminCodexSourceField`** (`admin-codex-source-field.tsx`; open `sources` names from `getCodexSourceCatalog` in `lib/codex/source-catalog.ts`, shared `ChipSelect` plus the existing `Input`, many per item; species `is_starter` stays separate). Co-located under `app/(main)/admin/codex/`. Spreadsheet copy-suffix stays local. Not CodexBrowseListShell and not OfficialEntityList. First-step delete is `DeleteConfirmModal` (`deleteContext="Codex"`); still-referenced rows keep `ConfirmActionModal`. A dirty Codex record edit modal asks before Back, the X, or Escape discards the edits, and refresh uses the same beforeunload as a creator (`admin-codex-unsaved-leave.ts` + the creator leave blocker + `ConfirmActionModal`, 86e3jthxr). |
-| Confirm/delete/login modals | `ConfirmActionModal`; `DeleteConfirmModal` wraps it with delete copy (TASK-799 / TASK-841). `LoginPromptModal` (guest Save/Load; Log In / Create Account / dismiss tertiary in Modal `footer`). Character finalize/reveal pass `onContinueWithoutSigningIn` (ADR-0026 / TASK-904) so tertiary is **Continue without signing in** and writes a local sheet. Library / creator Load omit that callback (Continue Without Loading / Saving). |
-| Standalone creator page shell (auth/load/save) | `CreatorPageShell` (+ `CreatorLayout`, `CreatorSaveToolbar`, `CollapsibleSection`, **`AdvancedCalculationsPanel`** `groups` — TASK-922 / **TASK-923**) from `@/components/creator`. Admin three-way save: My library \| Public library \| Admin library (`CreatorSaveTarget`, ADR-0027). Expanded `CollapsibleSection` headers keep original title/padding (`p-4`, `font-bold` / global `h2` `text-title`) and drop the reserved empty summary line (TASK-764). Optional `toolbarHelp` / `CostStat.help` / `costHelp` for InfoTippy. |
-| Image upload + crop | `ImageUploadModal` |
-| Creator portrait (Guided reveal) | `CreatorPortraitUpload` (`patterns/chrome/creator-portrait-upload.tsx`, ADR-0017) — wrapper `GuidedPortraitUpload`; draft compress + Storage via `lib/portrait.ts`; **display matte** `bg-image-matte` only (crops preserve alpha PNG/WebP, no theme bake) |
-| Realms Image Library picker | `RealmsImagePicker` — bank browse/select; admin upload-into-bank (`resolveRealmsImagePickerCategories` in `lib/realms-images.ts`) |
-| Theme switch | `ThemeToggle` |
-| Help tooltips | `InfoTippy` (`tone` API: `info` / `tp` / `current` — TASK-707; layout-neutral hit overlay TASK-725) / `WordHelpTip` + `public/tooltip-text.tsx` — see `guide/04-floating-ui-tooltips.md` |
+---
 
-> UI primitives (Modal, Button, Chip, **DescriptorChip**, **ExpandableChip**, PageContainer (`PAGE_FILLS_VIEWPORT_CLASSNAME` — Combat, Codex, and Characters stay at least one viewport tall so the site footer starts below the fold; 86e3k9fyg), PageHeader, TabNavigation (`labelMobile` below `md`; `trailing` outside the tablist — TASK-827; C1 overflow fade + chevrons — TASK-840 / TASK-890 (2px slack + `overflow-y-hidden`; chevrons jump to list edges); `TabNavOverflowScroller` also on Guided chapter rail — TASK-848), SearchInput, **TableScroll** `relative min-w-0` — TASK-826) live in `@/components/ui`. **Button / IconButton** coarse-pointer tiers: Primary `size="lg"`/`xl` (modal/screen CTAs: Add Selected, Save, Continue, Confirm), Standard `md` (Cancel / standalone), Dense `sm`/`link` (TASK-841 / ADR-0023). **Input / Select / Textarea / SearchInput** Standard 44 (`touch-tier-standard`) under coarse pointer; fine pointer keeps compact `h-10` (TASK-830). Filter rows stay `FILTER_CONTROL_CLASS` `h-11`. Modal sizes: `full` for high-complexity editors (admin codex add/edit use `full` + `fullScreenOnMobile`; see DESIGN_SYSTEM). After close, Modal holds an invisible `z-overlay` sink for 200ms (TASK-804) so dismiss cannot click-through to Create/Save.
+## App entries
 
-## Game logic / calculators (`src/lib/`)
+Each path is a file. Group headings are only the URL prefix.
 
-| Need | File |
-|------|------|
-| Health/skill/derived calculations (current source) | `lib/game/calculations.ts` (`calculateMaxEnergyForArchetype` / `resolveEnergyArchetypeAbility`, `abilityDefenseBonusesFromAbilities` for allocation cards, `calculateCreatureSpeed` = player Speed with **no size add**; Energy and sheet Training Points use the Martial Ability on a pure Martial character, the Power Ability on a pure Power character, and the higher of the two on Powered-Martial (86e3jv2hr)) |
-| Game constants / formulas | `lib/game/constants.ts` (`CHARACTER_STARTING_CURRENCY` — Guided create; TASK-791; `DEFENSE_DISPLAY_NAMES` — GAME_RULES defense labels, TASK-835), `lib/character/appearance-age.ts` (`resolveCharacterAge` / `resolveCharacterAppearance` / `resolveCharacterBackstory` / `normalizeAgeAppearanceForSave`; live Appearance and Backstory keep spaces and line breaks via `appearanceDraftFromEdit` / `backstoryDraftFromEdit`, 86e3jvzre; legacy `parseAgeFromAppearance`; TASK-886), `lib/character/sheet-header-species-label.ts` (`resolveSheetHeaderSpeciesLabel` / `isMixedSpeciesHeaderLine` — mixed header uses `speciesNames`; TASK-884), `lib/game/formulas.ts` (`resolveArchetypeProficiencyStart` — path `*_prof_start` else type defaults; Guided save; `calculateMaxArchetypeFeats` delegates to `calculateArchetypeProgression` so Powered-Martial milestone feat picks count — TASK-742); Levels-by-Rarity: `LEVELS_BY_RARITY` + `maxRarityForCharacterLevel` / `rarityAtOrBelowMax` in `lib/game/creator-constants.ts` |
-| Skill allocation | `lib/game/skill-allocation.ts` (`canIncreaseDefense` caps **skill-point** defense at level; ability bonus unrestricted) |
-| Feat requirement checks | `lib/game/feat-requirements.ts` — `checkFeatRequirements`: hard `lvl_req` else character level ≥ 2 × feat level (feat rank 1 with no `lvl_req` stays legal at L1); used by creators, sheet, codex filter, L1 create legality (TASK-742) |
-| Leveled feat families | `lib/leveled-feats.ts` — family grouping, `formatFeatName` (Roman suffix II/III…; skips double-suffix when Codex name already matches `feat_lvl`), Codex other-rank chips (`buildFeatLevelChips`) on **`codex_feats` and `codex_creature_feats`** (after `mapCodexCreatureFeat` exposes `base_feat_id`), sheet play current-marked chips (`includeCurrent`), sheet edit rank via the same builder (`select` → `ChipData.onSelect`, TASK-780) |
-| Creator skill-save rows (Guided) | `lib/character/build-creator-skills.ts` (`buildCreatorSkillSaveRows` — preserves proficient skill_val 0 before `cleanForSave`; Guided `build-character`) |
-| Read-only sheet assemble (campaign RM view) | `character-sheet/read-only-sheet.ts` (`buildReadOnlySheetContextValue` / `buildReadOnlyLibraryHandlers`) + `useCharacterSheetDerived` + `CharacterSheetBody`. `isOwner` is the viewer check (owner and guest sheet edit; public, campaign, and Realm Master viewers do not). Play handlers are omitted via `whenSheetOwner` / `sheetLibraryAddActions` (`sheet-viewer-edits.ts`) inside `buildLibrarySectionData` — do not pass no-ops for HP, Energy, AP, XP, Use, equip, quantity, feat uses, add, notes, or Sync Proficiencies (86e3jryyp). The roll log stays; the dice builder is hidden when `canRoll` is false. Catalog args come from `sheetCatalogFromEnrichment` (`lib/character-view-enrichment.ts`) on the GET payload (TASK-773), not viewer `useUser*` / `useOfficialLibrary` / `useCodex*` |
-| Equipment vs Armaments vs Enhanced | GAME_RULES glossary. **Equipment** = `codex_equipment`. **Armaments** = Weapons / Armor / Shields (`official_items` / `user_items`). **Enhanced items** = later track (`official_enhanced_items`) — do not merge. Internal GLR `'gear'` and Loadout phase id `'gear'` = Equipment. No player-facing Gear (TASK-872). Kind labels: `formatInventoryKindLabel` in `lib/game/creature-inventory.ts`. |
-| Equipment equipped rules (single armor, create auto-equip) | `lib/game/equipment-equipped.ts` |
-| Armor Damage Reduction (canonical) | `lib/game/resolve-armor-damage-reduction.ts` → **`resolveArmorDamageReduction`** (TASK-644) — sheet equip, official list, enrichment, guided catalog, Guided create auto-equip. Creature total: **`creatureArmorDamageReduction`** — one armor, highest currency cost; currency tie keeps the earlier armor in the stored list (86e3t17av). Successive reductions in a turn: **`armorDamageReductionForHit`** / **`damageAfterArmorReduction`** (full DR, then half rounded up — 86e3pab12). Standard armor skips Psychic, Spiritual, and Sonic only (`standardArmorReducesDamageType` / `effectiveDamageReduction`); other Damage Reduction sources do not (86e3tcaf9). |
-| Sheet header DR / Critical Range vitals | `sheet-header.tsx` facade + `sheet-large-stat-block.tsx` (`LargeStatBlock`) + `sheet-header-identity` (`resolveSheetHeaderSpeciesLabel` — Level vs mixed `speciesNames` wrap groups; TASK-884) / `sheet-header-resources` (TASK-598 / **TASK-788** / **TASK-839** / **TASK-908**); C3 equal-track stat `grid` (2-col phones, 4-col from `md` and `xl`, 2×2 at `lg` so identity keeps width) + C5 three-column header from `lg` (identity `1.4fr` / auto / `minmax(15rem,1fr)`; `xl` `1.5fr` / auto / `1.1fr`; no 20rem identity cap). Cluster is `w-max` compact tiles (not `aspect-square`, not `h-full w-full` bars — TASK-885/908). Name uses `line-clamp-2` (not single-line truncate). Edit name stops at 100 characters (`character-name-limit.ts`); a longer name is left out of the save so other edits still persist. Sheet Library edit-mode hide-eyes are Dense `IconButton` `sm` (TASK-887). `ResourceInput` current Health/Energy uses Standard `touch-tier-standard` (44px min-h under coarse; `w-12` unchanged — TASK-836). play/edit show DR only when equipped armor (or a temp) changes DR; Critical Range only when armor Critical Range +1 / Increase (1 + op_1_lvl) or a crit temp applies. **Temp mode always shows both cards** so a temp can be added. Formula: `calculateCriticalRange` = Evasion + `COMBAT.criticalHitThreshold` (10) + increase (`getEquippedArmorQuickRef`; archetype `QuickArmorTable` uses the same helper) |
-| Archetype path / progression | `lib/game/archetype-path.ts` (incl. `pathHasPlayerVisibleLevel1`, `pathHiddenFromPlayerPicker`, `innatePowers`; `PathGuidanceGroup.audience` + `filterFeatGuidanceGroups` / `resolvePathGuidanceAudience` — TASK-514/ADR-0004; shared parsers `parseOptionalJsonField` / `parseIdQuantityStrings` / `serializeIdQuantityStrings` / `parseRecommendedAbilities` — TASK-476/570), `lib/game/archetype-display.ts`, `lib/game/archetype-edit.ts` (sheet + Guided path list/group + path-switch save — TASK-594), `lib/game/innate-eligibility.ts` (**TASK-879:** `isPowerInnateEligible` — Basic, ≤1 min (6 rounds), Adaptation + heal bans; uses `deriveStructuredDuration` + `resolvePartCategoryList`), `lib/game/path-validation.ts` (Appendix G innate + Level 1 skills warn-cap — TASK-515), `lib/constants/creator-layer-governance.ts` (`LAYER1_GOVERNANCE.maxPathRecommendedBaseSkills` = 3), `components/character-sheet/path-level-guidance.tsx` (`indexDisplayNamesByNormalizedIds` — TASK-732), `components/character-sheet/archetype-path-identity.tsx`, `components/character-sheet/edit-archetype-modal.tsx`, `app/(main)/codex/CodexArchetypesTab.tsx`, `app/(main)/admin/codex/AdminArchetypesTab.tsx` + `admin-archetype-path-form.ts` + `admin-archetype-path-rows.tsx` + `admin-archetype-editor.tsx` (facade ~98 LOC; TASK-609 sections: `admin-archetype-editor-{config,meta,level1,guided,progression}.tsx`) + `use-admin-archetype-workspace.ts` (facade ~242 LOC; TASK-617: `admin-archetype-workspace-{open,save,mutators,unknown-selections}.ts`) + `use-admin-archetype-selection-options.ts` (TASK-381 Phase 6a–6c; feat guidance groups character vs archetype; L1 skills ≤3 base + warn; armaments weapons/shields vs armor UI — TASK-514–516; no path-recommended species — TASK-517; recommended-ability steppers + loadout — TASK-404; Advanced Path JSON escape hatch for rare fields; selected feats expandable GridListRows + full-width qty rows — TASK-534), creator `skills-step` / `feats-step` apply actions; species L1 = `is_starter` only |
-| Admin codex spreadsheet | `CodexSpreadsheetView.tsx` (facade ~115 LOC; **TASK-617**) + `use-codex-spreadsheet.ts` + `codex-spreadsheet-{config,helpers,toolbar,table,table-row,virtualization}.tsx` — raw tab spreadsheet edit/find-replace/save; table body window-virtualizes past 40 rows (`@tanstack/react-virtual`, **86e3meznt**). Toolbar hits use pointer tiers (`touch-tier-standard` / Dense `Button size="sm"`) not viewport `md:min-h-0` slabs (TASK-847). Collection allowlist / id retirement / delete probes: `lib/codex/{collections,id-allocation,references}.ts` |
-| Admin codex species editor | `AdminSpeciesTab.tsx` (facade ~321 LOC; **TASK-619** / **TASK-927**) + `admin-species-form.ts` + `admin-species-edit-modal.tsx` — CodexBrowseListShell list + full modal editor; Public/Admin library listing (`catalog_listing`, ADR-0027) |
-| Admin codex properties editor | `AdminPropertiesTab.tsx` (facade ~357 LOC; **TASK-619**) + `admin-property-form.ts` + `admin-property-edit-modal.tsx` |
-| Admin codex traits editor | `AdminTraitsTab.tsx` (facade ~296 LOC; **TASK-619**) + `admin-trait-form.ts` + `admin-trait-edit-modal.tsx` (+ nested create-trait modal) |
-| Admin codex feats editor | `AdminFeatsTab.tsx` (facade ~368 LOC; TASK-609) + `admin-feat-form.ts` + `admin-feat-edit-modal.tsx` (facade ~265 LOC; **TASK-619**) + `admin-feat-edit-modal-fields.tsx` |
-| Admin codex parts editor | `AdminPartsTab.tsx` (facade ~390 LOC; TASK-609) + `admin-part-form.ts` + `admin-part-edit-modal.tsx` (facade ~305 LOC; **TASK-619**) + `admin-part-edit-modal-options.tsx` |
-| Admin codex skills editor | `AdminSkillsTab.tsx` + `admin-skill-edit-modal.tsx` (TASK-849) — CodexBrowseListShell list + full modal editor |
-| Admin codex equipment editor | `AdminEquipmentTab.tsx` + `admin-equipment-edit-modal.tsx` (TASK-849) |
-| Admin codex creature feats editor | `AdminCreatureFeatsTab.tsx` + `admin-creature-feat-form.ts` + `admin-creature-feat-edit-modal.tsx` (TASK-849). Add level, base feat, category, and the level selector share `admin-codex-feat-level-fields.tsx` and `use-admin-leveled-feat-session.ts` with the character feat modal. |
-| Admin core rules editor | `admin/core-rules/page.tsx` (facade ~142 LOC; TASK-609) + `core-rules-category-editor.tsx` facade (**TASK-666g**) + `core-rules-{tabs,field-editors,progression-preview,damage-types,progression,combat,archetypes,ability-skills,conditions,sizes,rarities,recovery-experience,armament,crafting-rules}-editor(s).tsx`. A dirty edit asks before Back, Escape, or another in-app link discards it, and refresh uses the same beforeunload as a creator (`core-rules-unsaved-leave.ts` + the creator leave blocker + `ConfirmActionModal`, 86e3jtrak). This page has no close button. Switching tabs uses that same dialog. The Conditions tab lists the stored CONDITIONS row when it is a flat name-and-description map (`core-rules-conditions.ts`, 86e3juy5z). |
-| Crafting / encounter helpers | `lib/game/crafting-utils.ts`, `lib/game/encounter-utils.ts` |
-| Creature level display (user-facing fractions) | `lib/game/creature-level-display.ts` — `formatCreatureLevel`, `formatCreatureLevelLabel`, `formatCreatureLevelShort`, `parseCreatureLevelSortValue` (list sort), `CREATURE_LEVEL_SELECT_OPTIONS`; export `@/lib/game` |
-| Creature inventory document (kind buckets) | `lib/game/creature-inventory.ts` — `resolveCreatureInventoryBuckets` migrates mixed `armaments[]` on read; save/load uses `weapons` / `armor` / `shields` / `equipment` (**TASK-812**); export `@/lib/game` |
-| Power / technique / item / empowered calc | `lib/calculators/*-calc.ts`, `mechanic-builder.ts` (`calculateDamageOptionLevel`; 1 round adds no duration-modifier Energy — 86e3jrhtq; day labels are 1 Day, 7 Days, and 14 Days — 86e3jrhvb), `empowered-overlap-parts.ts` (cheaper-EN pick — TASK-683). **Advanced Calculations display (TASK-922 / TASK-923):** `analyzePowerEnergy` + `power-energy-breakdown.ts`; `analyzeTechniqueEnergy` + `technique-energy-breakdown.ts`; `buildEmpoweredAdvancedCalculationGroups`; `analyzeItemMarketCurrency` + `item-cost-breakdown.ts` (sectioned IP/C; Rounded Down). Display-only — does not change cost totals. Empowered technique EN uses `dedupeSavedParts` on percentage parts (TASK-742). Item rarity from IP; display Currency is rarity-multiplied `resolveItemMarketPricing().currencyCost` (never property C sum `totalCurrency` — TASK-870). Item damage: `deriveItemDisplay` delegates to `formatDamageDisplay` (TASK-715). Item/weapon range display: `resolveWeaponRangeDisplay` / `deriveWeaponRangeConfig` (TASK-701 / **TASK-716** / **TASK-919** — Melee / Reach 2–6 / Thrown 3+2 / Ranged 8…64; Thrown+Reach are mechanic IDs). Ability utilized: Finesse/Heavy mechanic IDs (**TASK-920**). `formatRange` stays file-local in `item-calc.ts` (tests + `resolveWeaponRangeDisplay`) |
-| Data enrichment (minimal stored → full display) | `lib/data-enrichment.ts` facade → `lib/data-enrichment/*` (TASK-611: enrich powers/techniques/items/character + clean-for-save). Read-only other-user / RM catalog rows: `lib/character-view-enrichment.ts` (client collector + `sheetCatalogFromEnrichment`) + `lib/character-view-enrichment-server.ts` (referenced fetch; same P0-1 gate as `getOwnerLibraryForView`). Codex row map: `lib/codex/row-map.ts` (shared with GET `/api/codex`; TASK-777) |
-| Character sheet Library tab visibility defaults | `lib/character-library-tab-visibility.ts` (`defaultLibraryTabVisibilityForArchetype` → persisted `libraryTabVisibility`; power/martial-only create hides opposite tab) |
-| Notes tab section order / hide | `lib/character/notes-tab-sections.ts` (`notesSectionOrder`, `notesSectionVisibility`, named note `hidden`; edit-mode chrome in `notes-tab.tsx` / `notes-tab-edit-controls.tsx`) |
-| Library columnar mapping & sync | **`lib/library-columnar-keys.ts`** (shared columnar type/scalar metadata), `lib/library-columnar.ts` (`columnarViewSelect` for official/user view fetches; official `catalogListing` is a column, never `user_*` payload — ADR-0027), **`lib/library-persisted-contract.ts`** (write allowlist + shape validation aligned with `types/library.ts`), **`lib/library-mutation-validation.ts`**, **`lib/library-image-write.ts`** (bank `image_id` write policy), **`lib/crafting/crafting-session-persist.ts`** (crafting JSON persistence DTO), `lib/library-sync.ts`, **`lib/library-selectable-builders.ts`** (shared add+load SelectableItem pipeline; `libraryItemToPowerDocument` / `libraryItemToTechniqueDocument` + `buildPowerTechniqueBudgetDisplay` / `buildPowerTechniqueFilterableRow` for guided + Official list derive parity — TASK-691 / TASK-675 / **TASK-708**; vitest covers DEV-V-016-T001/T002/T003 column contracts). Armament Load/USM is per-kind (`weapon` / `armor` / `shield`); mixed `item` Type+Stat chrome is gone (**TASK-810**). Creature sync migrates mixed `armaments[]` into kind buckets; fingerprint field stays `armaments` (**TASK-812**) |
-| Official catalog listing (Public vs Admin library) | `lib/library/catalog-listing.ts` — `listed`/`unlisted`, `CreatorSaveTarget`, SegmentedControl option lists (`CATALOG_LISTING_SCOPE_OPTIONS`, `catalogListingClassOptions`, `CREATOR_SAVE_TARGET_OPTIONS`), `officialLibraryQueryPath` / `includeUnlisted=1` (ADR-0027 / TASK-927). List/count APIs default listed-only; enrichment-by-id stays unfiltered |
-| Load from library (creators) | `LoadFromLibraryModal` + `useLoadModalLibrary` (`itemKind` for armament Load; admin Load passes `includeUnlisted`); species/creature rows: `@/lib/library/creator-load-selectables` |
-| Tooltips (defaults + interpolation) | `lib/tooltips/` — **`lib/tooltips/README.md`** (PR #14 onboarding; legacy DB key map in that README) |
-| Roles / quotas / limits | `lib/role-policy.ts`, `lib/role-limits.ts`, `lib/role-quota-messages.ts`, `lib/admin.ts` |
-| API client / validation / rate limit | `lib/api-client.ts` (`apiFetch`, `apiUpload`, `ApiError` / `isConflictError`, `getErrorMessage`, `logClientError`), `lib/api-validation.ts`, `lib/validation/schemas.ts` (auth emails trim+lowercase), `lib/rate-limit.ts`, **`lib/server/resource-access-unavailable.ts`** + **`lib/server/assert-resource-http-access.ts`** (character/campaign detail layout preflight — **fail-closed**: 404 → `notFound`, 401 → `/login?returnTo=…`, network/5xx/429 → `ResourceAccessUnavailableError`, never render the page on a failed preflight) (Upstash Redis / Vercel KV when env set — TASK-645; **prod Redis live 2026-08-13** via `KV_REST_API_*` on Vercel, TASK-669) — client error convention: `ARCHITECTURE.md` § Client error handling |
-| Character save legality (server, B5) | `lib/game/character-legality.ts` — `findCharacterLegalityViolations` (required `CharacterLegalityRulesStatus`), `evaluateCharacterLegalityForSave` on `POST /api/characters` and `PATCH /api/characters/[id]`. **All levels:** warn and save — structured `legalityWarnings` on 200 (no legality 400), including feat-count caps (`archetype_feats_over_max`, `character_feats_over_max`) and HP+EN pool over-allocation (`health_energy_over_pool`). B5 = totals vs level budgets; B6 = level-up spend history. Cached feat catalog: `lib/codex/feat-requirement-catalog-server.ts`. PATCH skips feat catalog fetch unless dirty keys match `FEAT_CATALOG_PATCH_TRIGGER_KEYS` (exposes `feat_requirements_skipped`). `legalityUncomputable` codes only. Idempotent create replay (`clientRequestId`) re-reads stored `characters.data` for legality — not the retry POST body (`evaluateLegalityForReplayedCharacter` in `src/app/api/characters/route.ts`). Players do not see legality warnings in UI. Gate: `scripts/check-character-legality-all-levels.mjs` + `scripts/lib/character-legality-all-levels-gate.mjs` (route discovery for `characters.data` writes). |
-| `core_rules` on the server | `lib/core-rules-server.ts` → `fetchCoreRules(supabase)`; one authority, shared by `/api/codex` and character save legality (TASK-738 / B5). Client equivalent: `useGameRules` |
-| Auth error copy (login/register/reset/update-email/update-password/delete-account) | `lib/auth-errors.ts` (`getAuthErrorMessage`) — do not map every message containing “email” to invalid address; my-account uses `update-email` / `update-password` / `delete-account` |
-| Supabase clients (server/client/middleware) | `lib/supabase/*` — generated `Database` in `src/types/database.types.ts` (`npm run db:types`; ADR-0020). Cookie-less `createPublicClient` is parameterized (`public-client.ts`; ADR-0021; do not import from cookie `server.ts`). Browser/cookie/service-role factories are unparameterized. JSONB writes: `asDbJson` / `asDbInsert` / `asDbUpdate`; variable tables: `fromPublicTable` (`lib/supabase/database.ts`). Domain/API shapes stay `Library*` / `Codex*` / `Campaign`. Keep `asLibraryCountsClient` (TS2589). Helper `.from()` params use `TypedSupabaseClient` (TASK-822). **Public catalog GET CDN:** listed-only `GET /api/official/[type]` uses `createPublicClient` + `PUBLIC_CDN_CACHE_CONTROL` (`public, max-age=0, s-maxage=300, stale-while-revalidate=3600`; `lib/api/public-cdn-cache.ts`; 86e3t5bpt). Codex: `DATA_HANDLING.md`. `includeUnlisted=1`, admin unlisted payloads, `?debug=1`, and empty/error-shaped bodies stay `private, no-store` or `private, max-age=0` so the CDN cannot serve stale or privileged data. |
-| Rulebook chapter metadata | `lib/rules/rulebook.ts` (`RULEBOOK_CHAPTERS` from `src/content/rules/chapters.json`; nested `parentSlug` + `getRulebookNavTree` + `getRulebookChapterHref` — TASK-905; Welcome is `/rules`, not `/rules/welcome-to-realms`). Chrome: `components/rules/rulebook-nav.tsx` + `rulebook-shell.tsx` + `rulebook-article.tsx` + `rulebook-search.tsx`. Search: `lib/rules/rulebook-search.ts`. MDX map: `src/content/rules/index.ts`. 1-column MDX tables render as callouts (`src/mdx-components.tsx`); data `<table>` uses `TableScroll` (TASK-826 /cleanup). Character creation: a state's default duration is 1 minute (6 rounds) (86e3jrj8h). |
-| Codex browse (public URL) | `app/(main)/codex/page.tsx` — client browse list at `/codex` (no per-entry detail routes). Data via `useCodex*` → `GET /api/codex?collection=`. |
-| Generic utils (cn, string, number, object, motion, duration display) | `lib/utils/*` — indexed-access narrow: `defined()` / `isDefined()` (`defined.ts`; TASK-797 / ADR-0022); optional-prop widen: `AllowUndefinedOptionals<T>` (`exact-optional.ts`; TASK-824 / ADR-0024, flag in main `tsconfig.json`); JSON omit: `removeUndefined()` (`object.ts`); list column labels: `formatColumnKeyLabel()` in `string.ts`; item damage: `formatDamageDisplay()` (string / object / array — TASK-715); motion timing: `MOTION_DURATION_SLOW_MS` in `motion.ts`; duration layers in `duration.ts`: structured `formatDurationFromTypeAndValue` / `formatDurationWithModifiers`, any-shape `formatDurationDisplay`, compact `formatDurationCompact` (TASK-477); id lookup: `normalizeId` / `rowMatchesNormalizedId` / `findByNormalizedId` / `indexByNormalizedIds` / `indexDisplayNamesByNormalizedIds` / `resolveNormalizedRefLabel` in `normalize-id.ts` (id + `docId`; path `id:qty` names — TASK-732) |
-| Stable empty fallbacks for hook deps | `lib/empty.ts` (`EMPTY_STRING_ARRAY`, `EMPTY_STRING_RECORD`, `EMPTY_GUIDANCE_GROUPS`) — never mutate |
+### Auth
 
-## Services (`src/services/`, deep import e.g. `@/services/character-service`)
+- `src/app/(auth)/layout.tsx`
+- `src/app/(auth)/login/page.tsx`
+- `src/app/(auth)/register/page.tsx`
+- `src/app/(auth)/forgot-password/page.tsx`
+- `src/app/(auth)/reset-password/page.tsx`
+- `src/app/auth/callback/route.ts`
+- `src/app/auth/confirm/route.ts`
 
-| Need | Service |
-|------|---------|
-| Character persistence | Client HTTP contract: `character-service`; server relational DB boundary: `lib/character-persistence-server.ts` (`getRelationalCharacterDocument`, atomic campaign-authorized read, transactional create/patch and campaign roster+visibility mutation RPCs, service-role provisioning). Runtime code has no dependency on the removed legacy character document column. |
-| Library entity types (official + user) | `src/types/library.ts` (`LibraryPower`, `LibraryTechnique`, `LibraryItem`, …); hooks re-export |
-| Official / user enhanced items | `src/types/crafting.ts` (`OfficialEnhancedItem`, `OfficialEnhancedItemPayload`, `CreateOfficialEnhancedItemInput`); `useEnhancedItems` |
-| Library fetch/save (official + user) | `library-service` (use `fetchOfficialLibrary`, not removed `fetch*Public*` aliases). Official GET is listed-only unless `{ includeUnlisted: true }` (admin editor / creator Load) |
+Login, register, and forgot-password import `@/app/(auth)/auth-actions`. Register also imports `@/app/(auth)/actions`. Those are two server-action modules. See [Same filename](#same-filename-different-module).
 
-## Stores (`src/stores/`)
+### Home, account, legal, rules, resources
 
-Zustand stores live in `src/stores/`. Check there before adding client-side global state (auth state is via `useAuthStore`).
+- `src/app/(main)/layout.tsx`
+- `src/app/(main)/page.tsx`
+- `src/app/(main)/loading.tsx`
+- `src/app/(main)/error.tsx`
+- `src/app/(main)/my-account/layout.tsx`
+- `src/app/(main)/my-account/page.tsx`
+- `src/app/(main)/about/layout.tsx`
+- `src/app/(main)/about/page.tsx`
+- `src/app/(main)/privacy/page.tsx`
+- `src/app/(main)/terms/page.tsx`
+- `src/app/(main)/resources/layout.tsx`
+- `src/app/(main)/resources/page.tsx`
+- `src/app/(main)/rules/layout.tsx`
+- `src/app/(main)/rules/page.tsx`
+- `src/app/(main)/rules/[slug]/page.tsx`
+
+Privacy and terms import `@/components/legal/legal-document-body` and `@/lib/constants/site-copy`. Rules pages import `@/components/rules/rulebook-shell`, `@/components/rules/rulebook-article`, `@/components/rules/rulebook-pager`, `@/lib/rules/rulebook`, and `@/content/rules`.
+
+### Characters
+
+- `src/app/(main)/characters/layout.tsx`
+- `src/app/(main)/characters/page.tsx` — imports `@/components/character` (the card barrel, not the sheet barrel).
+- `src/app/(main)/characters/new/page.tsx`
+- `src/app/(main)/characters/new/guided/page.tsx` — imports `@/components/guided-creator` and `@/stores/guided-creator-store`.
+- `src/app/(detail)/characters/[id]/layout.tsx`
+- `src/app/(detail)/characters/[id]/page.tsx` — imports `./character-sheet-route`.
+- `src/app/(detail)/characters/[id]/character-sheet-route.tsx` — imports `@/components/character-sheet` and `./use-character-sheet-page`.
+- `src/app/(detail)/characters/[id]/use-character-sheet-page.ts` — imports `./use-character-sheet-page-data` and `./use-character-sheet-page-ui`.
+- `src/app/(detail)/characters/[id]/use-character-sheet-page-data.ts`
+- `src/app/(detail)/characters/[id]/use-character-sheet-page-ui.ts`
+
+The sheet route also imports `@/components/onboarding` and `@/components/rolls`.
+
+### Campaigns and tabletop
+
+- `src/app/(main)/campaigns/layout.tsx`
+- `src/app/(main)/campaigns/page.tsx`
+- `src/app/(detail)/campaigns/[id]/layout.tsx`
+- `src/app/(detail)/campaigns/[id]/page.tsx` — imports `./campaign-detail-route`.
+- `src/app/(detail)/campaigns/[id]/campaign-detail-route.tsx` — imports `./_components/use-campaign-detail-page`.
+- `src/app/(detail)/campaigns/[id]/_components/use-campaign-detail-page.ts`
+- `src/app/(detail)/campaigns/[id]/view/[userId]/[characterId]/page.tsx` — imports `@/components/character-sheet` and `@/components/character-sheet/read-only-sheet`.
+- `src/app/(main)/campaigns/[id]/tabletop/page.tsx` — imports `@/components/tabletop/tabletop-canvas` and `@/components/tabletop/add-monster-token-modal`.
+
+### Library, codex, creators, crafting, encounters
+
+- `src/app/(main)/library/layout.tsx`
+- `src/app/(main)/library/page.tsx` — imports `./LibraryPowersTab`, `./LibraryTechniquesTab`, `./LibraryItemsTab`, `./LibraryCreaturesTab`, `./LibraryEnhancedTab`, `./LibraryPublicContent`, `./library-guest-notice`.
+- `src/app/(main)/library/LibraryPowersTab.tsx`
+- `src/app/(main)/library/LibraryTechniquesTab.tsx`
+- `src/app/(main)/library/LibraryItemsTab.tsx`
+- `src/app/(main)/library/LibraryCreaturesTab.tsx`
+- `src/app/(main)/library/LibraryEnhancedTab.tsx`
+- `src/app/(main)/library/LibraryPublicContent.tsx`
+- `src/app/(main)/library/library-guest-notice.tsx`
+- `src/app/(main)/codex/layout.tsx`
+- `src/app/(main)/codex/page.tsx` — imports `./CodexFeatsTab`, `./CodexSkillsTab`, `./CodexSpeciesTab`, `./CodexEquipmentTab`, `./CodexPropertiesTab`, `./CodexPartsTab`, `./CodexTraitsTab`, `./CodexCreatureFeatsTab`, `./CodexArchetypesTab`.
+- `src/app/(main)/codex/CodexFeatsTab.tsx`
+- `src/app/(main)/codex/CodexSkillsTab.tsx`
+- `src/app/(main)/codex/CodexSpeciesTab.tsx`
+- `src/app/(main)/codex/CodexEquipmentTab.tsx`
+- `src/app/(main)/codex/CodexPropertiesTab.tsx`
+- `src/app/(main)/codex/CodexPartsTab.tsx`
+- `src/app/(main)/codex/CodexTraitsTab.tsx`
+- `src/app/(main)/codex/CodexCreatureFeatsTab.tsx`
+- `src/app/(main)/codex/CodexArchetypesTab.tsx`
+- `src/app/(main)/codex/CodexMyCodexEmpty.tsx` — imported by the feats, skills, parts, properties, traits, creature-feats, and archetypes tabs above. The species and equipment tabs do not import it.
+- `src/app/(main)/power-creator/layout.tsx`
+- `src/app/(main)/power-creator/page.tsx`
+- `src/app/(main)/technique-creator/layout.tsx`
+- `src/app/(main)/technique-creator/page.tsx`
+- `src/app/(main)/empowered-technique-creator/layout.tsx`
+- `src/app/(main)/empowered-technique-creator/page.tsx`
+- `src/app/(main)/item-creator/layout.tsx`
+- `src/app/(main)/item-creator/page.tsx`
+- `src/app/(main)/species-creator/layout.tsx`
+- `src/app/(main)/species-creator/page.tsx`
+- `src/app/(main)/creature-creator/layout.tsx`
+- `src/app/(main)/creature-creator/page.tsx`
+- `src/app/(main)/crafting/layout.tsx`
+- `src/app/(main)/crafting/page.tsx`
+- `src/app/(main)/crafting/[id]/page.tsx`
+- `src/app/(main)/encounters/layout.tsx`
+- `src/app/(main)/encounters/page.tsx`
+- `src/app/(main)/encounters/[id]/page.tsx`
+- `src/app/(main)/encounters/[id]/combat/page.tsx`
+- `src/app/(main)/encounters/[id]/skill/page.tsx`
+- `src/app/(main)/encounters/[id]/mixed/page.tsx`
+
+The power, technique, empowered-technique, item, species, and creature creator pages, and `src/app/(main)/crafting/[id]/page.tsx`, import `@/components/creator`. The crafting hub page does not. The guided character page imports `@/components/guided-creator`, not the creator barrel. Those barrels export different components (`CreatorPageShell` vs `GuidedCreatorShell`).
+
+### Admin
+
+- `src/app/(main)/admin/layout.tsx`
+- `src/app/(main)/admin/page.tsx`
+- `src/app/(main)/admin/codex/page.tsx` — imports `./AdminFeatsTab`, `./AdminTraitsTab`, `./AdminSpeciesTab`, `./AdminSkillsTab`, `./AdminPartsTab`, `./AdminPropertiesTab`, `./AdminEquipmentTab`, `./AdminArchetypesTab`, `./AdminCreatureFeatsTab`, `./CodexSpreadsheetView`.
+- `src/app/(main)/admin/codex/AdminFeatsTab.tsx`
+- `src/app/(main)/admin/codex/AdminTraitsTab.tsx`
+- `src/app/(main)/admin/codex/AdminSpeciesTab.tsx`
+- `src/app/(main)/admin/codex/AdminSkillsTab.tsx`
+- `src/app/(main)/admin/codex/AdminPartsTab.tsx`
+- `src/app/(main)/admin/codex/AdminPropertiesTab.tsx`
+- `src/app/(main)/admin/codex/AdminEquipmentTab.tsx`
+- `src/app/(main)/admin/codex/AdminArchetypesTab.tsx`
+- `src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx`
+- `src/app/(main)/admin/codex/CodexSpreadsheetView.tsx`
+- `src/app/(main)/admin/core-rules/page.tsx`
+- `src/app/(main)/admin/images/page.tsx`
+- `src/app/(main)/admin/public-library/page.tsx` — imports `./AdminPublicPowersTab`, `./AdminPublicTechniquesTab`, `./AdminPublicItemsTab`, `./AdminPublicCreaturesTab`, `./AdminPublicSpeciesTab`, `./AdminPublicEnhancedItemsTab`.
+- `src/app/(main)/admin/public-library/AdminPublicPowersTab.tsx`
+- `src/app/(main)/admin/public-library/AdminPublicTechniquesTab.tsx`
+- `src/app/(main)/admin/public-library/AdminPublicItemsTab.tsx`
+- `src/app/(main)/admin/public-library/AdminPublicCreaturesTab.tsx`
+- `src/app/(main)/admin/public-library/AdminPublicSpeciesTab.tsx`
+- `src/app/(main)/admin/public-library/AdminPublicEnhancedItemsTab.tsx`
+- `src/app/(main)/admin/roles/page.tsx`
+- `src/app/(main)/admin/sources/page.tsx`
+- `src/app/(main)/admin/users/page.tsx`
+- `src/app/(main)/admin/changelogs/page.tsx`
+
+Admin codex also has edit modals and archetype editor sections next to the tabs. They were not opened one by one on this pass. Start from the tab file the page imports.
+
+### Dev and root shell
+
+- `src/app/dev/styleguide/layout.tsx`
+- `src/app/dev/styleguide/page.tsx`
+- `src/app/layout.tsx`
+- `src/app/error.tsx`
+- `src/app/global-error.tsx`
+- `src/app/not-found.tsx`
+- `src/app/(detail)/error.tsx`
+- `src/app/opengraph-image.tsx`
+- `src/app/robots.ts`
+- `src/app/sitemap.ts`
+- `src/proxy.ts` — exports `proxy`. It calls `redirectOAuthCodeToCallback` on `/`, `rejectCrossOriginApiMutation` on `/api/`, then `updateSession`.
+- `src/instrumentation.ts`
+- `src/instrumentation-client.ts`
+
+---
+
+## HTTP handlers
+
+Auth callbacks are also listed with the auth pages.
+
+- `src/app/api/admin/changelogs/route.ts`
+- `src/app/api/admin/check/route.ts`
+- `src/app/api/admin/role-policies/route.ts`
+- `src/app/api/admin/users/route.ts`
+- `src/app/api/admin/users/update-role/route.ts`
+- `src/app/api/campaigns/route.ts`
+- `src/app/api/campaigns/[id]/route.ts`
+- `src/app/api/campaigns/[id]/rolls/route.ts`
+- `src/app/api/campaigns/[id]/characters/[userId]/[characterId]/route.ts`
+- `src/app/api/campaigns/invite/[code]/route.ts`
+- `src/app/api/characters/route.ts`
+- `src/app/api/characters/[id]/route.ts`
+- `src/app/api/codex/route.ts`
+- `src/app/api/crafting/route.ts`
+- `src/app/api/crafting/[id]/route.ts`
+- `src/app/api/encounters/route.ts`
+- `src/app/api/encounters/[id]/route.ts`
+- `src/app/api/encounters/[id]/tabletop/route.ts`
+- `src/app/api/images/route.ts`
+- `src/app/api/images/[id]/route.ts`
+- `src/app/api/images/[id]/replace/route.ts`
+- `src/app/api/images/[id]/usage/route.ts`
+- `src/app/api/official/[type]/route.ts`
+- `src/app/api/official/counts/route.ts`
+- `src/app/api/official/enhanced-items/route.ts`
+- `src/app/api/tabletop/actions/[actionId]/route.ts`
+- `src/app/api/tabletop/campaigns/[campaignId]/active-scene/route.ts`
+- `src/app/api/tabletop/scenes/[sceneId]/route.ts`
+- `src/app/api/tabletop/scenes/[sceneId]/actions/route.ts`
+- `src/app/api/tabletop/scenes/[sceneId]/tokens/route.ts`
+- `src/app/api/upload/portrait/route.ts`
+- `src/app/api/upload/profile-picture/route.ts`
+- `src/app/api/upload/vtt-map/route.ts`
+- `src/app/api/user/enhanced-items/route.ts`
+- `src/app/api/user/enhanced-items/[id]/route.ts`
+- `src/app/api/user/library/counts/route.ts`
+- `src/app/api/user/library/[type]/route.ts`
+- `src/app/api/user/library/[type]/[id]/route.ts`
+- `src/app/auth/callback/route.ts`
+- `src/app/auth/confirm/route.ts`
+
+---
+
+## Barrels
+
+`scripts/generate-feature-index-barrels.js` reads only these four:
+
+- `src/components/patterns/index.ts`
+- `src/components/ui/index.ts`
+- `src/hooks/index.ts`
+- `src/services/index.ts`
+
+Other barrels (the generator does not list their exports):
+
+- `src/components/auth/index.ts`
+- `src/components/character/index.ts` — exports `CharacterCard` and `AddCharacterCard`.
+- `src/components/character-sheet/index.ts` — exports the sheet shell (`SheetHeader`, `CharacterSheetBody`, `CharacterSheetProvider`, and the modals named in that file). It does not re-export the tab files inside the folder.
+- `src/components/codex/index.ts`
+- `src/components/creator/index.ts`
+- `src/components/guided-creator/index.ts` — exports `GuidedCreatorShell` only.
+- `src/components/guided-creator/steps/index.ts`
+- `src/components/landing/index.ts`
+- `src/components/layout/index.ts`
+- `src/components/onboarding/index.ts`
+- `src/components/patterns/filters/index.ts`
+- `src/components/patterns/guided-choice/index.ts`
+- `src/components/patterns/stat-tiles/index.ts`
+- `src/components/providers/index.ts`
+- `src/components/rolls/index.ts`
+- `src/content/rules/index.ts`
+- `src/lib/calculators/index.ts`
+- `src/lib/constants/copy/index.ts`
+- `src/lib/detail-option/index.ts`
+- `src/lib/game/index.ts` — `export *` from `constants`, `formulas`, `calculations`, `creature-level-display`, `creature-inventory`, and `unarmed-prowess` only.
+- `src/lib/glr/index.ts`
+- `src/lib/observability/index.ts`
+- `src/lib/utils/index.ts`
+- `src/lib/validation/index.ts`
+- `src/stores/index.ts` — exports `useAuthStore` from `./auth-store` only.
+- `src/types/index.ts`
+
+`src/services/index.ts` re-exports `./character-service`, `./library-service`, and `./tabletop-service`. No TypeScript file imports `@/services` or this barrel. The generator reads it as text. The service modules are imported by their own paths.
+
+`src/hooks/use-auth.ts` imports `useAuthStore` from `src/stores/auth-store.ts` and re-exports it. `src/hooks/index.ts` re-exports that name again. One store, two import paths (`@/hooks` and `@/stores`).
+
+### Named exports left off a barrel that does import the file
+
+`src/hooks/index.ts` imports `src/hooks/use-characters.ts` but the export list is `useCharacters`, `useCharacter`, `useDeleteCharacter`, `useDuplicateCharacter`, `characterViewerId`, `patchCharacterDetailQuery`, `invalidateCharacterLists`. The same file also exports `useSaveCharacter`, `nextCharacterDetailQueryData`, and `mergeCharacterDetailQueryData`.
+
+`src/hooks/index.ts` imports types from `src/hooks/use-add-library-item-data.ts` and does not export `useAddLibraryItemData`. That file re-exports the function from `src/hooks/add-library-item/use-add-library-item-data.ts`.
+
+`src/hooks/index.ts` exports `UseModalListStateOptions` from `src/hooks/use-modal-list-state.ts` and does not export `useModalListState`.
+
+`src/hooks/index.ts` exports `LibrarySectionCollapseHeaderProps` from `src/hooks/use-library-section-collapse.ts` and does not export `useLibrarySectionCollapse`.
+
+`usePathRecommendationIndex` in `src/hooks/use-path-recommendation-index.ts` is not exported from that file. `usePathListFilter` in the same file is exported, and the hooks barrel re-exports it.
+
+---
+
+## Not re-exported by the six checked barrels
+
+These siblings exist. The folder's `index.ts` does not `export ... from` them. They are still imported somewhere unless noted. Do not add a second copy because the barrel omitted them.
+
+### `src/lib/game`
+
+- `src/lib/game/archetype-display.ts`
+- `src/lib/game/archetype-edit.ts`
+- `src/lib/game/archetype-path.ts`
+- `src/lib/game/character-legality.ts`
+- `src/lib/game/crafting-utils.ts`
+- `src/lib/game/creator-cache.ts`
+- `src/lib/game/creature-ability-bounds.ts`
+- `src/lib/game/creator-constants.ts`
+- `src/lib/game/creature-power-instances.ts`
+- `src/lib/game/dedupe-saved-parts.ts`
+- `src/lib/game/encounter-utils.ts`
+- `src/lib/game/equipment-equipped.ts`
+- `src/lib/game/feat-requirements.ts`
+- `src/lib/game/innate-eligibility.ts`
+- `src/lib/game/loadout-entries.ts`
+- `src/lib/game/mixed-encounter-view-tab.ts`
+- `src/lib/game/path-ability-labels.ts`
+- `src/lib/game/path-recommendation-index.ts`
+- `src/lib/game/path-validation.ts`
+- `src/lib/game/resolve-armor-damage-reduction.ts`
+- `src/lib/game/saved-part-id.ts`
+- `src/lib/game/size-table.ts`
+- `src/lib/game/skill-allocation-add.ts`
+- `src/lib/game/skill-allocation.ts`
+- `src/lib/game/suggested-abilities.ts`
+- `src/lib/game/targeted-defenses.ts`
+- `src/lib/game/weapon-attack-ability.ts`
+
+### `src/lib/calculators`
+
+- `src/lib/calculators/action-type.ts` — exports `deriveActionType`. This is not `src/lib/utils/action-type.ts`.
+- `src/lib/calculators/dice-splits.ts`
+- `src/lib/calculators/part-training-points.ts`
+- `src/lib/calculators/power-composition.fixture.ts` — imported by tests, not by app pages.
+
+### `src/hooks`
+
+- `src/hooks/use-add-to-character-from-library.tsx`
+- `src/hooks/use-auth-captcha.ts`
+- `src/hooks/use-browser-offline.ts`
+- `src/hooks/use-codex-source-catalog.ts`
+- `src/hooks/use-creator-unsaved-guard.ts`
+- `src/hooks/use-effective-portrait.ts`
+- `src/hooks/use-official-power-technique-browse-filters.ts`
+- `src/hooks/use-placeholder-theme.ts`
+- `src/hooks/use-portrait-fallback-url.ts`
+- `src/hooks/use-sort.ts` — exports `useSort`, `sortByColumn`, and `toggleSort`. Callers include library, codex, and admin tabs, which import this file directly.
+
+### `src/services`
+
+Not on `src/services/index.ts`. Import the file.
+
+- `src/services/campaign-roll-service.ts`
+- `src/services/campaign-service.ts`
+- `src/services/crafting-service.ts`
+- `src/services/encounter-service.ts`
+- `src/services/enhanced-items-service.ts`
+- `src/services/persist-finished-character.ts`
+- `src/services/resource-client.ts`
+
+### `src/stores`
+
+- `src/stores/guided-creator-store.ts` — imported by `src/app/(main)/characters/new/guided/page.tsx`. Not exported from `src/stores/index.ts`.
+
+### `src/components/ui`
+
+- `src/components/ui/chip-options-panel.tsx` — imported by `src/components/ui/expandable-chip.tsx`. Not exported from `src/components/ui/index.ts`. There is no `chip-options-panel` file under `src/lib/chip` (asserted by `src/components/ui/chip-options-panel.lib1-044.test.ts`).
+
+---
+
+## Same filename, different module
+
+| File name | What was opened |
+|-----------|-----------------|
+| `actions.ts` | Four `'use server'` modules, plus a fifth auth module with a different name: `src/app/(auth)/actions.ts` (profile, email, password, delete account), `src/app/(auth)/auth-actions.ts` (remember-me, password login, sign-up, password reset, resend confirmation), `src/app/(main)/admin/codex/actions.ts`, `src/app/(main)/admin/sources/actions.ts` (imports `updateCodexDoc` from the codex actions), `src/app/(main)/campaigns/actions.ts`. |
+| `action-type.ts` | `src/lib/calculators/action-type.ts` exports `deriveActionType`. `src/lib/utils/action-type.ts` exports `formatActionTypeForDisplay` and `formatSavedActionTypeForDisplay`. |
+| `path-ability-labels.ts` | `src/lib/guided-creator/path-ability-labels.ts` imports `resolvePathAbilityLabels` from `src/lib/game/path-ability-labels.ts` and exports `buildPathAbilityChipLabels`. |
+| `server.ts` | `src/lib/tabletop/server.ts` imports `createServiceRoleClient` from `src/lib/supabase/server.ts`. |
+| `skills.ts` | `src/lib/constants/skills.ts` exports ability abbreviation constants. `src/types/skills.ts` exports skill row types. |
+| `use-add-library-item-data.ts` | `src/hooks/use-add-library-item-data.ts` re-exports `src/hooks/add-library-item/use-add-library-item-data.ts`. One implementation. |
+
+`src/components/character/index.ts` and `src/components/character-sheet/index.ts` are different barrels (list cards vs sheet shell).
+
+---
+
+## Two help widgets
+
+`src/components/patterns/help/info-tippy.tsx` exports `InfoTippy`. Product pages import it (codex feats, creature creator, campaigns list, and others).
+
+`src/components/ui/tooltip.tsx` exports `Tooltip`. The file's own comment says it is the styleguide tooltip. The only JSX use found is `src/app/dev/styleguide/page.tsx`. The ui barrel still exports it.
+
+Both call `useFloatingHelpPopover` / `FloatingHelpPanel` from `src/lib/tooltips/floating-help.tsx`.
+
+`HelpTooltip` and `ContextHelpTooltip` are named in a comment in `info-tippy.tsx`. No function with either name is defined under `src`.
+
+---
+
+## Imported by tests or by `next.config.ts`, not by a page
+
+Not dead. Not part of a screen. The static walk from app entries did not reach these, or reached them only through tests. No other `src` source file was in that leftover set.
+
+- `src/services/index.ts` — no TypeScript importer. `scripts/generate-feature-index-barrels.js` reads the file as text.
+- `src/lib/api-input-validation-guard.ts` — imported by `src/lib/api-input-validation-scan.ts`.
+- `src/lib/api-input-validation-scan.ts` — imported by its tests.
+- `src/lib/api-mutation-guard-route-scan.ts` — imported by route-scan tests. `src/proxy.ts` imports `src/lib/api-mutation-guard.ts`, not this scan file.
+- `src/lib/codex/fake-supabase.ts` — imported by action tests.
+- `src/lib/glr/glr-chrome-spacing-norms.ts`
+- `src/lib/glr/validate-glr-chrome-spacing.ts` — imported by `src/lib/glr/validate-glr-chrome-spacing.test.ts`.
+- `src/lib/calculators/power-composition.fixture.ts` — test fixture.
+- `src/lib/security/content-security-policy.ts` and `src/lib/security/next-app-flags.ts` — imported by `next.config.ts`.
+
+`src/types/css.d.ts`, `src/types/mdx.d.ts`, and `src/types/source-raw.d.ts` are ambient declarations.
+
+---
+
+## Patterns, character sheet, guided creator
+
+Static imports were resolved for every non-test `.ts` / `.tsx` file in these three folders. Each of those files has at least one production importer. None are unused files. An export inside a used file can still be unused; that was not measured.
+
+### Two implementations, not one component
+
+- Ability tiles. `src/components/character-sheet/abilities-section.tsx` renders `src/components/character-sheet/ability-stat-tile.tsx`. `src/components/patterns/list/ability-score-grid.tsx` does not render `AbilityStatTile`. Callers that render `AbilityScoreGrid`: `src/components/guided-creator/guided-path-detail-overview.tsx`, `src/components/guided-creator/guided-reveal-summary.tsx`, `src/components/guided-creator/steps/abilities-step.tsx`, and the `variant="sheet"` branch of `src/components/creator/ability-score-editor.tsx`. `src/components/guided-creator/guided-abilities-customize-panel.tsx` passes that variant. The default branch of `AbilityScoreEditor` is a third tile grid; see the creator section. `AbilityScoreGrid` keeps its own `ABILITY_DISPLAY_ORDER` and `ABILITY_DISPLAY_INFO`. `src/components/patterns/stat-tiles/ability-defense-stat-model.ts` keeps `ABILITY_ORDER` and `ABILITY_INFO`. The six keys are the same and in the same order. The grid's class string is written out in the grid file. The sheet section uses `SHEET_STAT_GRID_CLASS` from the stat model. Those class strings are not the same constant.
+- Skill rows. `src/components/character-sheet/skills-section.tsx` renders `SkillRow` from `src/components/patterns/list/skill-row.tsx`. `src/components/guided-creator/guided-skills-panel.tsx` defines `GuidedSkillRow` in that file and does not render `SkillRow`.
+- Armor display. `src/components/character-sheet/archetype-section.tsx` renders `QuickArmorTable` from `src/components/patterns/list/quick-armaments-sections.tsx` (an HTML table). `src/components/character-sheet/library-inventory-panel.tsx` renders `ArmorListSection` from `src/components/patterns/list/entity-library-inventory.tsx`. Neither file imports the other.
+- `CodexPart` and `CodexProperty` are each declared twice. `src/components/patterns/list/creature-stat-block-helpers.ts` declares both with optional `name`. That `CodexPart` has no `defense` field. `src/components/character-sheet/library-list-helpers.ts` aliases both names to `CodexPartRow` and `CodexPropertyRow` from `src/lib/library/part-display.ts`. Those rows require `name`. `CodexPartRow` also has `defense`.
+
+### Calls the shared component
+
+These were opened. They are wrappers, not a second copy of the shared component.
+
+- `src/components/guided-creator/guided-detail-option-list.tsx` and `src/components/guided-creator/guided-trait-option-list.tsx` render `DetailOptionList` from `src/components/patterns/list/detail-option-list.tsx`.
+- `src/components/guided-creator/guided-portrait-upload.tsx` renders `CreatorPortraitUpload` from `src/components/patterns/chrome/creator-portrait-upload.tsx`.
+- `src/components/guided-creator/guided-health-energy-section.tsx` and `src/components/character-sheet/sheet-header-resources.tsx` render `HealthEnergyAllocator` from `@/components/creator`.
+- `src/components/guided-creator/guided-path-detail-modal.tsx` and `src/components/guided-creator/guided-species-detail-modal.tsx` render `GuidedEntityDetailModal` from `src/components/guided-creator/guided-entity-detail-modal.tsx`.
+- `src/components/guided-creator/guided-equipment-fact-chips.tsx` renders `DescriptorChipWithTip`.
+- `src/components/character-sheet/add-feat-modal.tsx`, `src/components/character-sheet/add-library-item-modal.tsx`, `src/components/character-sheet/add-proficiency-modal.tsx`, `src/components/guided-creator/guided-feats-l2-modal.tsx`, `src/components/guided-creator/guided-equipment-l2-modal.tsx`, and `src/components/guided-creator/guided-powers-techniques-l2-modal.tsx` render `UnifiedSelectionModal`. Feat steps import the guided feats modal, not the sheet add-feat modal.
+- `src/components/guided-creator/steps/skills-step.tsx` renders `AddSkillModal`. `src/components/guided-creator/steps/species-step.tsx` and `src/components/guided-creator/steps/ancestry-step.tsx` render `MixedSpeciesModal`. `src/components/character-sheet/edit-species-modal.tsx` also renders `MixedSpeciesModal`.
+- `src/components/patterns/list/official-power-list.tsx`, `src/components/patterns/list/official-technique-list.tsx`, `src/components/patterns/list/official-item-list.tsx`, `src/components/patterns/list/official-creature-list.tsx`, and `src/components/patterns/list/official-enhanced-list.tsx` render `OfficialEntityList`.
+- `src/components/patterns/list/entity-library-sections.tsx` re-exports the section components from `entity-library-inventory.tsx`, `entity-library-powers-techniques.tsx`, `entity-library-feats.tsx`, and `entity-library-sections-columns.ts`. One implementation each.
+- `src/components/patterns/list/grid-list-row.tsx` renders `GridListRowCollapsed` and `GridListRowExpandedBody`.
+- `src/components/character-sheet/sheet-header.tsx` renders `SheetHeaderIdentity`, `SheetHeaderResources`, and `LargeStatBlock`.
+- `src/components/guided-creator/guided-creator-shell.tsx` renders `GuidedCreatorPageShell` and the step components. `src/components/guided-creator/guided-creator-page-shell.tsx` renders `CreatorFunnelHero` from `@/components/landing`. It does not import `CreatorPageShell`.
+- `src/components/character-sheet/library-powers-panel.tsx` renders `PowersListSection`. `src/components/character-sheet/library-inventory-panel.tsx` renders the weapon, shield, armor, and equipment list sections. `src/components/character-sheet/feats-tab.tsx` renders `FeatsTraitsListSection`.
+- `src/components/patterns/filters/source-filter.tsx` is All / Realms Library / My Library. `src/components/patterns/filters/codex-rules-source-filter.tsx` is a codex-catalog multi-select. Different filters.
+- `src/components/patterns/select/choice-trait-option-select.tsx` is a single-choice picker. `GuidedTraitOptionList` is a read-only list over `DetailOptionList`. Different jobs.
+
+### Files
+
+Every path below is a non-test source file. The checker fails if one is missing from this document.
+
+### `src/components/character-sheet`
+
+- `src/components/character-sheet/abilities-section.tsx`
+- `src/components/character-sheet/ability-stat-tile.tsx`
+- `src/components/character-sheet/add-feat-modal.tsx`
+- `src/components/character-sheet/add-library-item-modal.tsx`
+- `src/components/character-sheet/add-proficiency-modal.tsx`
+- `src/components/character-sheet/archetype-path-identity.tsx`
+- `src/components/character-sheet/archetype-section.tsx`
+- `src/components/character-sheet/build-library-section-data.ts`
+- `src/components/character-sheet/character-sheet-body.tsx`
+- `src/components/character-sheet/character-sheet-context.tsx`
+- `src/components/character-sheet/character-sheet-settings-modal.tsx`
+- `src/components/character-sheet/currency-field-commit.ts`
+- `src/components/character-sheet/edit-archetype-modal.tsx`
+- `src/components/character-sheet/edit-species-ancestry-step.tsx`
+- `src/components/character-sheet/edit-species-modal.tsx`
+- `src/components/character-sheet/edit-species-species-filter.ts`
+- `src/components/character-sheet/edit-species-species-step.tsx`
+- `src/components/character-sheet/feats-tab.tsx`
+- `src/components/character-sheet/index.ts`
+- `src/components/character-sheet/level-up-modal.tsx`
+- `src/components/character-sheet/library-entity-rows.tsx`
+- `src/components/character-sheet/library-feat-rows.tsx`
+- `src/components/character-sheet/library-inventory-panel.tsx`
+- `src/components/character-sheet/library-list-helpers.ts`
+- `src/components/character-sheet/library-powers-panel.tsx`
+- `src/components/character-sheet/library-section-props.ts`
+- `src/components/character-sheet/library-section-visibility-toggle.tsx`
+- `src/components/character-sheet/library-section.tsx`
+- `src/components/character-sheet/library-tab-config.ts`
+- `src/components/character-sheet/notes-tab-edit-controls.tsx`
+- `src/components/character-sheet/notes-tab.tsx`
+- `src/components/character-sheet/path-level-guidance.tsx`
+- `src/components/character-sheet/proficiencies-tab.tsx`
+- `src/components/character-sheet/read-only-sheet.ts`
+- `src/components/character-sheet/recovery-modal.tsx`
+- `src/components/character-sheet/sheet-action-toolbar.tsx`
+- `src/components/character-sheet/sheet-allocation-reset-button.tsx`
+- `src/components/character-sheet/sheet-currency-input-layout.ts`
+- `src/components/character-sheet/sheet-desktop-columns.ts`
+- `src/components/character-sheet/sheet-field-focus.ts`
+- `src/components/character-sheet/sheet-header-identity.tsx`
+- `src/components/character-sheet/sheet-header-layout.ts`
+- `src/components/character-sheet/sheet-header-name.ts`
+- `src/components/character-sheet/sheet-header-resources.tsx`
+- `src/components/character-sheet/sheet-header.tsx`
+- `src/components/character-sheet/sheet-item-match.ts`
+- `src/components/character-sheet/sheet-large-stat-block.tsx`
+- `src/components/character-sheet/sheet-mobile-carousel.ts`
+- `src/components/character-sheet/sheet-resource-input.tsx`
+- `src/components/character-sheet/sheet-temp-modifier-controls.tsx`
+- `src/components/character-sheet/sheet-viewer-edits.ts`
+- `src/components/character-sheet/skills-header-pin.ts`
+- `src/components/character-sheet/skills-section.tsx`
+- `src/components/character-sheet/use-character-sheet-actions.ts`
+- `src/components/character-sheet/use-character-sheet-derived.ts`
+- `src/components/character-sheet/use-edit-species-modal.ts`
+- `src/components/character-sheet/use-library-section-rows.ts`
+- `src/components/character-sheet/use-library-tab-navigation.tsx`
+- `src/components/character-sheet/use-sheet-auto-proficiencies.ts`
+- `src/components/character-sheet/use-sheet-feat-actions.ts`
+- `src/components/character-sheet/use-sheet-library-actions.ts`
+- `src/components/character-sheet/use-sheet-resource-actions.ts`
+- `src/components/character-sheet/use-sheet-skill-identity-actions.ts`
+
+### `src/components/character-sheet/add-library-item`
+
+- `src/components/character-sheet/add-library-item/add-custom-equipment-form.tsx`
+- `src/components/character-sheet/add-library-item/build-custom-equipment.ts`
+- `src/components/character-sheet/add-library-item/map-selection.ts`
+- `src/components/character-sheet/add-library-item/modal-config.ts`
+- `src/components/character-sheet/add-library-item/power-header-extra.tsx`
+
+### `src/components/guided-creator`
+
+- `src/components/guided-creator/character-preview-panel.tsx`
+- `src/components/guided-creator/guided-abilities-customize-panel.tsx`
+- `src/components/guided-creator/guided-choice-card.tsx`
+- `src/components/guided-creator/guided-choice-image.ts`
+- `src/components/guided-creator/guided-choice-styles.ts`
+- `src/components/guided-creator/guided-creator-page-shell.tsx`
+- `src/components/guided-creator/guided-creator-shell.tsx`
+- `src/components/guided-creator/guided-detail-option-list.tsx`
+- `src/components/guided-creator/guided-entity-detail-modal.tsx`
+- `src/components/guided-creator/guided-equipment-fact-chips.tsx`
+- `src/components/guided-creator/guided-equipment-l1-phase.tsx`
+- `src/components/guided-creator/guided-equipment-l2-grid.ts`
+- `src/components/guided-creator/guided-equipment-l2-modal.tsx`
+- `src/components/guided-creator/guided-equipment-phase-layout.tsx`
+- `src/components/guided-creator/guided-feats-filter-fields.tsx`
+- `src/components/guided-creator/guided-feats-l2-modal.tsx`
+- `src/components/guided-creator/guided-health-energy-section.tsx`
+- `src/components/guided-creator/guided-mixed-species-overview.tsx`
+- `src/components/guided-creator/guided-overview-section.tsx`
+- `src/components/guided-creator/guided-path-custom-archetype.tsx`
+- `src/components/guided-creator/guided-path-detail-modal.tsx`
+- `src/components/guided-creator/guided-path-detail-overview.tsx`
+- `src/components/guided-creator/guided-portrait-upload.tsx`
+- `src/components/guided-creator/guided-powers-techniques-l1-content.tsx`
+- `src/components/guided-creator/guided-powers-techniques-l2-modal.tsx`
+- `src/components/guided-creator/guided-restriction-notice.tsx`
+- `src/components/guided-creator/guided-reveal-review-modal.tsx`
+- `src/components/guided-creator/guided-reveal-summary.tsx`
+- `src/components/guided-creator/guided-section-title.tsx`
+- `src/components/guided-creator/guided-skills-panel.tsx`
+- `src/components/guided-creator/guided-species-detail-modal.tsx`
+- `src/components/guided-creator/guided-species-utils.ts`
+- `src/components/guided-creator/guided-step-footer.tsx`
+- `src/components/guided-creator/guided-step-layout.tsx`
+- `src/components/guided-creator/guided-text.ts`
+- `src/components/guided-creator/guided-trait-option-list.tsx`
+- `src/components/guided-creator/guided-unarmed-prowess-panel.tsx`
+- `src/components/guided-creator/index.ts`
+- `src/components/guided-creator/species-reveal-panel.tsx`
+- `src/components/guided-creator/use-guided-path-data.ts`
+
+### `src/components/guided-creator/steps`
+
+- `src/components/guided-creator/steps/abilities-step.tsx`
+- `src/components/guided-creator/steps/ancestry-step.tsx`
+- `src/components/guided-creator/steps/archetype-feats-step.tsx`
+- `src/components/guided-creator/steps/character-feat-step.tsx`
+- `src/components/guided-creator/steps/index.ts`
+- `src/components/guided-creator/steps/loadout-step.tsx`
+- `src/components/guided-creator/steps/path-step.tsx`
+- `src/components/guided-creator/steps/powers-techniques-step.tsx`
+- `src/components/guided-creator/steps/reveal-step.tsx`
+- `src/components/guided-creator/steps/skills-step.tsx`
+- `src/components/guided-creator/steps/species-step.tsx`
+- `src/components/guided-creator/steps/use-powers-techniques-selection.ts`
+
+### `src/components/patterns/chrome`
+
+- `src/components/patterns/chrome/cloud-sync-offline-banner.tsx`
+- `src/components/patterns/chrome/confirm-action-modal.tsx`
+- `src/components/patterns/chrome/creator-portrait-upload.tsx`
+- `src/components/patterns/chrome/delete-confirm-modal.tsx`
+- `src/components/patterns/chrome/discord-icon.tsx`
+- `src/components/patterns/chrome/edit-section-toggle.tsx`
+- `src/components/patterns/chrome/error-boundary.tsx`
+- `src/components/patterns/chrome/image-upload-modal.tsx`
+- `src/components/patterns/chrome/loadout-budget-bar.tsx`
+- `src/components/patterns/chrome/login-prompt-modal.tsx`
+- `src/components/patterns/chrome/point-status.tsx`
+- `src/components/patterns/chrome/realms-image-picker.tsx`
+- `src/components/patterns/chrome/roll-button.tsx`
+- `src/components/patterns/chrome/section-cost-badge.tsx`
+- `src/components/patterns/chrome/section-header.tsx`
+- `src/components/patterns/chrome/segmented-control.tsx`
+- `src/components/patterns/chrome/tab-summary-section.tsx`
+- `src/components/patterns/chrome/temp-modifier-toggle.tsx`
+- `src/components/patterns/chrome/theme-toggle.tsx`
+- `src/components/patterns/chrome/trait-section.tsx`
+
+### `src/components/patterns/filters`
+
+- `src/components/patterns/filters/ability-requirement-filter.tsx`
+- `src/components/patterns/filters/archetype-path-filter.tsx`
+- `src/components/patterns/filters/armament-filters.tsx`
+- `src/components/patterns/filters/character-filter.tsx`
+- `src/components/patterns/filters/chip-select.tsx`
+- `src/components/patterns/filters/codex-rules-source-filter.tsx`
+- `src/components/patterns/filters/filter-native-select.tsx`
+- `src/components/patterns/filters/filter-section.tsx`
+- `src/components/patterns/filters/filter-utils.ts`
+- `src/components/patterns/filters/index.ts`
+- `src/components/patterns/filters/power-technique-filters.tsx`
+- `src/components/patterns/filters/select-filter.tsx`
+- `src/components/patterns/filters/source-filter.tsx`
+- `src/components/patterns/filters/tag-filter.tsx`
+
+### `src/components/patterns/guided-choice`
+
+- `src/components/patterns/guided-choice/guided-inline-catalog-list.tsx`
+- `src/components/patterns/guided-choice/guided-layer-nav.tsx`
+- `src/components/patterns/guided-choice/guided-nav-button-styles.ts`
+- `src/components/patterns/guided-choice/index.ts`
+
+### `src/components/patterns/help`
+
+- `src/components/patterns/help/descriptor-chip-with-tip.tsx`
+- `src/components/patterns/help/expandable-image.tsx`
+- `src/components/patterns/help/info-tippy.tsx`
+- `src/components/patterns/help/path-help-card.tsx`
+
+### `src/components/patterns`
+
+- `src/components/patterns/index.ts`
+
+### `src/components/patterns/list`
+
+- `src/components/patterns/list/ability-score-grid.tsx`
+- `src/components/patterns/list/codex-browse-list-shell.tsx`
+- `src/components/patterns/list/creature-library-stat-block-rows.tsx`
+- `src/components/patterns/list/creature-stat-block-display-data.ts`
+- `src/components/patterns/list/creature-stat-block-helpers.ts`
+- `src/components/patterns/list/creature-stat-block-panels.tsx`
+- `src/components/patterns/list/creature-stat-block-section.tsx`
+- `src/components/patterns/list/creature-stat-block-types.ts`
+- `src/components/patterns/list/creature-stat-block.tsx`
+- `src/components/patterns/list/detail-option-list.tsx`
+- `src/components/patterns/list/entity-library-feats.tsx`
+- `src/components/patterns/list/entity-library-inventory.tsx`
+- `src/components/patterns/list/entity-library-powers-techniques.tsx`
+- `src/components/patterns/list/entity-library-sections-columns.ts`
+- `src/components/patterns/list/entity-library-sections-rows.tsx`
+- `src/components/patterns/list/entity-library-sections-types.ts`
+- `src/components/patterns/list/entity-library-sections.tsx`
+- `src/components/patterns/list/grid-list-chip.tsx`
+- `src/components/patterns/list/grid-list-row-chrome.ts`
+- `src/components/patterns/list/grid-list-row-collapsed.tsx`
+- `src/components/patterns/list/grid-list-row-columns.ts`
+- `src/components/patterns/list/grid-list-row-detail.tsx`
+- `src/components/patterns/list/grid-list-row-expanded.tsx`
+- `src/components/patterns/list/grid-list-row-types.ts`
+- `src/components/patterns/list/grid-list-row.tsx`
+- `src/components/patterns/list/hub-list-row.tsx`
+- `src/components/patterns/list/library-add-to-library-button.tsx`
+- `src/components/patterns/list/library-row-action-slot.tsx`
+- `src/components/patterns/list/list-components.tsx`
+- `src/components/patterns/list/list-header.tsx`
+- `src/components/patterns/list/list-row-thumbnail.tsx`
+- `src/components/patterns/list/list-search-toolbar.tsx`
+- `src/components/patterns/list/official-creature-list.tsx`
+- `src/components/patterns/list/official-enhanced-list.tsx`
+- `src/components/patterns/list/official-entity-list.tsx`
+- `src/components/patterns/list/official-item-list.tsx`
+- `src/components/patterns/list/official-power-list.tsx`
+- `src/components/patterns/list/official-technique-list.tsx`
+- `src/components/patterns/list/quick-armaments-sections.tsx`
+- `src/components/patterns/list/skill-row.tsx`
+- `src/components/patterns/list/skills-allocation-page.tsx`
+- `src/components/patterns/list/summary-chip-list.tsx`
+
+### `src/components/patterns/select`
+
+- `src/components/patterns/select/ability-pick-button.tsx`
+- `src/components/patterns/select/add-skill-modal.tsx`
+- `src/components/patterns/select/add-sub-skill-modal.tsx`
+- `src/components/patterns/select/choice-trait-option-select.tsx`
+- `src/components/patterns/select/equip-toggle.tsx`
+- `src/components/patterns/select/innate-toggle.tsx`
+- `src/components/patterns/select/mixed-species-modal.tsx`
+- `src/components/patterns/select/mixed-species-skill-picker.tsx`
+- `src/components/patterns/select/powered-martial-slider.tsx`
+- `src/components/patterns/select/quantity-selector.tsx`
+- `src/components/patterns/select/selection-toggle.tsx`
+- `src/components/patterns/select/unified-selection-modal-footer.tsx`
+- `src/components/patterns/select/unified-selection-modal-helpers.ts`
+- `src/components/patterns/select/unified-selection-modal-leave-prompt.tsx`
+- `src/components/patterns/select/unified-selection-modal-list.tsx`
+- `src/components/patterns/select/unified-selection-modal-toolbar.tsx`
+- `src/components/patterns/select/unified-selection-modal-types.ts`
+- `src/components/patterns/select/unified-selection-modal.tsx`
+- `src/components/patterns/select/value-stepper.tsx`
+
+### `src/components/patterns/stat-tiles`
+
+- `src/components/patterns/stat-tiles/ability-defense-stat-model.ts`
+- `src/components/patterns/stat-tiles/defense-stat-tile.tsx`
+- `src/components/patterns/stat-tiles/index.ts`
+
+
+---
+
+## Creator pages, crafting, and encounters
+
+131 non-test `.ts` / `.tsx` files. `page.tsx` and `layout.tsx` files have no TypeScript importer. Next loads them. Every other file in this slice has a production importer. None of those files are unused.
+
+`src/app/(main)/crafting/DEFERRED.md` and `src/app/(main)/empowered-technique-creator/DEFERRED.md` are present. They were not opened.
+
+### Second implementations
+
+- Ability tiles, a third grid. `src/components/creator/ability-score-editor.tsx` renders `AbilityScoreGrid` only when `variant` is `sheet`. The default branch draws its own tiles and keeps its own `ABILITY_ORDER` and `ABILITY_INFO`, including a description string. `src/app/(main)/creature-creator/creature-creator-editor.tsx` renders `AbilityScoreEditor` without `variant`, so it uses that default grid. Guided customize passes `variant="sheet"`.
+- Action and attack controls. Three files, and none renders another. `src/app/(main)/power-creator/power-creator-editor-action-profile.tsx` is two sections (Action Type, Attack). `src/app/(main)/empowered-technique-creator/empowered-technique-editor-action-profile.tsx` is one Shared Action Profile section. `src/app/(main)/technique-creator/technique-creator-editor.tsx` has a Combat Configuration section with its own attack select and reaction checkbox. They share `ACTION_OPTIONS` and `ATTACK_MODE_SELECT_OPTIONS`.
+- Damage dice controls. Each file has its own `ValueStepper` and `DIE_SIZES` select. None renders another: `src/app/(main)/power-creator/power-creator-editor-power-damage.tsx`, `src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-damage.tsx`, `src/app/(main)/empowered-technique-creator/empowered-technique-editor-technique-parts.tsx`, the Additional Damage section in `technique-creator-editor.tsx`, `src/app/(main)/item-creator/item-creator-editor-weapon-shield.tsx`, and `src/app/(main)/item-creator/item-creator-editor-shield-panels.tsx` (shield block and shield damage).
+- Range, area, and duration. `src/app/(main)/power-creator/power-creator-editor-power-config.tsx` is three sections (Range, Area of Effect, Duration). `src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-config.tsx` is one Power Configuration section. Both use `ValueStepper`, `AREA_TYPES`, `DURATION_TYPES`, and `DURATION_VALUES`. Neither renders the other.
+- Part lists. `src/app/(main)/power-creator/power-creator-editor-power-parts.tsx`, `src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-parts.tsx`, and `technique-creator-editor.tsx` each map rows onto `PowerPartCard` inside their own `CollapsibleSection`.
+- Add-part handlers. `addPart` in `src/app/(main)/power-creator/power-creator-part-actions.ts` and `addPowerPart` in `src/app/(main)/empowered-technique-creator/empowered-technique-part-actions.ts` both append the first list entry with the same option-level fields. Power's mechanic add calls `nextMechanicPartToAdd`, which skips an id already selected. Empowered's mechanic add takes the first list entry and does not call that function.
+- Name and description cards. `src/app/(main)/power-creator/power-creator-editor-meta.tsx`, `src/app/(main)/empowered-technique-creator/empowered-technique-editor-meta.tsx`, and `src/app/(main)/item-creator/item-creator-editor-meta.tsx` each render `CreatorNameField` and `CreatorDescriptionField`. They do not render each other. The item card also has an item-type `SegmentedControl`.
+- Reset helpers. `applySpeciesCreatorReset` in `src/app/(main)/species-creator/species-creator-reset.ts` and `applyTechniqueCreatorReset` in `src/app/(main)/technique-creator/technique-creator-reset.ts` are separate functions. Both clear the draft, reset the form, forget the loaded library row, and clear the save message. Technique also calls `acceptDraft`. Species does not.
+- Condition names. `CONDITIONS` in `src/lib/game/creator-constants.ts` and `CONDITION_OPTIONS` in `src/components/encounters/encounter-constants.ts` are the same 23 names in the same order. Only the encounter list stores `leveled` and `description`. `src/app/(main)/creature-creator/creature-creator-editor-traits-section.tsx` imports `CONDITIONS`. The description strings were not compared to anything else.
+- Creature feats. `src/app/(main)/creature-creator/creature-creator-editor-loadout-sections.tsx` renders `GridListRow` for feats. It does not render `FeatsTraitsListSection`.
+
+### Calls a shared component
+
+- `src/components/creator/CreatorPageShell.tsx` renders `CreatorLayout`, `CreatorSaveToolbar`, `LoadFromLibraryModal`, `LoginPromptModal`, and `ConfirmActionModal`. The power, technique, empowered technique, item, species, and creature pages render `CreatorPageShell`.
+- `src/components/creator/LoadFromLibraryModal.tsx` renders `UnifiedSelectionModal`. The creator barrel does not export this file. `CreatorPageShell` imports it by path.
+- The creator barrel exports `CreatorSaveToolbarProps` and does not export the `CreatorSaveToolbar` function. `CreatorPageShell` imports the function by path.
+- `src/components/creator/creator-text-fields.tsx` is not on the creator barrel. The meta cards and `technique-creator-editor.tsx` import it by path.
+- `src/components/creator/targeted-defenses-section.tsx` renders `ChipSelect`.
+- `src/components/crafting/CraftingItemSelectModal.tsx` renders `UnifiedSelectionModal`. `src/components/crafting/get-crafting-market-price.ts` calls `equipmentCurrency` and `resolveItemMarketPricing`.
+- `src/app/(main)/crafting/[id]/page.tsx` renders `CreatorLayout` and the section files under `_components`. It does not render `CreatorPageShell`. `src/app/(main)/crafting/[id]/_components/crafting-summary-sidebar.tsx` renders `CreatorSummaryPanel`. `src/app/(main)/crafting/page.tsx` renders `PageContainer` and `PageHeader`.
+- `src/app/(main)/creature-creator/AddCreatureFeatModal.tsx` renders `UnifiedSelectionModal`. The selection rules in that file were not read.
+- `src/app/(main)/creature-creator/creature-creator-editor-inventory-section.tsx` renders `WeaponsListSection`, `ShieldsListSection`, `ArmorListSection`, and `EquipmentListSection`.
+- `src/app/(main)/creature-creator/creature-creator-editor.tsx` renders `ArchetypeSelector`, `HealthEnergyAllocator`, `AbilityScoreEditor`, and `SkillsAllocationPage`.
+- `src/app/(main)/power-creator/power-creator-editor.tsx`, `src/app/(main)/empowered-technique-creator/empowered-technique-creator-editor.tsx`, and `src/app/(main)/item-creator/item-creator-editor.tsx` only compose their section files.
+- `src/app/(main)/empowered-technique-creator/use-empowered-technique-creator-workspace.ts` imports `EXCLUDED_PARTS` from `src/app/(main)/power-creator/power-creator-constants.ts`. That constant is `POWER_AUTO_MECHANIC_PART_NAMES`.
+- `src/app/(main)/power-creator/power-creator-cost-derivation.ts`, `empowered-technique-cost-derivation.ts`, and `item-creator-cost-derivation.ts` were read through their cost hooks in **Crafting cost math** (they delegate to `@/lib/calculators`; calculator bodies are not re-summarized here).
+- Species base skills in `src/app/(main)/species-creator/species-creator-editor.tsx` are two `select` elements. They do not render `SkillRow`.
+- `src/components/encounters/CombatantCard.tsx` renders `CombatantCardInitiative`, `CombatantCardHeader`, `CombatantCardResources`, `CombatantCardConditionChips`, `CombatantCardResourceQuickActions`, and `CombatantCardConditionsPanel`.
+- `src/components/encounters/add-combatant-modal.tsx` renders `Modal`. It does not render `UnifiedSelectionModal`. The picker body was not read.
+
+### Not read line by line
+
+- `src/app/(main)/power-creator/use-power-creator-workspace.ts`, `use-power-creator-composition.ts`, `power-creator-bootstrap.ts`, `power-creator-composition.ts`, `power-creator-composition-band.tsx`, `power-creator-help.tsx`, `power-creator-from-shared.tsx`, `power-creator-innate-label.ts`, `power-creator-types.ts`, `power-creator-editor-config.ts`, and `page.tsx` past the `CreatorPageShell` render.
+- `src/app/(main)/technique-creator/use-technique-creator-workspace.ts`, `technique-creator-bootstrap.ts`, and `page.tsx` past the shell.
+- `src/app/(main)/empowered-technique-creator/use-empowered-technique-creator-workspace.ts` past the `EXCLUDED_PARTS` import, `empowered-technique-bootstrap.ts`, `empowered-technique-editor-config.ts`, and `page.tsx` past the shell.
+- `src/app/(main)/item-creator/use-item-creator-workspace.ts`, `item-creator-bootstrap.ts`, `item-creator-helpers.tsx`, `item-creator-property-actions.ts`, `item-creator-property-options.ts`, `item-creator-save-reset.ts`, `item-creator-editor-config.ts`, `item-creator-editor-ability-properties.tsx`, `item-creator-editor-armor.tsx` past the steppers, and `page.tsx` past the shell.
+- `src/app/(main)/species-creator/use-species-creator-workspace.ts`, `species-creator-bootstrap.ts`, `species-creator-editor.tsx` past the section titles and the base-skill selects, and `page.tsx` past the shell.
+- `src/app/(main)/creature-creator/use-creature-creator-workspace.ts`, `creature-creator-bootstrap.ts`, `creature-creator-derived-stats.ts`, `creature-creator-feat-armament-display.ts`, `creature-creator-library-selectables.ts`, `creature-creator-skill-bonus.ts`, `creature-skill-utils.ts`, `creature-creator-training-spent.ts`, `transformers.ts`, `creature-creator-workspace-persistence.ts`, `creature-damage-modifiers.ts`, `creature-ability-points-display.ts`, `creature-feat-utils.ts`, `creature-over-budget-notification.ts`, `creature-sub-skill-highest-ability-label.ts`, `creature-trait-labels.ts`, `map-creature-inventory-rows.ts`, `creature-creator-types.ts`, `creature-creator-summaries.ts`, `creature-creator-remove-section-confirm-placeholder.ts`, `creature-creator-constants.ts`, `CreatureCreatorHelpers.tsx` past `ChipList` (its rows are spans; the cost label renders `DescriptorChip`), `AddCreatureFeatModal.tsx` past the `UnifiedSelectionModal` render, and `page.tsx` past the shell.
+- `src/app/(main)/crafting/[id]/_components/use-crafting-tool-page.ts`, `crafting-tool-derived.ts`, `crafting-tool-helpers.ts`, and the section bodies in `crafting-adjustments-section.tsx`, `crafting-item-options-section.tsx`, `crafting-optional-rules-section.tsx`, `crafting-rolls-section.tsx`, and `crafting-outcome-card.tsx`.
+- `src/components/encounters/combatant-card-initiative.tsx`, `combatant-card-header.tsx`, `combatant-card-conditions.tsx`, `combatant-card-quick-actions.tsx`, `combatant-card-helpers.ts`, `combatant-card-resources.tsx` past its props, and `add-combatant-modal.tsx` past the `Modal` render.
+- `src/components/creator/health-energy-allocator.tsx`, `archetype-selector.tsx`, `power-part-card.tsx`, `creator-summary-panel.tsx`, and `collapsible-section.tsx` past their imports and the components named above.
+
+### Files
+
+Every path below is a non-test source file. The checker fails if one is missing from this document.
+
+### `src/app/(main)/crafting/[id]/_components`
+
+- `src/app/(main)/crafting/[id]/_components/crafting-adjustments-section.tsx`
+- `src/app/(main)/crafting/[id]/_components/crafting-item-options-section.tsx`
+- `src/app/(main)/crafting/[id]/_components/crafting-optional-rules-section.tsx`
+- `src/app/(main)/crafting/[id]/_components/crafting-outcome-card.tsx`
+- `src/app/(main)/crafting/[id]/_components/crafting-rolls-section.tsx`
+- `src/app/(main)/crafting/[id]/_components/crafting-summary-sidebar.tsx`
+- `src/app/(main)/crafting/[id]/_components/crafting-tool-derived.ts`
+- `src/app/(main)/crafting/[id]/_components/crafting-tool-helpers.ts`
+- `src/app/(main)/crafting/[id]/_components/use-crafting-tool-page.ts`
+
+### `src/app/(main)/crafting/[id]`
+
+- `src/app/(main)/crafting/[id]/page.tsx`
+
+### `src/app/(main)/crafting`
+
+- `src/app/(main)/crafting/crafting-bootstrap.ts`
+- `src/app/(main)/crafting/layout.tsx`
+- `src/app/(main)/crafting/page.tsx`
+
+### `src/app/(main)/creature-creator`
+
+- `src/app/(main)/creature-creator/AddCreatureFeatModal.tsx`
+- `src/app/(main)/creature-creator/CreatureCreatorHelpers.tsx`
+- `src/app/(main)/creature-creator/creature-ability-points-display.ts`
+- `src/app/(main)/creature-creator/creature-creator-bootstrap.ts`
+- `src/app/(main)/creature-creator/creature-creator-constants.ts`
+- `src/app/(main)/creature-creator/creature-creator-derived-stats.ts`
+- `src/app/(main)/creature-creator/creature-creator-editor-inventory-section.tsx`
+- `src/app/(main)/creature-creator/creature-creator-editor-loadout-sections.tsx`
+- `src/app/(main)/creature-creator/creature-creator-editor-traits-section.tsx`
+- `src/app/(main)/creature-creator/creature-creator-editor.tsx`
+- `src/app/(main)/creature-creator/creature-creator-feat-armament-display.ts`
+- `src/app/(main)/creature-creator/creature-creator-library-selectables.ts`
+- `src/app/(main)/creature-creator/creature-creator-movement-section.tsx`
+- `src/app/(main)/creature-creator/creature-creator-remove-section-confirm-placeholder.ts`
+- `src/app/(main)/creature-creator/creature-creator-skill-bonus.ts`
+- `src/app/(main)/creature-creator/creature-creator-summaries.ts`
+- `src/app/(main)/creature-creator/creature-creator-training-spent.ts`
+- `src/app/(main)/creature-creator/creature-creator-types.ts`
+- `src/app/(main)/creature-creator/creature-creator-workspace-persistence.ts`
+- `src/app/(main)/creature-creator/creature-damage-modifiers.ts`
+- `src/app/(main)/creature-creator/creature-feat-utils.ts`
+- `src/app/(main)/creature-creator/creature-movement.ts`
+- `src/app/(main)/creature-creator/creature-over-budget-notification.ts`
+- `src/app/(main)/creature-creator/creature-skill-utils.ts`
+- `src/app/(main)/creature-creator/creature-sub-skill-highest-ability-label.ts`
+- `src/app/(main)/creature-creator/creature-trait-labels.ts`
+- `src/app/(main)/creature-creator/layout.tsx`
+- `src/app/(main)/creature-creator/map-creature-inventory-rows.ts`
+- `src/app/(main)/creature-creator/page.tsx`
+- `src/app/(main)/creature-creator/transformers.ts`
+- `src/app/(main)/creature-creator/use-creature-creator-workspace.ts`
+
+### `src/app/(main)/empowered-technique-creator`
+
+- `src/app/(main)/empowered-technique-creator/empowered-technique-bootstrap.ts`
+- `src/app/(main)/empowered-technique-creator/empowered-technique-cost-derivation.ts`
+- `src/app/(main)/empowered-technique-creator/empowered-technique-creator-editor.tsx`
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-action-profile.tsx`
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-config.ts`
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-meta.tsx`
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-config.tsx`
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-damage.tsx`
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-parts.tsx`
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-technique-parts.tsx`
+- `src/app/(main)/empowered-technique-creator/empowered-technique-part-actions.ts`
+- `src/app/(main)/empowered-technique-creator/layout.tsx`
+- `src/app/(main)/empowered-technique-creator/page.tsx`
+- `src/app/(main)/empowered-technique-creator/use-empowered-technique-creator-workspace.ts`
+
+### `src/app/(main)/item-creator`
+
+- `src/app/(main)/item-creator/item-creator-bootstrap.ts`
+- `src/app/(main)/item-creator/item-creator-cost-derivation.ts`
+- `src/app/(main)/item-creator/item-creator-editor-ability-properties.tsx`
+- `src/app/(main)/item-creator/item-creator-editor-armor.tsx`
+- `src/app/(main)/item-creator/item-creator-editor-config.ts`
+- `src/app/(main)/item-creator/item-creator-editor-meta.tsx`
+- `src/app/(main)/item-creator/item-creator-editor-shield-panels.tsx`
+- `src/app/(main)/item-creator/item-creator-editor-weapon-shield.tsx`
+- `src/app/(main)/item-creator/item-creator-editor.tsx`
+- `src/app/(main)/item-creator/item-creator-helpers.tsx`
+- `src/app/(main)/item-creator/item-creator-property-actions.ts`
+- `src/app/(main)/item-creator/item-creator-property-options.ts`
+- `src/app/(main)/item-creator/item-creator-save-reset.ts`
+- `src/app/(main)/item-creator/layout.tsx`
+- `src/app/(main)/item-creator/page.tsx`
+- `src/app/(main)/item-creator/use-item-creator-workspace.ts`
+
+### `src/app/(main)/power-creator`
+
+- `src/app/(main)/power-creator/layout.tsx`
+- `src/app/(main)/power-creator/page.tsx`
+- `src/app/(main)/power-creator/power-creator-bootstrap.ts`
+- `src/app/(main)/power-creator/power-creator-composition-band.tsx`
+- `src/app/(main)/power-creator/power-creator-composition.ts`
+- `src/app/(main)/power-creator/power-creator-constants.ts`
+- `src/app/(main)/power-creator/power-creator-cost-derivation.ts`
+- `src/app/(main)/power-creator/power-creator-editor-action-profile.tsx`
+- `src/app/(main)/power-creator/power-creator-editor-config.ts`
+- `src/app/(main)/power-creator/power-creator-editor-meta.tsx`
+- `src/app/(main)/power-creator/power-creator-editor-power-config.tsx`
+- `src/app/(main)/power-creator/power-creator-editor-power-damage.tsx`
+- `src/app/(main)/power-creator/power-creator-editor-power-parts.tsx`
+- `src/app/(main)/power-creator/power-creator-editor.tsx`
+- `src/app/(main)/power-creator/power-creator-from-shared.tsx`
+- `src/app/(main)/power-creator/power-creator-help.tsx`
+- `src/app/(main)/power-creator/power-creator-innate-label.ts`
+- `src/app/(main)/power-creator/power-creator-part-actions.ts`
+- `src/app/(main)/power-creator/power-creator-types.ts`
+- `src/app/(main)/power-creator/use-power-creator-composition.ts`
+- `src/app/(main)/power-creator/use-power-creator-workspace.ts`
+
+### `src/app/(main)/species-creator`
+
+- `src/app/(main)/species-creator/layout.tsx`
+- `src/app/(main)/species-creator/page.tsx`
+- `src/app/(main)/species-creator/species-creator-bootstrap.ts`
+- `src/app/(main)/species-creator/species-creator-editor.tsx`
+- `src/app/(main)/species-creator/species-creator-reset.ts`
+- `src/app/(main)/species-creator/use-species-creator-workspace.ts`
+
+### `src/app/(main)/technique-creator`
+
+- `src/app/(main)/technique-creator/layout.tsx`
+- `src/app/(main)/technique-creator/page.tsx`
+- `src/app/(main)/technique-creator/technique-creator-bootstrap.ts`
+- `src/app/(main)/technique-creator/technique-creator-editor.tsx`
+- `src/app/(main)/technique-creator/technique-creator-reset.ts`
+- `src/app/(main)/technique-creator/use-technique-creator-workspace.ts`
+
+### `src/components/crafting`
+
+- `src/components/crafting/CraftingItemSelectModal.tsx`
+- `src/components/crafting/get-crafting-market-price.ts`
+
+### `src/components/creator`
+
+- `src/components/creator/CreatorLayout.tsx`
+- `src/components/creator/CreatorPageShell.tsx`
+- `src/components/creator/CreatorSaveToolbar.tsx`
+- `src/components/creator/LoadFromLibraryModal.tsx`
+- `src/components/creator/ability-score-editor.tsx`
+- `src/components/creator/advanced-calculations-panel.tsx`
+- `src/components/creator/archetype-selector.tsx`
+- `src/components/creator/collapsible-section.tsx`
+- `src/components/creator/creator-summary-panel.tsx`
+- `src/components/creator/creator-text-fields.tsx`
+- `src/components/creator/health-energy-allocator.tsx`
+- `src/components/creator/index.ts`
+- `src/components/creator/power-part-card.tsx`
+- `src/components/creator/targeted-defenses-section.tsx`
+
+### `src/components/encounters`
+
+- `src/components/encounters/CombatantCard.tsx`
+- `src/components/encounters/add-combatant-modal.tsx`
+- `src/components/encounters/combatant-card-conditions.tsx`
+- `src/components/encounters/combatant-card-header.tsx`
+- `src/components/encounters/combatant-card-helpers.ts`
+- `src/components/encounters/combatant-card-initiative.tsx`
+- `src/components/encounters/combatant-card-quick-actions.tsx`
+- `src/components/encounters/combatant-card-resources.tsx`
+- `src/components/encounters/encounter-combatant-types.ts`
+- `src/components/encounters/encounter-constants.ts`
+
+
+---
+
+## Character, codex, encounter play, and campaign detail
+
+40 non-test `.ts` / `.tsx` files. Each one has a production importer. None are unused files.
+
+`src/components/character/index.ts` exports `CharacterCard` and `AddCharacterCard`. It does not export `PortraitThumb`. Callers import `src/components/character/portrait-thumb.tsx` by path.
+
+### Second implementations
+
+- Portraits. `src/components/character/character-card.tsx` draws the portrait with `next/image`. `src/components/character/portrait-thumb.tsx` and `src/app/(detail)/campaigns/[id]/_components/character-chip.tsx` each draw an `img`. All three call `useEffectivePortrait` and `usePortraitFallbackUrl`. The card and the chip do not render `PortraitThumb`. `src/app/(detail)/campaigns/[id]/_components/add-character-modal.tsx` does.
+- Editable titles. `src/app/(main)/encounters/[id]/_components/EncounterPageHeader.tsx` and `src/app/(detail)/campaigns/[id]/_components/campaign-detail-header.tsx` each render `PageHeader` while not editing, and a text `input` while editing. Enter commits and Escape cancels in both. Neither renders the other. The class strings differ.
+- Initiative roll. `rollInitiative` in `src/app/(main)/encounters/[id]/_components/encounter-view-helpers.ts` and the private `rollInitiative` in `src/components/encounters/add-combatant-modal.tsx` are the same expression. The modal does not import the helper. Combat helpers and the skill view hook import the helper.
+- Participant cards. `src/app/(main)/encounters/[id]/_components/combat/combat-combatant-list.tsx` renders `CombatantCard`. `src/app/(main)/encounters/[id]/_components/skill/skill-participant-list.tsx` renders `ParticipantCard` from `skill-participant-card.tsx`. `getParticipantBorderColor` in that card and `getCombatantBorderColor` in `src/components/encounters/combatant-card-helpers.ts` are separate functions. Both can return `border-l-ally` and `border-l-enemy`.
+- Sort initiative buttons. `src/app/(main)/encounters/[id]/_components/combat/combat-round-controls.tsx` and `src/app/(main)/encounters/[id]/_components/skill/skill-sidebar.tsx` each render their own Sort Initiative button.
+- Condition names on the combat sidebar. `src/app/(main)/encounters/[id]/_components/combat/combat-add-sidebar.tsx` maps `CONDITION_OPTIONS` into its own spans. It does not render the combatant card condition chips.
+
+### Calls a shared component
+
+- `src/components/codex/codex-feat-row.tsx` and `src/components/codex/codex-skill-row.tsx` each render `GridListRow`. They do not render each other. Codex and admin feat tabs render `CodexFeatRow`. Codex and admin skill tabs render `CodexSkillRow`. The sheet `SkillRow` does not render `CodexSkillRow`.
+- `src/app/(main)/encounters/[id]/_components/CombatEncounterView.tsx` renders `CombatRoundControls`, `CombatCombatantList`, `CombatAddSidebar`, `AddCombatantModal`, and `RollLog`. `src/app/(main)/encounters/[id]/_components/SkillEncounterView.tsx` renders `SkillTrackersSection`, `SkillParticipantList`, `SkillSidebar`, `AddCombatantModal`, and `RollLog`. `src/app/(main)/encounters/[id]/mixed/page.tsx` renders both views.
+- `src/app/(main)/encounters/[id]/_components/combat/combat-add-sidebar.tsx` and `src/app/(main)/encounters/[id]/_components/skill/skill-sidebar.tsx` both render `EncounterCampaignRosterSection`. That section is a campaign select and add-all button. `src/app/(detail)/campaigns/[id]/_components/campaign-roster-section.tsx` renders `CharacterChip`. Those two roster files do different jobs.
+- `src/app/(main)/encounters/[id]/_components/skill/skill-trackers-section.tsx` renders `SuccessFailureTracker`.
+- `src/app/(detail)/campaigns/[id]/_components/campaign-roll-log-section.tsx` renders `RollEntryCard` from `@/components/rolls`.
+- `src/app/(main)/encounters/[id]/_components/hooks/use-reorderable-list-drag.ts` is the drag state used by the combat roster actions and the skill view hook.
+- `src/app/(detail)/campaigns/[id]/_components/add-character-modal.tsx` renders `Modal` and `PortraitThumb`. It does not render `UnifiedSelectionModal`.
+- Combat, skill, and mixed encounter pages render `useEncounterPlayPage`, `EncounterPlayPageGate`, and `EncounterPageHeader`. Combat and mixed also render `OpenTabletopButton`.
+
+### Not read line by line
+
+- `src/app/(main)/encounters/[id]/_components/skill/use-skill-encounter-view.ts`
+- `src/app/(main)/encounters/[id]/_components/combat/use-combat-encounter-view.ts`
+- `src/app/(main)/encounters/[id]/_components/combat/use-combat-roster-actions.ts`
+- `src/app/(main)/encounters/[id]/_components/combat/use-combat-linked-character-sync.ts`
+- `src/app/(main)/encounters/[id]/_components/combat/use-combat-round-actions.ts`
+- `src/app/(main)/encounters/[id]/_components/combat/combat-encounter-helpers.ts` past the `rollInitiative` import
+- `src/app/(main)/encounters/[id]/_components/encounter-play-page-shell.tsx` past the exported types
+- `src/app/(main)/encounters/[id]/_components/skill/skill-participant-card.tsx` past `getParticipantBorderColor` and its props
+- `src/app/(main)/encounters/[id]/_components/skill/skill-success-failure-tracker.tsx` past the total and net lines
+- `src/app/(main)/encounters/[id]/_components/skill/skill-sidebar.tsx` past the initiative checkbox, the sort button, the roster section, and the quick-reference card
+- `src/app/(detail)/campaigns/[id]/_components/use-campaign-detail-page.ts`
+- `src/app/(detail)/campaigns/[id]/_components/campaign-detail-header.tsx` past the name and description editors
+
+### Files
+
+Every path below is a non-test source file. The checker fails if one is missing from this document.
+
+### `src/app/(detail)/campaigns/[id]/_components`
+
+- `src/app/(detail)/campaigns/[id]/_components/add-character-modal.tsx`
+- `src/app/(detail)/campaigns/[id]/_components/campaign-detail-header.tsx`
+- `src/app/(detail)/campaigns/[id]/_components/campaign-invite-section.tsx`
+- `src/app/(detail)/campaigns/[id]/_components/campaign-roll-log-scroll.ts`
+- `src/app/(detail)/campaigns/[id]/_components/campaign-roll-log-section.tsx`
+- `src/app/(detail)/campaigns/[id]/_components/campaign-roster-section.tsx`
+- `src/app/(detail)/campaigns/[id]/_components/character-chip.tsx`
+- `src/app/(detail)/campaigns/[id]/_components/use-campaign-detail-page.ts`
+
+### `src/app/(main)/encounters/[id]/_components`
+
+- `src/app/(main)/encounters/[id]/_components/CombatEncounterView.tsx`
+- `src/app/(main)/encounters/[id]/_components/EncounterCampaignRosterSection.tsx`
+- `src/app/(main)/encounters/[id]/_components/EncounterPageHeader.tsx`
+- `src/app/(main)/encounters/[id]/_components/OpenTabletopButton.tsx`
+- `src/app/(main)/encounters/[id]/_components/SkillEncounterView.tsx`
+- `src/app/(main)/encounters/[id]/_components/encounter-play-page-shell.tsx`
+- `src/app/(main)/encounters/[id]/_components/encounter-view-helpers.ts`
+
+### `src/app/(main)/encounters/[id]/_components/combat`
+
+- `src/app/(main)/encounters/[id]/_components/combat/combat-add-sidebar.tsx`
+- `src/app/(main)/encounters/[id]/_components/combat/combat-combatant-list.tsx`
+- `src/app/(main)/encounters/[id]/_components/combat/combat-encounter-helpers.ts`
+- `src/app/(main)/encounters/[id]/_components/combat/combat-encounter-layout.ts`
+- `src/app/(main)/encounters/[id]/_components/combat/combat-encounter-view-props.ts`
+- `src/app/(main)/encounters/[id]/_components/combat/combat-round-controls.tsx`
+- `src/app/(main)/encounters/[id]/_components/combat/use-combat-encounter-view.ts`
+- `src/app/(main)/encounters/[id]/_components/combat/use-combat-linked-character-sync.ts`
+- `src/app/(main)/encounters/[id]/_components/combat/use-combat-roster-actions.ts`
+- `src/app/(main)/encounters/[id]/_components/combat/use-combat-round-actions.ts`
+
+### `src/app/(main)/encounters/[id]/_components/hooks`
+
+- `src/app/(main)/encounters/[id]/_components/hooks/use-linked-campaign-characters.ts`
+- `src/app/(main)/encounters/[id]/_components/hooks/use-reorderable-list-drag.ts`
+
+### `src/app/(main)/encounters/[id]/_components/skill`
+
+- `src/app/(main)/encounters/[id]/_components/skill/skill-encounter-view-props.ts`
+- `src/app/(main)/encounters/[id]/_components/skill/skill-participant-card.tsx`
+- `src/app/(main)/encounters/[id]/_components/skill/skill-participant-list.tsx`
+- `src/app/(main)/encounters/[id]/_components/skill/skill-sidebar.tsx`
+- `src/app/(main)/encounters/[id]/_components/skill/skill-success-failure-tracker.tsx`
+- `src/app/(main)/encounters/[id]/_components/skill/skill-trackers-section.tsx`
+- `src/app/(main)/encounters/[id]/_components/skill/use-skill-encounter-view.ts`
+
+### `src/components/character`
+
+- `src/components/character/character-card.tsx`
+- `src/components/character/index.ts`
+- `src/components/character/portrait-thumb.tsx`
+
+### `src/components/codex`
+
+- `src/components/codex/codex-feat-row.tsx`
+- `src/components/codex/codex-skill-row.tsx`
+- `src/components/codex/index.ts`
+
+
+---
+
+## Rolls, rules, tabletop, chrome, marketing, auth, and account cards
+
+56 non-test `.ts` / `.tsx` files. Each one has a production importer. None are unused files.
+
+`src/components/landing/index.ts` exports `HeroSection`, `UniquenessSection`, `HowItWorksSection`, `SecondaryDiscoverySection`, `CommunitySection`, `MarketingLinkButton`, and `CreatorFunnelHero`. It does not export `MarketingExternalButton`, `LandingArtFrame`, `LandingDiceDecor`, or `LandingGradientBackdrop`. Callers import those by path.
+
+`src/components/layout/index.ts` exports `Header`, `Footer`, `ProtectedRoute`, and `SelectionGuard`. It does not export `MainAppChrome` or `MainContentBoundary`.
+
+### Second implementations
+
+- Labeled inputs. `src/components/auth/form-input.tsx` and `src/components/auth/password-input.tsx` each render a raw `<input>`, the same label class (`block text-sm font-medium text-text-primary`), and the same border and focus class string. `PasswordInput` adds `pr-12` and a show/hide button. It does not render `FormInput`. `showStrength` is on `PasswordInputProps` and is not read before the remaining props are spread onto the input.
+- Account password fields. `src/app/(main)/my-account/_components/account-security-cards.tsx` and `src/app/(main)/my-account/_components/account-danger-zone-card.tsx` each render `Input` from `@/components/ui` with `type="password"` and their own `<label>`. Neither renders `PasswordInput` or `FormInput`. `src/app/(main)/my-account/_components/account-password-validation.ts` checks length against `PASSWORD_MIN_LENGTH` from `@/lib/password-policy`. It does not restate a number.
+- Heroes. `src/components/landing/hero-section.tsx` and `src/components/landing/creator-funnel-hero.tsx` both render `LandingGradientBackdrop` and `LandingDiceDecor` with `variant="hero"`, and both use the same light and dark gradient class string. Neither renders the other. The funnel hero skips the dice when `compact` is set.
+- Header menus. In `src/components/layout/header.tsx`, `NavDropdown` and `MobileDropdown` each map `item.dropdown` into links. `NavDropdown` uses `useDisclosureMenu`. `MobileDropdown` uses its own `useState` for open. Neither renders the other.
+- Document bodies. `src/components/rules/rulebook-article.tsx` is a class string around MDX children. `src/components/legal/legal-document-body.tsx` walks a copy object and emits headings, paragraphs, and lists. Neither renders the other.
+- Auth chrome. `src/components/auth/auth-card.tsx` renders a `div`. It does not render `Card`. `src/components/auth/social-button.tsx` renders a `<button>`. It does not render `Button`.
+
+### Calls a shared component
+
+- `MarketingLinkButton` and `MarketingExternalButton` in `src/components/landing/marketing-button.tsx` each render `Button` from `@/components/ui/button`. The link button uses `next/link`. The external button uses an `<a>`.
+- `src/components/rules/rulebook-shell.tsx` renders `RulebookNav`. `RulebookNav` renders `RulebookSearch`. `RulebookSearch` renders `SearchInput`.
+- `src/components/layout/main-app-chrome.tsx` renders `Header`, `Footer`, and `MainContentBoundary`. On a minimal chrome route it skips `Header` and `Footer`. `MainContentBoundary` renders `ErrorBoundary`.
+- `src/components/layout/protected-route.tsx` reads `useAuthStore` and renders `LoadingState` while loading or logged out. `src/components/layout/selection-guard.tsx` listens for mouseup and clears a detached selection. It returns null. Those two files do different jobs.
+- `src/components/providers/auth-provider.tsx` calls `useAuth()` and returns its children. `src/components/providers/theme-provider.tsx` renders `NextThemesProvider`. `src/components/providers/query-provider.tsx` renders `QueryClientProvider`.
+- `src/components/tabletop/add-monster-token-modal.tsx` renders `UnifiedSelectionModal` and `SourceFilter`. It does not render `AddCombatantModal`.
+- `RollLog` in `src/components/rolls/roll-log.tsx` renders `RollEntryCard` from the same file. The campaign roll log also renders `RollEntryCard`.
+- `src/components/about/about-carousel-section.tsx` renders `AboutDiceCarousel`. `src/components/about/about-slide-body.tsx` renders `MarketingExternalButton` and `MarketingLinkButton`. The about page passes that slide body into the carousel as slide content.
+- `src/components/onboarding/play-together-modal.tsx` and `src/components/onboarding/sheet-tour-offer-modal.tsx` each render `Modal`. They do not render each other.
+
+### Not read line by line
+
+- `src/components/rolls/roll-context.tsx` past the `RollProvider`, `useRolls`, and `useRollsOptional` exports.
+- `src/components/rolls/roll-log.tsx` past `RollLog` rendering `RollEntryCard`, and past the opening markup of `RollEntryCard`.
+- `src/components/tabletop/tabletop-canvas.tsx` past the Konva imports, the tool-mode type, and the size and image hooks.
+- `src/components/layout/header.tsx` past `NavDropdown` and `MobileDropdown`.
+- `src/components/layout/footer.tsx` past the four `FOOTER_COPY` groups and the `MarketingExternalButton` import.
+- `src/components/landing/uniqueness-section.tsx`, `how-it-works-section.tsx`, `secondary-discovery-section.tsx`, and `community-section.tsx` past the external-button import in the community file.
+- `src/components/landing/landing-art-frame.tsx` past the aspect constant, and `landing-dice-decor.tsx` past the hero and auth opacity strings.
+- `src/components/about/about-dice-carousel.tsx` past `getDisplaySlot`, `about-carousel-section.tsx` past the `AboutDiceCarousel` render, and `about-slide-body.tsx` past the two marketing-button renders.
+- `src/components/rules/rulebook-nav.tsx` past `ChapterLink` and the `RulebookSearch` render. The rest of the class string in `rulebook-article.tsx` was not read.
+- `src/components/onboarding/play-together-modal.tsx` past the persist handlers, `sheet-tour.tsx` past the highlight imports, and `level-up-guide-card.tsx` past the floating-card start.
+- `src/app/(main)/my-account/_components/account-profile-card.tsx`, `account-preferences-cards.tsx`, `account-role-limits-card.tsx`, and `use-my-account-page.ts` past the `validateNewAccountPassword` call. `account-helpers.ts` past `usernameCharsetError` and `hasPasswordProvider`. `account-security-cards.tsx` past the password `Input`s.
+
+### `src/components/rolls`
+
+- `src/components/rolls/index.ts`
+- `src/components/rolls/roll-log.tsx`
+
+### `src/components/rules`
+
+- `src/components/rules/rulebook-article.tsx`
+- `src/components/rules/rulebook-nav.tsx`
+- `src/components/rules/rulebook-pager.tsx`
+- `src/components/rules/rulebook-search.tsx`
+- `src/components/rules/rulebook-shell.tsx`
+
+### `src/components/tabletop`
+
+- `src/components/tabletop/add-monster-token-modal.tsx`
+- `src/components/tabletop/tabletop-canvas.tsx`
+
+### `src/components/layout`
+
+- `src/components/layout/footer.tsx`
+- `src/components/layout/header.tsx`
+- `src/components/layout/index.ts`
+- `src/components/layout/main-app-chrome.tsx`
+- `src/components/layout/main-content-boundary.tsx`
+- `src/components/layout/protected-route.tsx`
+- `src/components/layout/selection-guard.tsx`
+
+### `src/components/landing`
+
+- `src/components/landing/community-section.tsx`
+- `src/components/landing/creator-funnel-hero.tsx`
+- `src/components/landing/hero-section.tsx`
+- `src/components/landing/how-it-works-section.tsx`
+- `src/components/landing/index.ts`
+- `src/components/landing/landing-art-frame.tsx`
+- `src/components/landing/landing-dice-decor.tsx`
+- `src/components/landing/landing-gradient-backdrop.tsx`
+- `src/components/landing/marketing-button.tsx`
+- `src/components/landing/secondary-discovery-section.tsx`
+- `src/components/landing/uniqueness-section.tsx`
+
+### `src/components/about`
+
+- `src/components/about/about-carousel-section.tsx`
+- `src/components/about/about-dice-carousel.tsx`
+- `src/components/about/about-slide-body.tsx`
+
+### `src/components/auth`
+
+- `src/components/auth/auth-card.tsx`
+- `src/components/auth/auth-google-terms-notice.tsx`
+- `src/components/auth/auth-turnstile.tsx`
+- `src/components/auth/form-input.tsx`
+- `src/components/auth/index.ts`
+- `src/components/auth/password-input.tsx`
+- `src/components/auth/social-button.tsx`
+
+### `src/components/legal`
+
+- `src/components/legal/legal-document-body.tsx`
+
+### `src/components/onboarding`
+
+- `src/components/onboarding/index.ts`
+- `src/components/onboarding/level-up-guide-card.tsx`
+- `src/components/onboarding/play-together-modal.tsx`
+- `src/components/onboarding/sheet-tour-offer-modal.tsx`
+- `src/components/onboarding/sheet-tour.tsx`
+
+### `src/components/providers`
+
+- `src/components/providers/auth-provider.tsx`
+- `src/components/providers/index.ts`
+- `src/components/providers/query-provider.tsx`
+- `src/components/providers/theme-provider.tsx`
+
+### `src/app/(main)/my-account/_components`
+
+- `src/app/(main)/my-account/_components/account-danger-zone-card.tsx`
+- `src/app/(main)/my-account/_components/account-helpers.ts`
+- `src/app/(main)/my-account/_components/account-password-validation.ts`
+- `src/app/(main)/my-account/_components/account-preferences-cards.tsx`
+- `src/app/(main)/my-account/_components/account-profile-card.tsx`
+- `src/app/(main)/my-account/_components/account-role-limits-card.tsx`
+- `src/app/(main)/my-account/_components/account-security-cards.tsx`
+- `src/app/(main)/my-account/_components/use-my-account-page.ts`
+
+---
+
+## UI kit and admin codex
+
+88 non-test `.ts` / `.tsx` files. `src/app/(main)/admin/codex/page.tsx` has no TypeScript importer because Next loads it. Every other file in these two folders has a production importer. None are unused files.
+
+`src/components/ui/index.ts` re-exports every sibling except `src/components/ui/chip-options-panel.tsx`. That panel is imported by `expandable-chip.tsx`.
+
+### Second implementations
+
+- Buttons. `src/components/ui/button.tsx` and `src/components/ui/icon-button.tsx` each have their own `cva` map and render a `<button>` or a Slot. `IconButton` does not render `Button`. `Button` has a size named `icon`. `TabNavOverflowScroller` in `src/components/ui/tab-navigation.tsx` renders its own chevron `<button>` elements. It does not render `IconButton`.
+- Labeled fields. `Input`, `Textarea`, and `Select` each render their own control, the same label class (`mb-1.5 block text-sm font-medium text-text-primary`), and the same focus and error border classes. None renders another. `Input`'s error paragraph has `role="alert"`. `Textarea`'s does not. `SearchInput` renders a raw `<input>` with a search icon and a clear button. It does not render `Input`.
+- Chips. `DescriptorChip` in `src/components/ui/chip.tsx` renders `Chip`. `ExpandableChip` renders `DescriptorChip` only when `descriptor` is set. Otherwise it draws its own shell from `expandableChipShellClass` and, when options are open, `ChipOptionsPanel`. That shell does not render `Chip`.
+- Feedback. `Alert` and `ToastItem` in `src/components/ui/toast.tsx` each use `role="alert"`, a status icon, and `IconButton` to dismiss. `ToastItem` does not render `Alert`. Toasts are portaled. Alerts are inline.
+- Cards. `SelectionCard` and `SelectionCardSurface` call `cardVariants` from `src/components/ui/card.tsx`. They do not render `Card`. `SelectionCard` is a `<button>`. `Card` and `SelectionCardSurface` are `div`s.
+- Copy suffix. `src/app/(main)/admin/codex/admin-codex-copy-suffix.ts` exports `COPY_NAME_SUFFIX`. `src/app/(main)/admin/codex/use-codex-spreadsheet.ts` declares its own `COPY_NAME_SUFFIX` and does not import that file. Both values are the same characters. The spreadsheet `copyRow` appends that local constant.
+- Archetype list. `src/app/(main)/admin/codex/AdminArchetypesTab.tsx` renders `SearchInput` and `GridListRow`. It does not render `CodexBrowseListShell`. The other eight entity tabs do.
+- Spreadsheet find bar. `src/app/(main)/admin/codex/codex-spreadsheet-toolbar.tsx` renders a raw text `<input>`, a raw checkbox, and a raw `<select>`. It does not render `SearchInput`, `Checkbox`, or `Select`.
+- Feat editors. `src/app/(main)/admin/codex/admin-feat-edit-modal.tsx` renders `AdminFeatEditModalFields`. `src/app/(main)/admin/codex/admin-creature-feat-edit-modal.tsx` renders its own `Input` and `Textarea`. Neither modal renders the other. Both call `useAdminLeveledFeatSession`, `AdminFeatLevelControls`, and `codexFeatEditorIsDirty`.
+
+### Calls a shared component
+
+- `LoadingState` renders `Spinner`. `EmptyState` renders `Button` when its action is an object with `label` and `onClick`. `Alert`, `ToastItem`, and the modal close control render `IconButton`. `Modal` portals into `document.body`.
+- The admin codex page renders `TabNavigation`, `TabContentPanel`, and either `CodexSpreadsheetView` or one of the nine tab components.
+- Eight entity tabs call `useAdminCodexEntity` and render `CodexBrowseListShell` and `AdminCodexRowActions`. Feats also render `CodexFeatRow`. Skills also render `CodexSkillRow`.
+- The edit modals for creature feats, equipment, parts, properties, skills, species, and traits each render `AdminCodexEditModalFooter`, `AdminCodexCopySourceBanner`, and `AdminCodexSourceField`. The feat modal renders the footer and the banner. `AdminFeatEditModalFields` renders `AdminCodexSourceField`. The archetype tab renders the footer. `admin-archetype-editor-meta.tsx` renders the banner and the source field.
+- `useAdminCodexDelete` renders `DeleteConfirmModal` and `ConfirmActionModal`. `useCodexEditorLeaveGuard` renders `ConfirmActionModal`. `codexEditorDraftIsDirty` calls `creatorDraftIsDirty`.
+- `CodexSpreadsheetView` renders `CodexSpreadsheetToolbar`, `CodexSpreadsheetTable`, and `Modal`. The table renders `CodexSpreadsheetTableRow`. `AdminArchetypeEditor` renders the meta, level-1, guided, and progression sections.
+
+### Not read line by line
+
+- `src/components/ui/modal.tsx` past the scroll-lock helpers and the portal, dialog, and close button.
+- `src/components/ui/tab-navigation.tsx` past `TabContentPanel`, the overflow chevrons, and the start of `TabNavigation`.
+- `ChipHeaderContent` and the cost lines above the descriptor return in `src/components/ui/expandable-chip.tsx`.
+- The floating-ui setup in `src/components/ui/tooltip.tsx` between the early return and `FloatingHelpPanel`. The file does call `useFloatingHelpPopover` and `FloatingHelpPanel`.
+- `src/app/(main)/admin/codex/actions.ts`.
+- The eight `CodexBrowseListShell` tab files past the shared hook, shell, and row-action imports. `AdminArchetypesTab.tsx` past the workspace hook and the error return.
+- The edit-modal bodies past the shared footer, banner, and source field. `admin-feat-edit-modal-fields.tsx`, `admin-codex-feat-level-fields.tsx`, and `admin-part-edit-modal-options.tsx`.
+- The archetype editor sections past `AdminArchetypeEditor`'s composition, and the archetype workspace, path form, and write files.
+- `use-codex-spreadsheet.ts` past `copyRow`. `codex-spreadsheet-config.ts`, `codex-spreadsheet-helpers.ts`, `codex-spreadsheet-table-row.tsx`, and `codex-column-map.ts`.
+- The `*-form.ts` files.
+
+### `src/components/ui`
+
+- `src/components/ui/alert.tsx`
+- `src/components/ui/button.tsx`
+- `src/components/ui/card.tsx`
+- `src/components/ui/checkbox.tsx`
+- `src/components/ui/chip-options-panel.tsx`
+- `src/components/ui/chip.tsx`
+- `src/components/ui/empty-state.tsx`
+- `src/components/ui/expandable-chip.tsx`
+- `src/components/ui/icon-button.tsx`
+- `src/components/ui/index.ts`
+- `src/components/ui/input.tsx`
+- `src/components/ui/modal.tsx`
+- `src/components/ui/page-container.tsx`
+- `src/components/ui/page-header.tsx`
+- `src/components/ui/search-input.tsx`
+- `src/components/ui/select.tsx`
+- `src/components/ui/selection-card.tsx`
+- `src/components/ui/spinner.tsx`
+- `src/components/ui/tab-navigation.tsx`
+- `src/components/ui/table-scroll.tsx`
+- `src/components/ui/textarea.tsx`
+- `src/components/ui/toast.tsx`
+- `src/components/ui/tooltip.tsx`
+
+### `src/app/(main)/admin/codex`
+
+- `src/app/(main)/admin/codex/AdminArchetypesTab.tsx`
+- `src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx`
+- `src/app/(main)/admin/codex/AdminEquipmentTab.tsx`
+- `src/app/(main)/admin/codex/AdminFeatsTab.tsx`
+- `src/app/(main)/admin/codex/AdminPartsTab.tsx`
+- `src/app/(main)/admin/codex/AdminPropertiesTab.tsx`
+- `src/app/(main)/admin/codex/AdminSkillsTab.tsx`
+- `src/app/(main)/admin/codex/AdminSpeciesTab.tsx`
+- `src/app/(main)/admin/codex/AdminTraitsTab.tsx`
+- `src/app/(main)/admin/codex/CodexSpreadsheetView.tsx`
+- `src/app/(main)/admin/codex/actions.ts`
+- `src/app/(main)/admin/codex/admin-archetype-editor-config.ts`
+- `src/app/(main)/admin/codex/admin-archetype-editor-guided.tsx`
+- `src/app/(main)/admin/codex/admin-archetype-editor-level1.tsx`
+- `src/app/(main)/admin/codex/admin-archetype-editor-meta.tsx`
+- `src/app/(main)/admin/codex/admin-archetype-editor-progression.tsx`
+- `src/app/(main)/admin/codex/admin-archetype-editor.tsx`
+- `src/app/(main)/admin/codex/admin-archetype-path-form.ts`
+- `src/app/(main)/admin/codex/admin-archetype-path-rows.tsx`
+- `src/app/(main)/admin/codex/admin-archetype-workspace-mutators.ts`
+- `src/app/(main)/admin/codex/admin-archetype-workspace-open.ts`
+- `src/app/(main)/admin/codex/admin-archetype-workspace-save.ts`
+- `src/app/(main)/admin/codex/admin-archetype-workspace-unknown-selections.ts`
+- `src/app/(main)/admin/codex/admin-codex-copy-source-banner.tsx`
+- `src/app/(main)/admin/codex/admin-codex-copy-suffix.ts`
+- `src/app/(main)/admin/codex/admin-codex-edit-modal-footer.tsx`
+- `src/app/(main)/admin/codex/admin-codex-feat-level-fields.tsx`
+- `src/app/(main)/admin/codex/admin-codex-level-save.ts`
+- `src/app/(main)/admin/codex/admin-pending-feat-level-id.ts`
+- `src/app/(main)/admin/codex/admin-codex-row-actions.tsx`
+- `src/app/(main)/admin/codex/admin-codex-save-target.ts`
+- `src/app/(main)/admin/codex/admin-codex-source-field.tsx`
+- `src/app/(main)/admin/codex/admin-codex-unsaved-leave-guard.tsx`
+- `src/app/(main)/admin/codex/admin-codex-unsaved-leave.ts`
+- `src/app/(main)/admin/codex/admin-creature-feat-edit-modal.tsx`
+- `src/app/(main)/admin/codex/admin-creature-feat-form.ts`
+- `src/app/(main)/admin/codex/admin-equipment-edit-modal.tsx`
+- `src/app/(main)/admin/codex/admin-feat-edit-modal-fields.tsx`
+- `src/app/(main)/admin/codex/admin-feat-edit-modal.tsx`
+- `src/app/(main)/admin/codex/admin-feat-form.ts`
+- `src/app/(main)/admin/codex/admin-part-edit-modal-options.tsx`
+- `src/app/(main)/admin/codex/admin-part-edit-modal.tsx`
+- `src/app/(main)/admin/codex/admin-part-form.ts`
+- `src/app/(main)/admin/codex/admin-property-edit-modal.tsx`
+- `src/app/(main)/admin/codex/admin-property-form.ts`
+- `src/app/(main)/admin/codex/admin-skill-edit-modal.tsx`
+- `src/app/(main)/admin/codex/admin-species-edit-modal.tsx`
+- `src/app/(main)/admin/codex/admin-species-form.ts`
+- `src/app/(main)/admin/codex/admin-trait-edit-modal.tsx`
+- `src/app/(main)/admin/codex/admin-trait-form.ts`
+- `src/app/(main)/admin/codex/codex-archetype-write.ts`
+- `src/app/(main)/admin/codex/codex-column-map.ts`
+- `src/app/(main)/admin/codex/codex-spreadsheet-config.ts`
+- `src/app/(main)/admin/codex/codex-spreadsheet-helpers.ts`
+- `src/app/(main)/admin/codex/codex-spreadsheet-table-row.tsx`
+- `src/app/(main)/admin/codex/codex-spreadsheet-table.tsx`
+- `src/app/(main)/admin/codex/codex-spreadsheet-toolbar.tsx`
+- `src/app/(main)/admin/codex/codex-spreadsheet-virtualization.ts`
+- `src/app/(main)/admin/codex/page.tsx`
+- `src/app/(main)/admin/codex/source-catalog-action.ts`
+- `src/app/(main)/admin/codex/use-admin-archetype-selection-options.ts`
+- `src/app/(main)/admin/codex/use-admin-archetype-workspace.ts`
+- `src/app/(main)/admin/codex/use-admin-codex-delete.tsx`
+- `src/app/(main)/admin/codex/use-admin-codex-entity.tsx`
+- `src/app/(main)/admin/codex/use-admin-leveled-feat-session.ts`
+- `src/app/(main)/admin/codex/use-codex-spreadsheet.ts`
+
+---
+
+## Other admin screens, and codex, character, library, auth, and guided helpers
+
+164 non-test `.ts` / `.tsx` files. `src/app/(main)/admin/page.tsx` and `src/app/(main)/admin/layout.tsx` have no TypeScript importer because Next loads them. `src/lib/codex/fake-supabase.ts` is imported only by tests. Every other file in this slice has a production importer.
+
+### Second implementations
+
+- Admin home cards. `src/app/(main)/admin/page.tsx` repeats the same bordered section, heading, paragraph, and `Button` plus `Link` eight times. The Sources card reads `admin-sources-copy.ts`. The other seven write the strings in the page.
+- Official-library delete. Powers, techniques, armaments, creatures, and species each call `apiFetch` with `DELETE`, then invalidate `officialLibraryKeys.all` and `officialLibraryKeys.counts`. None of those files calls a shared delete helper. Techniques and empowered techniques are one component, `AdminPublicTechniquesTab`, with a `mode` prop.
+- Species list. `AdminPublicSpeciesTab` renders `OfficialEntityList`. There is no `OfficialSpeciesList`. Powers, techniques, armaments, and creatures render `OfficialPowerList`, `OfficialTechniqueList`, `OfficialItemList`, and `OfficialCreatureList`.
+- Image delete. `src/app/(main)/admin/images/admin-image-delete-modal.tsx` renders `Modal` and `Button`. It does not render `DeleteConfirmModal`.
+- Discard prompts. `CORE_RULES_EDITOR_DISCARD_TITLE`, `CORE_RULES_EDITOR_DISCARD_CONFIRM`, and `CORE_RULES_EDITOR_DISCARD_CANCEL` are the same strings as the codex editor title, confirm, and cancel. The descriptions differ. `src/app/(main)/admin/core-rules/core-rules-unsaved-leave.ts` does not import the codex file. The core rules page renders `ConfirmActionModal`.
+- Password length. `src/lib/password-policy.ts` exports `PASSWORD_MIN_LENGTH` as `6`. The account card check uses that constant. `assertSensitiveAccountReauth` in `src/lib/auth/sensitive-account-auth.ts` rejects an empty password and then calls `signInWithPassword`. It does not import `PASSWORD_MIN_LENGTH`.
+- Name length. `CHARACTER_NAME_MAX_LENGTH` in `src/lib/character/character-name-limit.ts` is `100`. `CODEX_SOURCE_NAME_MAX_LENGTH` in `src/lib/codex/sources.ts` is a private `100`. `sources.ts` does not import the character constant.
+- Base skill. `isCodexBaseSkill` in `src/lib/character/sheet-skills-display.ts` and in `src/app/(main)/admin/codex/admin-archetype-path-form.ts` are both `base_skill_id == null`. Neither imports the other. `src/lib/guided-creator/curated-skills.ts` keeps a skill only when `base_skill_id !== undefined`. It does not call `isCodexBaseSkill`. The species creator skill options use `base_skill_id == null || base_skill_id === 0`. The loops in `src/lib/game/skill-allocation.ts` and `src/lib/game/skill-allocation-add.ts` skip a skill when the id is null or `0`. `buildGuidedSkillMeta` and `skills-allocation-page.tsx` treat `base_skill_id !== undefined` as sub-skill (so `0` counts as sub). See **Skill and allocation math** for modal add/remove and guided budget reads.
+- Table lists. `CODEX_DATA_TABLES` in `src/lib/codex/codex-tables.ts` includes `codex_archetype_levels` and does not include `core_rules`. `CodexCollection` in `src/lib/codex/collections.ts` includes `core_rules` and does not include `codex_archetype_levels`. `CODEX_SOURCE_TABLES` is `COLUMNAR_COLLECTIONS` with `core_rules` filtered out. It is not a third hand-written list.
+
+### Calls a shared component
+
+- `fetchAdminCodexSourceRows` in `src/app/(main)/admin/sources/actions.ts` calls `loadAdminCodexSourceRows`. `admin-source-list.ts` imports the name helpers from `sources.ts`.
+- `src/lib/auth/oauth-delete-grant.server.ts` re-exports `src/lib/auth/oauth-delete-grant-core.ts` and adds the cookie options. `buildProtectedRouteLoginUrl` calls `sanitizeRedirectPath` and `buildLoginRedirectUrl`. `buildPathAbilityChipLabels` calls `resolvePathAbilityLabels`.
+- The official library page renders `TabNavigation` and one tab component. Empowered techniques are `AdminPublicTechniquesTab` with `mode="empowered"`. The enhanced-items tab renders `OfficialEnhancedList`, `DeleteConfirmModal`, and its own `Modal`.
+- The image library page renders `CodexBrowseListShell`. The admin layout calls `requireAdminSession` from `src/lib/admin.ts`. That module was not opened.
+
+### Not read line by line
+
+- `src/app/(main)/admin/sources/page.tsx`, `sources/actions.ts` past the two fetch wrappers, `users/page.tsx`, `roles/page.tsx` past its imports, `changelogs/page.tsx` past its imports, and `images/page.tsx` past its imports.
+- `src/app/(main)/admin/core-rules/page.tsx` past the `ConfirmActionModal` import, and the core-rules editor components.
+- The official-library tab bodies past the delete calls. `useDeleteOfficialEnhancedItem` and the enhanced edit modal body were not read.
+- `src/lib/codex/feat-list.ts`, `skill-list.ts`, and `row-map.ts` past their openings. `sources.ts` past `collapseCodexSourceName` and the length check. `fake-supabase.ts` past the class header.
+- `src/lib/character/dirty-patch.ts`, `temp-modifiers.ts`, `sheet-edit-notification.ts`, and `sheet-skills-display.ts` past `isCodexBaseSkill`.
+- `src/lib/library/official-power-list.ts` and `official-technique-list.ts` past their imports. `official-item-list.ts` and `power-technique-filters.ts`.
+- `src/lib/auth/oauth-delete-grant-core.ts` past the cookie names and payload types.
+- The large guided-creator files, including `build-character.ts`, `guided-equipment-l2.ts`, and `curated-skills.ts` past the two `base_skill_id !== undefined` filters.
+
+
+### `src/app/(main)/admin` pages
+
+- `src/app/(main)/admin/layout.tsx`
+- `src/app/(main)/admin/page.tsx`
+
+### `src/app/(main)/admin/changelogs`
+
+- `src/app/(main)/admin/changelogs/page.tsx`
+
+### `src/app/(main)/admin/core-rules`
+
+- `src/app/(main)/admin/core-rules/core-rules-ability-skills-editors.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-archetypes-editor.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-armament-editor.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-category-editor.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-combat-editor.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-conditions-editor.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-conditions.ts`
+- `src/app/(main)/admin/core-rules/core-rules-crafting-rules-editor.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-damage-types-editor.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-field-editors.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-number.ts`
+- `src/app/(main)/admin/core-rules/core-rules-progression-editor.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-progression-preview.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-rarities-editor.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-recovery-experience-editors.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-sizes-editor.tsx`
+- `src/app/(main)/admin/core-rules/core-rules-tabs.ts`
+- `src/app/(main)/admin/core-rules/core-rules-unsaved-leave.ts`
+- `src/app/(main)/admin/core-rules/page.tsx`
+
+### `src/app/(main)/admin/images`
+
+- `src/app/(main)/admin/images/admin-image-delete-modal.tsx`
+- `src/app/(main)/admin/images/admin-image-edit-modal.tsx`
+- `src/app/(main)/admin/images/page.tsx`
+
+### `src/app/(main)/admin/public-library`
+
+- `src/app/(main)/admin/public-library/AdminPublicCreaturesTab.tsx`
+- `src/app/(main)/admin/public-library/AdminPublicEnhancedItemsTab.tsx`
+- `src/app/(main)/admin/public-library/AdminPublicItemsTab.tsx`
+- `src/app/(main)/admin/public-library/AdminPublicPowersTab.tsx`
+- `src/app/(main)/admin/public-library/AdminPublicSpeciesTab.tsx`
+- `src/app/(main)/admin/public-library/AdminPublicTechniquesTab.tsx`
+- `src/app/(main)/admin/public-library/page.tsx`
+
+### `src/app/(main)/admin/roles`
+
+- `src/app/(main)/admin/roles/page.tsx`
+
+### `src/app/(main)/admin/sources`
+
+- `src/app/(main)/admin/sources/actions.ts`
+- `src/app/(main)/admin/sources/admin-sources-copy.ts`
+- `src/app/(main)/admin/sources/page.tsx`
+
+### `src/app/(main)/admin/users`
+
+- `src/app/(main)/admin/users/admin-users-directory-state.ts`
+- `src/app/(main)/admin/users/admin-users-search-applied.ts`
+- `src/app/(main)/admin/users/page.tsx`
+- `src/app/(main)/admin/users/use-admin-users-load-more.ts`
+
+### `src/lib/codex`
+
+- `src/lib/codex/admin-source-list.ts`
+- `src/lib/codex/admin-source-rows.ts`
+- `src/lib/codex/cache-tags.ts`
+- `src/lib/codex/codex-tables.ts`
+- `src/lib/codex/collection-to-payload-key.ts`
+- `src/lib/codex/collections.ts`
+- `src/lib/codex/equipment-list.ts`
+- `src/lib/codex/fake-supabase.ts`
+- `src/lib/codex/feat-ability.ts`
+- `src/lib/codex/feat-list.ts`
+- `src/lib/codex/feat-requirement-catalog-server.ts`
+- `src/lib/codex/feat-restriction-notice.ts`
+- `src/lib/codex/feat-tags.ts`
+- `src/lib/codex/id-allocation.ts`
+- `src/lib/codex/list-rules-source-filter.ts`
+- `src/lib/codex/part-type.ts`
+- `src/lib/codex/postgrest-pager.ts`
+- `src/lib/codex/public-table-select.ts`
+- `src/lib/codex/references.ts`
+- `src/lib/codex/row-map.ts`
+- `src/lib/codex/skill-list.ts`
+- `src/lib/codex/source-catalog.ts`
+- `src/lib/codex/sources.ts`
+
+### `src/lib/character`
+
+- `src/lib/character/appearance-age.ts`
+- `src/lib/character/build-creator-skills.ts`
+- `src/lib/character/character-autosave-equal.ts`
+- `src/lib/character/character-name-limit.ts`
+- `src/lib/character/character-relational-save-errors.ts`
+- `src/lib/character/character-size.ts`
+- `src/lib/character/collect-sheet-traits.ts`
+- `src/lib/character/current-follows-max.ts`
+- `src/lib/character/dirty-patch.ts`
+- `src/lib/character/innate-power-capacity.ts`
+- `src/lib/character/notes-tab-sections.ts`
+- `src/lib/character/power-energy-spend.ts`
+- `src/lib/character/prune-trait-sheet-state.ts`
+- `src/lib/character/quick-shield-table-display.ts`
+- `src/lib/character/realtime-merge.ts`
+- `src/lib/character/recovery-over-max.ts`
+- `src/lib/character/recovery-uses.ts`
+- `src/lib/character/relational-lean-save.ts`
+- `src/lib/character/resource-value-color.ts`
+- `src/lib/character/save-lock.ts`
+- `src/lib/character/schema-normalize.ts`
+- `src/lib/character/sheet-allocation-reset.ts`
+- `src/lib/character/sheet-edit-notification.ts`
+- `src/lib/character/sheet-equipment-match.ts`
+- `src/lib/character/sheet-header-species-label.ts`
+- `src/lib/character/sheet-interaction-mode.ts`
+- `src/lib/character/sheet-skills-display.ts`
+- `src/lib/character/sheet-trait-display.ts`
+- `src/lib/character/temp-modifiers.ts`
+
+### `src/lib/library`
+
+- `src/lib/library/armament-character-context.ts`
+- `src/lib/library/armament-filters.ts`
+- `src/lib/library/armament-library-labels.ts`
+- `src/lib/library/catalog-listing.ts`
+- `src/lib/library/character-filter-persistence.ts`
+- `src/lib/library/creator-load-selectables.ts`
+- `src/lib/library/empowered-technique-display.ts`
+- `src/lib/library/fetch-library-tab-counts.ts`
+- `src/lib/library/library-tab-counts.ts`
+- `src/lib/library/official-catalog-row-filter.ts`
+- `src/lib/library/official-creature-list.ts`
+- `src/lib/library/official-enhanced-list.ts`
+- `src/lib/library/official-item-list.ts`
+- `src/lib/library/official-power-list.ts`
+- `src/lib/library/official-technique-list.ts`
+- `src/lib/library/part-display.ts`
+- `src/lib/library/power-technique-categories.ts`
+- `src/lib/library/power-technique-character-context.ts`
+- `src/lib/library/power-technique-filters.ts`
+- `src/lib/library/published-training-points.ts`
+- `src/lib/library/source-scope.ts`
+- `src/lib/library/use-creator-edit-draft.ts`
+
+### `src/lib/auth`
+
+- `src/lib/auth/auth-page-client.ts`
+- `src/lib/auth/captcha.ts`
+- `src/lib/auth/oauth-delete-grant-core.ts`
+- `src/lib/auth/oauth-delete-grant.server.ts`
+- `src/lib/auth/oauth-delete-messages.ts`
+- `src/lib/auth/oauth-google-delete-proof.ts`
+- `src/lib/auth/sensitive-account-auth.ts`
+- `src/lib/auth/session-persistence.ts`
+- `src/lib/auth/should-clear-query-cache-on-auth-event.ts`
+- `src/lib/auth/should-ignore-null-auth-session.ts`
+- `src/lib/auth/sign-in-guard.ts`
+- `src/lib/auth/supabase-pkce-cookies.ts`
+
+### `src/lib/guided-creator`
+
+- `src/lib/guided-creator/ancestry-pick-gate.ts`
+- `src/lib/guided-creator/ancestry-pick-tasks.ts`
+- `src/lib/guided-creator/build-character.ts`
+- `src/lib/guided-creator/chapter-progress-label.ts`
+- `src/lib/guided-creator/chapter-rail-lock.ts`
+- `src/lib/guided-creator/creator-entry-mode.ts`
+- `src/lib/guided-creator/curated-skills.ts`
+- `src/lib/guided-creator/equipment-catalog-rows.ts`
+- `src/lib/guided-creator/equipment-currency.ts`
+- `src/lib/guided-creator/equipment-eligibility.ts`
+- `src/lib/guided-creator/equipment-phase-candidates.ts`
+- `src/lib/guided-creator/equipment-phase-nav.ts`
+- `src/lib/guided-creator/equipment-phase-stats.ts`
+- `src/lib/guided-creator/feat-selection.ts`
+- `src/lib/guided-creator/feats-l2.ts`
+- `src/lib/guided-creator/guided-deep-entry-landing.ts`
+- `src/lib/guided-creator/guided-equipment-l2.ts`
+- `src/lib/guided-creator/guided-skill-recommendations.ts`
+- `src/lib/guided-creator/guided-species-resolve.ts`
+- `src/lib/guided-creator/guided-substep-nav.ts`
+- `src/lib/guided-creator/loadout-pool.ts`
+- `src/lib/guided-creator/loadout-tp.ts`
+- `src/lib/guided-creator/path-ability-labels.ts`
+- `src/lib/guided-creator/path-selection-draft.ts`
+- `src/lib/guided-creator/power-technique-display.ts`
+- `src/lib/guided-creator/powers-phase-nav.ts`
+- `src/lib/guided-creator/powers-techniques-energy-filter.ts`
+- `src/lib/guided-creator/powers-techniques-l1-candidates.ts`
+- `src/lib/guided-creator/powers-techniques-l2.ts`
+- `src/lib/guided-creator/powers-techniques-step-helpers.ts`
+- `src/lib/guided-creator/preview-ability-summary.ts`
+- `src/lib/guided-creator/resolve-loadout-items.ts`
+- `src/lib/guided-creator/reveal-blockers.ts`
+- `src/lib/guided-creator/skill-reconcile.ts`
+- `src/lib/guided-creator/species-selection-draft.ts`
+- `src/lib/guided-creator/substep-satisfaction.ts`
+- `src/lib/guided-creator/use-guided-deep-entry-on-arrival.ts`
+
+### `src/lib/password-policy.ts`
+
+- `src/lib/password-policy.ts`
+
+---
+
+## Sheet, crafting, creator, encounter, rolls, rules, tabletop, and loose lib files
+
+150 non-test `.ts` / `.tsx` files. `src/lib/api-input-validation-scan.ts` and `src/lib/api-mutation-guard-route-scan.ts` are imported only by tests. Every other file in this slice has a production importer.
+
+### Second implementations
+
+- Password length. `loginSchema` and `registerSchema` in `src/lib/validation/schemas.ts` each use `.min(6, 'Password must be at least 6 characters')`. They do not import `PASSWORD_MIN_LENGTH`.
+- Username length. `registerSchema` uses `.max(24)`. `src/lib/username-rules.ts` has a private `USERNAME_MAX_LEN` of `24`. The schema also calls `validateUsername`. The `24` on the schema is not that constant.
+- Search escaping. `buildAdminUsersIlikePattern` in `src/lib/admin-users-search.ts` repeats the `/[%_\\]/` replace from `escapeIlikePattern` in `src/lib/ilike-pattern.ts`. It does not import that function.
+- Official table names. `OFFICIAL_TABLE_BY_TYPE` is written in `src/lib/official-library-server.ts` and again in `src/lib/official-library-get-payload.ts`. The payload file imports the fetch functions and not the map. `TABLE_MAP` in `src/app/api/official/[type]/route.ts` is the same five table names. That route was not read past the map. `OFFICIAL_LIBRARY_COUNT_TABLES` uses the key `empoweredTechniques`. `USER_LIBRARY_COLUMNAR_TABLES` uses `empowered-techniques`.
+- Description length. `CODEX_DESC_MAX_LENGTH` in `src/lib/codex-columnar-keys.ts` and `CREATOR_DESCRIPTION_MAX_LENGTH` in `src/lib/creator/creator-text-limits.ts` are both `10000`. Neither file imports the other. `CODEX_NAME_MAX_LENGTH` is `200`. The character and creator name max is `100`.
+- Redirect paths. `buildCanonicalAuthRedirectUrl` and `buildAuthRedirectUrl` call `sanitizeRedirectPath` unless `sanitizeUserRedirect` is false. That branch only checks that the string starts with `/` and does not contain `://`.
+- Admin session. `requireLiveAdminSession` calls `isAdmin`. It does not call `requireAdminSession`.
+- Dice. `rollDie` is `Math.floor(Math.random() * max) + 1`. The initiative helpers in `encounter-view-helpers.ts` and `add-combatant-modal.tsx` hardcode `20`, add acuity, and do not call `rollDie`.
+- Ids. `generateId` and `generateRollId` each build a string from `Math.random`. They do not call each other.
+- Guest sign-in. The character migration and the encounter migration each keep their own flag and their own in-flight slot. Both call `beginSingleFlight`. They do not call each other. The upload bodies were not read line by line.
+- Ability labels. `formatAbilityLabel` capitalizes the first character. It does not read `ABILITY_FILTER_OPTIONS`. `ABILITY_OPTIONS` and `ABILITY_FILTER_OPTIONS` are two lists of the same six keys.
+
+### Calls a shared component
+
+- `creator-text-limits.ts` sets `CREATOR_NAME_MAX_LENGTH` to `CHARACTER_NAME_MAX_LENGTH` and calls `clampTextToLength` and `insertTextToLength`. `campaign-roll-limits.ts` uses `CREATOR_NAME_MAX_LENGTH`.
+- `getDefaultRolePolicy` copies the fields from `ROLE_LIMITS`.
+- `rollParsedDamage` calls `rollDie` and `parseDamageRollGroups`.
+- `official-library-get-payload.ts` calls `fetchOfficialColumnarRows` and `fetchOfficialSpeciesRows`. `character-view-enrichment-server.ts` imports the collectors from `character-view-enrichment.ts`. `library-columnar.ts` imports the key lists from `library-columnar-keys.ts`.
+- `src/lib/constants/site-copy.ts` re-exports `src/lib/constants/copy`. `src/lib/data-enrichment.ts` re-exports the `data-enrichment` folder. That folder was not opened. `src/lib/validation/index.ts` re-exports `schemas.ts`. `assertCodexAdminBodyShapes` calls `codexAdminCamelBodyShapeError`.
+- `src/lib/utils/index.ts` does not re-export `motion.ts` or `stabilize-vertical-scroll.ts`. Toast imports the motion file by path. The guided catalog list imports the scroll helper by path. The barrel also omits `rowMatchesNormalizedId` and `resolveNormalizedRefLabel`.
+
+### Not read line by line
+
+- `src/lib/constants/copy/about-copy.ts`, `guided-creator-copy.ts`, `privacy-copy.ts`, and `terms-copy.ts`.
+- `src/lib/api-validation.ts`, `library-selectable-builders.ts`, `library-sync.ts`, `library-columnar.ts` past its imports, `library-persisted-contract.ts` past its imports, `codex-persisted-contract.ts` past its imports, `proficiencies.ts`, `leveled-feats.ts`, `id-constants.ts`, and `rate-limit.ts`.
+- `character-view-enrichment.ts` past its header, `character-view-enrichment-server.ts` past its imports, and `src/lib/encounter/character-resource-sync.ts` past the suppress functions.
+- `src/lib/tabletop/server.ts` and `src/lib/tabletop/tokens.ts`.
+- `src/lib/utils/duration.ts` and `src/lib/utils/string.ts`.
+- `src/lib/codex-columnar-keys.ts` past the two length constants, and the two API scan files past their headers.
+- `src/lib/crafting/crafting-session-persist.ts` past the first schemas.
+
+
+### `src/lib/character-sheet`
+
+- `src/lib/character-sheet/add-modal-existing-ids.ts`
+
+### `src/lib/crafting`
+
+- `src/lib/crafting/crafting-session-persist.ts`
+
+### `src/lib/creator`
+
+- `src/lib/creator/creator-edit-query.ts`
+- `src/lib/creator/creator-empty-overwrite.ts`
+- `src/lib/creator/creator-missing-name-message.ts`
+- `src/lib/creator/creator-save-as-copy.ts`
+- `src/lib/creator/creator-save-error.ts`
+- `src/lib/creator/creator-text-limits.ts`
+- `src/lib/creator/creator-unsaved-guard.ts`
+- `src/lib/creator/private-library-name-save.ts`
+
+### `src/lib/encounter`
+
+- `src/lib/encounter/character-resource-sync.ts`
+- `src/lib/encounter/unique-campaign-characters.ts`
+
+### `src/lib/rolls`
+
+- `src/lib/rolls/campaign-roll-attribution.ts`
+- `src/lib/rolls/campaign-roll-limits.ts`
+- `src/lib/rolls/die.ts`
+- `src/lib/rolls/modifier-label.ts`
+- `src/lib/rolls/parse-damage-string.ts`
+- `src/lib/rolls/personal-roll-log-storage.ts`
+- `src/lib/rolls/roll-log-layout.ts`
+- `src/lib/rolls/roll-parsed-damage.ts`
+
+### `src/lib/rules`
+
+- `src/lib/rules/rulebook-callout.ts`
+- `src/lib/rules/rulebook-metadata.ts`
+- `src/lib/rules/rulebook-search-load.ts`
+- `src/lib/rules/rulebook-search.ts`
+- `src/lib/rules/rulebook.ts`
+
+### `src/lib/tabletop`
+
+- `src/lib/tabletop/grid.ts`
+- `src/lib/tabletop/server.ts`
+- `src/lib/tabletop/tokens.ts`
+- `src/lib/tabletop/visibility.ts`
+
+### `src/lib/validation`
+
+- `src/lib/validation/index.ts`
+- `src/lib/validation/schemas.ts`
+
+### `src/lib/constants`
+
+- `src/lib/constants/ability-effect-blurbs.ts`
+- `src/lib/constants/copy/about-copy.ts`
+- `src/lib/constants/copy/archetype-category-copy.ts`
+- `src/lib/constants/copy/auth-copy.ts`
+- `src/lib/constants/copy/footer-copy.ts`
+- `src/lib/constants/copy/guided-creator-copy.ts`
+- `src/lib/constants/copy/index.ts`
+- `src/lib/constants/copy/landing-copy.ts`
+- `src/lib/constants/copy/legal-copy-types.ts`
+- `src/lib/constants/copy/nav-copy.ts`
+- `src/lib/constants/copy/onboarding-copy.ts`
+- `src/lib/constants/copy/path-ability-copy.ts`
+- `src/lib/constants/copy/privacy-copy.ts`
+- `src/lib/constants/copy/resources-copy.ts`
+- `src/lib/constants/copy/rules-copy.ts`
+- `src/lib/constants/copy/shared-copy.ts`
+- `src/lib/constants/copy/terms-copy.ts`
+- `src/lib/constants/creator-layer-governance.ts`
+- `src/lib/constants/site-copy.ts`
+- `src/lib/constants/skills.ts`
+
+### `src/lib/utils`
+
+- `src/lib/utils/action-type.ts`
+- `src/lib/utils/cn.ts`
+- `src/lib/utils/defined.ts`
+- `src/lib/utils/duration.ts`
+- `src/lib/utils/exact-optional.ts`
+- `src/lib/utils/id.ts`
+- `src/lib/utils/index.ts`
+- `src/lib/utils/motion.ts`
+- `src/lib/utils/normalize-id.ts`
+- `src/lib/utils/number.ts`
+- `src/lib/utils/object.ts`
+- `src/lib/utils/stabilize-vertical-scroll.ts`
+- `src/lib/utils/string.ts`
+
+### Loose files directly under `src/lib/`
+
+- `src/lib/admin-users-search.ts`
+- `src/lib/admin.ts`
+- `src/lib/api-client.ts`
+- `src/lib/api-error.ts`
+- `src/lib/api-input-validation-guard.ts`
+- `src/lib/api-input-validation-scan.ts`
+- `src/lib/api-mutation-guard-route-scan.ts`
+- `src/lib/api-mutation-guard.ts`
+- `src/lib/api-validation.ts`
+- `src/lib/attack-mode.ts`
+- `src/lib/auth-email-site-origin.ts`
+- `src/lib/auth-errors.ts`
+- `src/lib/auth-redirect.ts`
+- `src/lib/campaign-invite-code.ts`
+- `src/lib/campaign-invite.ts`
+- `src/lib/campaign-roster.ts`
+- `src/lib/character-library-section-visibility.ts`
+- `src/lib/character-library-tab-visibility.ts`
+- `src/lib/character-list-columns.ts`
+- `src/lib/character-persistence-server.ts`
+- `src/lib/character-save.ts`
+- `src/lib/character-view-enrichment-server.ts`
+- `src/lib/character-view-enrichment.ts`
+- `src/lib/choice-trait.ts`
+- `src/lib/codex-archetype-path-save-validation.ts`
+- `src/lib/codex-changelog-display.ts`
+- `src/lib/codex-changelog.ts`
+- `src/lib/codex-columnar-keys.ts`
+- `src/lib/codex-mutation-validation.ts`
+- `src/lib/codex-persisted-contract.ts`
+- `src/lib/core-rules-server.ts`
+- `src/lib/creator-save-handoff.ts`
+- `src/lib/creature-chip-tier.ts`
+- `src/lib/crop-image.ts`
+- `src/lib/data-enrichment.ts`
+- `src/lib/empty.ts`
+- `src/lib/ensure-user-profile.ts`
+- `src/lib/entity-image-enrich-server.ts`
+- `src/lib/entity-image-url.ts`
+- `src/lib/guest-character-migration.ts`
+- `src/lib/guest-character-storage.ts`
+- `src/lib/guest-encounter-migration.ts`
+- `src/lib/guest-encounter-storage.ts`
+- `src/lib/guest-migration-lock.ts`
+- `src/lib/id-constants.ts`
+- `src/lib/ilike-pattern.ts`
+- `src/lib/level-up-guide.ts`
+- `src/lib/leveled-feats.ts`
+- `src/lib/library-columnar-keys.ts`
+- `src/lib/library-columnar.ts`
+- `src/lib/library-image-write.ts`
+- `src/lib/library-mutation-validation.ts`
+- `src/lib/library-persisted-contract.ts`
+- `src/lib/library-selectable-builders.ts`
+- `src/lib/library-sync.ts`
+- `src/lib/list-row-image.ts`
+- `src/lib/modal-close-click.ts`
+- `src/lib/modal-unmount-click-guard.ts`
+- `src/lib/network-error.ts`
+- `src/lib/official-library-get-payload.ts`
+- `src/lib/official-library-server.ts`
+- `src/lib/onboarding-preferences.ts`
+- `src/lib/owner-library-for-view.ts`
+- `src/lib/placeholder-art.ts`
+- `src/lib/portrait-storage.ts`
+- `src/lib/portrait.ts`
+- `src/lib/power-variant-chips.ts`
+- `src/lib/proficiencies.ts`
+- `src/lib/profile-display-name.ts`
+- `src/lib/rate-limit.ts`
+- `src/lib/realms-image-consumers.ts`
+- `src/lib/realms-images-list-cursor.ts`
+- `src/lib/realms-images-server.ts`
+- `src/lib/realms-images.ts`
+- `src/lib/role-limits.ts`
+- `src/lib/role-policy.ts`
+- `src/lib/role-quota-messages.ts`
+- `src/lib/roll-timestamp.ts`
+- `src/lib/safe-redirect.ts`
+- `src/lib/sheet-tour-highlight.ts`
+- `src/lib/site-url.ts`
+- `src/lib/skill-extra-descriptions.ts`
+- `src/lib/species-skill-migration.ts`
+- `src/lib/stepper-value-memory.ts`
+- `src/lib/username-rules.ts`
+- `src/lib/validate-image.ts`
+
+---
+
+## Ancestry, API cache, chips, enrichment, lists, and clients
+
+68 non-test `.ts` / `.tsx` files. `src/lib/glr/validate-glr-chrome-spacing.ts` is imported only by its test. `next.config.ts` imports `src/lib/security/content-security-policy.ts` and `src/lib/security/next-app-flags.ts`. Every other file in this slice has a production importer under `src`.
+
+### Second implementations
+
+- Library lookup. `findInLibrary` matches an id with `String(reference.id)` and a name with `toLowerCase()`. It does not call `findByNormalizedId`. That helper lowercases and trims, and it also matches `docId`.
+- Power and technique enrichment. `enrichPowers` and `enrichTechniques` each call `findInLibrary` on the user library and then the public library. They do not call each other. A found power keeps the character row id. A found technique returns `libraryItem.id`. `enrichItems` is a third function. It was not read past its opening.
+- Detail options. `powerToDetailOption` calls `derivePowerDisplay`. `techniqueToDetailOption` calls `deriveTechniqueDisplay`. They do not call each other. `resolveCombatDetailOption` calls one or the other.
+- Species sizes. `getSpeciesSizeOptions` returns the `sizes` array when it has entries, and otherwise the single `size`. `combineSpeciesSizes` reads both fields on two species, unions them, and stops at 4. It does not call `getSpeciesSizeOptions`.
+- Chip variants. `gridListChipVariant` maps `warning` to `listWarning` and `success` to `listSuccess`. `descriptorChipVariantForGridList` maps those same categories to `warning` and `success`. `gridListChipStyleVariant` calls one or the other. `partChipVariant` and `rarityChipVariant` are separate maps.
+- Supabase clients. `src/lib/supabase/client.ts`, `src/lib/supabase/server.ts`, and `createPublicClient` each build a client. They do not call each other. The browser and server factories use the publishable key and cookies. The public factory uses the publishable key and no cookies. `createServiceRoleClient` uses the service-role key.
+- Session user. `sessionUserFromClaims` reads `sub`. `sessionUserFromAuthUser` reads `user.id`. `requireAuth` calls `getSession`. `requireLiveUser` calls `auth.getUser` and does not call `getSession`.
+- Page access. `assertCharacterSheetHttpAccess` and `assertCampaignDetailHttpAccess` each call `fetchInternalApi` and then `denyResourcePage`. The character check returns early for a guest id. They do not call each other.
+
+### Calls a shared component
+
+- `enrichCharacterData` calls `enrichPowers`, `enrichTechniques`, and `enrichItems`. `getCharacterAllowedSizes` calls `getSpeciesSizeOptions`.
+- `officialEntityBrowseChrome` calls `glrListChrome`. `createBrowserSupabaseCookieMethods` calls `createSupabaseAuthCookieMethods`. The server client uses that same cookie helper.
+- `src/proxy.ts` calls `updateSession` and `redirectOAuthCodeToCallback`. `next.config.ts` uses `ACCOUNT_PATH_ALIAS_REWRITE` and `buildContentSecurityPolicy`.
+- `src/lib/glr/index.ts` does not re-export `validate-glr-chrome-spacing.ts`. That file says the barrel must not. The barrel also omits `assertRowFactCoverage`. Tests import that function from the file. `src/lib/observability/index.ts` does not re-export `sentry-client-filter.ts`. `src/instrumentation-client.ts` imports it by path. `src/lib/detail-option/index.ts` does not re-export `format-recovery.ts`. `builders.ts` imports it.
+
+### Not read line by line
+
+- `src/lib/ancestry/ancestry-selection.ts` past `combineSpeciesSizes`.
+- `src/lib/chip/list-row-metadata.ts`.
+- `src/lib/data-enrichment/clean-for-save.ts`, `enrich-items.ts` past its opening, and `enrich-character.ts` past the three calls.
+- `src/lib/detail-option/compact-facts.ts`.
+- `src/lib/glr/glr-fact-catalog.ts`, `glr-density.ts`, `resolve-glr-fact-layout.ts`, `validate-glr-facts.ts`, and `validate-glr-chrome-spacing.ts` past its header.
+- `src/lib/supabase/middleware.ts` past `isHardProtectedPath`, `supabase-auth-cookies.ts` past `createSupabaseAuthCookieMethods`, `database.ts`, `cached-public-read.ts`, and `verified-claims.ts`.
+- `src/lib/tooltips/floating-help.tsx` past the placement helper.
+
+
+### `src/lib/ancestry`
+
+- `src/lib/ancestry/ancestry-selection.ts`
+- `src/lib/ancestry/species-size-options.ts`
+
+### `src/lib/api`
+
+- `src/lib/api/public-catalog-cache-invalidation.ts`
+- `src/lib/api/public-catalog-cache-purge.ts`
+- `src/lib/api/public-catalog-list-cache-tags.ts`
+- `src/lib/api/public-cdn-cache.ts`
+
+### `src/lib/chip`
+
+- `src/lib/chip/chip-data-helpers.ts`
+- `src/lib/chip/chip-size-tokens.ts`
+- `src/lib/chip/descriptor-chip-variants.ts`
+- `src/lib/chip/expandable-chip-props.ts`
+- `src/lib/chip/expandable-chip-shell.ts`
+- `src/lib/chip/full-row-expand-layout.ts`
+- `src/lib/chip/grid-list-chip-utils.ts`
+- `src/lib/chip/grid-list-chip-variant.ts`
+- `src/lib/chip/list-row-metadata.ts`
+- `src/lib/chip/part-chip-variant.ts`
+- `src/lib/chip/part-chips-from-display.ts`
+- `src/lib/chip/part-data.ts`
+- `src/lib/chip/rarity-chip-variant.ts`
+- `src/lib/chip/species-skill-chips.ts`
+
+### `src/lib/data-enrichment`
+
+- `src/lib/data-enrichment/clean-for-save.ts`
+- `src/lib/data-enrichment/enrich-character.ts`
+- `src/lib/data-enrichment/enrich-items.ts`
+- `src/lib/data-enrichment/enrich-powers.ts`
+- `src/lib/data-enrichment/enrich-techniques.ts`
+- `src/lib/data-enrichment/find-in-library.ts`
+- `src/lib/data-enrichment/types.ts`
+
+### `src/lib/detail-option`
+
+- `src/lib/detail-option/builders.ts`
+- `src/lib/detail-option/combat-builder.ts`
+- `src/lib/detail-option/compact-facts.ts`
+- `src/lib/detail-option/equipment-builder.ts`
+- `src/lib/detail-option/format-recovery.ts`
+- `src/lib/detail-option/index.ts`
+
+### `src/lib/glr`
+
+- `src/lib/glr/glr-chrome-spacing-norms.ts`
+- `src/lib/glr/glr-density.ts`
+- `src/lib/glr/glr-fact-catalog.ts`
+- `src/lib/glr/glr-list-chrome.ts`
+- `src/lib/glr/glr-surface-bindings.ts`
+- `src/lib/glr/index.ts`
+- `src/lib/glr/official-entity-browse-chrome.ts`
+- `src/lib/glr/resolve-glr-fact-layout.ts`
+- `src/lib/glr/validate-glr-chrome-spacing.ts`
+- `src/lib/glr/validate-glr-facts.ts`
+
+### `src/lib/observability`
+
+- `src/lib/observability/config.ts`
+- `src/lib/observability/index.ts`
+- `src/lib/observability/report-error.ts`
+- `src/lib/observability/sentry-client-filter.ts`
+
+### `src/lib/routes`
+
+- `src/lib/routes/funnel-chrome.ts`
+
+### `src/lib/security`
+
+- `src/lib/security/content-security-policy.ts`
+- `src/lib/security/next-app-flags.ts`
+
+### `src/lib/server`
+
+- `src/lib/server/assert-resource-http-access.ts`
+- `src/lib/server/internal-api-fetch.ts`
+- `src/lib/server/resource-access-unavailable.ts`
+
+### `src/lib/supabase`
+
+- `src/lib/supabase/auth-cookies.ts`
+- `src/lib/supabase/browser-auth-cookies.ts`
+- `src/lib/supabase/cached-public-read.ts`
+- `src/lib/supabase/client.ts`
+- `src/lib/supabase/database.ts`
+- `src/lib/supabase/middleware.ts`
+- `src/lib/supabase/proxy-oauth-redirect.ts`
+- `src/lib/supabase/public-client.ts`
+- `src/lib/supabase/server.ts`
+- `src/lib/supabase/session.ts`
+- `src/lib/supabase/supabase-auth-cookies.ts`
+- `src/lib/supabase/verified-claims.ts`
+
+### `src/lib/tooltips`
+
+- `src/lib/tooltips/floating-help.tsx`
+- `src/lib/tooltips/markdown-lite.tsx`
+
+### `src/lib/ui`
+
+- `src/lib/ui/status-surface-classes.ts`
+
+---
+
+## Game formulas and creator calculators the barrels re-export
+
+20 non-test files. Every one has a production importer. The sibling files those barrels do not re-export were opened in the section below.
+
+### Second implementations
+
+- Currency growth. `calculateCreatureCurrency` in `src/lib/game/formulas.ts` uses `CREATURE_CONSTANTS.BASE_CURRENCY` and `CREATURE_CONSTANTS.CURRENCY_GROWTH`, both `200` and `1.45`. `computeStartingCurrency` in `src/lib/guided-creator/equipment-currency.ts` uses `CHARACTER_STARTING_CURRENCY` (`200`) and a private `CURRENCY_GROWTH` of `1.45`. It does not import the creature constant. Level 1 returns the character constant. Above that it uses the same `Math.ceil(base * growth ** (level - 1))` shape.
+- Damage text. `formatPowerDamage` joins `amount + "d" + size + type` for an array. `formatTechniqueDamage` returns `"+" + amount + "d" + size` for one object. They do not call each other.
+- Action from parts. `power-calc.ts` and `technique-calc.ts` each have a private `computeActionType`. Both call `deriveActionType`. The technique one also matches the names `Reaction`, `Quick or Free Action`, and `Long Action`. The power one does not. `computeActionTypeFromSelection` in both files is the same `actionTypeFromSelection` from `src/lib/calculators/action-type.ts`.
+- Inventory kind. `normalizeCreatureInventoryType` returns `equipment` when the type is not weapon, armor, or shield. `normalizeArmamentKind` in `src/lib/library/official-item-list.ts` returns `null` for that case. They do not call each other.
+- Creature speed. `calculateCreatureSpeed` calls `calculateSpeed` and then adds Speedy and Slow. It is not a second speed formula.
+
+### Calls a shared component
+
+- `derivePowerDisplay` calls `deriveComposedPowerDisplay`, and if that returns null it calls `derivePlainPowerDisplay`. `derivePlainPowerDisplay` calls `calculatePowerCosts`.
+- `calculateEmpoweredTechniqueCosts` calls `calculatePowerCosts` and `calculateTechniqueCosts`, then multiplies the power energy by `getTechniquePartEnergyContribution`. `calculateTechniqueCosts` writes that same base-plus-options sum again and does not call `getTechniquePartEnergyContribution`.
+- `buildEmpoweredAdvancedCalculationGroups` calls `buildPowerEnergySectionGroups` and `buildTechniqueEnergySectionGroups`. The technique breakdown imports `formatEnergyNumber` and `formatPercentagePartModifier` from the power breakdown. It keeps its own section id list: action, attack, damage, parts.
+- `abilityDefenseBonusesFromAbilities` calls `calculateDefenses`. `formulas.ts` imports the fallback numbers from `constants.ts`.
+
+### Not read line by line
+
+- See **Health, energy, and cost math** for formula bodies. Character-check and path files listed under **Not read line by line** below are mapped in **Character-check and path math** when read.
+
+### Files
+
+- `src/lib/game/calculations.ts`
+- `src/lib/game/constants.ts`
+- `src/lib/game/creature-inventory.ts`
+- `src/lib/game/creature-level-display.ts`
+- `src/lib/game/formulas.ts`
+- `src/lib/game/unarmed-prowess.ts`
+- `src/lib/calculators/empowered-energy-breakdown.ts`
+- `src/lib/calculators/empowered-overlap-parts.ts`
+- `src/lib/calculators/empowered-technique-calc.ts`
+- `src/lib/calculators/item-calc.ts`
+- `src/lib/calculators/item-cost-breakdown.ts`
+- `src/lib/calculators/mechanic-builder.ts`
+- `src/lib/calculators/no-attack-creator-warning.ts`
+- `src/lib/calculators/power-calc.ts`
+- `src/lib/calculators/power-composition.ts`
+- `src/lib/calculators/power-energy-breakdown.ts`
+- `src/lib/calculators/power-mechanic-constants.ts`
+- `src/lib/calculators/technique-calc.ts`
+- `src/lib/calculators/technique-creator-section-costs.ts`
+- `src/lib/calculators/technique-energy-breakdown.ts`
+
+`src/lib/game/index.ts` and `src/lib/calculators/index.ts` re-export those modules. A dropped file in either folder fails `scripts/validate-feature-index.js`.
+
+---
+
+## Public codex, library, sheets, campaigns, auth, and the styleguide
+
+Every non-test file in these folders has a production importer, or it is a page, layout, or route that Next loads. None of these files were unused.
+
+### Second implementations
+
+- My Codex. Seven tabs return `CodexMyCodexEmpty`. `CodexEquipmentTab` returns its own `EmptyState` when `codexMode` is `my`. `CodexSpeciesTab` loads `useUserSpecies` in that mode and does not render `CodexMyCodexEmpty`.
+- Create links. `src/app/(main)/library/page.tsx` keeps a `TABS` list of create hrefs and labels. `src/app/(main)/library/components/library-entity-tab.types.ts` keeps another. The enhanced label is `From Crafting` on the page and `Go to Crafting` in `ENHANCED_LIBRARY_LABELS`. They do not import each other.
+- Character cap alert. `src/app/(main)/characters/page.tsx` renders an `Alert` titled `Character limit reached` from `useCharacterQuota`. `CharacterQuotaAlert` in `src/app/(main)/characters/use-character-quota.tsx` renders that same title. The characters page does not render `CharacterQuotaAlert`. The new-character chooser does.
+- Power cap. The library page calls `isAtRoleQuota` and renders its own `Alert` titled `Power limit reached`. It does not call `useCharacterQuota`.
+- Password length. `changeAccountPasswordAction` in `src/app/(auth)/actions.ts` rejects `newPassword.length < 6`. `resetPasswordSchema` in `src/app/(auth)/reset-password/page.tsx` uses `.min(8)`. `loginWithPasswordAction` in `src/app/(auth)/auth-actions.ts` rejects only an empty password, then calls `signInWithPassword`. Login and register import `loginSchema` and `registerSchema`.
+- Upload size. `src/app/api/upload/profile-picture/route.ts` and `src/app/api/upload/portrait/route.ts` each set `MAX_SIZE` to `5 * 1024 * 1024` and call `detectImageMime`. Neither imports the other's constant.
+- Skill defaults. `prepareMixedEncounter` and `prepareSkillEncounter` each fill missing skill fields. Mixed does not call the skill function. Mixed sets `useInitiative` to true. Skill fills missing success and failure counts through `computeSkillRollResult`.
+- Library tab clamp. `useCharacterSheetPage` and the campaign character view page each call `resolveLibraryActiveTab` and then `setLibraryActiveTab` when the resolved tab differs. The view page does not call `useCharacterSheetPage`.
+- Campaign character cap. `joinCampaignAction` and `addCharacterToCampaignAction` each compare the roster length to `MAX_CAMPAIGN_CHARACTERS` before their own later work. They do not call each other. The constants live in `src/app/(main)/campaigns/constants.ts`.
+
+### Calls a shared component
+
+- The nine public codex tabs render `CodexBrowseListShell`. Feats render `CodexFeatRow`. Skills render `CodexSkillRow`. The other tabs render `GridListRow`.
+- `src/app/(main)/codex/page.tsx` renders those nine tabs twice, once for each `codexMode`.
+- Library powers, techniques, items, creatures, and enhanced items render `UserLibraryEntityTabShell`. Powers, techniques, items, and creatures also call `useLibraryEntitySync` and `useLibraryDuplicateConfirm`.
+- `LibraryPublicContent` has one `useAddToLibraryFlow`. Powers, techniques, items, and creatures each render the matching `Official*List`.
+- `src/app/(detail)/characters/[id]/page.tsx` renders `CharacterSheetRoute`. That route calls `useCharacterSheetPage`, which calls `useCharacterSheetPageData`, `useCharacterSheetPageUi`, and `useCharacterSheetActions`. `calculateStats` in `src/app/(detail)/characters/[id]/character-sheet-utils.ts` returns `calculateAllStats`. `CharacterSheetModals` renders the sheet modals from context.
+- `src/app/(detail)/campaigns/[id]/page.tsx` renders `campaign-detail-route.tsx`, which renders the campaign detail components. The campaign character view page calls `useCharacterSheetDerived` and `CharacterSheetBody`. It does not render `CharacterSheetModals`.
+- Mixed encounter renders `CombatEncounterView` and `SkillEncounterView` and one `RollLog`. The skill page renders `SkillEncounterView` with `showRollLog`. Both call `useEncounterPlayPage`.
+- The campaigns page calls `createCampaignAction` and `joinCampaignAction`. The join button uses `isValidInviteCodeFormat`, and the action calls that same function.
+- `isStyleguideServed` returns the opposite of `isProductionIndexingEnabled`. The styleguide layout calls it and then `notFound`.
+
+### Not read line by line
+
+- Codex tab bodies past the My Codex branch: `CodexFeatsTab.tsx`, `CodexSkillsTab.tsx`, `CodexSpeciesTab.tsx`, `CodexArchetypesTab.tsx`, `CodexEquipmentTab.tsx`, `CodexPartsTab.tsx`, `CodexPropertiesTab.tsx`, `CodexTraitsTab.tsx`, `CodexCreatureFeatsTab.tsx`.
+- Library tab bodies past the shell: `LibraryPowersTab.tsx`, `LibraryTechniquesTab.tsx`, `LibraryItemsTab.tsx`, `LibraryCreaturesTab.tsx`, `LibraryEnhancedTab.tsx`, and `UserLibraryEntityTabShell.tsx`.
+- `use-character-sheet-page-data.ts`, `use-character-sheet-page.ts` past the hook calls, `use-character-sheet-page-ui.ts` past the visibility save, `character-sheet-route.tsx` past the model fields, and `CharacterSheetModals.tsx` past the context read.
+- The campaign character view page past `useCharacterSheetDerived`, and `campaign-detail-route.tsx` past the roster.
+- `src/app/(main)/campaigns/page.tsx` past the join handler, `src/app/(main)/campaigns/actions.ts` past the two roster-length checks, and `src/app/(main)/campaigns/[id]/tabletop/page.tsx` past its imports.
+- `src/app/(auth)/actions.ts` past the new-password length check, `src/app/(auth)/auth-actions.ts` past the empty-password check, and the login, register, and reset-password form bodies.
+- `src/app/api/upload/profile-picture/route.ts` past the size check, and `src/app/dev/styleguide/page.tsx` past its imports.
+
+### Files that were missing from this index
+
+- `src/app/(main)/library/components/UserLibraryEntityTabShell.tsx`
+- `src/app/(main)/library/components/library-entity-tab.types.ts`
+- `src/app/(main)/library/hooks/use-library-entity-sync.ts`
+- `src/app/(main)/library/hooks/use-library-duplicate-confirm.ts`
+- `src/app/(detail)/characters/[id]/CharacterSheetModals.tsx`
+- `src/app/(detail)/characters/[id]/character-sheet-utils.ts`
+- `src/app/(main)/characters/use-character-quota.tsx`
+- `src/app/(main)/campaigns/constants.ts`
+- `src/app/(auth)/forgot-password/forgot-password-action-result.ts`
+- `src/app/(auth)/login/login-action-result.ts`
+- `src/app/(main)/encounters/[id]/mixed/prepare-mixed-encounter.ts`
+- `src/app/(main)/encounters/[id]/skill/prepare-skill-encounter.ts`
+- `src/app/api/upload/profile-picture/profile-picture-storage.ts`
+- `src/app/dev/styleguide/styleguide-gate.ts`
+---
+
+## Hooks, services, and stores the barrels re-export
+
+Every non-test file under `src/hooks`, `src/services`, and `src/stores` has a production importer, or it is a barrel. The barrel-gap names already listed above were not re-read. None of the files in this section were unused.
+
+### Second implementations
+
+- Name lookup. `findLibraryItemsByName` in `src/services/library-service.ts` asks the server with `?name=`. `findOfficialLibraryItemByName` in the same file loads the official list and compares trimmed lowercase names. They do not call each other.
+- Trait lookup. `findTraitByIdOrName` in `src/hooks/codex-types.ts` matches id, then lowercase name, then a sanitized name. `findByIdOrName` in `src/lib/id-constants.ts` matches id, then a trimmed lowercase name. They do not call each other.
+- Empowered rows. `useLoadModalLibrary` concatenates the user list and the public list and calls `buildEmpoweredPowerSelectableItem`. `loadEmpoweredRawItems` also merges those lists, then drops a repeated id, and the load modal does not call it.
+- Official enhanced items. `useCreateOfficialEnhancedItem` and `useDeleteOfficialEnhancedItem` call `apiFetch` on `/api/official/enhanced-items`. User enhanced items call `src/services/enhanced-items-service.ts`. The official mutations do not call that service.
+- Character reads. `getCharacter` uses `/api/characters`. `getCampaignCharacterForView` uses `/api/campaigns/.../characters/...`. `useCampaignCharacterView` calls the campaign function. It does not call `getCharacter`.
+
+### Calls a shared component
+
+- `useCraftingSessions`, `useCraftingSession`, `useCreateCraftingSession`, `useSaveCraftingSession`, and `useDeleteCraftingSession` call `src/services/crafting-service.ts`. That service is `createResourceClient('/api/crafting')`.
+- `useEncounters`, `useEncounter`, `useCreateEncounter`, and `useDeleteEncounter` call `src/services/encounter-service.ts`. `useSaveEncounter` calls `persistEncounterSave`. That service is `createResourceClient('/api/encounters')`.
+- `useCampaigns`, `useCampaignsFull`, `useCampaign`, `useCampaignCharacterView`, and `useCampaignCharacterEncounters` call `src/services/campaign-service.ts`.
+- `useCampaignRolls` calls `getCampaignRolls`.
+- `useCharacters` calls `getCharacters` and, when signed out or when guest sheets remain, `getGuestCharactersList`. `useCharacter`, `useSaveCharacter`, `useDeleteCharacter`, and `useDuplicateCharacter` call `src/services/character-service.ts`.
+- `useOfficialLibrary`, `useOfficialLibraryCounts`, and `useAddOfficialToLibrary` call `src/services/library-service.ts`. `useUserPowers`, `useUserTechniques`, `useUserEmpoweredTechniques`, `useUserItems`, `useUserCreatures`, and `useUserSpecies` call one private `useUserLibrary`. `useUserLibraryCounts` calls `fetchUserLibraryCounts`.
+- `useCodexFeats`, `useCodexSkills`, `useCodexSpecies`, `useCodexTraits`, `useCodexParts`, `useCodexItemProperties`, `useCodexEquipment`, `useCodexArchetypes`, and `useCodexCreatureFeats` call `useCodexCollection`. `useCodexPowerParts` and `useCodexTechniqueParts` call that same helper with the `parts` collection. `useCodexFull` calls `fetchCodex`.
+- `useProfile` and `useAccountProfile` share `userProfileQueryKey` and `fetchUserProfile`. Account profile keeps email and role. The header profile does not.
+- `useGuidedEquipmentL2Catalog` calls `buildGuidedEquipmentEligibilityContext`. It does not call `useGuidedEquipmentCatalog`.
+- `useCreatorSave` calls `saveToLibrary` and `saveToOfficialLibrary`.
+- `useTabletopScene`, `useActiveCampaignTabletop`, and `useTabletopMutations` import `src/services/tabletop-service.ts`.
+- `buildSelectableItem` in `src/hooks/add-library-item/build-selectable-item.ts` calls `buildEmpoweredPowerSelectableItem` for an empowered power and `buildSelectableItem` from `src/lib/library-selectable-builders.ts` for the other types. The load modal imports the library-builders function, not the add-library dispatcher.
+- `useAdmin` calls `useAuth` and `/api/admin/check`. `useCharacterResourceSync` calls `scheduleCharacterResourceSync`. `getGameRulesFallback` returns the fallback object built from `src/lib/game/constants.ts`. `useGameRules` uses that object when the query has no data.
+
+### Not read line by line
+
+- `src/hooks/use-auto-save.ts` past `flushDirtyAutosave`.
+- `src/hooks/use-creator-save.ts` past the two library save calls.
+- `src/hooks/use-game-rules.ts` past `mergeCoreRules` and `getGameRulesFallback`. The fallback object was not opened field by field.
+- `src/hooks/use-load-modal-library.ts` past the empowered branch.
+- `src/hooks/use-tabletop.ts` past its service imports.
+- `src/hooks/use-user-library.ts` past `userSpeciesToSpecies`.
+- `src/services/character-service.ts` past the start of `getCharacter`, and `src/services/tabletop-service.ts` past `updateTabletopScene`.
+- `src/hooks/add-library-item/load-raw-items.ts` past `loadEmpoweredRawItems`, and `src/hooks/add-library-item/map-library-to-character.ts`.
+- The barrel-gap files already named under hooks, services, and stores.
+
+### Files
+
+- `src/hooks/codex-types.ts`
+- `src/hooks/use-admin.ts`
+- `src/hooks/use-auto-save.ts`
+- `src/hooks/use-campaign-rolls.ts`
+- `src/hooks/use-campaigns.ts`
+- `src/hooks/use-character-resource-sync.ts`
+- `src/hooks/use-codex.ts`
+- `src/hooks/use-crafting.ts`
+- `src/hooks/use-creator-save.ts`
+- `src/hooks/use-encounters.ts`
+- `src/hooks/use-enhanced-items.ts`
+- `src/hooks/use-game-rules.ts`
+- `src/hooks/use-guided-equipment-catalog.ts`
+- `src/hooks/use-guided-equipment-l2-catalog.ts`
+- `src/hooks/use-is-client.ts`
+- `src/hooks/use-load-modal-library.ts`
+- `src/hooks/use-official-library.ts`
+- `src/hooks/use-profile.ts`
+- `src/hooks/use-tabletop.ts`
+- `src/hooks/use-user-library.ts`
+- `src/hooks/add-library-item/build-empowered-selectable-item.ts`
+- `src/hooks/add-library-item/build-selectable-item.ts`
+- `src/hooks/add-library-item/load-raw-items.ts`
+- `src/hooks/add-library-item/map-library-to-character.ts`
+- `src/hooks/add-library-item/normalize-public.ts`
+- `src/hooks/add-library-item/types.ts`
+- `src/services/character-service.ts`
+- `src/services/library-service.ts`
+- `src/services/tabletop-service.ts`
+
+---
+
+## Game and calculator siblings, and the formula bodies
+
+Every non-test file under `src/lib/game` and `src/lib/calculators` is already required by the checker. `src/lib/calculators/power-composition.fixture.ts` is imported by tests, not by app pages. The exported names in these files that no other production file mentions are still called inside the same file or by a test. No unused export turned up in that check.
+
+### Second implementations
+
+- Path type. `getArchetypeType` in `src/lib/game/formulas.ts` returns `powered-martial` when both proficiencies are above 0, and `none` when both are 0. `inferArchetypeCategoryFromCharacter` in `src/lib/game/archetype-edit.ts` returns `powered-martial` for that split, and `power` when both are 0, unless a stored type is set. `archetypeCategoryForEnergy` in `src/lib/game/calculations.ts` returns `undefined` when both are above 0 and no type is stored. They do not call each other.
+- Ability cost. `getAbilityIncreaseCost` and `calculateAbilityScoreCost` use different variables (`currentValue >= threshold` vs `target > threshold`) but each single-step cost matches. The loop does not call `getAbilityIncreaseCost`.
+- Player health and creature health. `calculateMaxHealth` adds a base health. `calculateCreatureMaxHealth` in `src/lib/game/encounter-utils.ts` does not. It does not call `calculateMaxHealth` or `calculateHealthEnergyPool`.
+- Item property sums. `calculateItemCosts` and `analyzeItemCosts` agree on IP and property currency per row. See **Health, energy, and cost math** for the guarded disagreement list and for copies that match.
+- Energy text. `formatEnergyNumber` and `formatEnergyIntermediate` disagree on decimals by design; see `math-disagree-intentional:format-energy-intermediate-vs-format-energy-number` in that section.
+- Breakdown helpers. `nearlyEqual` is written in `power-energy-breakdown.ts`, `technique-energy-breakdown.ts`, `item-cost-breakdown.ts`, and `empowered-energy-breakdown.ts`. `formatOptionSuffix` is written in the power file and the technique file. They do not call each other.
+- Technique part energy. `getTechniquePartEnergyContribution` and the sum inside `calculateTechniqueCosts` are the same base-plus-options product. They do not call each other. `partEnergyContribution` in `technique-energy-breakdown.ts` is that sum again.
+
+### Calls a shared component
+
+- `calculateAllStats` and `computeMaxHealthEnergy` call `calculateMaxHealth` and `calculateMaxEnergyForArchetype`. `calculateMaxEnergyForArchetype` calls `calculateMaxEnergy`. `abilityPointsSpent` in `character-legality.ts` calls `calculateAbilityScoreCost`. `buildSuggestedAbilityArray` calls `calculateAbilityPoints` and `calculateAbilityScoreCost`.
+- `applyProficiencyGainForLevelUp` and `applyProficiencyLossForLevelDown` call `calculateProficiency`. `applyLevelDownProficiencyUpdates` calls `applyProficiencyLossForLevelDown`. A mixed split returns null from the gain function.
+- `resolveArmorDamageReduction` calls `deriveDamageReductionFromProperties`. `creatureArmorDamageReduction` picks the highest currency cost, then calls `resolveArmorDamageReduction`. `pickArmorEquipIndex` picks the highest damage reduction. It does not call `creatureArmorDamageReduction`.
+- `checkFeatRequirements` calls `calculateDefenses` and `calculateSpeed`. `feat-requirements.ts` also imports `getSkillBonusForFeatRequirement`.
+- `buildEmpoweredAdvancedCalculationGroups` was read through the combined-energy rows. It calls the power and technique section builders. `empowered-energy-breakdown.ts` and `empowered-overlap-parts.ts` and `dice-splits.ts` and `part-training-points.ts` were read. `computePartTrainingPointsRaw` and `computePartTrainingPoints` ignore the power-versus-technique argument.
+- `formatPowerDamage` and `formatTechniqueDamage` were read through the return. They still do not call each other.
+- `src/lib/game/calculations.ts` was read through `computeMaxHealthEnergy`. `encounter-utils.ts`, `creature-ability-bounds.ts`, `loadout-entries.ts`, `saved-part-id.ts`, `mixed-encounter-view-tab.ts`, `skill-allocation-add.ts`, `suggested-abilities.ts`, `path-ability-labels.ts`, `equipment-equipped.ts`, `creature-power-instances.ts`, and `dedupe-saved-parts.ts` were read.
+
+### Not read line by line
+
+- Health, energy, and cost formulas in the section above are read through that pass’s scope. Skill helpers in `formulas.ts` after innate energy and `skill-allocation.ts` cost helpers are in **Skill and allocation math** below.
+- Character-check and path math is in **Character-check and path math** below. Creature creator budgets are in **Creature creator budget math**. Player proficiency caps and guided TP wiring are in **Player proficiency and training math**. Defense targeting and weapon attack helpers are in **Defense targeting and weapon attack math**. Crafting tables, requirements, and outcome math are in **Crafting cost math**. Size categories and carrying capacity are in **Size and path recommendation math**. `creator-cache.ts` has no cost or point formulas (skipped).
+
+---
+
+
+## Health, energy, and cost math (line-by-line pass)
+
+This pass read the health, energy, and currency formulas in the code through the remainder named below. Skill bonus and allocation helpers are in **Skill and allocation math**. This is a map of what the code does, not a rules balance sign-off.
+
+### Read to the end
+
+- `calculateMaxHealth` and `computeMaxHealthEnergy` in `src/lib/game/calculations.ts`. Player max health starts from a base (default 12 from rules), adds allocated health points, and adds vitality. If vitality is negative, it is added once. If vitality is zero or higher, it is multiplied by level. When vitality is the archetype ability, the code uses strength instead of vitality for that piece. The result is clamped at zero.
+- `calculateMaxEnergy`, `calculateMaxEnergyForArchetype`, and `resolveEnergyArchetypeAbility` in the same file. Max energy is archetype-ability score × level plus allocated energy points, clamped at zero. Powered-Martial uses the higher of the martial and power ability names unless the path type forces one side.
+- `calculateCreatureMaxHealth` and `calculateCreatureMaxEnergy` in `src/lib/game/encounter-utils.ts`. Creature max health has no player base health. It uses vitality × level when vitality is not negative, otherwise vitality once, plus hit points from the pool. Creature max energy uses the highest non-vitality primary ability × level plus energy points. It does not call the player functions.
+- `calculateHealthEnergyPool` and `allocateHealthEnergyPool` in `src/lib/game/formulas.ts`. The pool grows by level from rules defaults. Allocation puts pool points toward energy first, up to the highest power or technique energy cost, then puts the rest toward health.
+- `getAbilityIncreaseCost` and `calculateAbilityScoreCost` in `src/lib/game/formulas.ts`. One step from the current score uses `currentValue >= threshold` to pick cost 1 vs 2. The total-to-reach loop uses `target > threshold` for the same split. Each single-step cost matches between the two functions.
+- `calculateCreatureCurrency` in `src/lib/game/formulas.ts` and `computeStartingCurrency` in `src/lib/guided-creator/equipment-currency.ts`. Both use base 200 and growth 1.45 with `Math.ceil(base × growth ** (level − 1))` above level 1. They read constants from different files but the numbers match today.
+- `analyzePowerEnergy`, `calculatePowerCosts`, `finalizePowerEnergy`, and `derivePlainPowerDisplay` in `src/lib/calculators/power-calc.ts`. Power energy adds flat parts, multiplies percentage parts, and applies a duration equation: `(flat_normal × perc_all) + ((dur_all + 1) × flat_duration × perc_dur) − (flat_duration × perc_dur)`. Published energy rounds up once and can floor at 1 EN when there was positive flat energy.
+- `analyzeTechniqueEnergy` and `calculateTechniqueCosts` in `src/lib/calculators/technique-calc.ts` and `src/lib/calculators/technique-energy-breakdown.ts`. Technique energy is flat parts summed, then multiplied by the product of percentage parts. Both paths use the same math and call `finalizePowerEnergy` for publish.
+- `calculateEmpoweredTechniqueCosts` in `src/lib/calculators/empowered-technique-calc.ts`. It runs the power and technique cost functions, multiplies only the technique percentage-part product into the power raw energy, adds the full technique raw energy, then applies the same publish floor.
+- `formatEnergyIntermediate` in `src/lib/calculators/power-composition.ts` and `formatEnergyNumber` in `src/lib/calculators/power-energy-breakdown.ts` (via `formatCost` in `src/lib/game/creator-constants.ts`). Both format intermediate numbers for breakdown UIs; see disagreements.
+- `resolvePowerComposition` in `src/lib/calculators/power-composition.ts` through its return. Composed power energy sums shared chassis energy, variant extras, choice max, modify sums, randomize face averages, and reverse drawback discounts, then calls `finalizeCompositionEnergy` (same floor as plain powers).
+- `calculateItemCosts`, `analyzeItemMarketCurrency`, `resolveItemMarketPricing`, and `deriveItemDisplay` in `src/lib/calculators/item-calc.ts`. Item points and property currency sum base plus option × level per property. Market currency picks a rarity band from total IP, then `band_low × (1 + 0.125 × property currency sum)`, clamps to the band min and max, then floors for display.
+- `analyzeItemCosts` and `buildItemAdvancedCalculationGroups` in `src/lib/calculators/item-cost-breakdown.ts`. Breakdown lines repeat the same per-property IP and currency sums as `calculateItemCosts`; totals add rarity and rounded-down market currency.
+- `calculateArchetypeProgression` in `src/lib/game/formulas.ts` through its return. Archetype progression sets innate pools, thresholds, and bonus feat slots from proficiencies and milestone choices.
+- `buildMechanicParts` and `calculateDamageOptionLevel` in `src/lib/calculators/mechanic-builder.ts` through the return. Damage uses `floor((dice × size − 4) / 2)` for option 1. Range uses `steps − 1` for Power Range. Duration maps UI values to codex option levels (including minute/hour/day index tables). Split dice calls `computeSplits` in `dice-splits.ts`. Technique attack mode adds No Attack or Add Weapon at level 0.
+- `buildPowerPartsPayloadForCost` in `src/lib/calculators/power-calc.ts`. Without creator-style fields it maps saved parts and rebuilds weapon attack from `attackMode`. With creator fields it keeps user/advanced saved parts, rebuilds mechanics via `buildMechanicParts`, keeps legacy auto-mechanic rows only when the rebuild missed that name, then appends weapon attack. Every cost path uses the merged payload in `calculatePowerCosts`.
+- `rawEnergyOf`, `beneficialTabExtra`, `ownRangeEnergy`, and `reverseDrawbackEnergy` in `src/lib/calculators/power-composition.ts`. Tab energy is the difference of two `calculatePowerCosts` runs on footprints (not a hand-written delta). Range extra charges the full tab range, not a refund when shorter than Shared.
+- `powerCompositionEnergyLines`, `deriveComposedPowerDisplay`, and `formatPowerCompositionSummary` in `src/lib/calculators/power-composition.ts`. They format `resolvePowerComposition` results; published `energy` and `tp` on the display come from that resolution, not a second calculator.
+- `weaponRangeSpaceLadder`, `weaponRangeSpacesFromOpLevel`, `deriveWeaponRangeConfig`, `formatRange`, and `resolveWeaponRangeDisplay` in `src/lib/calculators/item-calc.ts`. Thrown, reach, and ranged use fixed space ladders from `ITEM_PROPERTY_CONSTANTS`; option level picks the ladder index (clamped). Legacy `rangeLevel` is 1-based and maps to ranged option `level − 1`. Bare stored integers without properties are treated as corrupt and show Melee.
+- `sumInnatePowerEnergyCosts` and `calculateRemainingInnateEnergy` in `src/lib/game/formulas.ts`. Remaining innate budget is `maxInnateEnergy` minus the sum of `cost` on innate powers. It does not call `calculatePowerCosts`.
+- `computePartTrainingPoints` in `src/lib/calculators/part-training-points.ts`. Training points round base plus option products up once per part; power and technique share the same function.
+- `computeSplits` in `src/lib/calculators/dice-splits.ts`. One split formula shared by mechanic builder and calculators.
+
+### Still not read line by line (health / energy / cost scope)
+
+- None in this slice.
+
+### Disagreements
+
+These IDs are required; dropping a line makes `scripts/validate-feature-index.js` exit 2. Prefix marks intent: `math-disagree-intentional` (by design), `math-disagree-bug` (code bug), `math-disagree-deferred` (known gap; fix later), `math-disagree-unclassified` (not yet classified).
+
+**Intentional (player vs creature, power vs technique, formatting, composition display)**
+
+- math-disagree-intentional:player-vs-creature-max-health: **Intentional.** Players and creatures use different health formulas on purpose. `calculateMaxHealth` adds a player base health (default 12) and can swap vitality for strength when vitality is the archetype ability. `calculateCreatureMaxHealth` never adds that base and always uses creature vitality.
+- math-disagree-intentional:player-vs-creature-max-energy: **Intentional.** `calculateMaxEnergyForArchetype` picks the path’s archetype ability (or the higher of two on Powered-Martial). `calculateCreatureMaxEnergy` uses the highest non-vitality primary score only.
+- math-disagree-intentional:power-energy-vs-technique-energy: **Intentional.** Powers and techniques use different energy equations. `analyzePowerEnergy` includes duration parts; `analyzeTechniqueEnergy` is flat sum × percentage product only.
+- math-disagree-intentional:format-energy-intermediate-vs-format-energy-number: **Intentional display split.** `formatEnergyIntermediate` (composition notes) rounds to two decimals. `formatEnergyNumber` (creator breakdowns) uses `formatCost` at three decimals and strips trailing zeros.
+- math-disagree-intentional:modify-variant-ceil-vs-composition-finalize: **Intentional display split.** Modify variant tabs round with `publishContribution` per tab; the published power total uses one `finalizeCompositionEnergy` on summed raw energy. Per-tab rounded sums can exceed the header total.
+
+**Bug**
+
+- math-disagree-bug:innate-remaining-uses-stored-cost: **Bug.** `calculateRemainingInnateEnergy` subtracts each innate power’s saved `cost` field. Live energy comes from parts via `buildPowerPartsPayloadForCost` / `calculatePowerCosts`. A stale saved `cost` makes remaining innate energy wrong.
+
+### Same math, separate copies
+
+- `calculateItemCosts` and `analyzeItemCosts` sum the same IP and property currency per row. Breakdown does not add training points; chip TP still comes from `trainingPointsForItemPropertyRef`.
+- `getTechniquePartEnergyContribution`, the loop inside `calculateTechniqueCosts`, and `partEnergyContribution` in `technique-energy-breakdown.ts` use the same base-plus-three-options energy product.
+- `calculateCreatureCurrency` and `computeStartingCurrency` use the same growth formula and the same 200 / 1.45 defaults, stored in different constant imports.
+- `rawEnergyOf` and `derivePlainPowerDisplay` both feed `buildPowerPartsPayloadForCost` into `calculatePowerCosts`. Composed-power totals use the same path through `rawEnergyOf`.
+- `computeSplits` in `dice-splits.ts` is the only split-dice formula; `buildMechanicParts` calls it for power and technique damage.
+
+## Skill and allocation math (line-by-line pass)
+
+Skill bonus, skill point totals, and allocation spend in `src/lib/game/formulas.ts` (from the Skill Helpers block through `getSkillBonusForFeatRequirement`), `src/lib/game/skill-allocation.ts` through `calculateSimpleSkillPointsSpent`, `src/lib/game/skill-allocation-add.ts`, and `src/lib/guided-creator/skill-reconcile.ts`. `getCreatureSkillBonus` in `creature-creator-skill-bonus.ts` delegates to the shared bonus helpers. Not a rules balance sign-off.
+
+### Read to the end
+
+- `unproficientBonus` in `src/lib/game/formulas.ts`. Negative ability mods double; non-negative mods use `Math.ceil(mod / 2)`. Used by skill, sub-skill, feat checks, and defense unprof values in `calculations.ts`.
+- `calculateSkillPointsForEntity` in `src/lib/game/formulas.ts`. Characters: `skillPointsPerLevel × floor(level)`. Creatures: `skillPointsAtLevel1 + skillPointsPerLevel × (floor(level) − 1)`. Rules overrides come from `PROGRESSION_PLAYER` / `PROGRESSION_CREATURE`.
+- `getLinkedAbilityKeys`, `getHighestLinkedAbilityKey`, `subSkillAllocationAbility`, `getLinkedAbilityMod` (private), `calculateSkillBonusWithProficiency`, and `calculateSubSkillBonusWithProficiency` in `src/lib/game/formulas.ts`. Proficient: ability mod plus skill values (sub-skills add base value when the base is proficient). Not proficient: `unproficientBonus` on the chosen or highest linked ability. Multi-ability skills use the chosen key when valid, else the highest score.
+- `resolveParentSkillNameForSubSkill` in `src/lib/game/formulas.ts`. Resolves parent base skill name from `selectedBaseSkillId` or codex `base_skill_id`; display-only for sheet copy.
+- `getSkillBonusForFeatRequirement` in `src/lib/game/formulas.ts`. Inlines base/sub bonus shapes similar to the proficiency helpers but always reads the **first** comma-separated codex ability (not highest/chosen). Draft vs sheet proficiency uses numeric thresholds (`base ≥ 0`, sub `≥ 1`) or `{ prof, val }` rows.
+- `resolveSkillAllocationRules`, `getTotalSkillPoints`, `getSkillValueIncreaseCost`, `skillAllocationIncreaseCost`, `applySkillAllocationIncrease`, `applySkillAllocationDecrease`, `canIncreaseDefense`, `calculateCharacterSkillPointsSpent`, and `calculateSimpleSkillPointsSpent` in `src/lib/game/skill-allocation.ts`. Value steps cost 1 point below soft cap; at or past cap use `baseSkillPastCapCost` or `subSkillPastCapCost`. Non-species rows pay `gainProficiencyCost` once when gaining proficiency. Spent totals loop value from 1..n and sum `getSkillValueIncreaseCost(v − 1, …)`; defense spends `defenseIncreaseCost` per skill-point defense bonus.
+- `getCreatureSkillBonus` in `src/app/(main)/creature-creator/creature-creator-skill-bonus.ts`. Wraps `calculateSkillBonusWithProficiency` / `calculateSubSkillBonusWithProficiency` with codex-linked abilities and parent skill lookup.
+- `buildExistingSkillIdSet`, `buildExistingSkillNames`, `buildCharacterSkillsForSubModal`, `removeAllocatedSkill`, `applyAddedBaseSkills`, and `applyAddedSubSkills` in `src/lib/game/skill-allocation-add.ts`. No separate point-cost table. Base adds start at allocation `0` (proficient, zero ranks). Sub adds start at `1` (proficient sub). `autoAddBaseSkill` seeds the parent base at `0` when missing. `removeAllocatedSkill` deletes the base key and any codex sub whose `base_skill_id` matches (skips rows where `base_skill_id` is null or `0`). Proficiency for sub-modal parents uses `(allocations[id] ?? 0) >= 0`, same threshold as `readProficiency` for base skills in `getSkillBonusForFeatRequirement`.
+- `pruneUnresolvedSkillAllocations`, `calculateGuidedSkillPointBudget`, and helpers in `src/lib/guided-creator/skill-reconcile.ts`. Prune drops allocation keys absent from the codex index. Budget builds `skillMeta` (`isSubSkill: base_skill_id !== undefined`), merges species and recommended path skills at default values, adds `extraSkillPoints` when species grant id `"0"` (Any), then `spentPoints = calculateSimpleSkillPointsSpent(...)` with `resolveSkillAllocationRules(rules)`. `remainingPoints = totalPoints − spentPoints`. `mergeGuidedSkillAllocationsWithDefaults` keeps orphaned keys while `skillMeta.size === 0` so a cold catalog does not wipe allocations; once the catalog loads, only resolved keys remain for spend.
+
+### Still not read line by line (skill / allocation scope)
+
+- None in this slice. `buildMixedSpeciesSkillOptions` in `src/lib/ancestry/ancestry-selection.ts` was not opened (species skill pick list only; no point math). Out of scope for this pass.
+
+### Disagreements
+
+- math-disagree-bug:feat-skill-req-first-ability-vs-sheet-highest: **Bug (Kadin).** Feat skill requirements must match the sheet: chosen linked ability when set, else highest, with the full skill bonus including proficiency. `getSkillBonusForFeatRequirement` still uses only the first codex ability string and its inline bonus path. `calculateSkillBonusWithProficiency` / `calculateSubSkillBonusWithProficiency` use `getLinkedAbilityMod` (chosen or highest). Not intentional.
+- math-disagree-bug:guided-skill-total-omits-rules-on-getTotalSkillPoints: **Bug (Kadin).** Guided remaining skill points must use core rules for the base total and for skill points per level. `calculateGuidedSkillPointBudget` calls `getTotalSkillPoints(1, 'character')` without the `rules` argument while spend uses `resolveSkillAllocationRules(rules)`, so the guided creator can show a built-in normal total and skip the live `PROGRESSION_PLAYER` values. The species skill choice that grants one extra spendable point is a separate bonus and is **not** this finding.
+
+### Same math, separate copies
+
+- `getTotalSkillPoints` returns `calculateSkillPointsForEntity`; one skill-point total formula when callers pass the same `rules`.
+- `skillAllocationIncreaseCost` and `calculateSimpleSkillPointsSpent` both call `getSkillValueIncreaseCost`; no parallel past-cap table.
+- `getCreatureSkillBonus`, the character sheet, guided creator, allocation page, and creature stat block display call the same `calculateSkillBonusWithProficiency` / `calculateSubSkillBonusWithProficiency` pair (not the feat inline path).
+- `getHighestLinkedAbilityKey` and private `getHighestLinkedAbility` use the same max scan; one returns the key, one the value.
+- `buildGuidedSkillMeta` in `skill-reconcile.ts` and the `skillMeta` map in `skills-allocation-page.tsx` both set `isSubSkill` from `base_skill_id !== undefined`; spend loops match when given the same catalog.
+- `calculateGuidedSkillPointBudget` uses the same `calculateSimpleSkillPointsSpent` and the same `extraSkillPoints` rule (`speciesSkillIds.has('0') ? 1 : 0`) as the allocation page; it fixes level at `1` for guided creation, which matches `skills-step.tsx`.
+
+## Character-check and path math (line-by-line pass)
+
+Save legality budgets, feat requirement checks, path publish validation, innate power eligibility, and archetype path JSON parsing. Not creator UI screens. Not a rules balance sign-off.
+
+### Read to the end
+
+- `findCharacterLegalityViolations` and helpers in `src/lib/game/character-legality.ts` through `evaluateCharacterLegalityForSave`. Ability budget: `calculateAbilityPoints` vs sum of `calculateAbilityScoreCost` per ability. Skill budget: `getTotalSkillPoints(level, 'character', budgetRules)` vs `skillPointsSpentFloor` (sums nonnegative `skill_val` / allocation vals plus `defenseIncreaseCost ×` defense skill totals; **not** proficiency or stepped value costs). Archetype feat cap: `calculateMaxArchetypeFeats` with `normalizeArchetypeChoices`. Character feat cap: `calculateMaxCharacterFeats`. Health–energy pool: `calculateHealthEnergyPool(level, 'PLAYER', …)` vs `healthPoints + energyPoints` (allocatable pool only; player base health is separate). Feat rows: `checkFeatRequirements` when catalog loaded.
+- `checkFeatRequirements`, `getMaxQualifiedFeatLevel`, `applyTempModifiersForFeatRequirements`, and mappers in `src/lib/game/feat-requirements.ts`. Level: `lvl_req` or else `2 × featLevel` for ranks above 1. Ability reqs use raw abilities; defense reqs use `calculateDefenses(abilities, defenseVals)`. Skill reqs call `getSkillBonusForFeatRequirement`. Speed uses `calculateSpeed`. Leveled feats use `getPreviousLevelFeatId` and `ownsFeatOrUpgrade`. Sheet warning compares base vs temp-adjusted characters through the same `checkFeatRequirements`.
+- `validatePathDataForPublish`, `validateLevel1Skills`, `validateLoadoutTrainingPoints`, and `validateInnatePowerRecommendations` in `src/lib/game/path-validation.ts`. Governance caps from `LAYER1_GOVERNANCE`. Loadout TP: sum `resolveItemTrainingPoints(id) × max(1, quantity)` per flattened loadout entry vs `trainingPointLimit`. Innate list delegates to `validateRecommendedInnatePowers`.
+- `parseArchetypePathData`, `collectPathRecommendedIds`, guidance helpers, and codex write validators in `src/lib/game/archetype-path.ts` through the return of each export in that file. Parsing only; no progression formulas beyond finite number checks on recommended abilities.
+- `validateRecommendedInnatePowers`, `evaluateInnatePowerEligibility`, `snapshotOfficialPowerForInnate`, `getLevel1InnateBudget`, duration and action predicates, and filter helpers in `src/lib/game/innate-eligibility.ts`. L1 innate budget from `calculateArchetypeProgression(1, martialProf, powerProf)` with path or default proficiencies. Per-power energy from `derivePowerDisplay` / `resolvePowerComposition` (composed variants re-call `resolvePowerComposition` for priced energy). Threshold and duration checks are local predicates; energy sum compared to `budget.innateEnergy`.
+
+### Still not read line by line (character-check / path scope)
+
+- None in this slice. `buildMixedSpeciesSkillOptions` and other ancestry UI remain outside this pass.
+
+### Disagreements
+
+- math-disagree-bug:legality-skill-spent-floor-vs-allocation-spent: **Bug (Kadin).** Available and remaining skill points must use exact math. `skillPointsSpentFloor` is a lower estimate (nonnegative rank sums plus defense totals × `defenseIncreaseCost`). `calculateSimpleSkillPointsSpent` reflects real proficiency and step costs. Legality warnings can under-report spend. Not intentional.
+
+### Same math, separate copies
+
+- `abilityPointsSpent` and `buildSuggestedAbilityArray` both use `calculateAbilityScoreCost`; legality does not reimplement ability step costs.
+- `findCharacterLegalityViolations` and `calculateGuidedSkillPointBudget` both call `getTotalSkillPoints` with rules when computing skill **budget** (legality at character level; guided at 1).
+- `validateRecommendedInnatePowers` and sheet innate pools both source threshold/energy from `calculateArchetypeProgression` via `getLevel1InnateBudget` or `calculateArchetypeProgression` directly; path validation passes path L1 proficiencies into that budget.
+- `checkFeatRequirements` is the single feat gate for legality, sheet, creator, and codex filter; `getMaxQualifiedFeatLevel` loops the same function.
+- Innate path validation energy uses live `derivePowerDisplay` / `resolvePowerComposition`, same family as `calculatePowerCosts` (contrast `math-disagree-bug:innate-remaining-uses-stored-cost` on the sheet budget field).
+- `validateLoadoutTrainingPoints` uses `flattenLoadoutEntries` only; no second TP sum formula in this slice.
+
+## Creature creator budget math (line-by-line pass)
+
+Creature point budgets, spend totals, and training-point aggregation for the creature creator. Not encounter play UI. Not a rules balance sign-off.
+
+### Read to the end
+
+- `calculateCreatureCreatorStats` and `isCreatureOverBudget` in `src/app/(main)/creature-creator/creature-creator-derived-stats.ts`. Budgets: `calculateCreatureTrainingPoints(level, highestNonVitality)`, `calculateCreatureCurrency`, `calculateHealthEnergyPool(..., 'CREATURE', allowSubLevel)`, `calculateProficiency(..., allowSubLevel)`, `calculateAbilityPoints(..., allowSubLevel)`, `calculateSkillPointsForEntity` as creature, `calculateCreatureFeatPoints(level, martialProficiency)`. Spend: sum `calculateAbilityScoreCost` on abilities; `hitPoints + energyPoints` vs HE pool; `calculateSimpleSkillPointsSpent` on mapped creature skills via `allocationValueFromPersistedSkill`; feat sum from manual `points` plus mechanical sense/movement/resistance lines from codex maps; `computeCreatureTrainingSpent`; inventory currency × quantity. `minEnergy` is `highestNonVitality × max(1, floor(level))` without allocated `energyPoints`; `maxEnergy` uses `calculateCreatureMaxEnergy` which adds `energyPoints` to that same ability×level piece. `getCreatureAbilityBounds` in `creature-ability-bounds.ts` returns code constants only (ignores stale rules max).
+- `computeCreatureTrainingSpent`, `creatureLoadoutForBudget`, and legacy fallbacks in `src/app/(main)/creature-creator/creature-creator-training-spent.ts`. With codex parts: rebuild power rows through `resolvePowerComposition` / `plainPowerProficiencyParts`, then `sumRequiredProficiencyTrainingPoints` on active loadout. Adds `storedTpWithoutParts` (rows with no `parts` use saved `tp`), equipment/armament stored TP when properties missing, plus full legacy path when no DB context. Without DB: sums stored `tp` on powers, techniques, and armaments only.
+- `calculateCreatureTrainingPoints` and `calculateCreatureFeatPoints` in `src/lib/game/formulas.ts`. Creature TP: `base + ability + (level−1)×(tpPerLevelMultiplier + ability)` at L1+; sub-level uses `ceil(base×level)+ability`. Creature feat points: `baseFeat + martial` at L1 plus `(level−1)×featPointsPerLevel`.
+- `calculateProficiencyTP`, `roundUpTrainingPoints`, `optionLevelForWholeTrainingPoints`, `buildRequiredProficiencies`, and `sumRequiredProficiencyTrainingPoints` in `src/lib/proficiencies.ts` through the return of `sumRequiredProficiencyTrainingPoints`. Per-row TP rounds base plus rated options (whole-number level bump via `optionLevelForWholeTrainingPoints`), then `roundUpTrainingPoints`. Loadout-wide sum dedupes identical parts before summing.
+
+### Still not read line by line (creature budget scope)
+
+- None in this slice.
+
+### Disagreements
+
+`math-disagree-unclassified` marks a difference that is not labelled intentional or bug. Dropping a line fails the validator.
+
+- math-disagree-bug:creature-training-stored-tp-without-parts: **Bug (Kadin).** Intended rule: use live parts through `sumRequiredProficiencyTrainingPoints` when parts exist; saved `tp` only when the parts cannot be found (may be stale). **What the code does:** with codex part/property DBs loaded, `computeCreatureTrainingSpent` runs `sumRequiredProficiencyTrainingPoints` on the active loadout and **does not** add stored `power.tp` / `technique.tp` when that row has a non-empty `parts` array (`storedTpWithoutParts`); armament stored `tp` is skipped when `properties` are present (`storedTpWithoutResolvableParts`). Saved `tp` is added only for rows missing parts or properties on the snapshot, plus equipment via `sumStoredArmamentTp`. When no parts DB context, `sumLegacyCreatureTrainingSpent` uses stored sums only. Remaining bug vs intent is when parts are present on the row but cannot be resolved from DB—stored fallback is still skipped today.
+
+### Same math, separate copies
+
+- Creature skill spend uses the same `calculateSimpleSkillPointsSpent` as the character sheet; creature meta skips orphan sub-skills whose base is absent from the skill list.
+- Creature ability spend uses `calculateAbilityScoreCost`; same as character legality and suggested-ability builders.
+- `computeCreatureTrainingSpent` and guided character save both call `sumRequiredProficiencyTrainingPoints` when part/property codex is available.
+- Player training **cap** uses `calculateTrainingPoints` via `getTrainingPointLimit`; creature training **budget** uses `calculateCreatureTrainingPoints` (different formula, different entity).
+
+## Player proficiency and training math (line-by-line pass)
+
+Archetype proficiency caps on level change, player Training Point pool formula, and guided creator proficiency / TP spend wiring. Not creator screen UI. Not a rules balance sign-off.
+
+### Read to the end
+
+- `applyProficiencyGainForLevelUp`, `applyProficiencyLossForLevelDown`, `applyLevelUpProficiencyUpdates`, `applyLevelDownProficiencyUpdates`, and `applyPathProficiencyForLevel` in `src/lib/game/archetype-display.ts`. Milestone gain/loss uses `calculateProficiency(oldLevel)` and `calculateProficiency(newLevel)`; pure-side auto-assign adds or removes the cap delta on the side that holds all spent points (mixed splits return null). Level 5+ path floors use `Math.max(current, path power_prof_level5 / martial_prof_level5)` when `archetypePathId` is set. Codex fetch helpers in the same file are display/merge only.
+- `calculateProficiency` and `calculateTrainingPoints` in `src/lib/game/formulas.ts`. Proficiency cap: base at low levels, then +1 per `proficiencyEveryNLevels` (default 5) via `floor(level / interval) × proficiencyPerIncrease`; sub-level can `ceil(base × level)`. Player TP pool: `base + archetypeAbility + (tpPerLevelMultiplier + archetypeAbility) × (level − 1)` from `PROGRESSION_PLAYER` defaults. `resolveArchetypeProficiencyStart` sets starting `pow_prof` / `mart_prof` from path columns or type defaults (power 2/0, martial 0/2, mixed 1/1).
+- `getTrainingPointLimit` in `src/lib/proficiencies.ts` delegates to `calculateTrainingPoints(level, archetypeAbility, rules)`.
+- Guided proficiency and TP in `src/lib/guided-creator/build-character.ts`: `resolvePowersForProficiency` (composition → `composedPowerProficiencyParts`), `resolveTechniquesForProficiency`, `resolveArmamentsForProficiency`, `buildGuidedProficiencyInput`, `computeGuidedRequiredTrainingSpent` (`sumRequiredProficiencyTrainingPoints`), and `computeGuidedTrainingPointsBudgetSpent` (`Math.max` of deduped proficiency spend vs listed loadout + combat TP). Save payload builds `proficiencies` via `buildRequiredProficiencies` and starting `pow_prof` / `mart_prof` via `resolveArchetypeProficiencyStart` (does not call level-up auto-assign).
+- `computeGuidedLoadoutTpSummary`, `resolveItemTrainingPoints`, `combineGuidedTpBudgets`, and `sumGuidedListedCombatTrainingPoints` in `src/lib/guided-creator/loadout-tp.ts`. Loadout spend sums `Math.round(calculateItemCosts(...).totalTP)` per selected ref × quantity. Limit at guided L1 uses `getTrainingPointLimit(1, archetypeAbility, rules)` where archetype ability is max of pow/mart picks and all six scores. Listed combat TP sums catalog `tpCostOf(id)` for unique power/technique/innate ids.
+
+### Still not read line by line (proficiency / training scope)
+
+- None in this slice.
+
+### Disagreements
+
+- math-disagree-bug:guided-tp-bar-max-of-dedupe-vs-listed: **Bug (Kadin).** Training-point cost has one source of truth: the cleaned-up proficiency list used on the character sheet (`computeGuidedRequiredTrainingSpent` / `sumRequiredProficiencyTrainingPoints`). `computeGuidedTrainingPointsBudgetSpent` takes the `Math.max` of that walk and item/catalog chip TP (`loadoutEquipmentTpSpent + sumGuidedListedCombatTrainingPoints`), so the guided bar can over-count. Not intentional.
+
+### Same math, separate copies
+
+- `getTrainingPointLimit`, `computeGuidedLoadoutTpSummary`, and path admin `trainingPointLimit` all use `calculateTrainingPoints` for the pool size when rules match.
+- `buildGuidedCharacterPayload` and `computeGuidedRequiredTrainingSpent` share `buildGuidedProficiencyInput`; save persists `buildRequiredProficiencies` rows, not the budget counter max.
+- `applyProficiencyGainForLevelUp` and `applyProficiencyLossForLevelDown` use the same `calculateProficiency` cap function the sheet uses for proficiency **pools** (points spent are separate fields on the character).
+- `resolveItemTrainingPoints` and path `validateLoadoutTrainingPoints` both use `calculateItemCosts` property TP; path validation sums the same way with quantity.
+
+## Defense targeting and weapon attack math (line-by-line pass)
+
+Power/technique “can target” defense lists and weapon attack ability / bonus resolution. Not crafting or size tables. Not a rules balance sign-off.
+
+### Read to the end
+
+- `normalizeTargetedDefenses`, `parseDefensesFromDescription`, `defensesFromPart`, `suggestTargetedDefenses`, `buildTargetedDefenseSelectOptions`, and format helpers in `src/lib/game/targeted-defenses.ts`. No point budgets. DB `defense` field wins; else description substring match (longest defense names first). Damage types map through `getPowerDamagePartInfo` then codex part `defenseFromPart`. Weapon/unarmed attack mode suggests **Evasion** only.
+- `deriveAbilityRequirementFromProperties`, `meetsAbilityRequirement`, property detectors, `defaultWeaponAbilityUtilized`, `deriveWeaponAbilityUtilized`, `getWeaponAttackAbility`, `getWeaponAttackBonusFromProperties`, and related exports in `src/lib/game/weapon-attack-ability.ts`. Requirement level is `1 + op_1_lvl` on named `* Requirement` properties. `meetsAbilityRequirement` compares that level to `abilities[key]`. Attack ability: `getWeaponAttackAbility` checks Finesse, Thrown, Reach, Heavy, then `resolveWeaponRangeDisplay` (non-Melee → Acuity, else Strength). `deriveWeaponAbilityUtilized` checks Finesse, Heavy only when `rangeType === 'ranged'`, else range-type default. Weapon attack bonus is `abilities[attackAbility] + martialProficiency` via `getWeaponAttackAbility`.
+- `getPowerDamagePartInfo` in `src/lib/calculators/mechanic-builder.ts` (damage-type → codex damage part name/id); already used in cost builds; read here only for targeted-defense damage routing.
+
+### Still not read line by line (defense / weapon scope)
+
+- None in this slice.
+
+### Disagreements
+
+- math-disagree-bug:weapon-derive-utilized-vs-get-attack-ability: **Bug in item creator (Kadin rules vs code).** Stated rules: Thrown → Strength; ranged default → Acuity; Heavy overrides range → Strength even at range; Finesse → Agility (overrides Acuity on ranged or Strength elsewhere). `getWeaponAttackAbility` on the sheet matches that order (Finesse, Thrown, Reach, Heavy, then non-Melee → Acuity). `deriveWeaponAbilityUtilized` in the item creator omits Thrown and Reach and only applies Heavy when `rangeType === 'ranged'`, so the creator default can disagree while the sheet matches the rules.
+
+### Same math, separate copies
+
+- `defensesFromPart`, power/technique chip formatters, and library `part-display` all call the same targeted-defense helpers; no second parse implementation.
+- `getWeaponAttackBonusFromProperties` does not reimplement ability pick; it always calls `getWeaponAttackAbility`.
+- `meetsAbilityRequirement` is the single threshold check for derived requirements on weapons (no duplicate in this slice).
+
+## Crafting cost math (line-by-line pass)
+
+General, enhanced, consumable-enhanced, and upgrade crafting requirements; successes-table outcome; crafting tool wiring. Skips size tables, path recommendations, and creator cache. Not a rules balance sign-off.
+
+### Read to the end
+
+- `findGeneralRow`, `getCraftingRequirements`, `getCraftingSessionLabels`, `getSuccessesTableEffect`, `calculateCraftingOutcome`, enhanced row lookup, `getMultipleUseAdjustedEnergy`, `getEnhancedCraftingRequirements`, `getConsumableEnhancedRequirements`, `getEnhancedMarketPrice`, `getUpgradeRequirements`, and all four optional modifiers in `src/lib/game/crafting-utils.ts`. General material cost is market price × `craftingCostMultiplier`; consumable time uses `Math.max(1, Math.ceil(time × consumableTimeMultiplier))`. Outcome applies successes-table percents to material retained, final cost, item worth, and extra items when delta > 7. Enhanced material cost is effective energy × table `currencyPerEnergy` or consumable `costPerEnergy`. Upgrade uses 75% of price delta, DS from the upgraded row, successes as row difference, and time delta in days (`8` hours = 1 day via `craftingDayHours`).
+- `getCodexEquipmentMarketPrice`, `getLibraryItemMarketPrice`, and helpers in `src/components/crafting/get-crafting-market-price.ts`. Codex rows use `equipmentCurrency` (`currency` / `gold_cost` only). Library and public items use `resolveItemMarketPricing` from `item-calc` (same path as Library and equipment-step).
+- `equipmentCurrency` and `persistEquipmentCost` in `src/lib/codex/equipment-list.ts` (read for crafting currency inputs only).
+- `computeCraftingRequirements`, `computeRequirementsBreakdown`, optional-modifier max-step helpers, multiple-use index/energy wrappers, and `getEffectiveCraftingEnergy` in `src/app/(main)/crafting/[id]/_components/crafting-tool-helpers.ts`. This file applies bulk quantity multipliers, stacks optional modifiers, and merges base-item + enhancement requirements when `craftBaseItemAlso` (combined time in hours/days, summed successes and material, `Math.max` DS).
+- `buildRequirementsSyncPatch`, `computeLiveCraftingOutcome`, `computeBaseOutcomeForDisplay`, session tallies, and roll DS routing in `src/app/(main)/crafting/[id]/_components/crafting-tool-derived.ts` (calls `computeSkillRollResult` from encounter-utils for roll parsing only).
+- `handleComplete` in `use-crafting-tool-page.ts` was read only for whether it duplicates outcome math (it calls the same `calculateCraftingOutcome` path as `computeLiveCraftingOutcome`).
+- `crafting-session-persist.ts` (full): Zod defaults and `min(0)` on `marketPrice`, `materialCost`, `enhancementMaterialCost`, `energyCost`, and `craftingOutcomeSchema` numeric fields. No formulas; `projectCraftingSessionPatch` only strips UI keys.
+- `GET`/`POST` `src/app/api/crafting/route.ts` and `GET`/`PATCH` `src/app/api/crafting/[id]/route.ts` (cost paths only): `toSummary` sets hub `currencyCost` from `currency_cost` column, then `data.materialCost`, then `item.marketPrice`. `POST`/`PATCH` write `currency_cost` as `materialCost ?? item.marketPrice` (nullish coalescing only — **0** material cost does not fall through to market price). No requirement math on the API.
+- `crafting-bootstrap.ts` (full): no price, cost, currency, or point math (uses-type migration from `multipleUseTableIndex` only).
+- `CraftingItemSelectModal.tsx` (full for cost): every list row calls `getLibraryItemMarketPrice` (my/public armaments and equipment) or `getCodexEquipmentMarketPrice` (codex equipment tab); no other currency math.
+- Creator cost-derivation hooks: `usePowerCreatorCostDerivation` builds `partsPayload` and calls `calculatePowerCosts` / `calculatePowerSectionContribution` for totals and section slices. `useItemCreatorCostDerivation` builds `propertiesPayload` (including weapon damage level `(amount×size−4)/2`, split-dice op levels, armor DR op levels) then `resolveItemMarketPricing` and `calculateItemCosts` per UI section via `combineItemSectionCosts`. `useEmpoweredTechniqueCostDerivation` calls `calculateEmpoweredTechniqueCosts` and per-section `calculatePowerCosts` / `calculateTechniqueCosts`. Crafting enhanced energy uses `derivePowerDisplay` in `buildCraftingPowerOptions`, which routes through `calculatePowerCosts` in `power-calc` for the same saved parts.
+
+### Still not read line by line (crafting cost scope)
+
+- None for this pass (calculator implementations behind the hooks remain in **Health, energy, and cost math** and item-calc summaries elsewhere).
+
+### Disagreements
+
+- math-disagree-bug:official-armament-codex-stored-currency-vs-item-calc: **Bug (Kadin).** Official armaments site-wide should use calculated currency from properties (`resolveItemMarketPricing` / `calculateItemCosts`), not a stored catalog `currency` / `gold_cost` column. `getCodexEquipmentMarketPrice` and `equipmentCurrency` still read stored values for codex equipment rows. Library and creator paths already use item-calc. Not intentional.
+- math-disagree-deferred:crafting-codex-stored-currency-vs-library-resolve-market: **Deferred (Kadin).** Crafting still needs stored currency for now; crafter work is deferred. The picker still pairs `getCodexEquipmentMarketPrice` (stored) with `getLibraryItemMarketPrice` (calculated). Do not treat this crafting path as the immediate official-armament fix (see bug above).
+- math-disagree-deferred:crafting-codex-currency-vs-persist-equipment-cost: **Deferred (Kadin).** Same crafter deferral: crafting codex rows use `equipmentCurrency` only while `persistEquipmentCost` can read a `cost` fallback elsewhere. Not scheduled for this fix pass.
+- math-disagree-deferred:crafting-hub-currency-column-vs-requirements-market-price: **Deferred (Kadin).** The crafting hub list can show **0** when `materialCost` is defaulted while requirements use `item.marketPrice`. Fix with crafter work, not now.
+
+### Same math, separate copies
+
+- `crafting-tool-helpers` and `crafting-utils` share one implementation for table lookup, upgrade, enhanced/consumable enhanced reqs, multiple-use energy, and optional modifiers; the tool file only orchestrates session state and bulk/merge.
+- `computeLiveCraftingOutcome`, `computeBaseOutcomeForDisplay`, and `handleComplete` all call `calculateCraftingOutcome` with the same market-price rules (`getEnhancedMarketPrice` when enhanced, else stored session item price).
+- Enhanced save UI in `crafting-outcome-card.tsx` uses the same `getEnhancedMarketPrice(materialCost)` as live outcome for enhanced items (not a second multiplier formula).
+- `getLibraryItemMarketPrice`, item creator `useItemCreatorCostDerivation` pricing, and crafting picker rows all call `resolveItemMarketPricing` when properties are available (same item-calc path).
+- `buildCraftingPowerOptions` energy matches power creator totals for the same parts because `derivePowerDisplay` uses `calculatePowerCosts` internally.
+- Creator section-cost hooks slice payloads then call the same calculator functions as their totals; they do not reimplement point formulas in the page files.
+
+## Size and path recommendation math (line-by-line pass)
+
+Creature size table, carrying-capacity kg formula, and archetype-path browse filtering (ref → entity id union). Not combat grid placement. Not a rules balance sign-off.
+
+### Read to the end
+
+- `SIZE_TABLE_BASE`, `CREATURE_SIZES`, `formatSizeHeightRangeCm`, `findSizeTableRow`, `sizeLabelForKey`, `calculateCarryingCapacityKg`, and `reconcileSizeWithAllowedOptions` in `src/lib/game/size-table.ts`. Carrying capacity is `baseCarry + perStrCarry × Strength`, floored at `minCarry` for the matched size row (`Math.max`). Size lookup is case/whitespace-insensitive on value or label. `reconcileSizeWithAllowedOptions` picks allowed species sizes; no numeric formulas beyond table fields.
+- `character-size.ts` (size slice): `resolveEffectiveCharacterSize` and labels call `reconcileSizeWithAllowedOptions` / `findSizeTableRow` only; **no** carrying-capacity math.
+- `creator-constants.ts` re-exports `CREATURE_SIZES` and `CARRYING_CAPACITY_HALF_LOAD_RULE` from `size-table` (single table source for creator dropdowns).
+- `FALLBACK_RULES.SIZES` in `use-game-rules.ts` copies the same `CREATURE_SIZES` carry/spaces fields into the default core-rules payload; `mergeCoreRules` lets DB `SIZES` override that document client-side.
+- `notes-tab.tsx` carrying display calls `calculateCarryingCapacityKg(characterSize, strength)` only (does not read `rules.SIZES` from the hook).
+- Full `path-recommendation-index.ts`: filter alias expansion, `buildPathRecommendationIndex` (`indexByNormalizedIds` + name map, then `collectPathRecommendedIds` per path/kind), union/intersection helpers (`pathRecommendedEntityIds`, `rowMatchesPathRecommendedIds`, `applyLivePathFilter`). **No** TP, skill, energy, or currency arithmetic—only id/name resolution.
+- `normalize-id.ts` (`normalizeId`, `indexByNormalizedIds`) read for path index lookups.
+- `use-path-recommendation-index.ts` (full): memo wrapper around `buildPathRecommendationIndex` and `pathRecommendedEntityIds`; no extra formulas.
+- `collectPathRecommendedIds` in `archetype-path.ts` was already read in **Character-check and path math**; path index calls it verbatim.
+
+### Still not read line by line (size / path scope)
+
+- None in this slice.
+- `src/lib/game/creator-cache.ts`: localStorage draft helpers only (no cost/point math; not opened for formulas).
+
+### Disagreements
+
+- math-disagree-bug:size-hardcoded-carry-vs-core-rules-sizes: **Bug (Kadin).** Carrying capacity must use edited rules sizes from `core_rules` / `useGameRules`, not the hardcoded `CREATURE_SIZES` chart in `size-table.ts`. `calculateCarryingCapacityKg` on the notes tab ignores live `SIZES.categories`. Not intentional.
+
+### Same math, separate copies
+
+- `creator-constants` and `use-game-rules` fallback both source size rows from the same `size-table` export at build time; only the hook path can diverge after a DB edit (see disagreement above).
+- Path browse lists share one `buildPathRecommendationIndex` via `usePathRecommendationIndex` / `usePathListFilter`; `guided-creator/feats-l2.ts` and codex list pages consume the same index helpers.
+- Path filter chip logic (`expandPathFilterSelection`, `addPathFilterSelection`) does not duplicate entity resolution; matching uses the prebuilt `entityIdsByPathId` map.
+- Character size pickers and sheet height hints use `findSizeTableRow` / `reconcileSizeWithAllowedOptions` from this module without a second carry table.
+
+## Character creator screens (behavior pass)
+
+What a player can do on each **character** creator surface: guided (and custom entry), entry chooser, and creature creator. Library entity creators (power, technique, item, species) are in **Library entity creator screens** below. Not a rules balance sign-off.
+
+### Screens walked (read through save wiring)
+
+**Entry chooser** — route `src/app/(main)/characters/new/page.tsx`. A person picks **Guided** or **Custom**; both links go to `/characters/new/guided` with `?entry=guided` or `?entry=custom` (optional `returnTo`). No form fields; quota alert only. Does not save anything.
+
+**Guided / Custom character creator (one app)** — route `src/app/(main)/characters/new/guided/page.tsx` → `GuidedEntryBootstrap` applies `buildOpenGuidedPathEntryPatch` or `buildOpenCustomPathEntryPatch` from `path-selection-draft.ts`, then `GuidedCreatorShell`. State: `useGuidedCreatorStore` (Zustand + `localStorage`; legacy nine-step `character-creator-store` removed). Shell: chapter rail (`GUIDED_CHAPTERS`), mobile/desktop `CharacterPreviewPanel`, step body from `STEP_COMPONENTS` in `guided-creator-shell.tsx`.
+
+| Sub-step | Component | What the player does | Draft fields touched |
+|----------|-----------|----------------------|----------------------|
+| `path` | `PathStep` | L1: pick codex archetype path (`buildPathSelectionDraftPatch`). L3: custom type + abilities (`buildCustomArchetypeDraftPatch`, `buildEnterCustomArchetypeLayerPatch`). Layer nav L1↔L3. | `archetypePathId`, `pathLayer`, `pow_abil`, `mart_abil`, clears dependents on change |
+| `species` | `SpeciesStep` | Pick species or mixed pair; size where allowed. | `speciesName`, ancestry ids, size |
+| `ancestry` | `AncestryStep` | Species traits, characteristic, ancestry trait, optional flaw. | `ancestry` blob, trait picks |
+| `abilities` | `AbilitiesStep` | Recommended array or customize via `guided-abilities-customize-panel` + `AbilityScoreGrid`. | `abilities`, `abilitiesMode` |
+| `skills` | `SkillsStep` | Species/path skills, spend budget via `calculateGuidedSkillPointBudget`, browse via `AddSkillModal` / sub-skills modal; `GuidedSkillsPanel` (not sheet `SkillRow`). | `skills`, `defenseVals`, `skillAbilities` |
+| `archetype-feats` | `ArchetypeFeatsStep` | Path-recommended feats (`guided-feats-l2-modal` + path filter). | `archetypeFeatIds` |
+| `character-feat` | `CharacterFeatStep` | Optional L1 character feat. | `characterFeatIds` |
+| `loadout` | `LoadoutStep` | Phased weapon → armor → gear (`equipmentPhase`); path-filtered catalog; currency/unarmed via `computeStartingCurrency` / loadout TP helpers. | `loadoutWeapons`, `loadoutArmor`, `armaments`, `equipment`, `currency` |
+| `powers-techniques` | `PowersTechniquesStep` | Innate, powers, techniques phases (`powersPhase`); L2 modals. | `innatePowerIds`, `powerIds`, `techniqueIds` |
+| `reveal` | `RevealStep` | Name, age, appearance, portrait, HP/EN split (`GuidedHealthEnergySection`), summary; save when logged in. | identity + `hpAllocated` / `energyAllocated` |
+
+**Save (guided/custom):** `RevealStep` builds payload with `buildGuidedCharacterPayload` (proficiencies via `buildRequiredProficiencies`, skills via `buildCreatorSkillSaveRows`, equipment via `resolve-loadout-items` + `applyStarterEquippedFlags`), then `cleanForSave`, then `persistFinishedCharacter` (`/api/characters` pattern in `persist-finished-character.ts`). Guests draft locally only; `LoginPromptModal` gates save. After save: optional `returnTo`, sheet tour via `characterSheetUrlWithTourOffer`, `resetCreator` on handoff helpers.
+
+**Creature creator** — route `src/app/(main)/creature-creator/page.tsx` → `useCreatureCreatorWorkspace` + `CreatureCreatorEditor` inside **`CreatorPageShell`** (not `GuidedCreatorShell`). Bootstrap: `bootstrapCreatureState`, session draft `creator-cache` keyed `CREATURE_CREATOR_CACHE_KEY`.
+
+What the screen exposes (via `creature-creator-editor.tsx` and child sections): name/description/image; **level** select; size; type; **ArchetypeSelector** (creature archetype type, not player path); **AbilityScoreEditor** + **HealthEnergyAllocator**; **SkillsAllocationPage** (same pattern as sheet allocation, not guided skills panel); defense skills; sense/movement trait chips with feat costs; manual **feat** list (`AddCreatureFeatModal`); **loadout** powers / empowered / techniques / armaments via `UnifiedSelectionModal` + `creature-creator-editor-loadout-sections`; inventory tabs. Budget bar from `calculateCreatureCreatorStats` / `isCreatureOverBudget` blocks save when over budget.
+
+**Save (creature):** `useCreatureCreatorWorkspacePersistence` → `useCreatorSave({ type: 'creatures' })` with `stampCreatureSyncMeta` on payload; My Library vs Realms Library for admins (`saveTarget`); load/restart/save-as-copy through `CreatorPageShell` + `LoadFromLibraryModal`. Edits from library use `?edit=` query and `useCreatorEditDraftDecision`.
+
+### Screens not walked in this pass
+
+- **Legacy “standard” nine-step character wizard** — removed (`guided-creator-store` comment TASK-912); no route remains.
+- **Character sheet in-place editing** — post-create play on `/characters/[id]`; not a creator screen.
+- **Crafting tool** — out of scope (see **Crafting cost math**).
+- **Library entity creators** — summarized in the sibling section below (not re-walked here).
+- Every file under `src/components/guided-creator/` and `creature-creator-editor-*` not opened line-by-line beyond the paths above (**partial pass**).
+
+### Same job, different behavior
+
+- screen-behavior-note:custom-and-guided-share-one-shell: **Guided** and **Custom** on the chooser are not two apps. Both render `GuidedCreatorShell` and the same sub-steps; `buildOpenGuidedPathEntryPatch` vs `buildOpenCustomPathEntryPatch` only sets `creatorEntryMode`, `pathLayer`, and clears dependents. Custom lands on Path **L3** (no codex path id); guided lands on Path **L1** cards.
+- screen-behavior-note:character-creator-shell-fork: **Player character create** uses `GuidedCreatorPageShell` + funnel chrome. **Creature creator** uses `CreatorPageShell` with toolbar load/save/publish like item/power creators. Same “creator” name, different shells and persistence (character row vs library creature).
+- screen-behavior-note:guided-skills-panel-vs-skills-allocation-page: **Guided** skills step uses `GuidedSkillsPanel` / local `GuidedSkillRow` and `calculateGuidedSkillPointBudget`. **Creature creator** (and the live character sheet allocation UI) uses `SkillsAllocationPage` from patterns — same underlying `skill-allocation` spend functions when rules match, different UI and guided-only path/species suggestion wiring.
+- screen-behavior-note:guided-ability-grid-vs-creature-ability-editor: **Guided** `AbilitiesStep` uses `AbilityScoreGrid` (+ customize panel). **Creature creator** uses `AbilityScoreEditor` from the creator barrel (different control layout; both use ability point formulas from `formulas.ts` when budgets match).
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:legacy-character-creator-store-removed: No `character-creator-store` or non-guided multi-step character route; chooser “Custom” still opens `/characters/new/guided`.
+
+## Library entity creator screens (behavior pass)
+
+My Library / Realms Library authoring for powers, techniques, empowered techniques, armaments, and species. All use **`CreatorPageShell`** + `useCreatorSave` (except where noted). Creator routes: `power-creator`, `technique-creator`, `empowered-technique-creator`, `item-creator`, and `species-creator` under `src/app/(main)/`. **Partial pass:** workspace hooks and editor facades read; not every section island line-by-line.
+
+### Screens walked (read through save wiring)
+
+**Power creator** — `/power-creator` → `bootstrapPowerCreatorFormState`, `usePowerCreatorWorkspace`, `PowerCreatorEditor` (`power-creator-editor-*.tsx` islands), `usePowerCreatorCostDerivation` → `calculatePowerCosts`.
+
+A person sets name/description/portrait and **targeted defenses** (`TargetedDefensesSection`). **Action profile** (action type, reaction, attack mode). **Range / area / duration** mechanic fields. **Power parts** and **advanced mechanic** parts from codex. **Damage** rows. **Composition band** (`PowerCreatorCompositionBand`): shared tab vs per-variant **Reverse** tabs — fields can inherit from shared (`power-creator-from-shared` override toggles). Summary: `AdvancedCalculationsPanel` + `CreatorSummaryPanel` (energy, TP, innate snapshot via `snapshotPowerCreatorForInnate` when applicable). Load: `useLoadModalLibrary('power')` + `LoadFromLibraryModal`. Save blocked when name empty, die/composition incomplete (`powerCreatorSaveBlockReason`), or power role quota (`formatRoleQuotaExceededMessage`).
+
+**Save:** `useCreatorSave({ type: 'powers' })`; payload `getPayload()` = `{ name, data: powerData }` with parts/damage/composition in workspace. Admin can publish to Realms Library. Session cache + `?edit=` via `creatorEditReplacesDraft`.
+
+**Technique creator** — `/technique-creator` → `bootstrapTechniqueCreatorFormState`, `useTechniqueCreatorWorkspace`, single **`TechniqueCreatorEditor`** file (inline `CollapsibleSection` sections, not split facades).
+
+Combat config (weapon attack mode), action/reaction, **technique parts**, **damage** dice, targeted defenses. Costs via workspace / `calculateTechniqueCosts` (no composition variants). Same shell pattern: summary panel, advanced calc, load modal for `technique` library type.
+
+**Save:** `useCreatorSave({ type: 'techniques' })`; `getPayload()` includes technique document + damage array shape from bootstrap comments.
+
+**Empowered technique creator** — **separate route** `/empowered-technique-creator` (not a tab inside power or technique). `bootstrapEmpoweredTechniqueFormState`, `useEmpoweredTechniqueCreatorWorkspace`, `EmpoweredTechniqueCreatorEditor` (parallel **power** + **technique** section facades), `useEmpoweredTechniqueCostDerivation` → `calculateEmpoweredTechniqueCosts`. Loads **both** `usePowerParts` and `useTechniqueParts`. Attack mode picks cheaper Add Weapon part (`pickCheaperEnPart`) or technique No Attack. Single combined name/description/defenses; power damage + power parts + technique damage + technique parts.
+
+**Save:** `useCreatorSave({ type: 'empowered-techniques' })`; one library row linking both sides in `getPayload()`.
+
+**Item (armament) creator** — `/item-creator` (optional `?type=weapon|armor|shield` on new drafts; `?edit=` ignores type). `bootstrapItemCreatorFormState`, `useItemCreatorWorkspace`, `ItemCreatorEditor` switches **Weapon / Armor / Shield** panels. Property picks, weapon range/damage, armor DR, shield block/damage; `useItemCreatorCostDerivation` → `resolveItemMarketPricing` / `calculateItemCosts`. Summary shows currency, IP, TP, rarity (`RarityReferenceTable`). Load modal `useLoadModalLibrary('item', { itemKind })` with kind tied to armament type.
+
+**Save:** `useCreatorSave({ type: 'items' })`; properties + mechanic fields in payload. Changing `?type=` on a draft does not remount session (`sessionKey` = edit id or `'draft'`) — workspace warns instead of silent wipe.
+
+**Species creator** — `/species-creator` → `useSpeciesCreatorWorkspace`, `SpeciesCreatorEditor`, trait pickers via `TraitListModal` / `UnifiedSelectionModal`.
+
+A person sets species name, type, image, description, height/weight/lifespan, **sizes** (`SIZE_OPTIONS`), two **base skills** (base skills only; `"Any"` id `0` allowed), **languages**, and trait buckets (species / ancestry / characteristic / flaw) with caps from `species-creator-bootstrap`. **No** energy/TP advanced calc panel on this page. Load works **without login** (`requireAuthToLoad: false` on `CreatorPageShell` auth).
+
+**Save:** `useCreatorSave({ type: 'species' })`; payload is species codex shape (`species_traits`, `skills`, `sizes`, etc.) to **My Codex**; admin publish targets **Realms Codex** species.
+
+### Screens not walked in this pass
+
+- Section-island internals are documented in **Creator editor section islands** below (this page pass remains route/save level).
+- Admin-only codex spreadsheet editors for the same entities (different screens).
+- **Crafting**, **encounters**, hub **Library** browser pages.
+
+### Same job, different behavior
+
+- screen-behavior-note:empowered-technique-separate-screen: **Empowered technique** is its own URL and `useCreatorSave` type `empowered-techniques`, not a mode inside power or technique creators. It merges two part databases in one form.
+- screen-behavior-note:power-composition-variants-vs-technique-single-flow: **Power** alone has `PowerCreatorCompositionBand` (shared + reverse variant tabs, inheritance overrides, `hidePartsAndDamage` on shared randomize). **Technique** and **item** creators are a single form state with no variant tab strip.
+- screen-behavior-note:power-facade-sections-vs-technique-monolith-editor: **Power** (and **empowered** power half) use thin `power-creator-editor.tsx` facades into many files. **Technique** keeps sections in one `technique-creator-editor.tsx` with `CollapsibleSection` + `PowerPartCard` reused for technique parts.
+- screen-behavior-note:species-creator-guest-load: **Species** sets `requireAuthToLoad: false` so Load opens without `LoginPromptModal`; other entity creators default to requiring auth for load (power page uses standard auth config).
+- screen-behavior-note:item-creator-type-query-vs-session-key: New item drafts can start from `?type=`, but `sessionKey` stays `'draft'` so switching type in the URL does not auto-reset; item workspace shows a type-mismatch warning instead of remounting like `?edit=` sessions do.
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:no-empowered-mode-on-power-or-technique-routes: There is no empowered-technique editor inside `/power-creator` or `/technique-creator`; only `/empowered-technique-creator`.
+
+## Creator editor section islands (behavior pass)
+
+**Partial pass** inside the four library entity creators only (not species/creature). Islands are presentational: handlers mutate workspace state; **`useCreatorSave` on the page** persists the whole document. No island saves by itself.
+
+### Power (`power-creator-editor.tsx` → `power-creator-editor-*.tsx`)
+
+| Island | Person changes | In saved payload (via workspace) |
+|--------|----------------|--------------------------------|
+| **Meta** (`power-creator-editor-meta.tsx`) | Name, description, admin **RealmsImageField**; embeds **`TargetedDefensesSection`** | Identity, image refs, targeted defenses |
+| **Action profile** | Action type, reaction checkbox, attack mode; inheritance notices on variants | Action + attack fields |
+| **Power config** | Range, area, duration mechanic controls | Mechanic columns on power doc |
+| **Power parts** | Two collapsibles: **Power Parts** + **Power Mechanics** (`PowerPartCard` lists) | `parts` / advanced mechanic arrays |
+| **Power damage** | Damage rows | `damage` array |
+
+When composition **shared** tab is in **randomize shared unpriced** mode, `hidePartsAndDamage` on the editor **omits** parts + damage islands entirely (shared piece only).
+
+### Technique (`technique-creator-editor.tsx` — inline sections)
+
+| Section | Person changes | Saved via workspace |
+|---------|----------------|---------------------|
+| Meta **Card** | Name, description, admin image, **`TargetedDefensesSection`** | Same families as power meta |
+| **Combat Configuration** `CollapsibleSection` | Attack mode, action type, reaction | Combat + action costs fields |
+| **Technique Parts** | `PowerPartCard` rows (`showApplyDuration={false}`) | Technique parts list |
+| **Additional Damage** | Extra dice stepper (weapon damage type copy) | Technique damage blob |
+
+### Item (`item-creator-editor.tsx` → `item-creator-editor-*.tsx`)
+
+| Island | When visible | Person changes |
+|--------|--------------|----------------|
+| **Meta** | Always | Name, description, image category, **armament type** toggle |
+| **Weapon/shield** (`item-creator-editor-weapon-shield.tsx`) | **Weapon** or **Shield** only | Handedness; weapon range/ability; **Base Damage** collapsible (**Weapon** only) |
+| **Armor** | `armamentType === 'Armor'` | DR, agility penalty, crit range |
+| **Shield panels** | `armamentType === 'Shield'` | Block DR, optional shield damage |
+| **Ability + properties** | Always | Ability requirement + `PropertyCard` rows |
+
+### Empowered (`empowered-technique-creator-editor.tsx` → `empowered-technique-editor-*.tsx`)
+
+Parallel to **power** islands (meta + action + power config + **power damage** + **power parts**) plus **technique parts** island that also contains **Additional Damage (Technique)** collapsible (technique dice separate label from power damage). Section **order** differs from standalone power creator (**damage before parts** on the power side).
+
+### Not walked
+
+- Every `PowerPartCard` field and property option matrix inside item properties.
+- `power-creator-from-shared` override toggles line-by-line.
+
+### Same job, different behavior
+
+- screen-behavior-note:creator-islands-workspace-not-autosave: Section islands only call `onXChange` props; **save** is always the page **Creator save** toolbar (`useCreatorSave`), not per-collapsible.
+- screen-behavior-note:power-editor-facade-files-vs-technique-inline-sections: **Power** splits islands across `power-creator-editor-*.tsx`; **technique** keeps all **`CollapsibleSection`** blocks in one `technique-creator-editor.tsx`.
+- screen-behavior-note:power-parts-vs-mechanics-two-collapsibles: **Power parts** island renders **two** collapsibles (regular parts vs **Power Mechanics** advanced parts)—technique has a single **Technique Parts** collapsible.
+- screen-behavior-note:technique-parts-no-apply-duration-on-card: **Technique** (and empowered technique) pass **`showApplyDuration={false}`** on `PowerPartCard`; default power part cards allow duration apply on power creator.
+- screen-behavior-note:item-armor-only-armor-island: **Armor** type shows **Armor** + **Ability/properties** islands only—no **Weapon Configuration** / **Base Damage** collapsibles.
+- screen-behavior-note:empowered-damage-before-parts-order: **Empowered** editor renders **power damage** island **before** **power parts**; standalone **power** editor renders **parts** then **damage**.
+- screen-behavior-note:empowered-technique-damage-labeled-separate: **Empowered** technique side uses collapsible **Additional Damage (Technique)** explicitly separate from **power** damage island—mirrors technique creator wording.
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:power-hide-parts-damage-shared-randomize: On power **shared** composition with `hidePartsAndDamage`, **parts** and **damage** islands are **not mounted**—editing those fields on that tab is unreachable until leaving that mode/tab.
+- screen-behavior-note:item-weapon-fields-hidden-on-armor-type: **Weapon** range, ability utilized, and **Base Damage** UI inside `item-creator-editor-weapon-shield.tsx` render only for **`armamentType === 'Weapon'`**—Armor never sees them.
+
+## Encounter screens (behavior pass)
+
+RM-facing encounter hub and play routes: list/create, type-specific play pages, shared play shell, combat/skill views, add-participant modal, roll log, initiative, and combat conditions. **Partial pass:** play hooks and main panels read; `add-combatant-modal` picker tabs and tabletop sync not line-by-line.
+
+### Screens walked (read through save wiring)
+
+**Encounters list** — `/encounters` → `EncountersContent` in `encounters/page.tsx`.
+
+A person searches and filters (tabs All / Active / Completed, type chips combat/skill/mixed), opens a row (`handleOpen` → `/encounters/{id}/{type}`), creates via `CreateEncounterModal` (`createDefaultEncounter` + `useCreateEncounter`), marks complete (`useSaveEncounter` patches `status: 'completed'`, `isActive: false`, `currentTurnIndex: -1`), or deletes (`useDeleteEncounter`). Guests see a sign-in banner; `useEncounters` falls back to **localStorage** guest encounters (`use-encounters.ts`, `guest-encounter-storage`).
+
+**Encounter type redirect** — `/encounters/[id]/page.tsx` loads `useEncounter` then `router.replace` to `/encounters/{id}/{encounter.type}`. No play UI on this URL.
+
+**Combat play** — `/encounters/[id]/combat/page.tsx` → `useEncounterPlayPage` + `RollProvider` + `CombatEncounterView` (`showRollLog` default **true**).
+
+**Skill play** — `/encounters/[id]/skill/page.tsx` → `useEncounterPlayPage({ keepaliveOnUnload: true, requireSkillEncounter: true, prepareLoaded: prepareSkillEncounter })` + `SkillEncounterView`.
+
+**Mixed play** — `/encounters/[id]/mixed/page.tsx` → same play shell with `prepareMixedEncounter`; `SegmentedControl` switches Combat vs Skill; last tab per encounter id in **`sessionStorage`** (`readMixedEncounterViewTab` / `writeMixedEncounterViewTab`). Both `CombatEncounterView` and `SkillEncounterView` mount (CSS `hidden` on inactive tab) with `showRollLog={false}`; one shared **`RollLog`** at page bottom.
+
+**Shared play shell** — `useEncounterPlayPage` in `encounter-play-page-shell.tsx`: hydrates encounter once per id (`prepareLoaded` optional), local `encounter` state, `useAutoSave` (1.5s debounce) → `encounterAutosaveBody` → `useSaveEncounter` or guest `persistEncounterSave` with **keepalive** only when `keepaliveOnUnload` (skill route). Header: `EncounterPageHeader` (inline name edit). Combat/mixed also expose `OpenTabletopButton` (`saveNow` before open).
+
+**What saves:** The whole `Encounter` document (combatants, round/turn fields, `skillEncounter` blob, campaign link, status). Autosave on play pages; list “mark complete” patches status fields only. Signed-in → `/api/encounters/[id]`; guest ids → localStorage merge.
+
+**Add combatant / participant** — `AddCombatantModal` (`add-combatant-modal.tsx`): Library creatures + campaign characters; `mode="combat"` on combat view (`onAdd` → `addCombatantsFromModal` as `TrackedCombatant[]`) or `mode="skill"` on skill view (`onAddParticipants` → `SkillParticipant[]`, plus `onAdd` for copying combatants in mixed). Not `UnifiedSelectionModal`. Initiative on add uses local `rollInitiative` in the modal (duplicate of `encounter-view-helpers.rollInitiative`).
+
+**Initiative** — Combat: `CombatRoundControls` **Sort Initiative** → `useCombatRoundActions.sortInitiative`; per-card edit/drag on `CombatantCardInitiative`; manual reorder on `CombatCombatantList`. Skill (optional `useInitiative`): `SkillSidebar` duplicate **Sort Initiative** + sync with combat order / copy combatants to skill when `isMixedEncounter`; participant initiative via `rollInitiativeForParticipant` on `ParticipantCard`.
+
+**Conditions** — Combat only on `CombatantCard`: `CombatantCardConditionChips` + `CombatantCardConditionsPanel` (`CONDITION_OPTIONS` from `encounter-constants.ts`); leveled conditions via chip click / context menu. Skill participants have **no** condition panel on `ParticipantCard`.
+
+**Roll log** — `RollLog` in `components/rolls/roll-log.tsx` inside `RollProvider`; `viewOnlyCampaignId={encounter.campaignId}` when linked. Personal vs campaign log modes in-component; rolls from sheet/cards elsewhere also land in context. Mixed page: single docked log for both tabs; standalone combat/skill attach log to view and apply `ENCOUNTER_TRACKER_DOCK_FRAME_CLASS` on the grid when `showRollLog`.
+
+### Screens not walked in this pass
+
+- VTT / tabletop page opened by `OpenTabletopButton` (separate route).
+- `EncounterCampaignRosterSection` campaign link UI beyond props wiring.
+- Full `add-combatant-modal` library/campaign picker bodies.
+- `/encounters/[id]/combat` is walked; **library hub** and **crafting** not started (per scope).
+
+### Same job, different behavior
+
+- screen-behavior-note:mixed-one-roll-log-vs-view-embedded-log: **Mixed** hides per-view `RollLog` and renders one page-level `RollLog`. **Combat** and **skill** standalone pages pass `showRollLog` so the log sits in the view layout with dock framing.
+- screen-behavior-note:skill-unload-keepalive-autosave: Only the **skill** play route sets `keepaliveOnUnload: true` on `useEncounterPlayPage`, so tab-close/refresh can flush via `persistEncounterSave(..., { keepalive: true })`. Combat and mixed use the mutation path only on autosave.
+- screen-behavior-note:add-combatant-modal-combat-vs-skill-mode: Same modal component; **`mode="combat"`** confirms `TrackedCombatant` payloads through `onAdd`. **`mode="skill"`** confirms `SkillParticipant` through `onAddParticipants` (and can still wire `onAdd` for combatant-shaped copies in mixed).
+- screen-behavior-note:combatant-card-vs-skill-participant-card: **Combat** list renders `CombatantCard` (HP/EN/AP, conditions, initiative column). **Skill** list renders `ParticipantCard` (DS roll, successes/failures, helping); conditions UI does not exist on skill cards.
+- screen-behavior-note:duplicate-sort-initiative-in-combat-and-skill-sidebars: **Sort Initiative** appears in `CombatRoundControls` and again in `SkillSidebar` when skill initiative mode is on — separate handlers (`sortInitiative` vs `sortByInitiative`), same user-facing label.
+- screen-behavior-note:mixed-view-tab-session-only: Mixed Combat/Skill tab choice is stored in **browser sessionStorage**, not on the `Encounter` row; refresh within the session restores tab, other devices do not.
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:encounter-id-redirect-no-type-page: `/encounters/[id]` never renders play; only redirects or error. A stored `encounter.type` with no matching play route file would `replace` to a missing page (redirect does not validate against known types).
+
+## Library screens (behavior pass)
+
+Single hub **`/library`** (`library/page.tsx`) for **My Library** (signed-in user rows) and **Realms Library** (official published rows). Legacy **`/browse`** redirects here. **Partial pass:** tab row components and `UserLibraryEntityTabShell` read; pattern `Official*List` implementations not line-by-line. **Admin** official-library editor (`/admin/public-library`) out of scope.
+
+### Screens walked (read through save/delete wiring)
+
+**Library hub** — one page, two scopes via `SegmentedControl` (`libraryMode` `'my' | 'public'`). Boot: `?view=realms` → start on Realms; guests always **public** (no toggle). `TabNavigation` entity tabs (counts from `useUserLibraryCounts` vs `useOfficialLibraryCounts` + `libraryTabCount`). Header **Create** link follows active tab (`TABS[].createHref`) — only in **My Library**, not guest, not Realms browse. Deletes run on the page via `DeleteConfirmModal` + type-specific `useDelete*` hooks.
+
+| Tab id | My Library component | Realms (`LibraryPublicContent`) | Typical save / edit |
+|--------|----------------------|----------------------------------|---------------------|
+| `powers` | `LibraryPowersTab` | `PublicPowersList` + `OfficialPowerList` | User: `/api/user/library/...`, edit → `/power-creator?edit=`; add official: `useAddOfficialToLibrary('powers')` |
+| `techniques` | `LibraryTechniquesTab` `mode="standard"` | `PublicTechniquesList` standard | Same pattern; empowered uses separate API type |
+| `empowered-techniques` | `LibraryTechniquesTab` `mode="empowered"` | `PublicTechniquesList` `mode="empowered"` | `useUserEmpoweredTechniques` / `useAddOfficialToLibrary('empowered-techniques')` |
+| `weapons` / `armor` / `shields` | `LibraryItemsTab` per `armamentKind` | `PublicItemsList` per kind | User items API; create → `itemCreatorTypeHref(kind)`; official items fetched once as `'items'` then filtered |
+| `creatures` | `LibraryCreaturesTab` | `PublicCreaturesList` | Edit → `/creature-creator?edit=`; stat-block rows |
+| `enhanced` | `LibraryEnhancedTab` | *(tab hidden)* | `useEnhancedItems`; edit → `/crafting/{id}`; create CTA → `/crafting` |
+
+**My Library row actions** (most tabs): `UserLibraryEntityTabShell` — search/sort/filters, per-row **Edit**, **Delete** (delegates to page), **Duplicate** (`useLibraryDuplicateConfirm` + `useDuplicate*`), **Sync** when codex drift (`useLibraryEntitySync` → `saveToLibrary` patch). **Add to character** on several tabs via `LibraryAddToCharacterButton` + `useAddToCharacterFromLibrary`. Power tab can block **Create** when `isAtRoleQuota` for custom powers.
+
+**Realms Library row actions**: read-only lists for guests (`readOnly` → no Add button); signed-in users **Add to library** → confirm modal → `useAddOfficialToLibrary` copies official row into user library (then editable in My Library).
+
+**Species:** not a tab on `/library`. Custom species use **species creator** / My Codex flows elsewhere; official species are not browsed on this hub.
+
+### Screens not walked in this pass
+
+- `/admin/public-library` and other admin publish tools.
+- Full bodies of `OfficialPowerList`, `OfficialTechniqueList`, `OfficialItemList`, `OfficialCreatureList` in `components/patterns`.
+- **Crafting** save UI (enhanced tab only links in).
+- Codex species browse (separate product surface).
+
+### Same job, different behavior
+
+- screen-behavior-note:library-my-vs-realms-one-page-toggle: **My Library** and **Realms Library** are not separate routes; `library/page.tsx` swaps `LibraryPowersTab` (etc.) vs `LibraryPublicContent` from `resolvedLibraryMode`.
+- screen-behavior-note:library-guest-realms-read-only: Guests always see Realms lists with `readOnly` and `LibraryGuestNotice`; no scope toggle, no Create, Add prompts `LoginPromptModal`.
+- screen-behavior-note:library-enhanced-tab-my-only: **Enhanced Items** tab exists only in My Library (`TABS` filtered + state clamp from `enhanced` → `powers` if user switches to Realms).
+- screen-behavior-note:library-techniques-tab-empowered-dual-hook: Standard and **Empowered** are separate nav tabs but both use **`LibraryTechniquesTab`** with `mode` — only the matching `useUserTechniques` / `useUserEmpoweredTechniques` query is enabled.
+- screen-behavior-note:library-realms-add-official-vs-my-sync: Realms mode **adds** via `useAddOfficialToLibrary`. My mode **updates** user rows via creators, duplicate, or drift **sync** (`saveToLibrary` with `existingId`) — not the same as official add.
+- screen-behavior-note:library-creatures-tab-embeds-roll-log: Only **`LibraryCreaturesTab`** wraps the list in `RollProvider` and passes `afterList={<RollLog />}` on the entity shell; other My tabs do not embed a roll log on this page.
+- screen-behavior-note:library-enhanced-edit-via-crafting-route: **Enhanced** rows edit with `router.push('/crafting/{id}')`, not item or power creators; create CTA on that tab points to `/crafting`.
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:library-no-species-tab: There is no species tab on `/library`; species are not listed on this hub (codex / species creator instead).
+- screen-behavior-note:legacy-browse-alias-redirect: `/browse` does not render; permanent redirect to `/library` (same hub as Realms guest browse).
+
+## Character sheet screens (behavior pass)
+
+Play and edit surfaces: character list, live sheet at `/characters/[id]`, main column sections, and library sub-tabs. **Partial pass:** `use-character-sheet-actions` and enrichment hooks skimmed; campaign **view-only** sheet URL not walked.
+
+### Screens walked (read through save wiring)
+
+**Character list** — `/characters` → `characters/page.tsx`.
+
+Signed-in users see account characters (`useCharacters`), delete, duplicate (`useDuplicateCharacter`), create → `/characters/new` (role quota via `useCharacterQuota`). Signed-out users can still see **browser-local guest** sheets (`getGuestCharactersList`); create works locally with sign-in CTA. Deletes use `DeleteConfirmModal` with `deleteContext` `browser` vs `account`.
+
+**Character sheet page** — `/characters/[id]` → `character-sheet-route.tsx` + `useCharacterSheetPage` (data in `use-character-sheet-page-data`, chrome in `use-character-sheet-page-ui`).
+
+**Load & save:** `useCharacter` hydrates React Query; owner edits `patchCharacterDetailQuery`. **`useAutoSave`** debounces → `cleanForSave` → **dirty-field** patch via `saveCharacterWithConflictRetry` (`/api/characters/[id]`). Guest ids use guest storage branch inside character service. Owners get `CloudSyncOfflineBanner`, conflict merge (`mergeRemotePreservingDirty`), optional **realtime** merge; guests skip `useCharacterResourceSync` (encounter HP sync).
+
+**Owner vs viewer:** `isOwner` = guest sheet **or** `character.userId === user.uid`. Non-owners see “View only”, no `SheetActionToolbar`, handlers stripped with `whenSheetOwner`. `RollProvider` sets `canRoll={isOwner}` and personal roll log id for owners.
+
+**Interaction modes** (owner): `SheetActionToolbar` toggles **Edit** and **Temp** via `nextSheetInteractionMode` — mutually exclusive; clicking active mode turns both off. `effectiveEditMode` / `effectiveTempModifierMode` require `isOwner`. Edit unlocks ability/skill spend, library adds/removes, archetype/species modals. Temp mode drives `tempModifiers` on abilities/skills without full edit chrome.
+
+**Header** — `SheetHeader`: name (edit mode), portrait upload, current/max HP & EN & AP, XP, level-up entry, archetype/species edit buttons (edit mode), recovery/level-up/settings modals.
+
+**Main sections** (`CharacterSheetBody`):
+
+| Section | Component | Play vs edit (summary) |
+|---------|-----------|-------------------------|
+| Abilities & defenses | `AbilitiesSection` | Edit: spend ability points, defense skills; Temp: temp modifiers |
+| Skills | `SkillsSection` | Edit: add/remove/allocate (`SkillRow` from patterns); uses `AddSubSkillModal`; Temp: temp bonuses |
+| Archetype & attacks | `ArchetypeSection` | Proficiencies, milestones, quick armor table, equipped attacks |
+| Library (card) | `LibrarySection` | Nested tabs below; extra **EditSectionToggle** when sheet edit mode is on (library-specific edit chrome) |
+
+**Desktop vs mobile:** Desktop shows abilities full-width, then a grid with skills / archetype / library. **Mobile** uses horizontal snap carousel (`SHEET_CAROUSEL_PANEL_OPTIONS`: Abilities, Skills, Archetype, Library) + sticky `SegmentedControl`; abilities render twice (desktop block + mobile panel).
+
+**Library sub-tabs** (`LIBRARY_TAB_DEFS` / `library-tab-config.ts`): **Feats**, **Powers**, **Techniques**, **Inventory** (weapons, shields, armor, equipment), **Proficiencies**, **Notes** (named notes + visibility). Tab visibility toggles (settings) hide tabs in **play** mode; `resolveLibraryActiveTab` jumps to a visible tab. Add buttons open `CharacterSheetModals` → `AddLibraryItemModal` / `AddFeatModal` / etc. **Empowered techniques** are not a library tab; they are picked inside **Add power** flow (`powerSelectionMode === 'empowered'` on the modal). Powers panel splits innate vs regular; techniques use spend/energy row chrome.
+
+**Roll log:** Page-level `RollLog` under `RollProvider` (not inside library creatures tab — that pattern is hub-only).
+
+### Screens not walked in this pass
+
+- `/campaigns/.../view/.../character` read-only sheet embedding.
+- Every handler inside `use-character-sheet-actions.ts` line-by-line.
+- Onboarding tour steps beyond modal wiring.
+- Campaigns, admin, crafting, marketing (per scope).
+
+### Same job, different behavior
+
+- screen-behavior-note:sheet-mobile-carousel-vs-desktop-layout: **Mobile** side-scrolls four section panels; **desktop** uses a multi-column grid and shows **Abilities** outside the carousel (duplicate mount on small viewports only).
+- screen-behavior-note:sheet-edit-and-temp-modes-exclusive: **Edit** and **Temp** cannot both be active; toolbar uses `nextSheetInteractionMode` to flip one off when enabling the other.
+- screen-behavior-note:sheet-library-sub-edit-toggle: Sheet-level **Edit** does not immediately enable library row delete/add; **`EditSectionToggle`** on the library card toggles `showLibraryEditControls` separately.
+- screen-behavior-note:sheet-library-tab-visibility-play-mode: Hidden library tabs (settings) are skipped when **not** in edit mode via `resolveLibraryActiveTab`; in edit mode all tabs stay reachable for visibility editing.
+- screen-behavior-note:sheet-guest-owner-local-save: **Guest** sheets count as **owner** for edits but persist in **browser storage**, show guest banner, lock **visibility** settings, and skip encounter resource sync hooks used by signed-in sheets.
+- screen-behavior-note:sheet-viewer-omits-toolbar-and-handlers: **Viewers** get no action toolbar; `whenSheetOwner` drops change handlers so controls do not appear as dead buttons.
+- screen-behavior-note:sheet-empowered-in-add-power-modal: Hub library has an **Empowered** tab; the **character sheet** has no empowered library tab — empowered picks use **`AddLibraryItemModal`** power mode sub-switch.
+- screen-behavior-note:sheet-skills-skill-row-vs-guided-guided-skill-row: Sheet **`SkillsSection`** uses shared `SkillRow` from patterns; guided creator uses **`GuidedSkillRow`** in `guided-skills-panel.tsx` (same spend math, different UI).
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:sheet-no-standalone-empowered-library-tab: `LIBRARY_TAB_DEFS` has no `empowered-techniques` entry; empowered content is only via add-power modal mode.
+
+## Campaign screens (behavior pass)
+
+Signed-in **campaign** hub, detail, roster, shared roll log, and Realm Master (RM) **embedded read-only sheet**. Server actions in `campaigns/actions.ts` persist roster and metadata. **Partial pass:** API/SQL behind actions not opened; **VTT tabletop** route (`/campaigns/[id]/tabletop`) not walked.
+
+### Screens walked (read through save wiring)
+
+**Campaign list** — `/campaigns` → `campaigns/page.tsx`.
+
+**Guests** see a sign-in wall only (no list). Signed-in users get tabs **My Campaigns**, **Create Campaign**, **Join Campaign** (`?tab=create|join` syncs tab). **Create** calls `createCampaignAction` → new row + **invite code** display. **Join** calls `joinCampaignAction` with invite code + selected character (guest characters filtered out); may set character **visibility** to campaign-wide so others can view the sheet. **My Campaigns** links to `/campaigns/{id}`.
+
+**Campaign detail** — `/campaigns/[id]` → `campaign-detail-route.tsx` inside `ProtectedRoute` + `useCampaignDetailPage`.
+
+**RM** (`campaign.ownerId === user.uid`): edit name/description via `updateCampaignAction`, delete campaign, copy invite (`CampaignInviteSection`), add own characters through **`AddCharacterModal`** (`addCharacterToCampaignAction`, capped by `OWNER_MAX_CHARACTERS` and `MAX_CAMPAIGN_CHARACTERS`), remove any roster entry. **Players:** view roster; remove **only their own** character; no invite section; cannot use RM add-character modal (they joined from the list **Join** tab).
+
+**Roster** — `CampaignRosterSection`: RM block (owner’s characters + optional Add) and **Players** block. `CharacterChip` remove rules: `canRemove = isRealmMaster || userId === currentUserId`. **View sheet** link (`/campaigns/{id}/view/{userId}/{characterId}`) is passed only for **other players’** chips when the viewer is the RM (`onViewSheet`); opens in new tab. RM’s own chips have no external view link (use `/characters/{id}` for play).
+
+**Campaign roll log** — `CampaignRollLogSection` + `useCampaignRolls`: read-only, scrollable feed of `RollEntryCard` rows (newest at bottom); realtime/refetch from campaign rolls API. This is **not** the interactive `RollLog` FAB—it's an audit trail on the detail page.
+
+**Embedded character view (RM)** — `/campaigns/[id]/view/[userId]/[characterId]` → `useCampaignCharacterView` (roster + RM auth), **not** `useCharacter` / `/api/characters/[id]` alone. Renders `SheetHeader` + `CharacterSheetBody` with `buildReadOnlySheetContextValue` / `buildReadOnlyLibraryHandlers` (no edit toolbar, `isEditMode` false). `RollProvider` sets `campaignContext` so rolls can post to the campaign log; page-level `RollLog` for local history.
+
+**What saves:** Campaign name/description (RM update actions); roster membership add/remove; join/create/delete campaign; rolls appended via `addCampaignRoll` when a sheet in campaign context rolls (feeds detail log). Character sheet data still saves on the owner’s `/characters/[id]` route—not on the campaign view URL.
+
+### Screens not walked in this pass
+
+- `/campaigns/[id]/tabletop` (encounter/tabletop play).
+- Campaign server actions and Supabase policies line-by-line.
+- Admin, crafting, marketing (per scope).
+
+### Same job, different behavior
+
+- screen-behavior-note:campaigns-guest-sign-in-wall: **`/campaigns`** is entirely gated for guests; unlike `/library`, there is no read-only campaign browse without signing in.
+- screen-behavior-note:campaign-join-list-tab-vs-rm-detail-add: **Players** enter via **Join** tab + invite code. **RM** adds characters on **detail** via `AddCharacterModal` (`addCharacterToCampaignAction`); non-RM never get the detail add flow for another player’s slot.
+- screen-behavior-note:campaign-detail-roll-feed-vs-sheet-roll-log: **Detail** shows a static **Campaign Roll Log** section (`useCampaignRolls`). **Character sheets** use interactive `RollLog` + `RollProvider`; when `campaignContext` is set, `addRoll` also persists to the campaign feed.
+- screen-behavior-note:campaign-embedded-sheet-campaign-view-hook: RM **view** route loads **`useCampaignCharacterView`** (campaign-scoped authorization), not the owner sheet’s `useCharacter` query path.
+- screen-behavior-note:campaign-view-sheet-link-rm-other-players-only: **`CharacterChip`** `onViewSheet` is set only for **other** players when viewer is RM; player chips never get view links for peers on the roster UI.
+- screen-behavior-note:campaign-remove-rm-or-own-character: Remove is allowed for **RM (any)** or **the owning player (self only)**—not for a player removing someone else.
+- screen-behavior-note:campaign-visibility-bump-on-join: **Join** and **add-to-campaign** actions can set character visibility to **campaign** (toast when `visibilityUpdated`) so RM/peers can open the sheet view.
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:campaign-player-no-peer-sheet-from-roster: The roster UI does not offer “view sheet” for fellow **players**—only the RM gets the external view link on other players’ chips.
+- screen-behavior-note:campaign-tabletop-not-on-detail-page: **Tabletop/VTT** is a separate route under the campaign id, not a section on the detail page walked here. Screen behavior is documented in **Campaign tabletop screen** below.
+
+## Campaign tabletop screen (behavior pass)
+
+Virtual tabletop at **`/campaigns/[id]/tabletop`** (`campaigns/[id]/tabletop/page.tsx`), usually opened with `?scene=` after **Open Tabletop** on a campaign-linked combat encounter. **Partial pass:** Konva canvas interaction beyond role gating not line-by-line; storage upload API not fully traced.
+
+### Walked (read through load/save wiring)
+
+**Entry & load** — `ProtectedRoute` → `useActiveCampaignTabletop(campaignId)` when no `scene` query, else `useTabletopScene(sceneId)`. `useTabletopRealtime` subscribes to `vtt_scenes`, `vtt_tokens`, `vtt_actions`. No state → empty **“No active tabletop”** (copy points to encounter **Open Tabletop**).
+
+**How you get here** — `OpenTabletopButton` on combat/mixed encounter play (`openEncounterTabletop` POST `/api/encounters/[id]/tabletop`): requires `encounter.campaignId`; **RM only** on API; creates/activates `vtt_scenes` row and seeds tokens from encounter combatants, then navigates to `/campaigns/{campaignId}/tabletop?scene={sceneId}`. Campaign **detail** page does not open the VTT.
+
+**What a person can do**
+
+| Role | Tools |
+|------|--------|
+| **Realm Master** (`state.role === 'realm-master'`) | `TabletopCanvas` drag moves tokens (`canMoveTokens`); upload map; **Sync** combatants; add **Monster** tokens (`AddMonsterTokenModal`); grid/fog/settings sidebar; hide/show/lock tokens; accept/dismiss **move requests** |
+| **Player** | Select, **Ping**, **Request Move** (pick token → click map → `createAction` `move-request`); cannot drag-move on canvas |
+
+Shared: token list sidebar, `RollProvider` + `RollLog` with `viewOnlyCampaignId={campaignId}` (campaign-scoped roll UI, not the detail page’s static roll list).
+
+**What saves** — VTT data in Supabase (`vtt_scenes`, `vtt_tokens`, `vtt_actions`, map storage via `uploadVttMap`); mutations through `useTabletopMutations` → `tabletop-service` APIs. **Sync** (`syncTabletopCombatants`) rebuilds tokens from the **linked encounter’s** combatant list (does not edit the encounter JSON on the play page). Accepting a move request updates token position via `resolveTabletopAction`. Does **not** replace encounter round/initiative UI on `/encounters/.../combat`.
+
+### Not walked in this pass
+
+- Every Konva handler in `tabletop-canvas.tsx` (partial).
+- Full RLS/policy review on tabletop tables.
+
+### Same job, different behavior
+
+- screen-behavior-note:tabletop-entry-via-encounter-open-not-campaign-hub: VTT scenes are **created/opened from encounter play** (`OpenTabletopButton`), not from `/campaigns/[id]` detail or roster.
+- screen-behavior-note:tabletop-scene-query-vs-active-scene-fetch: URL **`?scene=`** loads one scene; omitting it uses **active scene for campaign** (`getActiveCampaignTabletop`).
+- screen-behavior-note:tabletop-sync-duplicates-encounter-combatants: **Sync** on the VTT re-imports **encounter combatants** as map tokens — parallel to the encounter **combatant list**, not the campaign **character roster**.
+- screen-behavior-note:tabletop-rm-drag-vs-player-move-request: RM **drags** tokens on canvas; players use **Request Move** → pending queue RM accepts (different from encounter list reorder).
+- screen-behavior-note:tabletop-monster-usm-vs-encounter-add-combatant-modal: VTT **Monster** add uses **`AddMonsterTokenModal` + `UnifiedSelectionModal`** (creature library); encounter play uses **`AddCombatantModal`** (different picker grammar).
+- screen-behavior-note:tabletop-roll-log-vs-campaign-detail-roll-section: Page **`RollLog`** is interactive/local; campaign **detail** roll section is a read-only `useCampaignRolls` feed (same campaign rolls DB, different UI).
+- screen-behavior-note:tabletop-skill-encounter-no-open-button: **Open Tabletop** is on combat/mixed encounter chrome only — not on skill-only encounter play.
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:tabletop-direct-url-without-active-scene: Visiting `/campaigns/[id]/tabletop` with no active scene and no valid `?scene=` shows empty state — no create flow on this page alone.
+- screen-behavior-note:tabletop-encounter-without-campaign-id: `OpenTabletopButton` blocks when `campaignId` missing; API returns 400 without campaign link.
+
+## Admin screens (behavior pass)
+
+Admin hub at **`/admin`** (`admin/page.tsx`) links every tool below. **`admin/layout.tsx`** runs `requireAdminSession`: signed-out users → `/login?returnTo=/admin`; signed-in non-admins → `/`. All routes under `(main)/admin/` share that gate. **Partial pass:** Codex list modal field-by-field matrix not walked; Sources batch-merge edge cases skimmed; Image Library upload/storage API not fully traced. **Spreadsheet** cell/column save rules are in **Admin codex spreadsheet**.
+
+### Screens walked (from admin home links)
+
+**Admin home** — Cards only; no data writes. Opens Codex Editor, Sources, Official Library Editor, User Management, Role Policies, Core Rules, Image Library, Changelogs.
+
+**Codex Editor** — `/admin/codex` (`admin/codex/page.tsx`). Category tabs: feats, skills, species, traits, power & technique **parts**, armament **properties**, equipment, **archetypes**, creature feats. **List** view: browse list + edit modals (`useAdminCodexEntity`, `createCodexDoc` / `updateCodexDoc` / `deleteCodexDoc` in `codex/actions.ts`) → `codex_*` tables. **Spreadsheet** view (`CodexSpreadsheetView`, `useCodexSpreadsheet`): same collections, bulk edit, find/replace, save-all with optimistic concurrency (`expectedUpdatedAt`). Species tab also supports catalog listing patch (`usePatchOfficialCatalogListing('species')`) on `codex_species` rows.
+
+**Official Library Editor** — `/admin/public-library`. Tabs: powers, techniques, empowered techniques, armaments, creatures, species, enhanced items. Lists mirror Library UI (`OfficialPowerList`, `OfficialEntityList`, `variant="admin"`). **Edit** navigates to player creator routes with `?edit=` (e.g. `/power-creator?edit=`). **Save** happens on the creator via `saveToOfficialLibrary` / official APIs (`official_*` tables). Row **delete** and catalog listing toggles stay on the admin list (`apiFetch` DELETE, `usePatchOfficialCatalogListing`). Empty official tabs mean empty `official_*` data, not missing codex rows.
+
+**Sources** — `/admin/sources`. Manages **rules source names** and which catalog rows reference them (`fetchAdminCodexSourceCatalog`, `fetchAdminCodexSourceRows`, membership add/remove/rename in `sources/actions.ts`). Does not replace the Codex row editors; it tags membership across configured `codex_*` / core_rules sections (`ADMIN_CODEX_SOURCE_SECTIONS`).
+
+**Core Rules Editor** — `/admin/core-rules`. One tab per `core_rules` category id (`core-rules-tabs.ts`: progression, combat, archetypes, abilities, skills & defenses, conditions, sizes, rarities, damage, recovery, experience, armament proficiency, crafting). `CategoryEditor` + unsaved leave guard; **Save** → `saveCategory` → `updateCodexDoc('core_rules', …)` with create-if-missing fallback. Uses `useGameRules({ admin: true })`.
+
+**User Management** — `/admin/users`. Paginated search (`/api/admin/users`), **Change role** per user → `POST /api/admin/users/update-role`. Shows **Effective limits** from loaded role policies (read-only on this page).
+
+**Role Policies** — `/admin/roles`. Edits per-role numeric quotas and `can_upload_profile_picture` → `PATCH /api/admin/role-policies`. Per-role **Save** button; does not assign roles to users.
+
+**Realms Image Library** — `/admin/images`. Infinite list of shared card art; upload/rename/retag/replace/delete via modals (`listRealmsImagesPage`, `deleteRealmsImage`, edit modal). Delete blocked or warned when `RealmsImageUsageRef` references exist.
+
+**Changelogs** — `/admin/changelogs`. Read-only audit by category (each codex table + core_rules). Fetches `/api/admin/changelogs` (or equivalent `apiFetch` path in page); shows actor, operation, field diffs. No revert action on this screen.
+
+### Screens not walked in this pass
+
+- Field-by-field validation inside each Codex list modal (feats, traits, archetype workspace, etc.).
+- Full Sources rename/merge batch failure matrix.
+- Crafting and marketing routes (out of scope).
+- Non-admin navigation chrome (whether Admin link appears in header).
+
+### Same job, different behavior
+
+- screen-behavior-note:admin-layout-blocks-non-admin: **`requireAdminSession`** in `admin/layout.tsx` keeps the whole admin tree off-limits without an admin role—unlike Library, which allows guest read on Realms content.
+- screen-behavior-note:admin-codex-list-modal-vs-spreadsheet: **Codex Editor** offers **List** (per-row modals) and **Spreadsheet** (grid + save all) over the **same** `codex_*` collections—different UX, same `updateCodexDoc` path.
+- screen-behavior-note:admin-codex-vs-official-library-data-split: **Codex Editor** owns reference/catalog tables (feats, skills, parts, properties, equipment, codex archetypes, etc.). **Official Library Editor** owns published **powers, techniques, armaments, creatures, species, enhanced items** in `official_*` tables—not the same tabs as `/library` My content.
+- screen-behavior-note:admin-official-library-edit-via-creator-routes: Official Library **Edit** leaves admin for **`/power-creator`**, **`/technique-creator`**, **`/item-creator`**, **`/creature-creator`**, **`/species-creator`**, etc., with `?edit=`—save target is official library (`canSaveToOfficial` / `saveToOfficialLibrary`), not an in-place admin modal.
+- screen-behavior-note:admin-species-codex-tab-vs-official-species-tab: **Species** appears twice: **Codex Editor** species tab edits **`codex_species`** in modals; **Official Library** species tab opens **Species Creator** for **`official_species`** rows—different tables and UX.
+- screen-behavior-note:admin-core-rules-archetypes-vs-codex-archetypes-tab: **Core Rules** “Archetypes” tab edits the **`ARCHETYPES`** document in **`core_rules`**; **Codex Editor** “Archetypes” tab edits **`codex_archetypes`** rows (feat paths, etc.)—same word, different stores.
+- screen-behavior-note:admin-users-role-assign-vs-roles-quotas: **User Management** assigns **which role** a user has; **Role Policies** edits **limits and permissions** for each role. Users page shows effective limits but does not save policy numbers.
+- screen-behavior-note:admin-sources-membership-vs-codex-row-editor: **Sources** adds/removes/renames source **tags** on existing catalog rows across types; **Codex Editor** edits row **content**—complementary, not interchangeable.
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:admin-non-admin-direct-url-redirect: A signed-in **non-admin** who opens `/admin` or any child route is **redirected to `/`** by layout—no read-only admin preview.
+- screen-behavior-note:admin-changelogs-no-undo: **Changelogs** is audit-only; there is no “revert this edit” control on that page (fixes happen back in Codex, Official Library, or Core Rules).
+
+## Admin codex spreadsheet (behavior pass)
+
+**Codex Editor → Spreadsheet** (`CodexSpreadsheetView`, `useCodexSpreadsheet`) edits the same nine collections as **List** view: feats, skills, species, traits, parts, properties, equipment, archetypes, creature feats (`codex-spreadsheet-config.ts` `TAB_CONFIG`). Data loads from `useCodexFull` (`ADMIN_CODEX_QUERY_OPTIONS`). **Partial pass:** every physical column name on every row is not enumerated; the grid builds columns from keys present in loaded rows plus fixed rules below.
+
+### What a person can do
+
+| Action | Behavior |
+|--------|----------|
+| Edit cell | Inline text, number (`NUMERIC_COLUMNS`), checkbox (`BOOLEAN_COLUMNS`), or multiline **description** (`CodexSpreadsheetTableRow`). Arrays/objects edit as **JSON text**; blur runs `stringToCellValue` (parse JSON or keep string). |
+| Find / replace | `CodexSpreadsheetToolbar` + `doFindReplace`; optional whole-cell and limit-to-column. **Never** rewrites **`id`** (`READONLY_COLUMNS`, `searchableColumns`). |
+| Copy row | Inserts duplicate below with `generateNextNumericId` and name + ` copy` (`useCodexSpreadsheet`). |
+| Add row | Empty row; new saves need a **name**. |
+| Save row / Save all | `spreadsheetPersistPayload` → `createCodexDoc` / `updateCodexDoc` (`actions.ts`) with `expectedUpdatedAt` from load snapshot. Confirmation modal lists changed column keys per dirty row. |
+
+Saves run `assertCodexAdminPayloadKeys` → `toColumnarPayload` → `toDbPayload` (`codex-column-map.ts`). Cleared cells become **`null`** in the payload. Unsupported keys fail the save with an error (no silent drop after assert).
+
+### Column accounting (all tabs)
+
+| Rule | Columns / keys |
+|------|----------------|
+| **Read-only in grid** | **`id`** — shown but not editable; save always targets `originalId` from load, not the cell. |
+| **Hidden, not a column** | **`updated_at`** — used only for optimistic concurrency on update (`HIDDEN_COLUMNS`). |
+| **Not saved (derived display)** | Stripped in `spreadsheetPersistPayload` / hidden by `visibleSpreadsheetColumns`: **species** `size`, `speed`, `traits`; **traits** `species`; **properties** `tp_cost`, `gold_cost` (write **`base_tp`**, **`base_c`**, etc.); **equipment** `type`, `gold_cost`, `properties` (write **`currency`**, real property fields); **archetypes** `path_data` (write flattened level columns); **creature_feats** `points`, `prereqs` (write **`feat_points`** and real prereq fields). |
+| **Dynamic data columns** | Any other key on rows returned for that tab (e.g. `source`, `tags`, `op_1_desc`, `level1_feats`, trait id lists, skill arrays) — editable and saved if on the collection allowlist in `CODEX_COLUMNAR_FIELDS`. |
+| **Archetype load flattening** | On load only, `spreadsheetSourceRow` copies nested `path_data.level1` into **`level1_recommend_unarmed_prowess`**, **`level1_recommended_abilities`**, **`level1_loadouts`** so those cells save like list-mode column writes. |
+
+### Not walked
+
+- Exhaustive per-tab column inventory vs every API projection field.
+- Compare each modal-only control (pickers, images, trait multi-select UI) to its spreadsheet JSON/text equivalent line-by-line.
+
+### Same job, different behavior (vs List view)
+
+- screen-behavior-note:admin-codex-spreadsheet-same-updateCodexDoc-as-list-modals: Most tabs’ list modals build a payload and call **`updateCodexDoc`** / **`createCodexDoc`** through **`useAdminCodexEntity.save`**; spreadsheet dirty rows use the same server path after **`spreadsheetPersistPayload`**—not a separate bulk SQL API.
+- screen-behavior-note:admin-codex-spreadsheet-archetypes-skip-saveArchetypeWithPath: **List → Archetypes** saves through **`saveArchetypeWithPath`** (`admin-archetype-workspace-save.ts`) with path publish/selection validation and guidance UI. **Spreadsheet** writes archetype rows with **`updateCodexDoc`** on flat columns only—no guided workspace, no publish gate from that action.
+- screen-behavior-note:admin-codex-spreadsheet-feats-list-level-modal-vs-rows: **List → Feats** can open the leveled-feat **Layers** flow and **`persistCodexLevelEdits`** for a family in one session. **Spreadsheet** treats **each feat level as its own row**; you edit `feat_lvl` / level fields per row like any other column.
+- screen-behavior-note:admin-codex-spreadsheet-species-list-catalog-listing-ui: **List → Species** exposes **catalog listing** scope filter and **`usePatchOfficialCatalogListing`** controls on rows. **Spreadsheet** can only change listing if a **`catalog_listing`** (or related) column exists on the row—no dedicated listing toggle chrome.
+- screen-behavior-note:admin-codex-spreadsheet-derived-vs-writable-columns: List modals edit **`sizes`**, **`currency`**, **`feat_points`**, level columns, etc. **Spreadsheet** hides **derived** display aliases (`size`/`speed`/`traits`, `gold_cost`, `path_data`, …) so editors are not misled into editing non-persisting cells.
+- screen-behavior-note:admin-codex-spreadsheet-json-cells-vs-modal-pickers: List modals use pickers and structured subforms (traits, sources, archetype armament lines). **Spreadsheet** expects **comma-separated text** for Postgres text-array fields and **JSON strings** for JSONB columns (`toColumnValue` / `parseJsonColumn` in `codex-column-map.ts`)—invalid JSON rejects the save.
+- screen-behavior-note:admin-codex-spreadsheet-feat-tag-normalize-on-server: **Feat** saves from spreadsheet still run **`applyFeatTagNormalization`** on the server for **`tags`**—same as list modal saves.
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:admin-codex-spreadsheet-no-delete-row: **Spreadsheet** has copy and save actions per row but **no delete row** control—removal stays in **List** view (`useAdminCodexDelete` / row actions).
+- screen-behavior-note:admin-codex-spreadsheet-id-edit-dead-end: Changing **`id`** in the cell is blocked; even if find/replace touched ids, saves would still target **`originalId`**—retargeting another entity via id edit is intentionally impossible.
+- screen-behavior-note:admin-codex-spreadsheet-derived-columns-not-in-grid: Derived keys (e.g. **`path_data`**, equipment **`properties`** summary) are **not shown**; editing them in memory would be stripped before save anyway.
+
+## Crafting screens (behavior pass)
+
+Crafting hub **`/crafting`** and session tool **`/crafting/[id]`**. Product area is marked **deferred** (`crafting/DEFERRED.md`); this pass only records current behavior, not fixes. **Partial pass:** `crafting-tool-derived.ts` math and every optional-modifier edge not line-by-line.
+
+### Screens walked
+
+**Crafting hub** — `crafting/page.tsx`. Lists the signed-in user’s sessions (`useCraftingSessions` → `GET /api/crafting` → `crafting_sessions`). **Start Crafting** creates a blank session (`useCreateCraftingSession` → `POST /api/crafting`) and navigates to `/crafting/{id}`. Tabs **All / In progress / Completed** filter by `status`; search filters `itemName`. Row open → tool page; delete → `useDeleteCraftingSession`. Guests see a sign-in banner but the page still renders; session APIs require auth.
+
+**Crafting tool** — `crafting/[id]/page.tsx` + `useCraftingToolPage`. Loads one session (`useCraftingSession` → `GET /api/crafting/[id]`). **Autosave:** debounced 2s `useSaveCraftingSession` → `PATCH /api/crafting/[id]` with `session.data` JSON. Uses `CreatorLayout` + sidebar (`CraftingSummarySidebar` / `CreatorSummaryPanel`).
+
+| Panel | Role |
+|--------|------|
+| `CraftingItemOptionsSection` | Pick item (modal), consumable/bulk/enhance/upgrade options, custom base item, power pick for enhanced |
+| `CraftingAdjustmentsSection` | DS modifier, extra successes/failures |
+| `CraftingRollsSection` | Per-session d20 rolls → `computeSkillRollResult` |
+| `CraftingOptionalRulesSection` | Optional rule sliders (`optionalModifiers`) |
+| `CraftingOutcomeCard` | Shown when `status === 'completed'` |
+
+**Item pick** — `CraftingItemSelectModal`: **Armaments** (user + Realms official items) and **Equipment** (user + codex equipment), `SourceFilter` All / My / Realms. Not powers, techniques, or creatures.
+
+**Rules & math** — `useGameRules()` → `rules.CRAFTING`; `computeCraftingRequirements`, tallies, and `calculateCraftingOutcome` in `crafting-utils` / helpers. `bootstrapCraftingSession` migrates older `multipleUseTableIndex` rows when rules load.
+
+**Complete** — Sidebar **Complete Crafting** → `handleComplete`: sets `status: 'completed'`, stores `outcome` on session, saves via PATCH. **Enhanced** crafts can then **Save to Library** in `CraftingOutcomeCard` → `useCreateEnhancedItem` (user **Enhanced** library rows, not another crafting session row). Potency upgrade path uses `useUpdateEnhancedItem` when `isUpgradePotency` is set on the session.
+
+**What saves where**
+
+| Action | Store |
+|--------|--------|
+| Session progress, rolls, options | `crafting_sessions.data` (Supabase) via `/api/crafting` |
+| Enhanced item from completed craft | User enhanced-items API via `createEnhanced` |
+| Potency update after upgrade craft | `updateEnhanced` on existing enhanced item id |
+
+### Screens not walked in this pass
+
+- `crafting-tool-derived.ts` and `crafting-utils.ts` formula walk-through (deferred product math review).
+- Every optional-modifier slider max-step branch.
+- Marketing routes (out of scope).
+- `crafting/DEFERRED.md` and root `DEFERRED.md` policy text (area flagged deferred only).
+
+### Same job, different behavior (deferred product notes)
+
+- screen-behavior-note:crafting-guest-no-cloud-sessions: **Hub** is reachable signed-out with a banner, but **list/create/save/delete** APIs return **401**—there is no guest-local crafting session store (deferred: unlike guest character sheets).
+- screen-behavior-note:crafting-autosave-session-json-not-enhanced-row: In-progress edits **autosave** the **`crafting_sessions`** JSON blob; **Save to Library** on the outcome card is a **separate** enhanced-item create after completion—not the same save path as `item-creator`.
+- screen-behavior-note:crafting-creator-layout-vs-item-creator-page: Tool uses **`CreatorLayout`** / summary sidebar like creators, but persistence is **session JSON**, not `useCreatorSave` → user armament row (deferred: overlapping chrome, different job than `/item-creator`).
+- screen-behavior-note:crafting-item-modal-vs-full-library-picker: **`CraftingItemSelectModal`** limits pickers to **armaments + codex/user equipment** with source filter—narrower than Library hub tabs or sheet **Add Library** flows (deferred scope).
+- screen-behavior-note:crafting-rules-from-core-rules-not-hardcoded: Requirements and outcomes read **`core_rules` / `CRAFTING`** through `useGameRules`, same category family as **Admin → Core Rules → Crafting** tab—not inline literals in the tool page.
+- screen-behavior-note:crafting-hub-planned-in-in-progress-tab: Tab **In progress** includes both **`in_progress` and `planned`** sessions; there is no dedicated **Planned** tab (deferred UX).
+- screen-behavior-note:library-enhanced-cta-vs-hub-start: **Library → Enhanced** empty/create CTA links **`/crafting`**; functionally the same entry as **Start Crafting** on the hub (two doors, one flow).
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:library-enhanced-edit-not-session-id: **Library `LibraryEnhancedTab` `onEdit`** navigates to **`/crafting/{enhancedItemId}`**, which is **not** a `crafting_sessions` id—the tool page shows session not found (404 API) unless ids collide by accident.
+- screen-behavior-note:crafting-new-redirects-to-hub: Legacy **`/crafting/new`** redirects to **`/crafting`** (`next.config.ts`); there is no separate “new session” page—**Start Crafting** creates the session and opens `/crafting/[id]`.
+
+## Marketing and public entry screens (behavior pass)
+
+Public marketing copy and account sign-in under `(main)/` (with site header/footer) and `(auth)/` (branded auth shell). **Partial pass:** header nav dropdown internals only as needed for links. **Rulebook chapter inventory and routes** are in **On-site rulebook chapters** (not MDX prose).
+
+### Pages walked
+
+**Home `/`** — `page.tsx` renders landing sections: `HeroSection`, `UniquenessSection`, `HowItWorksSection`, `SecondaryDiscoverySection`, `CommunitySection`. **Read-only marketing** (no form saves). CTAs link into app routes: `/characters/new`, `/characters`, `/power-creator`, `/item-creator`, `/rules`, Discord (`DISCORD_URL`). `HeroSection` swaps copy when signed-in user has characters: primary → **`/characters`**, secondary → **`/characters/new`**.
+
+**About `/about`** — Carousel + creator note; CTAs to `/characters/new`, `/rules`, Discord.
+
+**Core Rulebook `/rules`** — See **On-site rulebook chapters** for the full slug list, loaders, and external Google Doc link.
+
+**Resources `/resources`** — Static copy; one working download (`/Realms Character Sheet Alpha.pdf` in `public/`). “Coming soon” list is text only (no links).
+
+**Privacy `/privacy`**, **Terms `/terms`** — `LegalDocumentBody` + copy constants; read-only legal prose.
+
+**Footer** (`Footer` full on `(main)` layout) — Groups from `FOOTER_COPY`: Play (`/characters`, `/campaigns`, `/encounters`), Learn (`/about`, `/rules`, `/resources`), Create (creator routes), Legal (`/terms`, `/privacy`, mailto contact). Discord CTA external. **Auth shell** uses `Footer variant="minimal"` (privacy, terms, contact, discord only).
+
+**Login `/login`** — Email/password via `loginWithPasswordAction`, optional remember-me, Turnstile captcha, Google OAuth (`signInWithGoogleOAuth`). **`returnTo`** / sessionStorage redirect via `resolvePostAuthRedirectPath`. On success may run guest character/encounter migration helpers. Links: `/forgot-password`, `/register`.
+
+**Register `/register`** — `signUpAction` + `createUserProfileAction`, terms acceptance, captcha, Google OAuth, email-confirmation flow with resend. Links: `/login`.
+
+**Forgot password `/forgot-password`** — `requestPasswordResetAction` (email); no account session created.
+
+**Reset password `/reset-password`** — Requires Supabase recovery **session** from email link; `updateUser({ password })`, then redirect `/login?message=password_updated`. Without session shows expired state → `/forgot-password`.
+
+**What saves (account entry only)** — Supabase Auth session/cookies via login, register, OAuth, and password reset; profile row via register action. Marketing/legal pages do not write game data.
+
+### Public pages not walked
+
+- `/my-account` (signed-in settings — app shell, not home/footer marketing).
+- `/codex`, `/library`, and other app hubs (covered in other behavior passes).
+- `dev/styleguide`.
+- Header account menu beyond login/register links.
+
+### Same job, different behavior
+
+- screen-behavior-note:marketing-hero-returning-vs-new-cta-targets: Signed-in users with characters get **Continue** → **`/characters`**; new visitors get **Create Character** → **`/characters/new`** only.
+- screen-behavior-note:marketing-rules-in-app-vs-google-doc: **`/rules`** hosts the on-site rulebook; the same page also links the **Google Doc manuscript** (`RULES_COPY.viewUrl`)—two ways to read rules, not one canonical UI.
+- screen-behavior-note:marketing-footer-full-vs-auth-minimal-legal: **Full footer** lists Play/Learn/Create plus legal; **auth minimal footer** repeats **privacy/terms/contact/discord** only—duplicate legal entry points, fewer app links.
+- screen-behavior-note:marketing-home-about-footer-duplicate-ctas: **Home**, **About**, **footer Create/Learn**, and **secondary discovery** repeat links to **`/characters/new`**, creators, and **`/rules`**—same destinations, multiple marketing surfaces.
+- screen-behavior-note:marketing-login-returnTo-guest-migration: **Login** honors **`returnTo`** (and stored redirect) after auth; may migrate **guest characters/encounters** into the account—marketing entry that changes app data on success.
+- screen-behavior-note:marketing-resources-coming-soon-no-links: **Resources** “Coming soon” bullets are **labels only**—no hrefs (not broken links; placeholders).
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:marketing-rules-welcome-slug-redirects-index: Visiting **`/rules/welcome-to-realms`** **permanent-redirects** to **`/rules`**—welcome exists only on the index URL, not as a separate chapter route.
+- screen-behavior-note:marketing-reset-password-without-session: **`/reset-password`** without a valid recovery session shows **Reset Link Expired**—form is unreachable until the user completes the email flow from **`/forgot-password`**.
+
+## On-site rulebook chapters (behavior pass)
+
+**Routes:** index **`/rules`** (`rules/page.tsx`) and **`/rules/[slug]`** (`rules/[slug]/page.tsx`). Both wrap content in **`RulebookShell`** (nav, search, outline). **Partial pass:** MDX body text inside each `.mdx` file was not read—only metadata, routing, and registry parity.
+
+### How chapters load
+
+| Step | Function / file |
+|------|-----------------|
+| Catalog | **`src/content/rules/chapters.json`** → imported as **`RULEBOOK_CHAPTERS`** in **`lib/rules/rulebook.ts`** (`title`, `description`, `headings`, optional **`parentSlug`**). |
+| Body | **`getRulebookChapterComponent(slug)`** in **`content/rules/index.ts`** maps each slug to a static MDX import (`*.mdx` under `content/rules/`). |
+| Index page | **`rules/page.tsx`** renders **`RULEBOOK_WELCOME_SLUG`** (`welcome-to-realms`) MDX on **`/rules`** via **`getRulebookChapterComponent`**. |
+| Chapter page | **`[slug]/page.tsx`**: **`getRulebookChapter(slug)`** for metadata; **`getRulebookChapterComponent(slug)`** for body; missing slug or missing component → **`notFound()`**. |
+| Nav outline | **`getRulebookNavTree()`** — roots omit **`parentSlug`**; children nest under parent (Encounters, Character Creation, Equipment groups). Links use **`getRulebookChapterHref`**. |
+| Prev/next | **`getAdjacentRulebookChapters`** walks the **flat `chapters.json` array order** (not only root chapters). |
+| Search | **`loadRulebookSearchChunks`** (`rulebook-search-load.ts`) reads each **`{slug}.mdx`** file from disk at build/RSC time. |
+| Sitemap | **`RULEBOOK_SITEMAP_PATHS`** — Welcome maps to **`/rules`**; no **`/rules/welcome-to-realms`** URL in sitemap. |
+
+Every chapter page also shows **`RULES_COPY.viewUrl`** (Google Docs manuscript)—external **view source**, not an on-site chapter slug.
+
+### Chapter inventory (13 in `chapters.json`)
+
+| # | Slug | Title | Opens at | MDX + component |
+|---|------|-------|----------|-----------------|
+| 1 | `welcome-to-realms` | Welcome to Realms | **`/rules` only** (`/rules/welcome-to-realms` **redirects** to `/rules`) | yes |
+| 2 | `playing-the-game` | Playing the Game | `/rules/playing-the-game` | yes |
+| 3 | `encounters` | Encounters | `/rules/encounters` | yes |
+| 4 | `combat-encounters` | Combat Encounters | `/rules/combat-encounters` (nav child of Encounters) | yes |
+| 5 | `skill-encounters` | Skill Encounters | `/rules/skill-encounters` (nav child of Encounters) | yes |
+| 6 | `character-creation` | Character Creation & Leveling | `/rules/character-creation` | yes |
+| 7 | `roll-tables` | Roll-Tables | `/rules/roll-tables` (nav child of Character Creation) | yes |
+| 8 | `equipment` | Equipment, Crafting & Downtime | `/rules/equipment` | yes |
+| 9 | `crafting` | Crafting & Harvesting | `/rules/crafting` (nav child of Equipment) | yes |
+| 10 | `downtime` | Downtime | `/rules/downtime` (nav child of Equipment) | yes |
+| 11 | `powers-and-techniques` | Powers & Techniques | `/rules/powers-and-techniques` | yes |
+| 12 | `glossary` | Rules Glossary | `/rules/glossary` | yes (metadata: unfinished in source manuscript) |
+| 13 | `the-realms` | The Realms | `/rules/the-realms` | yes (metadata: unfinished in source manuscript) |
+
+No duplicate slugs in JSON. No extra `.mdx` files without a matching `chapters.json` row (13 files, 13 slugs). Nothing in the chapter list is **Google-Doc-only**—the Doc is a separate link on every page.
+
+### Not walked
+
+- Heading anchors inside each MDX file vs `chapters.json` `headings` list line-by-line.
+- Search ranking / snippet behavior in **`rulebook-search.ts`**.
+
+### Same job, different behavior
+
+- screen-behavior-note:rulebook-welcome-index-not-slug-url: **Welcome** content is served at **`/rules`**; **`/rules/welcome-to-realms`** **`permanentRedirect('/rules')`**—the welcome slug is not a stable chapter URL (still in **`generateStaticParams`** for the redirect route).
+- screen-behavior-note:rulebook-google-doc-not-a-chapter: **`RULES_COPY.viewUrl`** opens the full manuscript in Google Docs; it is **not** listed in **`chapters.json`** and does not replace on-site MDX.
+- screen-behavior-note:rulebook-nav-tree-vs-pager-order: Sidebar **`getRulebookNavTree`** groups **parent/child** via **`parentSlug`**; **pager** uses **flat JSON order** (e.g. after **Encounters** comes **Combat Encounters**, not the next root).
+- screen-behavior-note:rulebook-json-mdx-registry-must-match: **`[slug]/page.tsx`** requires both **`getRulebookChapter`** and **`getRulebookChapterComponent`**—a slug in JSON without an MDX **`COMPONENTS`** entry returns **404**.
+- screen-behavior-note:rulebook-glossary-realms-metadata-unfinished: **`glossary`** and **`the-realms`** descriptions in JSON state the chapter is **unfinished in the source manuscript**—pages still render local MDX; they are not external-only.
+
+### Dead or unreachable paths
+
+- screen-behavior-note:rulebook-unknown-slug-notFound: Any **`/rules/[slug]`** not in **`RULEBOOK_CHAPTERS`** → **`notFound()`** (no fallback chapter).
+- screen-behavior-note:rulebook-welcome-slug-route-dead-end: **`/rules/welcome-to-realms`** never shows its own page body—always redirects to **`/rules`** (documented duplicate URL, not duplicate content).
+
+## My Account screen (behavior pass)
+
+Signed-in settings at **`/my-account`** (`my-account/page.tsx` → `ProtectedRoute` → `useMyAccountPage` + section cards). **Partial pass:** server actions in `(auth)/actions` and upload API policies not line-by-line.
+
+### Walked
+
+| Section | What a person can do | What saves |
+|---------|----------------------|------------|
+| **Role & limits** | Read role + quotas (`AccountRoleLimitsCard`, `useAccountProfile`) | Nothing (display only) |
+| **Profile** | View username/email/provider/member since; change/remove photo | Upload: `POST /api/upload/profile-picture` + `supabase.auth.updateUser` avatar; bank: `setProfilePhotoFromLibraryAction`; remove: `DELETE` upload + auth avatar |
+| **Tutorials** | Toggle onboarding tips (`AccountTutorialsCard`) | `localStorage` via `setTutorialsEnabled` (not server profile) |
+| **Username** | Submit new username (weekly limit copy) | `changeUsernameAction` → profile row; `patchProfile` cache |
+| **Email / password** (password provider only) | Change email with current password; change password in-page; **Send reset email** | `changeAccountEmailAction`, `changeAccountPasswordAction`; reset email via `supabase.auth.resetPasswordForEmail` |
+| **OAuth notice** (Google-only, etc.) | Read-only explanation (`AccountOauthNoticeCard`) | N/A — email/password cards hidden |
+| **Danger zone** | Delete account (type DELETE; password or OAuth reauth) | `deleteAccountAction`; Google delete may use `beginGoogleDeleteReauthAction` + `?deleteReauth=1` return |
+
+Profile load: `useAccountProfile` → `fetchUserProfile` (includes `rolePolicy` e.g. `canUploadProfilePicture`). Upload allowed opens `ImageUploadModal`; otherwise **Change Picture** opens `RealmsImagePicker` (portrait categories) only.
+
+### Not walked
+
+- Every branch inside `deleteAccountAction` / email change confirmation flows.
+- Admin **Role Policies** editor (cross-reference only).
+
+### Same job, different behavior
+
+- screen-behavior-note:account-protected-route-login-returnTo: **`ProtectedRoute`** sends guests to **login** with **returnTo** for `/my-account`—unlike marketing pages that render signed-out.
+- screen-behavior-note:account-oauth-hides-email-password-cards: Users **without** a password provider see **`AccountOauthNoticeCard`** instead of change-email/change-password forms (Google sign-in cannot use those inline forms).
+- screen-behavior-note:account-send-reset-email-vs-forgot-password-page: **Password card → Send reset email** uses the same **`resetPasswordForEmail`** pattern as **`/forgot-password`**—duplicate recovery entry while already signed in.
+- screen-behavior-note:account-change-password-vs-reset-password-route: **Change password** on this page uses **`changeAccountPasswordAction`** (current password required); **`/reset-password`** sets a new password via **recovery session** after email—same outcome, different paths.
+- screen-behavior-note:account-picture-upload-gated-by-role-policy: **`canUploadProfilePicture`** from role policy controls **file upload modal** vs **image library picker only** (no custom upload).
+- screen-behavior-note:account-role-limits-read-only-vs-admin-roles: **Role & limits** is **read-only** here; changing quotas is **`/admin/roles`** (admin only)—this page only shows effective limits for the signed-in user.
+- screen-behavior-note:account-tutorials-toggle-local-not-profile: Tutorial preference is **`localStorage`**, not saved on the user profile row or API.
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:account-guest-cannot-open-settings: **`/my-account`** never renders for signed-out users—the settings UI is unreachable without login (`ProtectedRoute`).
+
+### App routes still without a dedicated behavior-pass section
+
+Player-facing app routes now have behavior-pass sections except **`dev/styleguide`** (internal UI reference, out of scope for screen walks).
+
+## Codex screen (behavior pass)
+
+Public reference browser at **`/codex`** (`codex/page.tsx`). **Realms Codex** vs **My Codex** segmented control; category tabs (main + optional **Advanced** for parts, properties, creature feats, traits). **Partial pass:** filter helpers and chip field matrices not line-by-line; see **Codex expanded rows** for public expand bodies.
+
+### Walked
+
+**Hub** — No writes on this page in **Realms Codex** mode: browse, search, sort, expand rows via `CodexBrowseListShell` / `GridListRow` / codex row components. Page comment: **powers, techniques, armaments, creatures** live on **`/library`**, not here.
+
+| Tab | Public **Realms Codex** | **My Codex** |
+|-----|-------------------------|--------------|
+| Feats, skills, archetypes, properties, parts, traits, creature feats | Loads codex hooks (`useCodexFeats`, etc.); filters incl. rules source | **`CodexMyCodexEmpty`** (placeholder) |
+| Species | `useSpecies` → official `codex_species` rows | `useUserSpecies` list; **Edit** → `speciesCreatorEditHref` (**Species Creator**) |
+| Equipment | `useEquipment` reference list | **`EmptyState`**: custom equipment is on **Library**, not My Codex |
+
+**Feats / skills** (public): optional **`CharacterFilter`** + qualify toggles; selected character id persisted via `writePersistedLibraryCharacterFilterId` (shared persistence with library codex-style filters).
+
+**Advanced** toggle: hides advanced tab labels; if the active tab is advanced, selection resets to **feats**.
+
+### Not walked
+
+- Guest vs signed-in gate differences (if any) on codex hooks line-by-line.
+
+### Same job, different behavior
+
+- screen-behavior-note:codex-public-read-only-vs-admin-codex-editor: **`/codex`** is **read-only** reference UI; **`/admin/codex`** edits the same **`codex_*`** tables via modals/spreadsheet (`updateCodexDoc`)—same data, different job.
+- screen-behavior-note:codex-vs-library-publishable-entities: **`/codex`** is feats/skills/species/parts/properties/equipment reference; **`/library`** holds user/official **powers, techniques, armaments, creatures**—split called out in `codex/page.tsx` header comment.
+- screen-behavior-note:codex-species-public-vs-my-user-species: **Realms Codex → Species** shows **codex** species; **My Codex → Species** shows **`useUserSpecies`** with edit opening **Species Creator**—not **Admin → Official Library → Species** (`official_species`).
+- screen-behavior-note:codex-my-species-vs-species-creator-save: Edits from My Codex species rows navigate to **`/species-creator`**; saves happen on the creator, not inline on `/codex`.
+- screen-behavior-note:codex-my-equipment-empty-points-library: **My Codex → Equipment** is an **`EmptyState`** directing users to **Library** for custom equipment—not a second equipment editor.
+- screen-behavior-note:codex-feats-skills-character-filter-shared-persistence: **CharacterFilter** on feats/skills (and related codex tabs) persists the selected character id using the same helper as library character filtering—filter choice survives navigation.
+- screen-behavior-note:codex-advanced-collapse-resets-tab: Turning off **Advanced** while on an advanced tab **forces active tab back to feats**.
+
+### Dead or unreachable paths (this scope)
+
+- screen-behavior-note:codex-my-non-species-tabs-placeholder: In **My Codex**, tabs other than **Species** (and the equipment message state) render **`CodexMyCodexEmpty`**—no user codex content UI yet except custom species list.
+- screen-behavior-note:codex-no-save-on-browse-page: **Realms Codex** tabs do not expose create/delete/save controls on `/codex` itself—all reference browsing only.
+
+## Codex expanded rows (behavior pass)
+
+**Realms Codex** list rows only (**My Codex** species reuse the same expand body; species row chrome differs). Each tab maps through `CodexBrowseListShell` into `GridListRow` or `CodexFeatRow` / `CodexSkillRow`. A person **clicks the row** to open or close the panel; chip groups inside can expand for more text. Nothing in these panels saves data or jumps to another codex tab—except **My Codex → Species**, which shows an **Edit** control on the row (not inside the trait grids) that opens **Species Creator**.
+
+### Walked (expand payload by tab)
+
+| Tab | Component | What you see when expanded |
+|-----|-----------|----------------------------|
+| **Feats** | `CodexFeatsTab` → `CodexFeatRow` | Full feat **description**; labeled chip sections from `buildFeatDetailSections` (Type, Ability Requirements, Skill Requirements, Feat Levels for leveled families, Tags). Path-filter chips can also sit on the name in the collapsed row. |
+| **Skills** | `CodexSkillsTab` → `CodexSkillRow` | **Description** (sub-skills add a “Sub-skill of …” line in the body). Optional chips from `getSkillExtraDescriptionDetailSections` (Success/Failure Outcomes, DS Calculation, Craft Success/Failure) when the row has that copy. |
+| **Species** | `CodexSpeciesTab` → `SpeciesCard` / `GridListRow` | Custom **`expandedContent`**: description, stat grid (height, weight, adulthood, lifespan, languages, skill names), then trait blocks—Species Traits, Ancestry Traits, Flaws, Characteristics—each as small colored cards with name + description. Thumbnail in the collapsed row when present. |
+| **Archetypes** | `CodexArchetypesTab` → `ArchetypePathCard` | Custom **`expandedContent`**: description, type/abilities/proficiency summary grid, then `PathRecommendationsBlock` sections (“Level 1 recommendations”, per-level “Level-up progression”) listing resolved feat/skill/equipment/power/technique **names as bullet lists**—not links. Empty progression shows a muted “No level 2+ progression entries…” line. |
+| **Equipment** | `CodexEquipmentTab` → `CodexEquipmentRow` | Description; `buildCodexEquipmentDetailSections` adds catalog fact chips via `glrSurfaceDetailSections` (e.g. training points when calculated) plus a **Properties** chip group when the item has properties. |
+| **Parts** | `CodexPartsTab` → inline part row | Always at least a **Type** chip section (power vs technique, mechanic, percentage cost). **Options** chips (Option 1–3) with EN/TP cost in the chip title and option text in the chip body when `op_*_desc` exists. |
+| **Properties** | `CodexPropertiesTab` → inline property row | **Options** chips only when `op_1_desc` is set (name includes IP/TP/cost multiplier labels from columns). Otherwise expand may be only the description or nothing to expand. |
+| **Traits** | `CodexTraitsTab` → `GridListRow` | **Choice options** chip section when `choiceTraitOptionIdsToChipData` returns chips; plain traits are often description-only. |
+| **Creature feats** | `CodexCreatureFeatsTab` → `GridListRow` | Description plus **Feat Levels** chips from `buildFeatLevelChips` when the family has multiple levels—not the full `buildFeatDetailSections` stack used on the Feats tab. |
+
+### Not walked
+
+- Playwright/visual baseline matrices for every chip category color.
+- Admin codex row expand (different `variant` on feat/skill rows).
+
+### Same job, different behavior
+
+- screen-behavior-note:codex-expand-detailSections-vs-expandedContent: Most tabs feed `GridListRow` **`detailSections`** (labeled chip groups). **Species** and **Archetypes** use bespoke **`expandedContent`** JSX instead—trait/style cards and path recommendation lists rather than codex chip sections.
+- screen-behavior-note:codex-expand-feats-vs-creature-feats-detail-builders: **Feats** tab uses `CodexFeatRow` → `buildFeatDetailSections` (type, requirements, tags, family levels). **Creature feats** tab builds `GridListRow` inline with only **Feat Levels** chips from `buildFeatLevelChips`—same leveled-feat helper family, different expand depth.
+- screen-behavior-note:codex-expand-skills-only-tab-with-outcome-chips: **Skills** alone uses `getSkillExtraDescriptionDetailSections` for success/failure/craft/DS chips in the expand panel; other tabs do not surface that pattern.
+- screen-behavior-note:codex-expand-parts-always-type-section: **Parts** rows always include a **Type** `detailSections` group (at minimum power/technique descriptors), so they almost always have an expand panel even when option text is missing.
+- screen-behavior-note:codex-expand-properties-traits-may-collapse-only: **Properties** (no option desc) and **Traits** (non-choice) may have **no chip sections**—the row is readable from collapsed columns and maybe a short description only.
+- screen-behavior-note:codex-expand-equipment-calculated-property-chips: **Equipment** expand merges live **Properties** chips (names resolved against `useItemProperties` data) with catalog surface chips; collapsed columns already show category/rarity/cost facts per equipment list chrome.
+- screen-behavior-note:codex-expand-species-my-codex-edit-on-row-not-in-panel: **My Codex → Species** passes `onEdit` into `GridListRow` (opens `speciesCreatorEditHref`); **Realms Codex → Species** does not. The expand panel itself is the same read-only trait layout in both modes.
+
+### Dead or unreachable paths
+
+- screen-behavior-note:codex-expand-archetype-recommendations-not-links: `PathRecommendationsBlock` in **Archetypes** lists recommendation **names only**—clicking does not open the Feats/Skills/Equipment tabs or scroll to those rows.
+- screen-behavior-note:codex-expand-public-no-inline-mutations: **Realms Codex** expand panels have no save, delete, or admin edit controls—read-only reference except the separate **My Codex** species **Edit** button on the row chrome.
+- screen-behavior-note:codex-expand-no-body-no-expander: When a row has **no** description, **no** `detailSections`, and **no** `expandedContent`, `GridListRow` omits the expander—collapsed columns are the whole story (common on sparse property/trait rows).
+
+## Unused exports outside game and calculators
+
+No production file imports these names. A test import does not count. The file that exports the name may still call it. This is not a dead function unless nothing in that file calls it either. Next.js page, layout, route, proxy, and MDX conventions are not listed. `src/lib/game` and `src/lib/calculators` were not part of this search. The hook, service, and store files the barrels omit are imported by their own paths. The names below are the extra exports in those trees, not unused files.
+
+### Only a test imports this
+
+- `src/app/(main)/admin/codex/admin-codex-unsaved-leave.ts`: `codexEditorWarning`, `CodexEditorExit` (type)
+- `src/app/(main)/admin/codex/admin-property-form.ts`: `normalizePropertyType`
+- `src/app/(main)/admin/codex/use-admin-leveled-feat-session.ts`: `resolveAdminLeveledFeatAddSource`
+- `src/app/(main)/admin/codex/codex-column-map.ts`: `columnarDbColumns`
+- `src/app/(main)/admin/codex/codex-spreadsheet-helpers.ts`: `rowDataWithoutId`
+- `src/app/(main)/admin/core-rules/core-rules-conditions.ts`: `LEVELED_CONDITION_NAMES`
+- `src/app/(main)/admin/core-rules/core-rules-number.ts`: `CORE_RULES_NUMBER_REQUIRED`, `CORE_RULES_NUMBER_SERVER_NEGATIVE`, `CORE_RULES_NUMBER_TOO_LARGE`, `CORE_RULES_NUMBER_WHOLE`
+- `src/app/(main)/admin/core-rules/core-rules-unsaved-leave.ts`: `CORE_RULES_EDITOR_DISCARD_CONFIRM`, `CORE_RULES_EDITOR_DISCARD_DESCRIPTION`, `CORE_RULES_TAB_DISCARD_CONFIRM`
+- `src/app/(main)/admin/sources/actions.ts`: `addAdminCodexSourceMembership`
+- `src/app/(main)/admin/users/admin-users-directory-state.ts`: `tryApplyContinuationResult`
+- `src/app/(main)/creature-creator/creature-creator-library-selectables.ts`: `codexEquipmentAsLibraryItem`
+- `src/app/(main)/creature-creator/creature-movement.ts`: `isCreatureMovementControlFeatId`
+- `src/app/(main)/creature-creator/creature-creator-remove-section-confirm-placeholder.ts`: `REMOVE_SECTION_CONFIRM_CONFIRM_LABEL`, `REMOVE_SECTION_CONFIRM_DESCRIPTION`
+- `src/app/(main)/creature-creator/map-creature-inventory-rows.ts`: `creatureArmamentToSheetItem`
+- `src/app/(main)/creature-creator/transformers.ts`: `customEquipmentItemToCreatureArmament`
+- `src/lib/encounter/character-resource-sync.ts`: `CharacterResourcePatch` (type)
+- `src/app/(main)/encounters/[id]/_components/combat/use-combat-round-actions.ts`: `encounterStateAfterEnd`, `encounterStateAfterStart`
+- `src/app/(main)/encounters/[id]/_components/encounter-play-page-shell.tsx`: `encounterPlayPageGatePhase`
+- `src/app/(main)/item-creator/item-creator-editor-armor.tsx`: `ARMOR_FIELD_GRID_CLASS`
+- `src/app/(main)/item-creator/item-creator-helpers.tsx`: `RARITY_REFERENCE`, `formatPropertyHeaderCost`, `formatPropertyPerLevelCost`, `propertyPointTotal`
+- `src/app/(main)/item-creator/item-creator-property-options.ts`: `ADD_PROPERTY_DISABLED_REASON`, `ADD_PROPERTY_SHIELD_DISABLED_REASON`
+- `src/app/(main)/my-account/_components/account-profile-card.tsx`: `PROFILE_PICTURE_UPLOAD_DENIED`
+- `src/app/(main)/power-creator/power-creator-composition.ts`: `overlayFlagsFromVariants`
+- `src/app/(main)/power-creator/power-creator-part-actions.ts`: `nextMechanicPartToAdd`
+- `src/app/(main)/species-creator/species-creator-bootstrap.ts`: `resolveSpeciesEditForm`
+- `src/app/robots.ts`: `ROBOTS_DISALLOW`
+- `src/app/sitemap.ts`: `SITEMAP_PATHS`
+- `src/components/character-sheet/level-up-modal.tsx`: `calculateLevelGains`
+- `src/components/character-sheet/library-feat-rows.tsx`: `customizationDraftDiffers`, `traitRowId`
+- `src/components/character-sheet/notes-tab.tsx`: `SheetNoteField`
+- `src/components/character-sheet/sheet-currency-input-layout.ts`: `SHEET_CURRENCY_INPUT_MAX_CH`, `SHEET_CURRENCY_INPUT_MAX_CHROME_CH`, `SHEET_CURRENCY_REPRO_FORMATTED`
+- `src/components/character-sheet/sheet-desktop-columns.ts`: `archetypeStackedWeaponNamePx`, `sheetSkillNameCellPx`, `sheetThreeColumnFits`, `sheetWeaponNameCellPx`
+- `src/components/character-sheet/sheet-header-layout.ts`: `sheetHeaderThreeColumnFits`
+- `src/components/character-sheet/use-sheet-feat-actions.ts`: `traitUsesAfterDelta`
+- `src/components/creator/CreatorSaveToolbar.tsx`: `CREATOR_SAVE_DISABLED_CLASS`
+- `src/components/creator/LoadFromLibraryModal.tsx`: `LOAD_FROM_LIBRARY_MODAL_SIZE`
+- `src/components/creator/ability-score-editor.tsx`: `abilityNextCostVisible`
+- `src/components/creator/power-part-card.tsx`: `creatorPartOptionLabel`, `formatCreatorPartEnergy`
+- `src/components/encounters/combatant-card-resources.tsx`: `COMBATANT_RESOURCE_NUMBER_INPUT_CLASS`
+- `src/components/guided-creator/guided-choice-card.tsx`: `guidedChoiceCardSelectAriaLabel`, `isGuidedChoiceCardSelectKey`
+- `src/components/guided-creator/guided-equipment-l2-grid.ts`: `ARMOR_L2_HEADER_COLUMNS`, `GEAR_L2_HEADER_COLUMNS`, `WEAPON_L2_HEADER_COLUMNS`
+- `src/components/guided-creator/guided-skills-panel.tsx`: `AssignedSkillDetails`
+- `src/components/layout/header.tsx`: `accountAvatarInitial`, `accountMenuPointerClickState`, `armDismissClickSwallow`, `shouldCloseDisclosureOnFocusLeave`, `shouldCloseDisclosureOnOutsidePointer`
+- `src/components/patterns/chrome/cloud-sync-offline-banner.tsx`: `CLOUD_SYNC_SERVER_UNREACHABLE_BODY`, `CLOUD_SYNC_SERVER_UNREACHABLE_TITLE`
+- `src/components/patterns/chrome/image-upload-modal.tsx`: `IMAGE_CROPPER_KEYBOARD_HINT`, `imageCropperA11yProps`
+- `src/components/patterns/chrome/roll-button.tsx`: `rollButtonVariants`
+- `src/components/patterns/list/entity-library-powers-techniques.tsx`: `powerListFactCells`
+- `src/components/patterns/list/grid-list-row-chrome.ts`: `GRID_LIST_ROW_THUMBNAIL_COLUMN_WIDTH`, `collapsedNameTrackWidthPx`, `expandGridTemplateTokens`, `externalChromeFootprintWidth`
+- `src/components/patterns/list/grid-list-row-columns.ts`: `columnHasInteractiveValue`, `dataColumnTrackCount`
+- `src/components/patterns/list/grid-list-row.tsx`: `expandedBodyClickShouldToggle`, `selectedTextInside`
+- `src/components/patterns/list/hub-list-row.tsx`: `HUB_LIST_ROW_MOBILE_CHROME_END_DEFAULT`, `HUB_LIST_ROW_MOBILE_CHROME_END_SLOT`, `hubListRowMobileChromeEnd`
+- `src/components/patterns/list/list-header.tsx`: `columnSortAccessibleName`
+- `src/components/patterns/select/powered-martial-slider.tsx`: `formatProficiencyPointTotal`
+- `src/components/patterns/select/unified-selection-modal.tsx`: `selectionAddBlocked`
+- `src/components/rolls/roll-log.tsx`: `isCreatorRoutePath`, `rollLogShowsDiceBuilder`
+- `src/components/ui/button.tsx`: `buttonVariants`
+- `src/components/ui/icon-button.tsx`: `iconButtonVariants`
+- `src/components/ui/tab-navigation.tsx`: `scrollDeltaToRevealChild`, `tabListOverflowState`
+- `src/hooks/use-auto-save.ts`: `AUTOSAVE_RETRY_DELAYS_MS`, `flushDirtyAutosave`, `nextAutosaveRetryDelayMs`
+- `src/hooks/use-browser-offline.ts`: `getBrowserOfflineSnapshot`, `subscribeBrowserOffline`
+- `src/hooks/use-characters.ts`: `mergeCharacterDetailQueryData`, `nextCharacterDetailQueryData`
+- `src/hooks/use-library-section-collapse.ts`: `librarySectionExpandedForCount`, `librarySectionStateForMount`, `readLibrarySectionSession`, `rememberLibrarySectionSession`
+- `src/hooks/use-user-library.ts`: `userLibraryAfterMutationKeys`
+- `src/lib/admin-users-search.ts`: `buildAdminUsersIlikePattern`, `compareAdminUserProfilesForListing`, `profileMatchesAdminUserSearch`, `rolesMatchingAdminUserSearchQuery`
+- `src/lib/ancestry/ancestry-selection.ts`: `areSpeciesTraitChoicesComplete`
+- `src/lib/api-client.ts`: `ApiError`
+- `src/lib/api-input-validation-scan.ts`: `collectInputValidationGaps`, `collectReExportedHandlerMethods`, `getHandlerMethod`, `handlerReadsJsonBody`, `handlerReadsQuery`, `handlerUsesRouteParams`, `splitHandlerChunks`
+- `src/lib/api-mutation-guard-route-scan.ts`: `chunkInvokesMutationGuard`, `stripCommentsAndStringLiterals`
+- `src/lib/api-mutation-guard.ts`: `isApiMutationMethod`
+- `src/lib/api-validation.ts`: `readBodyWithLimit`
+- `src/lib/api/public-catalog-cache-invalidation.ts`: `codexListedGetCacheTags`, `codexWritePurgeCacheTags`, `officialListedGetCacheTags`, `officialWritePurgeCacheTags`
+- `src/lib/api/public-cdn-cache.ts`: `VERCEL_CACHE_TAG_HEADER`
+- `src/lib/auth-errors.ts`: `AUTH_EMAIL_NOT_CONFIRMED_MESSAGE`, `AUTH_INVALID_CREDENTIALS_LOGIN_MESSAGE`
+- `src/lib/auth-redirect.ts`: `collectAllowedRedirectHosts`, `resolveCanonicalRedirectOrigin`, `resolveTrustedRedirectOrigin`
+- `src/lib/auth/auth-page-client.ts`: `buildGoogleOAuthCallbackUrl`
+- `src/lib/auth/oauth-delete-grant-core.ts`: `verifyOAuthDeleteIntent`
+- `src/lib/auth/session-persistence.ts`: `PERSISTENT_AUTH_SESSION_MAX_AGE_S`
+- `src/lib/auth/supabase-pkce-cookies.ts`: `supabasePkceCodeVerifierCookieKey`
+- `src/lib/campaign-invite-code.ts`: `INVITE_CODE_ALPHABET`, `INVITE_CODE_LENGTH`
+- `src/lib/campaign-roster.ts`: `isUserCampaignParticipant`
+- `src/lib/character-library-section-visibility.ts`: `DEFAULT_LIBRARY_SECTION_VISIBILITY`
+- `src/lib/character-view-enrichment-server.ts`: `getCharacterViewEnrichment`
+- `src/lib/character/appearance-age.ts`: `parseAgeFromAppearance`, `stripAgeFromAppearance`
+- `src/lib/character/character-name-limit.ts`: `CHARACTER_DEFAULT_NAME`
+- `src/lib/character/character-relational-save-errors.ts`: `CHARACTER_SAVE_FAILED_MESSAGE`, `parseCharacterRelationalValidationError`
+- `src/lib/character/dirty-patch.ts`: `isStaleCharacterWrite`
+- `src/lib/character/innate-power-capacity.ts`: `resolveCharacterInnateEnergy`
+- `src/lib/character/notes-tab-sections.ts`: `DEFAULT_NOTES_SECTION_ORDER`
+- `src/lib/character/prune-trait-sheet-state.ts`: `PruneTraitSheetStateCharacterInput` (type)
+- `src/lib/character/relational-lean-save.ts`: `RELATIONAL_SAVE_ENTRY_ALLOWLIST`
+- `src/lib/character/save-lock.ts`: `resetCharacterSaveLockForTests`
+- `src/lib/character/sheet-allocation-reset.ts`: `resetSheetSkillAllocationRows`
+- `src/lib/character/sheet-skills-display.ts`: `isCodexBaseSkill`
+- `src/lib/character/temp-modifiers.ts`: `sectionHasTempModifiers`
+- `src/lib/chip/chip-size-tokens.ts`: `CHIP_ENTITY_INLINE_SIZE`
+- `src/lib/chip/list-row-metadata.ts`: `rankedGlrFactChips`
+- `src/lib/codex-archetype-path-save-validation.ts`: `archetypePathDataFromSaveInput`, `normalizeCodexCommaListColumn`
+- `src/lib/codex-changelog-display.ts`: `diffCodexChangedFields`, `parseChangedFields`, `summarizeChangedFieldNames`
+- `src/lib/codex/collection-to-payload-key.ts`: `CODEX_COLLECTION_TO_PAYLOAD_KEY`
+- `src/lib/codex/fake-supabase.ts`: `FakeSupabase`
+- `src/lib/codex/feat-restriction-notice.ts`: `getLimitedUsesNotice`
+- `src/lib/codex/id-allocation.ts`: `lowestUnusedNumericId`
+- `src/lib/codex/public-table-select.ts`: `CODEX_PROPERTIES_PUBLIC_SELECT`, `CODEX_SKILLS_PUBLIC_SELECT`
+- `src/lib/codex/row-map.ts`: `toNumArray`
+- `src/lib/codex/sources.ts`: `CODEX_SOURCE_WHITESPACE_CODE_POINTS`, `previewCodexSourceRename`
+- `src/lib/core-rules-server.ts`: `resetCoreRulesCacheForTests`
+- `src/lib/creator/creator-edit-query.ts`: `bindCreatorEditClear`, `creatorEditClearPlan`, `creatorPathWithoutEdit`
+- `src/lib/creator/creator-save-error.ts`: `CREATOR_DELETED_ROW_MESSAGE`
+- `src/lib/creator/creator-unsaved-guard.ts`: `CreatorBackHistory` (type)
+- `src/lib/crop-image.ts`: `CROPPED_IMAGE_EXTENSION`
+- `src/lib/detail-option/combat-builder.ts`: `powerToDetailOption`, `techniqueToDetailOption`
+- `src/lib/detail-option/compact-facts.ts`: `capitalizeSpacesTerm`, `formatCriticalRangeIncreaseFact`, `formatCurrencyFact`, `formatEnergyFact`, `formatHandednessFact`, `formatRangeFact`, `formatSpacesFact`, `formatTrainingPointsFact`, `formatWeaponAbilityFact`, `propertyDescriptorChip`
+- `src/lib/encounter/unique-campaign-characters.ts`: `hasDuplicateCampaignCharacters`
+- `src/lib/glr/validate-glr-chrome-spacing.ts`: `assertGlrChromeSpacingSources`, `expectedRowChromeFromRowActions`, `resolvedRowChromeFlags`, `scanGlrChromeSpacingSources`, `validateCodexBrowseShellSource`, `validateCreatorEmbeddedGlrSource`, `validateGlrGridColumnSource`, `validateGlrListClassName`, `validateGlrPublicBarrelSource`, `validateGlrRowLayoutSource`, `validateMyLibraryEntityTabSource`, `validateUsmListShellSource`, `validateUsmQuantityChromeSource`
+- `src/lib/glr/validate-glr-facts.ts`: `assertRowFactCoverage`, `assertSurfaceColumnConfig`, `validateRowFactCoverage`, `validateSurfaceColumnConfig`
+- `src/lib/guest-character-storage.ts`: `GUEST_CHARACTER_CAP`, `GuestCharacterCapError`
+- `src/lib/guided-creator/ancestry-pick-tasks.ts`: `AncestryPickSpeciesInput` (type)
+- `src/lib/guided-creator/chapter-rail-lock.ts`: `findGuidedChapterRailBlockerChapter`, `findGuidedChapterRailBlockerSubStep`
+- `src/lib/guided-creator/curated-skills.ts`: `GUIDED_CURATED_MIN_SUGGESTIONS`, `formatGuidedAbilityKeysLabel`, `getGuidedAbilityRecommendationTiers`, `isTooBroadSkillAbility`, `skillMatchesArchetypeAbility`
+- `src/lib/guided-creator/equipment-currency.ts`: `resolveItemUnitCost`
+- `src/lib/guided-creator/equipment-eligibility.ts`: `isCommonRarity`
+- `src/lib/guided-creator/equipment-phase-nav.ts`: `canCompleteEquipmentPhase`, `canNavigateToEquipmentPhase`
+- `src/lib/guided-creator/guided-equipment-l2.ts`: `computeL2GearSpend`
+- `src/lib/guided-creator/loadout-tp.ts`: `guidedTrainingPointsOverspendAmount`
+- `src/lib/guided-creator/powers-phase-nav.ts`: `isLastPowersPhase`
+- `src/lib/guided-creator/powers-techniques-energy-filter.ts`: `GUIDED_L1_FULL_ENERGY_POOL`
+- `src/lib/guided-creator/powers-techniques-l2.ts`: `GUIDED_POWERS_L2_HEADER_COLUMNS`, `GUIDED_TECHNIQUES_L2_HEADER_COLUMNS`
+- `src/lib/guided-creator/preview-ability-summary.ts`: `PREVIEW_ABILITY_ORDER`, `formatPreviewAbilityValue`, `resolvePreviewArchetypeAbilities`
+- `src/lib/guided-creator/resolve-loadout-items.ts`: `groupResolvedItemsByCategory`, `loadoutDraftFromSelection`, `resolveLoadoutItems`
+- `src/lib/guided-creator/substep-satisfaction.ts`: `isGuidedDraftSaveable`
+- `src/lib/leveled-feats.ts`: `featLevelChipDescription`, `levelToRomanNumeral`, `parseFeatNameRomanSuffix`
+- `src/lib/library-selectable-builders.ts`: `derivePowerTechniqueBudgetFacts`, `getItemColumns`
+- `src/lib/library-sync.ts`: `syncItemProperties`, `syncPowerParts`
+- `src/lib/library/catalog-listing.ts`: `catalogListingToSaveTarget`
+- `src/lib/library/character-filter-persistence.ts`: `LIBRARY_CHARACTER_FILTER_KEY`, `readPersistedLibraryCharacterFilterId`
+- `src/lib/library/empowered-technique-display.ts`: `buildEmpoweredPowerDocument`, `buildEmpoweredTechniqueDocument`, `deriveEmpoweredTechniquePartChips`
+- `src/lib/library/fetch-library-tab-counts.ts`: `LibraryCountsClient` (type)
+- `src/lib/library/power-technique-filters.ts`: `normalizeActionTypeFilterKey`
+- `src/lib/library/published-training-points.ts`: `publishedPowerTrainingPoints`
+- `src/lib/modal-unmount-click-guard.ts`: `armModalUnmountClickGuard`, `modalUnmountShouldArmGuard`
+- `src/lib/observability/sentry-client-filter.ts`: `isAbortOrCancelledRequest`, `isChunkOrDynamicImportFailure`, `isHarmlessBrowserNetworkError`, `shouldDropClientSentryEvent`
+- `src/lib/onboarding-preferences.ts`: `PLAY_TOGETHER_KEY`, `SHEET_TOUR_KEY`, `TUTORIALS_ENABLED_KEY`, `TUTORIAL_MILESTONES_KEY`, `getSheetTourStatus`
+- `src/lib/owner-library-for-view.ts`: `emptyLibraryForView`
+- `src/lib/portrait.ts`: `PORTRAIT_SAVE_NO_URL`, `dataUrlToBlob`
+- `src/lib/power-variant-chips.ts`: `buildPowerVariantChips`, `rollPowerRandomizeDie`
+- `src/lib/proficiencies.ts`: `hasSufficientProficiency`
+- `src/lib/profile-display-name.ts`: `PROFILE_DISPLAY_NAME_MAX_LENGTH`
+- `src/lib/rate-limit.ts`: `isDurableRateLimitEnabled`, `rateLimit`
+- `src/lib/role-limits.ts`: `ROLE_POLICY_LIMIT_UNLIMITED_SENTINEL`
+- `src/lib/role-policy.ts`: `getDefaultRolePolicy`
+- `src/lib/role-quota-messages.ts`: `ROLE_QUOTA_EXCEEDED_CODE`
+- `src/lib/roll-timestamp.ts`: `normalizeRollTimestamp`
+- `src/lib/rolls/campaign-roll-limits.ts`: `CAMPAIGN_ROLL_DAMAGE_TITLE_SUFFIX`
+- `src/lib/rolls/die.ts`: `d20CritAdjustment`, `defaultRollOutcomeKind`, `StoredRollKind` (type)
+- `src/lib/rolls/personal-roll-log-storage.ts`: `StoredRollLogEntry` (type)
+- `src/lib/rolls/roll-log-layout.ts`: `ROLL_LOG_HISTORY_LIST_MIN_CLASS`
+- `src/lib/rules/rulebook-search.ts`: `stripMdx`
+- `src/lib/security/content-security-policy.ts`: `TURNSTILE_CSP_ORIGIN`, `buildContentSecurityPolicy`
+- `src/lib/security/next-app-flags.ts`: `ACCOUNT_PATH_ALIAS_REWRITE`, `NEXT_APP_POWERED_BY_HEADER`
+- `src/lib/server/resource-access-unavailable.ts`: `RESOURCE_ACCESS_UNAVAILABLE_DIGEST`
+- `src/lib/sheet-tour-highlight.ts`: `SHEET_TOUR_NARROW_BOTTOM_PLACEMENT_CLASS`, `SHEET_TOUR_NARROW_MAX_WIDTH_PX`, `SHEET_TOUR_NARROW_TOP_PLACEMENT_CLASS`, `isTallSheetTourTarget`, `onboardingHighlightScrollBlock`, `sheetTourCardAnchorForViewport`, `sheetTourStepScrollBlockForViewport`
+- `src/lib/stepper-value-memory.ts`: `rememberStepperValue`, `StepperValueMemory` (type)
+- `src/lib/supabase/middleware.ts`: `isHardProtectedPath`
+- `src/lib/supabase/proxy-oauth-redirect.ts`: `shouldRedirectOAuthCodeFromRoot`
+- `src/lib/supabase/public-client.ts`: `CI_BUILD_SUPABASE_URL`, `isPublicSupabaseConfigured`
+- `src/lib/supabase/server.ts`: `ServiceRoleSupabaseClient` (type)
+- `src/lib/supabase/session.ts`: `sessionUserFromClaims`
+- `src/lib/supabase/verified-claims.ts`: `clearVerifiedClaimsCache`
+- `src/lib/tooltips/floating-help.tsx`: `floatingHelpPanelPointerClass`
+- `src/lib/utils/normalize-id.ts`: `resolveNormalizedRefLabel`, `rowMatchesNormalizedId`
+- `src/types/library.ts`: `LIBRARY_ITEM_TYPES`
+
+### Nothing imports this
+
+- `src/app/(auth)/login/login-action-result.ts`: `LoginActionFailure` (type)
+- `src/app/(main)/admin/codex/admin-archetype-editor-config.ts`: `ShowToast` (type)
+- `src/app/(main)/admin/codex/admin-archetype-editor-guided.tsx`: `AdminArchetypeEditorGuidedProps` (type)
+- `src/app/(main)/admin/codex/admin-archetype-editor-level1.tsx`: `AdminArchetypeEditorLevel1Props` (type)
+- `src/app/(main)/admin/codex/admin-archetype-editor-meta.tsx`: `AdminArchetypeEditorMetaProps` (type)
+- `src/app/(main)/admin/codex/admin-archetype-editor-progression.tsx`: `AdminArchetypeEditorProgressionProps` (type)
+- `src/app/(main)/admin/codex/admin-feat-edit-modal-fields.tsx`: `AdminFeatEditModalFieldsProps` (type)
+- `src/app/(main)/admin/codex/admin-part-edit-modal-options.tsx`: `AdminPartEditModalOptionsProps` (type)
+- `src/app/(main)/admin/codex/admin-part-edit-modal.tsx`: `AdminPartEditModalProps` (type)
+- `src/app/(main)/admin/codex/admin-property-edit-modal.tsx`: `AdminPropertyEditModalProps` (type)
+- `src/app/(main)/admin/codex/admin-species-edit-modal.tsx`: `AdminSpeciesEditModalProps` (type)
+- `src/app/(main)/admin/codex/admin-trait-edit-modal.tsx`: `AdminTraitCreateModalProps` (type), `AdminTraitEditModalProps` (type)
+- `src/app/(main)/admin/codex/codex-spreadsheet-table-row.tsx`: `CodexSpreadsheetTableRowProps` (type)
+- `src/app/(main)/admin/codex/use-admin-archetype-selection-options.ts`: `AdminArchetypeSelectionOptionsInput` (type)
+- `src/app/(main)/admin/codex/use-admin-codex-delete.tsx`: `AdminCodexDelete` (type)
+- `src/app/(main)/admin/codex/use-admin-codex-entity.tsx`: `AdminCodexNamedEntity` (type)
+- `src/app/(main)/admin/codex/use-admin-leveled-feat-session.ts`: `AdminLeveledFeatFamilyEntry` (type)
+- `src/app/(main)/admin/codex/use-codex-spreadsheet.ts`: `PendingRowChange` (type)
+- `src/app/(main)/admin/core-rules/core-rules-conditions.ts`: `ConditionsEditorShape` (type)
+- `src/app/(main)/admin/core-rules/core-rules-number.ts`: `CoreRulesNumberResult` (type)
+- `src/app/(main)/admin/core-rules/core-rules-tabs.ts`: `TabDef` (type)
+- `src/app/(main)/admin/core-rules/core-rules-unsaved-leave.ts`: `CoreRulesUnsavedAction` (type)
+- `src/app/(main)/admin/images/admin-image-delete-modal.tsx`: `AdminImageDeleteModalProps` (type)
+- `src/app/(main)/admin/images/admin-image-edit-modal.tsx`: `AdminImageEditModalProps` (type)
+- `src/app/(main)/admin/sources/actions.ts`: `AdminCodexSourceMembershipResult` (type)
+- `src/app/(main)/admin/users/admin-users-directory-state.ts`: `AdminUsersDirectoryAction` (type), `AdminUsersListOwner` (type)
+- `src/app/(main)/admin/users/use-admin-users-load-more.ts`: `AdminUsersLoadMorePage` (type), `AdminUsersLoadMoreRow` (type)
+- `src/app/(main)/crafting/[id]/_components/crafting-tool-derived.ts`: `CraftingSessionTallies` (type)
+- `src/app/(main)/creature-creator/AddCreatureFeatModal.tsx`: `AddCreatureFeatModalProps` (type)
+- `src/app/(main)/creature-creator/creature-creator-editor.tsx`: `CreatureCreatorStatsSlice` (type)
+- `src/app/(main)/creature-creator/creature-creator-feat-armament-display.ts`: `CreatureFeatRow` (type), `CreatureFeatSourceLookup` (type)
+- `src/app/(main)/creature-creator/creature-creator-library-selectables.ts`: `CreatureCodexEquipmentRow` (type), `CreatureEquipmentLibraryItem` (type)
+- `src/app/(main)/creature-creator/creature-movement.ts`: `MovementSpeedLine` (type), `MovementToggleLine` (type)
+- `src/app/(main)/creature-creator/creature-creator-remove-section-confirm-placeholder.ts`: `CreatureCreatorOptionalSectionDisplayName` (type)
+- `src/app/(main)/creature-creator/creature-damage-modifiers.ts`: `DamageModifierLists` (type)
+- `src/app/(main)/creature-creator/creature-over-budget-notification.ts`: `CreatureOverBudgetNotification` (type)
+- `src/app/(main)/empowered-technique-creator/empowered-technique-bootstrap.ts`: `EmpoweredLibraryRecord` (type)
+- `src/app/(main)/empowered-technique-creator/empowered-technique-cost-derivation.ts`: `EmpoweredSectionCostSlice` (type)
+- `src/app/(main)/empowered-technique-creator/empowered-technique-creator-editor.tsx`: `EmpoweredTechniqueCreatorEditorProps` (type)
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-action-profile.tsx`: `EmpoweredTechniqueEditorActionProfileProps` (type)
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-config.ts`: `EmpoweredSectionCosts` (type)
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-meta.tsx`: `EmpoweredTechniqueEditorMetaProps` (type)
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-config.tsx`: `EmpoweredTechniqueEditorPowerConfigProps` (type)
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-damage.tsx`: `EmpoweredTechniqueEditorPowerDamageProps` (type)
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-parts.tsx`: `EmpoweredTechniqueEditorPowerPartsProps` (type)
+- `src/app/(main)/empowered-technique-creator/empowered-technique-editor-technique-parts.tsx`: `EmpoweredTechniqueEditorTechniquePartsProps` (type)
+- `src/app/(main)/encounters/[id]/_components/EncounterCampaignRosterSection.tsx`: `EncounterCampaignRosterSectionProps` (type)
+- `src/app/(main)/encounters/[id]/_components/EncounterPageHeader.tsx`: `EncounterPageHeaderProps` (type), `EncounterTypeLabel` (type)
+- `src/app/(main)/encounters/[id]/_components/combat/combat-add-sidebar.tsx`: `CombatAddSidebarProps` (type)
+- `src/app/(main)/encounters/[id]/_components/combat/combat-combatant-list.tsx`: `CombatCombatantListProps` (type)
+- `src/app/(main)/encounters/[id]/_components/combat/combat-round-controls.tsx`: `CombatRoundControlsProps` (type)
+- `src/app/(main)/encounters/[id]/_components/encounter-play-page-shell.tsx`: `EncounterPlayPageGatePhase` (type), `EncounterPlayPageResult` (type), `EncounterPlayPageShared` (type)
+- `src/app/(main)/encounters/[id]/_components/skill/skill-participant-list.tsx`: `SkillParticipantListProps` (type)
+- `src/app/(main)/encounters/[id]/_components/skill/skill-sidebar.tsx`: `SkillSidebarProps` (type)
+- `src/app/(main)/encounters/[id]/_components/skill/skill-trackers-section.tsx`: `SkillTrackersSectionProps` (type)
+- `src/app/(main)/item-creator/item-creator-bootstrap.ts`: `ItemAbilityRequirement` (type)
+- `src/app/(main)/item-creator/item-creator-cost-derivation.ts`: `ItemSectionCostSlice` (type)
+- `src/app/(main)/item-creator/item-creator-editor-config.ts`: `ItemSectionCosts` (type)
+- `src/app/(main)/item-creator/item-creator-editor.tsx`: `ItemCreatorEditorProps` (type)
+- `src/app/(main)/item-creator/item-creator-helpers.tsx`: `PropertyCostKind` (type)
+- `src/app/(main)/library/components/UserLibraryEntityTabShell.tsx`: `UserLibraryEntityTabShellProps` (type)
+- `src/app/(main)/library/hooks/use-library-duplicate-confirm.ts`: `UseLibraryDuplicateConfirmOptions` (type)
+- `src/app/(main)/library/hooks/use-library-entity-sync.ts`: `LibrarySyncSanitizeResult` (type), `UseLibraryEntitySyncOptions` (type)
+- `src/app/(main)/power-creator/power-creator-cost-derivation.ts`: `PowerSectionCostSlice` (type)
+- `src/app/(main)/power-creator/power-creator-editor-config.ts`: `PowerSectionCosts` (type)
+- `src/app/(main)/power-creator/power-creator-editor.tsx`: `PowerCreatorEditorProps` (type)
+- `src/app/(main)/power-creator/power-creator-help.tsx`: `PowerCreatorHelpTopic` (type)
+- `src/app/(main)/species-creator/species-creator-bootstrap.ts`: `SpeciesCreatorCache` (type), `SpeciesCreatorEditPlan` (type)
+- `src/app/(main)/technique-creator/technique-creator-bootstrap.ts`: `TechniqueSavedPart` (type)
+- `src/components/character-sheet/character-sheet-settings-modal.tsx`: `CharacterSheetSettingsModalProps` (type), `SpeedDisplayUnit` (type)
+- `src/components/character-sheet/currency-field-commit.ts`: `CurrencyFieldCommit` (type)
+- `src/components/character-sheet/edit-species-ancestry-step.tsx`: `EditSpeciesAncestryStepProps` (type)
+- `src/components/character-sheet/edit-species-modal.tsx`: `EditSpeciesResult` (type)
+- `src/components/character-sheet/edit-species-species-step.tsx`: `EditSpeciesSpeciesStepProps` (type)
+- `src/components/character-sheet/library-feat-rows.tsx`: `FeatRowInput` (type), `TraitRowInput` (type)
+- `src/components/character-sheet/library-inventory-panel.tsx`: `LibraryInventoryPanelProps` (type)
+- `src/components/character-sheet/library-list-helpers.ts`: `ArmorItemCombatStats` (type), `EquippedArmorQuickRef` (type)
+- `src/components/character-sheet/library-powers-panel.tsx`: `LibraryPowersPanelProps` (type)
+- `src/components/character-sheet/library-tab-config.ts`: `LibraryTabDef` (type)
+- `src/components/character-sheet/path-level-guidance.tsx`: `PathLevelGuidanceProps` (type), `PathRemoveGuidanceProps` (type)
+- `src/components/character-sheet/sheet-resource-input.tsx`: `ResourceInputProps` (type)
+- `src/components/character-sheet/skills-header-pin.ts`: `SkillsHeaderPinInput` (type)
+- `src/components/character-sheet/use-character-sheet-actions.ts`: `UseCharacterSheetActionsArgs` (type)
+- `src/components/character-sheet/use-character-sheet-derived.ts`: `UseCharacterSheetDerivedArgs` (type)
+- `src/components/character-sheet/use-edit-species-modal.ts`: `EditSpeciesStep` (type)
+- `src/components/character-sheet/use-library-section-rows.ts`: `LibrarySectionRowsInput` (type)
+- `src/components/character/portrait-thumb.tsx`: `PortraitThumbProps` (type)
+- `src/components/creator/collapsible-section.tsx`: `CollapsibleSectionRemoveConfirmCopy` (type)
+- `src/components/creator/creator-summary-panel.tsx`: `BreakdownList` (type), `CostStat` (type), `StatRow` (type), `SummaryItem` (type)
+- `src/components/encounters/add-combatant-modal.tsx`: `AddCombatantModalProps` (type)
+- `src/components/encounters/combatant-card-conditions.tsx`: `CombatantCardConditionChipsProps` (type), `CombatantCardConditionsPanelProps` (type)
+- `src/components/encounters/combatant-card-header.tsx`: `CombatantCardHeaderProps` (type)
+- `src/components/encounters/combatant-card-initiative.tsx`: `CombatantCardInitiativeProps` (type)
+- `src/components/encounters/combatant-card-quick-actions.tsx`: `CombatantCardResourceQuickActionsProps` (type)
+- `src/components/encounters/combatant-card-resources.tsx`: `CombatantCardResourcesProps` (type)
+- `src/components/encounters/encounter-combatant-types.ts`: `Combatant` (type), `CombatantCondition` (type), `CombatantType` (type)
+- `src/components/guided-creator/character-preview-panel.tsx`: `CharacterPreviewPanelProps` (type)
+- `src/components/guided-creator/guided-abilities-customize-panel.tsx`: `GuidedAbilitiesCustomizePanelProps` (type)
+- `src/components/guided-creator/guided-choice-card.tsx`: `GuidedChoiceCardProps` (type)
+- `src/components/guided-creator/guided-creator-page-shell.tsx`: `GuidedCreatorPageShellProps` (type)
+- `src/components/guided-creator/guided-detail-option-list.tsx`: `GuidedDetailOptionListProps` (type)
+- `src/components/guided-creator/guided-entity-detail-modal.tsx`: `GuidedEntityDetailModalProps` (type)
+- `src/components/guided-creator/guided-equipment-fact-chips.tsx`: `GuidedFactChipRowProps` (type)
+- `src/components/guided-creator/guided-equipment-l1-phase.tsx`: `GuidedEquipmentL1PhaseProps` (type)
+- `src/components/guided-creator/guided-equipment-l2-grid.ts`: `L2ColumnHeader` (type)
+- `src/components/guided-creator/guided-equipment-l2-modal.tsx`: `GuidedEquipmentL2ModalProps` (type)
+- `src/components/guided-creator/guided-equipment-phase-layout.tsx`: `GuidedEquipmentPhaseLayoutProps` (type)
+- `src/components/guided-creator/guided-feats-filter-fields.tsx`: `GuidedFeatsFilterFieldsProps` (type)
+- `src/components/guided-creator/guided-feats-l2-modal.tsx`: `GuidedFeatsL2ModalProps` (type)
+- `src/components/guided-creator/guided-mixed-species-overview.tsx`: `GuidedMixedSpeciesOverviewProps` (type)
+- `src/components/guided-creator/guided-path-custom-archetype.tsx`: `GuidedPathCustomArchetypeProps` (type)
+- `src/components/guided-creator/guided-path-detail-modal.tsx`: `GuidedPathDetailModalProps` (type)
+- `src/components/guided-creator/guided-path-detail-overview.tsx`: `GuidedPathDetailOverviewProps` (type)
+- `src/components/guided-creator/guided-portrait-upload.tsx`: `GuidedPortraitUploadProps` (type)
+- `src/components/guided-creator/guided-powers-techniques-l1-content.tsx`: `GuidedPowersTechniquesL1ContentProps` (type), `PowersTechniquesDisplayItem` (type)
+- `src/components/guided-creator/guided-powers-techniques-l2-modal.tsx`: `GuidedPowersTechniquesL2ModalProps` (type)
+- `src/components/guided-creator/guided-restriction-notice.tsx`: `GuidedFeatRestrictionNoticeProps` (type), `GuidedRestrictionNoticeProps` (type), `GuidedTraitRestrictionNoticeProps` (type)
+- `src/components/guided-creator/guided-reveal-review-modal.tsx`: `GuidedRevealReviewModalProps` (type)
+- `src/components/guided-creator/guided-section-title.tsx`: `GuidedSectionTitleLevel` (type), `GuidedSectionTitleProps` (type)
+- `src/components/guided-creator/guided-skills-panel.tsx`: `GuidedSkillsPanelProps` (type)
+- `src/components/guided-creator/guided-species-detail-modal.tsx`: `GuidedSpeciesDetailModalProps` (type)
+- `src/components/guided-creator/guided-step-footer.tsx`: `GuidedStepFooterProps` (type)
+- `src/components/guided-creator/guided-step-layout.tsx`: `GuidedStepLayoutProps` (type)
+- `src/components/guided-creator/guided-trait-option-list.tsx`: `GuidedTraitOptionListProps` (type)
+- `src/components/guided-creator/guided-unarmed-prowess-panel.tsx`: `GuidedUnarmedProwessPanelProps` (type)
+- `src/components/guided-creator/species-reveal-panel.tsx`: `SpeciesRevealPanelProps` (type)
+- `src/components/layout/footer.tsx`: `FooterProps` (type)
+- `src/components/patterns/chrome/creator-portrait-upload.tsx`: `CreatorPortraitUploadLabels` (type), `CreatorPortraitUploadProps` (type), `CreatorPortraitVariant` (type)
+- `src/components/patterns/chrome/edit-section-toggle.tsx`: `SheetModeToggleColors` (type)
+- `src/components/patterns/chrome/image-upload-modal.tsx`: `CropShape` (type), `ImageUploadModalProps` (type)
+- `src/components/patterns/chrome/loadout-budget-bar.tsx`: `LoadoutBudgetBarProps` (type)
+- `src/components/patterns/chrome/point-status.tsx`: `PointStatusProps` (type)
+- `src/components/patterns/chrome/roll-button.tsx`: `RollButtonProps` (type)
+- `src/components/patterns/chrome/segmented-control.tsx`: `SegmentedControlProps` (type), `SegmentedOption` (type)
+- `src/components/patterns/chrome/temp-modifier-toggle.tsx`: `TempModifierToggleProps` (type)
+- `src/components/patterns/chrome/trait-section.tsx`: `TraitSectionProps` (type)
+- `src/components/patterns/help/descriptor-chip-with-tip.tsx`: `DescriptorChipWithTipProps` (type)
+- `src/components/patterns/help/expandable-image.tsx`: `ExpandableImageModalProps` (type)
+- `src/components/patterns/list/ability-score-grid.tsx`: `AbilityScoreGridProps` (type)
+- `src/components/patterns/list/creature-library-stat-block-rows.tsx`: `CreatureLibraryStatBlockRowProps` (type), `CreatureLibraryStatBlockRowsProps` (type)
+- `src/components/patterns/list/grid-list-row-chrome.ts`: `ExternalChromeFootprintInput` (type), `MobileCollapsedGridColumnsOptions` (type)
+- `src/components/patterns/list/grid-list-row-collapsed.tsx`: `GridListRowExternalChromeProps` (type)
+- `src/components/patterns/list/official-entity-list.tsx`: `OfficialEntityListProps` (type), `OfficialEntityRow` (type)
+- `src/components/patterns/select/ability-pick-button.tsx`: `AbilityPickButtonProps` (type)
+- `src/components/patterns/select/add-skill-modal.tsx`: `AddSkillModalSkillBadge` (type)
+- `src/components/patterns/select/choice-trait-option-select.tsx`: `ChoiceTraitOptionListPickerProps` (type)
+- `src/components/patterns/select/mixed-species-skill-picker.tsx`: `MixedSpeciesSkillPickerProps` (type)
+- `src/components/patterns/select/selection-toggle.tsx`: `IconPairToggleFloor` (type), `IconPairToggleProps` (type), `IconPairToggleSize` (type)
+- `src/components/patterns/select/unified-selection-modal-footer.tsx`: `UnifiedSelectionModalFooterProps` (type)
+- `src/components/patterns/select/unified-selection-modal-leave-prompt.tsx`: `UnifiedSelectionModalLeavePromptProps` (type)
+- `src/components/patterns/select/unified-selection-modal-list.tsx`: `UnifiedSelectionModalListProps` (type)
+- `src/components/patterns/select/unified-selection-modal-toolbar.tsx`: `UnifiedSelectionModalToolbarProps` (type)
+- `src/components/patterns/select/value-stepper.tsx`: `StepperButtonProps` (type), `ValueStepperProps` (type)
+- `src/components/rolls/roll-log.tsx`: `DieResult` (type), `RollEntry` (type), `RollType` (type)
+- `src/components/ui/alert.tsx`: `AlertProps` (type)
+- `src/components/ui/card.tsx`: `CardProps` (type)
+- `src/components/ui/checkbox.tsx`: `CheckboxProps` (type)
+- `src/components/ui/expandable-chip.tsx`: `ChipGroupProps` (type)
+- `src/components/ui/icon-button.tsx`: `IconButtonProps` (type)
+- `src/components/ui/input.tsx`: `InputProps` (type)
+- `src/components/ui/select.tsx`: `SelectProps` (type)
+- `src/components/ui/selection-card.tsx`: `SelectionCardProps` (type), `SelectionCardSurfaceProps` (type)
+- `src/components/ui/tab-navigation.tsx`: `TabContentPanelProps` (type), `TabNavOverflowScrollerProps` (type)
+- `src/components/ui/textarea.tsx`: `TextareaProps` (type)
+- `src/hooks/add-library-item/load-raw-items.ts`: `RawItemsInput` (type)
+- `src/hooks/use-characters.ts`: `UseCharacterOptions` (type), `UseCharactersOptions` (type)
+- `src/hooks/use-codex-source-catalog.ts`: `CodexSourceCatalogState` (type)
+- `src/hooks/use-codex.ts`: `CodexQueryOptions` (type)
+- `src/hooks/use-creator-save.ts`: `CreatorSaveTarget` (type)
+- `src/hooks/use-creator-unsaved-guard.ts`: `CreatorLeaveRequest` (type)
+- `src/hooks/use-enhanced-items.ts`: `EnhancedItemsScope` (type)
+- `src/hooks/use-game-rules.ts`: `GameRulesQueryOptions` (type)
+- `src/hooks/use-library-section-collapse.ts`: `LibrarySectionSession` (type)
+- `src/hooks/use-profile.ts`: `ProfileDisplay` (type), `UserProfileActionResult` (type)
+- `src/lib/admin-users-search.ts`: `AdminUserProfileSearchRow` (type)
+- `src/lib/admin.ts`: `AdminSessionResult` (type)
+- `src/lib/ancestry/ancestry-selection.ts`: `AncestryTraitBuckets` (type)
+- `src/lib/api-input-validation-scan.ts`: `InputValidationGap` (type)
+- `src/lib/auth-errors.ts`: `AuthErrorContext` (type)
+- `src/lib/auth/auth-page-client.ts`: `ResendConfirmationResult` (type)
+- `src/lib/auth/oauth-delete-grant-core.ts`: `SignedOAuthDeleteIntentPayload` (type)
+- `src/lib/auth/sensitive-account-auth.ts`: `SensitiveAccountReauthInput` (type)
+- `src/lib/character-persistence-server.ts`: `CharacterPatchResult` (type)
+- `src/lib/character-sheet/add-modal-existing-ids.ts`: `AddModalEntityType` (type)
+- `src/lib/character-view-enrichment.ts`: `CharacterViewRefIds` (type)
+- `src/lib/creature-chip-tier.ts`: `replaceTieredCreatureChipValue`
+- `src/lib/character/build-creator-skills.ts`: `BuildCreatorSkillSaveRowsOptions` (type), `CreatorSkillCodexEntry` (type), `CreatorSkillSaveRow` (type)
+- `src/lib/character/character-relational-save-errors.ts`: `CharacterRelationalSaveLogIds` (type), `CharacterRelationalValidationPayload` (type)
+- `src/lib/character/character-size.ts`: `SpeciesSizeSource` (type)
+- `src/lib/character/collect-sheet-traits.ts`: `CollectSheetTraitsInput` (type), `SheetTraitCategory` (type), `SheetTraitRow` (type), `VanillaTraitFields` (type)
+- `src/lib/character/notes-tab-sections.ts`: `NotesTabSectionDef` (type)
+- `src/lib/character/realtime-merge.ts`: `SheetRealtimeMerge` (type)
+- `src/lib/character/recovery-uses.ts`: `RecoveryUseSource` (type)
+- `src/lib/character/sheet-edit-notification.ts`: `ComputeSheetPointPoolsArgs` (type), `SheetEditNotificationSeverity` (type), `SheetPointPools` (type)
+- `src/lib/character/sheet-skills-display.ts`: `CodexSkillRef` (type)
+- `src/lib/chip/chip-size-tokens.ts`: `ChipVariantSize` (type)
+- `src/lib/chip/list-row-metadata.ts`: `GlrFactChipSource` (type)
+- `src/lib/chip/part-chips-from-display.ts`: `DisplayPartChip` (type)
+- `src/lib/codex-changelog.ts`: `CodexChangeOperation` (type)
+- `src/lib/codex/admin-source-list.ts`: `AdminSourceRowDetail` (type)
+- `src/lib/codex/fake-supabase.ts`: `FakeRpcCall` (type), `FakeSupabaseOptions` (type)
+- `src/lib/codex/feat-list.ts`: `FEAT_SELECTABLE_HEADER_COLUMNS`, `FeatFilterOptions` (type), `FeatSelectableColumnOptions` (type), `FilterFeatsOptions` (type)
+- `src/lib/codex/feat-restriction-notice.ts`: `FeatRestrictionNoticeOpts` (type), `LimitedUseEntity` (type)
+- `src/lib/codex/references.ts`: `ReferenceProbe` (type)
+- `src/lib/codex/skill-list.ts`: `SkillFilterOptions` (type)
+- `src/lib/constants/copy/legal-copy-types.ts`: `LegalSection` (type)
+- `src/lib/creator/creator-edit-query.ts`: `CreatorEditClear` (type)
+- `src/lib/creator/creator-unsaved-guard.ts`: `CreatorBackLocation` (type)
+- `src/lib/creator/private-library-name-save.ts`: `PrivateLibraryNameSave` (type)
+- `src/lib/encounter/character-resource-sync.ts`: `buildResourcePatchFromCharacter`
+- `src/lib/encounter/unique-campaign-characters.ts`: `DuplicateCampaignCharacterReport` (type)
+- `src/lib/glr/glr-density.ts`: `GlrModeSpec` (type)
+- `src/lib/glr/glr-fact-catalog.ts`: `GlrEntityFactMeta` (type), `GlrFactDef` (type)
+- `src/lib/glr/glr-list-chrome.ts`: `GlrChromeOptions` (type)
+- `src/lib/glr/glr-surface-bindings.ts`: `GLR_SURFACE_BINDINGS`
+- `src/lib/glr/validate-glr-chrome-spacing.ts`: `GlrChromeSpacingScanResult` (type), `RowChromeFlags` (type)
+- `src/lib/guided-creator/ancestry-pick-gate.ts`: `AncestryPickGateInput` (type)
+- `src/lib/guided-creator/ancestry-pick-tasks.ts`: `AncestryPickPhase` (type), `BuildAncestryPickTasksInput` (type), `BuildMixedAncestryPickTasksInput` (type)
+- `src/lib/guided-creator/build-character.ts`: `BuildGuidedCharacterContext` (type)
+- `src/lib/guided-creator/chapter-rail-lock.ts`: `GuidedChapterRailRef` (type)
+- `src/lib/guided-creator/curated-skills.ts`: `GuidedCuratedSkillsOptions` (type)
+- `src/lib/guided-creator/equipment-currency.ts`: `CatalogRowCostFields` (type), `CurrencyLineItem` (type), `RefCostLookupItem` (type)
+- `src/lib/guided-creator/equipment-eligibility.ts`: `WeaponHandValidation` (type)
+- `src/lib/guided-creator/equipment-phase-candidates.ts`: `PhaseL1RankContext` (type)
+- `src/lib/guided-creator/equipment-phase-nav.ts`: `EquipmentPhaseCompletionContext` (type)
+- `src/lib/guided-creator/equipment-phase-stats.ts`: `BuildPhaseCardStatsInput` (type), `EquipmentPhaseCardStats` (type)
+- `src/lib/guided-creator/guided-equipment-l2.ts`: `ApplyL2Result` (type), `GuidedEquipmentL2ItemData` (type)
+- `src/lib/guided-creator/guided-skill-recommendations.ts`: `BuildGuidedSkillSuggestionsOptions` (type), `BuildGuidedSkillSuggestionsResult` (type), `GuidedSkillSuggestion` (type), `GuidedSkillSuggestionBadge` (type), `GuidedSkillSuggestionKind` (type)
+- `src/lib/guided-creator/loadout-pool.ts`: `GuidedLoadoutDraftSelection` (type)
+- `src/lib/guided-creator/path-ability-labels.ts`: `PathAbilityChipLabel` (type)
+- `src/lib/guided-creator/power-technique-display.ts`: `PowerTechniqueCardFacts` (type)
+- `src/lib/guided-creator/powers-phase-nav.ts`: `PowersPhaseVisibility` (type)
+- `src/lib/guided-creator/powers-techniques-l1-candidates.ts`: `ResolvePowersTechniquesCanonicalId` (type)
+- `src/lib/guided-creator/powers-techniques-step-helpers.ts`: `InnateSelectionWarnReason` (type)
+- `src/lib/guided-creator/preview-ability-summary.ts`: `PreviewAbilityChip` (type), `PreviewAbilityHighlight` (type), `PreviewArchetypeAbilityContext` (type)
+- `src/lib/guided-creator/resolve-loadout-items.ts`: `EquipmentLookupEntry` (type), `ResolvedLoadoutItem` (type)
+- `src/lib/guided-creator/reveal-blockers.ts`: `GuidedChapterRef` (type)
+- `src/lib/guided-creator/skill-reconcile.ts`: `GuidedSkillPointBudget` (type), `PrunedSkillAllocations` (type), `SkillIdIndex` (type)
+- `src/lib/leveled-feats.ts`: `BuildFeatLevelChipsOptions` (type), `ComputeNextLeveledFeatFieldsInput` (type), `FeatFamily` (type), `FeatLevelChipSelect` (type), `LeveledFeatSourceType` (type), `MergeFeatRow` (type), `MergeFeatsInFamilyOnAddArgs` (type)
+- `src/lib/library-mutation-validation.ts`: `LibraryWriteValidationMode` (type)
+- `src/lib/library-selectable-builders.ts`: `PowerColumnDisplay` (type), `PowerTechniqueBudgetDisplay` (type), `PowerTechniqueBudgetFacts` (type), `TechniqueColumnDisplay` (type)
+- `src/lib/library-sync.ts`: `SyncIssue` (type), `SyncIssueCode` (type), `SyncResult` (type)
+- `src/lib/library/armament-filters.ts`: `ArmamentFilterProfile` (type), `ArmamentFilterableRow` (type)
+- `src/lib/library/armament-library-labels.ts`: `ArmamentKindChromeLabels` (type)
+- `src/lib/library/catalog-listing.ts`: `ResolveCreatorSaveTargetOptions` (type)
+- `src/lib/library/fetch-library-tab-counts.ts`: `LibraryCountQuery` (type), `LibraryCountTables` (type)
+- `src/lib/library/official-catalog-row-filter.ts`: `OfficialArmamentFilterableRow` (type), `OfficialArmamentRowFilters` (type), `OfficialPowerTechniqueFilterableRow` (type)
+- `src/lib/library/power-technique-categories.ts`: `PartCategoryDbRow` (type), `PartCategorySource` (type)
+- `src/lib/library/published-training-points.ts`: `PublishedTrainingPoints` (type)
+- `src/lib/onboarding-preferences.ts`: `SheetTourStatus` (type), `TutorialMilestones` (type)
+- `src/lib/rate-limit.ts`: `RateLimitResult` (type)
+- `src/lib/realms-images.ts`: `REALMS_IMAGE_CATEGORIES`, `CreateRealmsImageInput` (type), `RealmsImageUsageReport` (type), `RealmsImagesListPage` (type)
+- `src/lib/role-policy.ts`: `RolePolicy` (type)
+- `src/lib/role-quota-messages.ts`: `RoleQuotaExceededPayload` (type), `RoleQuotaResource` (type)
+- `src/lib/rolls/modifier-label.ts`: `RollModifierKind` (type)
+- `src/lib/rolls/parse-damage-string.ts`: `DamageRollGroup` (type)
+- `src/lib/rolls/roll-parsed-damage.ts`: `DamageRollDieResult` (type)
+- `src/lib/rules/rulebook-callout.ts`: `RulebookCalloutKind` (type)
+- `src/lib/rules/rulebook-search.ts`: `RulebookSearchHit` (type)
+- `src/lib/rules/rulebook.ts`: `RulebookHeading` (type)
+- `src/lib/sheet-tour-highlight.ts`: `ONBOARDING_FLOATING_CARD_NARROW_TOP_PIN_CLASS`, `SHEET_TOUR_NARROW_CHROME_RESERVE_PX`, `sheetTourStepScrollBlock`
+- `src/lib/skill-extra-descriptions.ts`: `SkillExtraChip` (type)
+- `src/lib/supabase/database.ts`: `DynamicTableFilter` (type), `DynamicTableQuery` (type)
+- `src/lib/supabase/session.ts`: `SessionUser` (type)
+- `src/lib/supabase/supabase-auth-cookies.ts`: `PendingSupabaseCookieWrite` (type), `SupabaseCookieStore` (type)
+- `src/lib/supabase/verified-claims.ts`: `VerifiedClaimsError` (type), `VerifiedClaimsResult` (type)
+- `src/lib/tabletop/server.ts`: `VttSceneRow` (type)
+- `src/lib/tooltips/floating-help.tsx`: `FloatingHelpPanelProps` (type)
+- `src/lib/username-rules.ts`: `UsernameValidationResult` (type)
+- `src/services/campaign-roll-service.ts`: `AddCampaignRollParams` (type)
+- `src/services/persist-finished-character.ts`: `PersistFinishedCharacterResult` (type)
+- `src/services/resource-client.ts`: `ResourceClient` (type)
+- `src/stores/guided-creator-store.ts`: `GuidedChapterId` (type), `GuidedChapterMeta` (type), `GuidedPathLayer` (type)
+- `src/types/archetype.ts`: `ArchetypePathLevel` (type)
+- `src/types/campaign-roll.ts`: `CampaignRollTimestamp` (type), `CampaignRollType` (type)
+- `src/types/codex.ts`: `CodexRowVersion` (type)
+- `src/types/core-rules.ts`: `ArchetypeProgressionEntry` (type), `MultipleUseEnergyRow` (type), `OptionalReduceDifficultyByCost` (type), `OptionalReduceDifficultyByTime` (type), `OptionalReduceTimeByCost` (type), `OptionalReduceTimeByDifficulty` (type), `RarityTier` (type), `SizeCategoryDef` (type)
+- `src/types/equipment.ts`: `DamageEntry` (type)
+
+## Left for a later pass
+
+This index is not finished. These were not opened file by line:
+
+- The bodies named under "Not read line by line" above and in the earlier sections. That includes creator, encounter, campaign, admin, codex, library, sheet, auth, and styleguide files, and the formula helpers still listed under health / energy / cost math.
+- The barrel-gap files under `src/hooks`, `src/services`, and `src/stores` were not re-read line by line. Their unused exports are named.
+
+No `src/app` folder still has a non-test source file that is missing from this index. This file is still a map of files and copies. It is not a re-check of how every screen behaves.

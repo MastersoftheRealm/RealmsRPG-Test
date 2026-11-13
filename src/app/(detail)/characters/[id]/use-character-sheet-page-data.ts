@@ -43,6 +43,8 @@ import {
   characterSaveWithoutOverlongName,
 } from '@/lib/character/character-name-limit';
 import {
+  applyCharacterDirtyPatch,
+  applySheetAutosaveConflictFields,
   characterLockToken,
   mergeRemotePreservingDirty,
   pickDirtyCharacterFields,
@@ -58,7 +60,10 @@ import {
 import { useCharacterSheetDerived } from '@/components/character-sheet';
 import { useToast } from '@/components/ui';
 import { createClient } from '@/lib/supabase/client';
-import { shouldSuppressRemoteResourceMerge } from '@/lib/encounter/character-resource-sync';
+import {
+  changedPoolAllocation,
+  shouldSuppressRemoteResourceMerge,
+} from '@/lib/encounter/character-resource-sync';
 import { isGuestCharacterId } from '@/lib/guest-character-storage';
 import type { Character } from '@/types';
 
@@ -323,7 +328,7 @@ export function useCharacterSheetPageData(id: string) {
 
   const isOwner = Boolean(character && (isGuestSheet || (user && character.userId === user.uid)));
 
-  useCharacterResourceSync(character, isOwner && !isGuestSheet);
+  useCharacterResourceSync(character, isOwner && !isGuestSheet, savedCleanRef);
 
   const pathProfAppliedKeyRef = useRef<string | null>(null);
   useEffect(() => {
@@ -371,9 +376,11 @@ export function useCharacterSheetPageData(id: string) {
         }
       }
       const cleaned = prepared.cleaned;
-      const dirty = prepared.dirty;
+      const dirty: Record<string, unknown> = {
+        ...prepared.dirty,
+        ...changedPoolAllocation(cleaned, savedCleanRef.current),
+      };
       if (Object.keys(dirty).length === 0) {
-        savedCleanRef.current = cleaned;
         return;
       }
       const mergedCleanRef: { current: Record<string, unknown> | null } = { current: null };
@@ -386,21 +393,18 @@ export function useCharacterSheetPageData(id: string) {
             remoteClean,
             localClean,
             Object.keys(dirty),
+            savedCleanRef.current,
           );
           mergedCleanRef.current = mergedClean;
           savedCleanRef.current = remoteClean;
           setCharacter((prev) => {
             if (!prev || prev.id !== remote.id) return prev;
-            const next: Record<string, unknown> = {
-              ...prev,
-              ...remote,
-              updatedAt: remote.updatedAt,
-            };
-            for (const key of Object.keys(dirty)) {
-              if (dirty[key] === null) delete next[key];
-              else if (key in cleaned) next[key] = cleaned[key];
-            }
-            return next as Character;
+            return applySheetAutosaveConflictFields(
+              prev as unknown as Record<string, unknown>,
+              remote as unknown as Record<string, unknown>,
+              mergedClean,
+              dirty,
+            ) as Character;
           });
           return {
             dirty: pickDirtyCharacterFields(mergedClean, remoteClean) as Partial<Character>,
@@ -408,10 +412,11 @@ export function useCharacterSheetPageData(id: string) {
           };
         },
       });
-      const nextClean = mergedCleanRef.current ?? cleaned;
-      savedCleanRef.current = result.updatedAt
-        ? { ...nextClean, updatedAt: result.updatedAt }
-        : nextClean;
+      savedCleanRef.current = applyCharacterDirtyPatch(
+        savedCleanRef.current ?? {},
+        result.applied as Record<string, unknown>,
+        result.updatedAt ? { documentUpdatedAt: result.updatedAt } : undefined,
+      );
       if (result.updatedAt) {
         setCharacter((prev) => (prev ? { ...prev, updatedAt: result.updatedAt } : prev));
       }

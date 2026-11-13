@@ -1,24 +1,6 @@
-/**
- * Match sheet equipment rows by id, name, or list index.
- * Equipment may be stored as { name, equipped } without a stable id.
- */
-
 import type { Item } from '@/types';
-
-export function matchesSheetEquipmentItem(
-  item: { id?: string | number | undefined; name?: string | undefined },
-  itemId: string | number,
-  idx: number,
-): boolean {
-  const idStr = String(itemId);
-  return (
-    item.id === itemId ||
-    String(item.id) === idStr ||
-    item.name === idStr ||
-    item.name?.toLowerCase() === idStr.toLowerCase() ||
-    (typeof itemId === 'number' && idx === itemId)
-  );
-}
+export { matchesSheetEquipmentItem } from '@/lib/character/sheet-equipment-match';
+import { matchesSheetEquipmentItem } from '@/lib/character/sheet-equipment-match';
 
 /** Sheet gear qty may reach 0; removal is via the row delete control only. */
 export function applySheetEquipmentQuantityDelta(

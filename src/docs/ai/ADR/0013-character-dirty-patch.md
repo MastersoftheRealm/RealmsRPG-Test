@@ -33,7 +33,9 @@ separate `version int` column.
    `updated_at` so later sheet saves can lock.
 3. **Success** `{ ok: true, updatedAt }` (column ISO). Client stores that token for the next PATCH.
 4. **409 handling.** Caller refetches, keeps local dirty keys, retries once with the remote token.
-   Same-key conflicts: local dirty value wins on the retry (last writer of that key).
+   Same-key conflicts: local dirty value wins on the retry (last writer of that key). Sheet
+   `equipment` merges per inventory row against the autosave baseline so two tabs can change
+   different gear quantities without dropping either edit.
 5. **Character React Query keys** include the signed-in user id (same pattern as user-library).
 
 ## Consequences
@@ -44,7 +46,8 @@ separate `version int` column.
   `updated_at`; resource sync still omits `updatedAt` by design (HP LWW)
   via `saveCharacter(..., { skipLock: true })`. Same-tab races (autosave + resource sync +
   pending resave) are serialized by `lib/character/save-lock.ts` (TASK-786): per-id PATCH
-  queue, in-memory newest `updatedAt`, and resource sync only when HP/EN/AP change.
+  queue, in-memory newest `updatedAt`, and resource sync when current HP/EN/AP change.
+  The sheet sync also sends `healthPoints` and `energyPoints` when those differ from the saved snapshot.
   Library add-to-character lock/retry is TASK-746 (done). Sheet realtime merge for
   non-resource keys is TASK-747 (done): remote wins for untouched keys; HP/EN/AP still
   use `mergeResourceUpdatesIntoCharacter` and the echo suppress window.

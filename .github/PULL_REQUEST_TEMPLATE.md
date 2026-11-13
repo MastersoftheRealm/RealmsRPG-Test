@@ -1,8 +1,9 @@
 <!-- Workflow: AGENTS.md. Checklist the reviewer grades: src/docs/ai/ARCHITECTURE_CONSTITUTION.md. Fill every section; write "none" rather than deleting one. -->
 
 ## ClickUp
-- Task: <!-- id — title -->
+- Task: <!-- id — title — https://app.clickup.com/t/<id> -->
 - Related: <!-- other task ids, or "none" -->
+- [ ] Task status and comments synced per `AGENTS.md` (in progress → PR link → in review after audit APPROVE → testing after merge)
 
 ## Result: REAL FIX | PATCH
 <!-- Keep one. PATCH: say what is left unfixed and what the real fix needs. -->

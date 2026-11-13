@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useId } from 'react';
+import { useState, useMemo, useId } from 'react';
 import {
   ArchetypePathFilter,
   ChipSelect,
@@ -25,12 +25,13 @@ import {
 import { useSort } from '@/hooks/use-sort';
 import { useAdminCodexEntity } from './use-admin-codex-entity';
 import { AdminCodexRowActions, ADMIN_CODEX_ROW_ACTIONS_WIDTH } from './admin-codex-row-actions';
-import { persistCodexLevelEdits } from './admin-codex-level-save';
+import { persistCodexFamilyLevelEdits } from './admin-codex-level-save';
 import { Layers } from 'lucide-react';
 import {
   groupFeatFamilies,
   formatFeatName,
   isFeatFamilyBase,
+  peakFeatInFamily,
   sortedFeatFamily,
 } from '@/lib/leveled-feats';
 import {
@@ -149,27 +150,15 @@ export function AdminFeatsTab() {
       bumpModal();
     });
 
-  const openAddLevel = (sourceFeat: Feat) =>
+  const openAddLevel = (sourceFeat: Feat, familyLevels?: readonly Feat[]) =>
     beginAdd(() => {
       setModalInitialForm(
-        computeNextLevelFormState(featToFormState(sourceFeat), String(sourceFeat.id)),
+        computeNextLevelFormState(featToFormState(sourceFeat), String(sourceFeat.id), familyLevels),
       );
       setModalInitialEditId(null);
       setModalLevelFeats([]);
       bumpModal();
     });
-
-  const openAddLevelFromEditModal = useCallback(
-    (sourceForm: FeatFormState, sourceDbFeatId: string) => {
-      beginAdd(() => {
-        setModalInitialForm(computeNextLevelFormState(sourceForm, sourceDbFeatId));
-        setModalInitialEditId(null);
-        setModalLevelFeats([]);
-        bumpModal();
-      });
-    },
-    [beginAdd],
-  );
 
   const handleSave = async (editId: string | null, form: FeatFormState) => {
     if (!form.name.trim()) return;
@@ -184,12 +173,13 @@ export function AdminFeatsTab() {
   const handleSaveAllLevels = async (editsById: Record<string, FeatFormState>) => {
     if (Object.keys(editsById).length === 0) return;
     setSaving(true);
-    const error = await persistCodexLevelEdits({
+    const error = await persistCodexFamilyLevelEdits({
       collection: 'codex_feats',
       editsById,
       updatedAtForId: (id) => (feats ?? []).find((f) => String(f.id) === id)?.updated_at,
       toPayload: featFormToSavePayload,
-      invalidMessage: (id, form) => (form?.name?.trim() ? null : `Level ${id}: name is required`),
+      invalidMessage: (_id, form) =>
+        form?.name?.trim() ? null : `Level ${form?.feat_lvl ?? '?'}: name is required`,
       queryClient,
     });
     setSaving(false);
@@ -375,7 +365,9 @@ export function AdminFeatsTab() {
                     <IconButton
                       variant="ghost"
                       size="sm"
-                      onClick={() => openAddLevel(feat)}
+                      onClick={() =>
+                        openAddLevel(peakFeatInFamily(familyLevels) ?? feat, familyLevels)
+                      }
                       label="Add level"
                     >
                       <Layers className="h-4 w-4" />
@@ -409,7 +401,6 @@ export function AdminFeatsTab() {
           initialForm={modalInitialForm}
           initialEditId={modalInitialEditId}
           enableAddLevel
-          onAddLevel={openAddLevelFromEditModal}
         />
       ) : null}
 
