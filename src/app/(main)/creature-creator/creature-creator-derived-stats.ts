@@ -28,6 +28,7 @@ import {
 import { creatureArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import type { CoreRulesMap } from '@/types/core-rules';
 import { movementControlFeatIdsFromNames } from './creature-movement';
+import type { CreatureFeat as CodexCreatureFeat } from '@/hooks';
 import type { CreatureState } from './creature-creator-types';
 import {
   computeCreatureTrainingSpent,
@@ -75,6 +76,7 @@ export function calculateCreatureCreatorStats(
   subSkillNames: Set<string>,
   rules: Partial<CoreRulesMap> | undefined,
   proficiencyCtx?: CreatureProficiencyDbContext,
+  creatureFeatsCatalog: readonly CodexCreatureFeat[] = [],
 ): CreatureCreatorDerivedStats {
   const level = creature.level;
   const abilities = creature.abilities;
@@ -122,7 +124,10 @@ export function calculateCreatureCreatorStats(
 
   const manualFeatSpent = creature.feats.reduce((sum, f) => sum + (f.points ?? 1), 0);
   const featIdsOnCreature = new Set(creature.feats.map((feat) => String(feat.id)));
-  const impliedMovementPoints = movementControlFeatIdsFromNames(creature.movementTypes).reduce(
+  const impliedMovementPoints = movementControlFeatIdsFromNames(
+    creature.movementTypes,
+    creatureFeatsCatalog,
+  ).reduce(
     (sum, id) => (featIdsOnCreature.has(id) ? sum : sum + (featPointsMap.get(id) ?? 0)),
     0,
   );

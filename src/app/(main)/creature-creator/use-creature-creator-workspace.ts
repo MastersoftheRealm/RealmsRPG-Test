@@ -64,7 +64,6 @@ import { mergeLibraryBySource } from '@/lib/library/source-scope';
 import { codexCreatureFeatToCreatureFeat, mergeCreatureFeatsOnAdd } from './creature-feat-utils';
 import {
   isCreatureMovementEffectFeat,
-  isMovementBoundFamilyFeat,
 } from './creature-movement';
 import { canAddDamageModifier } from './creature-damage-modifiers';
 import {
@@ -383,9 +382,8 @@ export function useCreatureCreatorWorkspace() {
     () =>
       sortFeatItems(
         featsWithTypeLabel.filter((feat) => {
-          if (isCreatureMovementEffectFeat(feat)) return false;
           const row = codexCreatureFeatsById.get(String(feat.id));
-          return !(row && isMovementBoundFamilyFeat(row));
+          return !isCreatureMovementEffectFeat(feat, row ?? null);
         }),
       ),
     [codexCreatureFeatsById, featsWithTypeLabel, sortFeatItems],
@@ -458,8 +456,15 @@ export function useCreatureCreatorWorkspace() {
 
   const stats = useMemo(
     () =>
-      calculateCreatureCreatorStats(creature, featPointsMap, subSkillNames, rules, proficiencyCtx),
-    [creature, featPointsMap, subSkillNames, rules, proficiencyCtx],
+      calculateCreatureCreatorStats(
+        creature,
+        featPointsMap,
+        subSkillNames,
+        rules,
+        proficiencyCtx,
+        creatureFeatsData,
+      ),
+    [creature, featPointsMap, subSkillNames, rules, proficiencyCtx, creatureFeatsData],
   );
 
   const isOverBudget = useMemo(() => isCreatureOverBudget(stats), [stats]);
@@ -507,7 +512,10 @@ export function useCreatureCreatorWorkspace() {
     acceptDraft();
   }, [acceptDraft, bootstrapApplied, sessionKey]);
 
-  const featsSummary = useMemo(() => buildCreatureFeatsSummary(creature), [creature]);
+  const featsSummary = useMemo(
+    () => buildCreatureFeatsSummary(creature, codexCreatureFeatsById),
+    [creature, codexCreatureFeatsById],
+  );
   const powersSummary = useMemo(() => buildCreaturePowersSummary(creature), [creature]);
   const techniquesSummary = useMemo(() => buildCreatureTechniquesSummary(creature), [creature]);
   const armamentsSummary = useMemo(() => buildCreatureArmamentsSummary(creature), [creature]);

@@ -9,6 +9,7 @@ import {
   movementAfterWalkLevel,
   movementAfterSwimLevel,
   movementDropdownFeats,
+  movementControlFeatIdsFromNames,
   movementSectionPointTotal,
   movementToggleLines,
   movementTravelLines,
@@ -86,6 +87,90 @@ describe('creature movement section helpers', () => {
     expect(
       movementSectionPointTotal({ ...initialState, movementTypes: ['Speedy'], feats: [] }, catalog),
     ).toBe(0.5);
+    expect(movementControlFeatIdsFromNames(['Speedy'], catalog)).toEqual([
+      String(CREATURE_FEAT_IDS.SPEEDY),
+    ]);
+  });
+
+  it('clamps the walk stepper at the highest Slow level in the catalog', () => {
+    const withFourthSlow = [
+      ...catalog,
+      {
+        id: String(CREATURE_FEAT_IDS.SLOW),
+        name: 'Slow',
+        description: '',
+        points: -0.5,
+        feat_lvl: 1,
+        mechanic: true,
+        category: 'Movement',
+      },
+      {
+        id: String(CREATURE_FEAT_IDS.SLOW_II),
+        name: 'Slow',
+        description: '',
+        points: -1,
+        feat_lvl: 2,
+        base_feat_id: String(CREATURE_FEAT_IDS.SLOW),
+        mechanic: true,
+        category: 'Movement',
+      },
+      {
+        id: String(CREATURE_FEAT_IDS.SLOW_III),
+        name: 'Slow',
+        description: '',
+        points: -1.5,
+        feat_lvl: 3,
+        base_feat_id: String(CREATURE_FEAT_IDS.SLOW),
+        mechanic: true,
+        category: 'Movement',
+      },
+      {
+        id: '167',
+        name: 'Slow',
+        description: 'This creature’s Speed is decreased by 4.',
+        points: -2.5,
+        feat_lvl: 4,
+        base_feat_id: String(CREATURE_FEAT_IDS.SLOW),
+        mechanic: true,
+        category: 'Movement',
+      },
+    ];
+    expect(walkLevelCap(withFourthSlow).down).toBe(4);
+    const capped = movementAfterWalkLevel(initialState, -99, withFourthSlow);
+    expect(readWalkLevel(capped.movementTypes)).toBe(-4);
+    expect(capped.movementTypes).toContain('walk:-4');
+    expect(capped.feats.map((feat) => feat.id)).toEqual(['167']);
+    const slowIv = withFourthSlow.find((feat) => feat.id === '167');
+    expect(isCreatureMovementEffectFeat(capped.feats[0]!, slowIv)).toBe(true);
+    expect(movementControlFeatIdsFromNames(['walk:-4'], withFourthSlow)).toEqual(['167']);
+    expect(movementAfterWalkLevel(initialState, -5, withFourthSlow).feats.map((feat) => feat.id)).toEqual(
+      ['167'],
+    );
+  });
+
+  it('clamps the walk stepper at the highest Speedy level in the catalog', () => {
+    const withFourth = [
+      ...catalog,
+      {
+        id: '166',
+        name: 'Speedy',
+        description: 'This creature’s Speed is increased by 4.',
+        points: 2.5,
+        feat_lvl: 4,
+        base_feat_id: String(CREATURE_FEAT_IDS.SPEEDY),
+        mechanic: false,
+        category: 'Movement',
+      },
+    ];
+    expect(walkLevelCap(withFourth).up).toBe(4);
+    const capped = movementAfterWalkLevel(initialState, 99, withFourth);
+    expect(readWalkLevel(capped.movementTypes)).toBe(4);
+    expect(movementAfterWalkLevel(initialState, 5, withFourth).feats.map((feat) => feat.id)).toEqual([
+      '166',
+    ]);
+    expect(
+      movementControlFeatIdsFromNames(['walk:+4'], withFourth),
+    ).toEqual(['166']);
   });
 
   it('uses a further Speedy family level as the speed step, not a listed feat', () => {

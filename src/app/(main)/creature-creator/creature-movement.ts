@@ -84,14 +84,27 @@ export function isMovementBoundFamilyFeat(feat: {
   return WALK_FAMILY_ROOTS.has(id) || WALK_FAMILY_ROOTS.has(base);
 }
 
-/** Hidden from the feat list: a known control id, or a row this section just wrote. */
-export function isCreatureMovementEffectFeat(feat: {
-  id?: string | number | undefined;
-  boundControl?: boolean | undefined;
-}): boolean {
+/** Hidden from the feat list: a known control id, a bound row, or any speed-family child in the codex. */
+export function isCreatureMovementEffectFeat(
+  feat: {
+    id?: string | number | undefined;
+    base_feat_id?: string | number | null | undefined;
+    boundControl?: boolean | undefined;
+  },
+  catalogRow?: Pick<CodexCreatureFeat, 'id' | 'base_feat_id'> | null,
+): boolean {
   if (feat.boundControl) return true;
   if (feat.id == null) return false;
-  return isCreatureMovementControlFeatId(feat.id);
+  if (isCreatureMovementControlFeatId(feat.id)) return true;
+  if (catalogRow && isMovementBoundFamilyFeat(catalogRow)) return true;
+  if (
+    feat.base_feat_id != null &&
+    feat.base_feat_id !== '' &&
+    isMovementBoundFamilyFeat({ id: String(feat.id), base_feat_id: feat.base_feat_id })
+  ) {
+    return true;
+  }
+  return false;
 }
 
 export function formatMovementPointCost(points: number): string {
@@ -327,16 +340,17 @@ export function movementDropdownFeats(catalog: readonly CodexCreatureFeat[]): Co
   );
 }
 
-export function movementControlFeatIdsFromNames(movementTypes: readonly string[]): string[] {
+export function movementControlFeatIdsFromNames(
+  movementTypes: readonly string[],
+  catalog: readonly CodexCreatureFeat[],
+): string[] {
   const ids: string[] = [];
   const walk = readWalkLevel(movementTypes);
   if (walk > 0) {
-    const id = SPEEDY_IDS[walk - 1];
-    if (id != null) ids.push(String(id));
+    ids.push(featIdForLevel(catalog, CREATURE_FEAT_IDS.SPEEDY, walk, SPEEDY_IDS));
   }
   if (walk < 0) {
-    const id = SLOW_IDS[-walk - 1];
-    if (id != null) ids.push(String(id));
+    ids.push(featIdForLevel(catalog, CREATURE_FEAT_IDS.SLOW, -walk, SLOW_IDS));
   }
   const fly = readFlyLevel(movementTypes);
   if (fly > 0) ids.push(String(FLY_IDS[fly - 1]));
@@ -359,7 +373,7 @@ export function movementSectionPointTotal(
     const points = feat.points ?? byId.get(id)?.points ?? 0;
     if (Number.isFinite(points)) sum += points;
   }
-  for (const id of movementControlFeatIdsFromNames(creature.movementTypes)) {
+  for (const id of movementControlFeatIdsFromNames(creature.movementTypes, catalog)) {
     if (onCreature.has(id)) continue;
     const points = byId.get(id)?.points ?? 0;
     if (Number.isFinite(points)) sum += points;

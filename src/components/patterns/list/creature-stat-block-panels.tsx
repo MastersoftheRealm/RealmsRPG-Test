@@ -25,6 +25,7 @@ import { getWeaponAttackBonusFromProperties } from '@/lib/game/weapon-attack-abi
 import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import { normalizeRangeDisplay } from '@/lib/utils';
 import type { Abilities } from '@/types';
+import type { CreatureFeat as CodexCreatureFeat } from '@/hooks';
 import type { CreatureData, CreatureStatBlockArmament } from './creature-stat-block-types';
 import {
   isCreatureMovementEffectFeat,
@@ -81,6 +82,7 @@ interface CreatureStatBlockExpandedContentProps {
   equipment: CreatureStatBlockArmament[];
   powersForDisplay: EntityPowerRow[];
   techniquesForDisplay: EntityTechniqueRow[];
+  creatureFeatsById: ReadonlyMap<string, CodexCreatureFeat>;
 }
 
 export function CreatureStatBlockExpandedContent({
@@ -112,6 +114,7 @@ export function CreatureStatBlockExpandedContent({
   equipment,
   powersForDisplay,
   techniquesForDisplay,
+  creatureFeatsById,
 }: CreatureStatBlockExpandedContentProps) {
   const travelLines = movementTravelLines(creature.movementTypes ?? [], speed);
   const toggleLines = movementToggleLines(creature.feats ?? []);
@@ -368,7 +371,10 @@ export function CreatureStatBlockExpandedContent({
                 compactRows
                 showTitle={false}
                 items={(creature.feats ?? [])
-                  .filter((f) => !isCreatureMovementEffectFeat(f))
+                  .filter(
+                    (f) =>
+                      !isCreatureMovementEffectFeat(f, creatureFeatsById.get(String(f.id)) ?? null),
+                  )
                   .map(
                     (f, idx): EntityFeatRow => ({
                       id: `${creature.id}-feat-${idx}`,
