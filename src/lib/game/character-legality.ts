@@ -9,7 +9,9 @@
  * `legalityWarnings` on 200; no legality 400. Bad payloads still fail Zod validation.
  *
  * Skill spend uses the same allocation math as the sheet (`calculateCharacterSkillPointsSpent`),
- * including free species skills and codex sub-skill steps when the feat catalog is loaded.
+ * including free species skills (ancestry `selectedSpeciesSkillIds`, else `user_species.skills` or
+ * `codex_species.skills` as comma-separated text, matching the merged species list) and codex
+ * sub-skill steps when the feat catalog is loaded.
  * Feat requirements
  * use `checkFeatRequirements` when the feat catalog loaded; catalog load failure is
  * `feat_catalog_unavailable` (save still succeeds).
@@ -647,6 +649,16 @@ async function resolveLegalitySpeciesSkillRefs(
   const ancestry = asRecord(candidate.ancestry);
   const speciesId = ancestry?.id != null ? String(ancestry.id) : '';
   if (!speciesId) return [];
+
+  const { data: userSpecies, error: userSpeciesError } = await supabase
+    .from('user_species')
+    .select('skills')
+    .eq('id', speciesId)
+    .maybeSingle();
+  if (!userSpeciesError && userSpecies != null) {
+    if (userSpecies.skills == null) return [];
+    return toStrArray(userSpecies.skills);
+  }
 
   const { data, error } = await supabase
     .from('codex_species')

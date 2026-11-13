@@ -470,19 +470,21 @@ describe('evaluateCharacterLegalityForSave', () => {
     const speciesSkillsText = 'Athletics,Stealth';
     const supabase = {
       from: vi.fn().mockImplementation((table: string) => {
-        if (table !== 'codex_species') {
-          throw new Error(`unexpected table ${table}`);
-        }
-        return {
+        const chain = () => ({
           select: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
-              maybeSingle: vi.fn().mockResolvedValue({
-                data: { skills: speciesSkillsText },
-                error: null,
-              }),
+              maybeSingle: vi
+                .fn()
+                .mockResolvedValue(
+                  table === 'user_species'
+                    ? { data: null, error: null }
+                    : { data: { skills: speciesSkillsText }, error: null },
+                ),
             }),
           }),
-        };
+        });
+        if (table === 'user_species' || table === 'codex_species') return chain();
+        throw new Error(`unexpected table ${table}`);
       }),
     };
 
@@ -499,6 +501,71 @@ describe('evaluateCharacterLegalityForSave', () => {
         ],
       });
       expect(result.warnings.filter((w) => w.code === 'skill_points_over_budget')).toEqual([]);
+    } finally {
+      rulesSpy.mockRestore();
+      catalogSpy.mockRestore();
+    }
+  });
+
+  it('parses user_species.skills text on save when ancestry is a library species (PR 590 round-3)', async () => {
+    const rulesSpy = vi.spyOn(coreRulesServer, 'fetchCoreRules').mockResolvedValue({});
+    const catalogSpy = vi
+      .spyOn(featCatalogServer, 'fetchFeatRequirementCatalogCached')
+      .mockResolvedValue({
+        feats: [],
+        skills: [
+          { id: '10', name: 'Athletics' },
+          { id: '11', name: 'Stealth' },
+        ],
+      });
+    const speciesSkillsText = 'Athletics, Stealth';
+    const supabase = {
+      from: vi.fn().mockImplementation((table: string) => {
+        const chain = () => ({
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              maybeSingle: vi
+                .fn()
+                .mockResolvedValue(
+                  table === 'user_species'
+                    ? { data: { skills: speciesSkillsText }, error: null }
+                    : { data: null, error: null },
+                ),
+            }),
+          }),
+        });
+        if (table === 'user_species' || table === 'codex_species') return chain();
+        throw new Error(`unexpected table ${table}`);
+      }),
+    };
+
+    const baseCandidate = {
+      ...legalBuild(),
+      ancestry: { id: 'my-sp-1', name: 'Customfolk' },
+      skills: [
+        { id: '10', name: 'Athletics', skill_val: 0, prof: true },
+        { id: '11', name: 'Stealth', skill_val: 0, prof: true },
+        { id: '3', skill_val: 0, prof: true },
+        { id: '4', skill_val: 0, prof: true },
+        { id: '5', skill_val: 0, prof: true },
+      ],
+    };
+
+    try {
+      const result = await evaluateCharacterLegalityForSave(supabase as never, baseCandidate);
+      expect(result.warnings.filter((w) => w.code === 'skill_points_over_budget')).toEqual([]);
+
+      const oneMoreBought = await evaluateCharacterLegalityForSave(supabase as never, {
+        ...baseCandidate,
+        skills: [...baseCandidate.skills, { id: '6', skill_val: 0, prof: true }],
+      });
+      expect(
+        oneMoreBought.warnings.find((w) => w.code === 'skill_points_over_budget'),
+      ).toMatchObject({
+        spent: 4,
+        budget: 3,
+      });
+      expect(supabase.from).toHaveBeenCalledWith('user_species');
     } finally {
       rulesSpy.mockRestore();
       catalogSpy.mockRestore();
