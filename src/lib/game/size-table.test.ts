@@ -105,10 +105,12 @@ describe('CREATURE_SIZES table', () => {
   });
 });
 
+const STATIC_SIZE_CATEGORIES = CREATURE_SIZES;
+
 describe('calculateCarryingCapacityKg', () => {
   it('uses base carry at Strength 0 for every size', () => {
     for (const expected of SIZE_TABLE_EXPECTED) {
-      expect(calculateCarryingCapacityKg(expected.value, 0)).toEqual({
+      expect(calculateCarryingCapacityKg(expected.value, 0, STATIC_SIZE_CATEGORIES)).toEqual({
         capacityKg: expected.baseCarry,
         minCarryKg: expected.minCarry,
       });
@@ -117,7 +119,9 @@ describe('calculateCarryingCapacityKg', () => {
 
   it('floors at minimum carry for negative Strength (one case per size)', () => {
     for (const expected of SIZE_TABLE_EXPECTED) {
-      expect(calculateCarryingCapacityKg(expected.value, expected.floorStrength)).toEqual({
+      expect(
+        calculateCarryingCapacityKg(expected.value, expected.floorStrength, STATIC_SIZE_CATEGORIES),
+      ).toEqual({
         capacityKg: expected.floorCapacityKg,
         minCarryKg: expected.minCarry,
       });
@@ -125,18 +129,18 @@ describe('calculateCarryingCapacityKg', () => {
   });
 
   it('applies per-Strength steps at high Strength', () => {
-    expect(calculateCarryingCapacityKg('medium', 4)).toEqual({
+    expect(calculateCarryingCapacityKg('medium', 4, STATIC_SIZE_CATEGORIES)).toEqual({
       capacityKg: 100 + 50 * 4,
       minCarryKg: 50,
     });
-    expect(calculateCarryingCapacityKg('gargantuan', 2)).toEqual({
+    expect(calculateCarryingCapacityKg('gargantuan', 2, STATIC_SIZE_CATEGORIES)).toEqual({
       capacityKg: 1600 + 800 * 2,
       minCarryKg: 800,
     });
   });
 
   it('matches codex-style labels case-insensitively', () => {
-    expect(calculateCarryingCapacityKg('Medium', 0)?.capacityKg).toBe(100);
+    expect(calculateCarryingCapacityKg('Medium', 0, STATIC_SIZE_CATEGORIES)?.capacityKg).toBe(100);
     expect(findSizeTableRow('Minuscule')?.value).toBe('miniscule');
   });
 
@@ -148,7 +152,14 @@ describe('calculateCarryingCapacityKg', () => {
       capacityKg: 120,
       minCarryKg: 50,
     });
-    expect(calculateCarryingCapacityKg('medium', 0)?.capacityKg).toBe(100);
+  });
+
+  it('does not use hardcoded Medium 100 when an empty category list is provided', () => {
+    expect(calculateCarryingCapacityKg('medium', 0, [])).toBeNull();
+    expect(calculateCarryingCapacityKg('medium', 0)).toEqual({
+      capacityKg: 100,
+      minCarryKg: 50,
+    });
   });
 });
 

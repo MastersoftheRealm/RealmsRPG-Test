@@ -2410,7 +2410,7 @@ Creature size table, carrying-capacity kg formula, and archetype-path browse fil
 - `character-size.ts` (size slice): `resolveEffectiveCharacterSize` and labels call `reconcileSizeWithAllowedOptions` / `findSizeTableRow` only; **no** carrying-capacity math.
 - `creator-constants.ts` re-exports `CREATURE_SIZES` and `CARRYING_CAPACITY_HALF_LOAD_RULE` from `size-table` (single table source for creator dropdowns).
 - `FALLBACK_RULES.SIZES` in `use-game-rules.ts` copies the same `CREATURE_SIZES` carry/spaces fields into the default core-rules payload; `mergeCoreRules` lets DB `SIZES` override that document client-side.
-- `notes-tab.tsx` carrying display calls `calculateCarryingCapacityKg(characterSize, strength, rules.SIZES.categories)` via `useGameRules()`; `CREATURE_SIZES` remains the fallback when categories are omitted.
+- `notes-tab.tsx` carrying display calls `calculateCarryingCapacityKg(characterSize, strength, rules.SIZES.categories)` via `useGameRules()`. Callers that omit `sizeCategories` still read `CREATURE_SIZES`; an explicitly passed empty list does not fall back to the built-in chart.
 - Full `path-recommendation-index.ts`: filter alias expansion, `buildPathRecommendationIndex` (`indexByNormalizedIds` + name map, then `collectPathRecommendedIds` per path/kind), union/intersection helpers (`pathRecommendedEntityIds`, `rowMatchesPathRecommendedIds`, `applyLivePathFilter`). **No** TP, skill, energy, or currency arithmetic—only id/name resolution.
 - `normalize-id.ts` (`normalizeId`, `indexByNormalizedIds`) read for path index lookups.
 - `use-path-recommendation-index.ts` (full): memo wrapper around `buildPathRecommendationIndex` and `pathRecommendedEntityIds`; no extra formulas.

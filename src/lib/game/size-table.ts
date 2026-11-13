@@ -151,7 +151,8 @@ function findCarryLookupRow(
   categories?: readonly SizeCarryLookupRow[] | undefined,
 ): SizeCarryLookupRow | undefined {
   const key = normalizeSizeLookupKey(sizeKey);
-  const table = categories?.length ? categories : CREATURE_SIZES;
+  const table = categories === undefined ? CREATURE_SIZES : categories;
+  if (table.length === 0) return undefined;
   return table.find(
     (row) => normalizeSizeLookupKey(row.value) === key || normalizeSizeLookupKey(row.label) === key,
   );
