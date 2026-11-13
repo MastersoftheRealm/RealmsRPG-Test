@@ -2298,7 +2298,7 @@ Creature point budgets, spend totals, and training-point aggregation for the cre
 
 `math-disagree-unclassified` marks a difference that is not labelled intentional or bug. Dropping a line fails the validator.
 
-- math-disagree-bug:creature-training-stored-tp-without-parts: **Bug (Kadin).** Intended rule: use live parts through `sumRequiredProficiencyTrainingPoints` when parts exist; saved `tp` only when parts cannot be found (may be stale). `computeCreatureTrainingSpent` still adds stored `power.tp` / `technique.tp` / `armament.tp` on paths where parts could be resolved, so spend can disagree with live TP when parts exist. Legacy no-DB mode uses stored sums only.
+- math-disagree-bug:creature-training-stored-tp-without-parts: **Bug (Kadin).** Intended rule: use live parts through `sumRequiredProficiencyTrainingPoints` when parts exist; saved `tp` only when the parts cannot be found (may be stale). **What the code does:** with codex part/property DBs loaded, `computeCreatureTrainingSpent` runs `sumRequiredProficiencyTrainingPoints` on the active loadout and **does not** add stored `power.tp` / `technique.tp` when that row has a non-empty `parts` array (`storedTpWithoutParts`); armament stored `tp` is skipped when `properties` are present (`storedTpWithoutResolvableParts`). Saved `tp` is added only for rows missing parts or properties on the snapshot, plus equipment via `sumStoredArmamentTp`. When no parts DB context, `sumLegacyCreatureTrainingSpent` uses stored sums only. Remaining bug vs intent is when parts are present on the row but cannot be resolved from DB—stored fallback is still skipped today.
 
 ### Same math, separate copies
 

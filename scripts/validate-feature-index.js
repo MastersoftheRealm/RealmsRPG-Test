@@ -322,6 +322,12 @@ const CRAFTING_COST_MATH_DEFERRED_IDS = [
 
 const SIZE_PATH_MATH_BUG_IDS = ['size-hardcoded-carry-vs-core-rules-sizes'];
 
+/** Guards `math-disagree-unclassified` documentation in FEATURE_INDEX (intro + math sections). */
+const MATH_DISAGREE_UNCLASSIFIED_DOCUMENTATION_MENTIONS = 3;
+
+/** When present, each id must appear as `math-disagree-unclassified:<id>:` in a ### Disagreements slice. */
+const MATH_DISAGREE_UNCLASSIFIED_IDS = [];
+
 function mathSectionSlice(text, heading) {
   const start = text.indexOf(heading);
   if (start < 0) return null;
@@ -541,6 +547,50 @@ requireDisagreementTokens(
   'size/path bug',
 );
 
+const unclassifiedDocMentions = indexText.match(/math-disagree-unclassified/g);
+if ((unclassifiedDocMentions?.length ?? 0) < MATH_DISAGREE_UNCLASSIFIED_DOCUMENTATION_MENTIONS) {
+  console.error(
+    `FEATURE_INDEX must document math-disagree-unclassified in at least ${MATH_DISAGREE_UNCLASSIFIED_DOCUMENTATION_MENTIONS} places; found ${unclassifiedDocMentions?.length ?? 0}.`,
+  );
+  process.exit(2);
+}
+
+const discoveredUnclassifiedIds = [
+  ...new Set(
+    [...indexText.matchAll(/math-disagree-unclassified:([a-z0-9-]+):/g)].map((match) => match[1]),
+  ),
+];
+for (const id of discoveredUnclassifiedIds) {
+  if (!MATH_DISAGREE_UNCLASSIFIED_IDS.includes(id)) {
+    console.error(
+      'FEATURE_INDEX has math-disagree-unclassified line not listed in validator MATH_DISAGREE_UNCLASSIFIED_IDS:',
+      id,
+    );
+    process.exit(2);
+  }
+}
+
+const mathDisagreementSections = [
+  healthDisagreements,
+  skillDisagreements,
+  characterDisagreements,
+  creatureBudgetDisagreements,
+  proficiencyDisagreements,
+  defenseWeaponDisagreements,
+  craftingCostDisagreements,
+  sizePathDisagreements,
+];
+for (const disagreements of mathDisagreementSections) {
+  if (disagreements) {
+    requireDisagreementTokens(
+      disagreements,
+      'math-disagree-unclassified',
+      MATH_DISAGREE_UNCLASSIFIED_IDS,
+      'unclassified',
+    );
+  }
+}
+
 const mathDisagreementCount =
   MATH_DISAGREEMENT_INTENTIONAL_IDS.length +
   MATH_DISAGREEMENT_BUG_IDS.length +
@@ -551,7 +601,8 @@ const mathDisagreementCount =
   DEFENSE_WEAPON_MATH_BUG_IDS.length +
   CRAFTING_COST_MATH_BUG_IDS.length +
   CRAFTING_COST_MATH_DEFERRED_IDS.length +
-  SIZE_PATH_MATH_BUG_IDS.length;
+  SIZE_PATH_MATH_BUG_IDS.length +
+  MATH_DISAGREE_UNCLASSIFIED_IDS.length;
 console.log(`FEATURE_INDEX math-disagreement check OK (${mathDisagreementCount} guarded lines).`);
 
 const CHARACTER_CREATOR_SCREEN_NOTE_IDS = [
