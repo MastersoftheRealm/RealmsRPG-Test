@@ -113,6 +113,19 @@ export function hasReachProperty(properties: WeaponPropertyRef[] | undefined): b
   );
 }
 
+function hasRangeProperty(properties: WeaponPropertyRef[] | undefined): boolean {
+  return propertyList(properties).some(
+    (p) => hasPropertyId(p, PROPERTY_IDS.RANGE) || normalizePropertyName(p) === 'range',
+  );
+}
+
+/** Thrown, Reach, or Range row — creator range type is already encoded in properties. */
+function hasWeaponRangeMechanicProperty(properties: WeaponPropertyRef[] | undefined): boolean {
+  return (
+    hasThrownProperty(properties) || hasReachProperty(properties) || hasRangeProperty(properties)
+  );
+}
+
 export function hasTwoHandedProperty(properties: WeaponPropertyRef[] | undefined): boolean {
   return propertyList(properties).some(
     (p) =>
@@ -153,29 +166,22 @@ export function clampWeaponAbilityUtilized(
 }
 
 /**
- * Range override for creator when saved properties are absent; matches sheet fallback
- * via `resolveWeaponRangeDisplay` without duplicating attack-ability rules.
- */
-function creatorWeaponRangeOverride(
-  properties: WeaponPropertyRef[] | undefined,
-  rangeType: WeaponRangeType,
-): string | null {
-  if ((properties ?? []).length > 0) return null;
-  if (rangeType === 'melee' || rangeType === 'thrown' || rangeType === 'reach') {
-    return formatWeaponRangeConfig({ type: 'melee', spaces: 0 });
-  }
-  const spaces = weaponRangeSpaceLadder(rangeType)[0] ?? 0;
-  return formatWeaponRangeConfig({ type: rangeType, spaces });
-}
-
-/**
  * Creator Ability utilized — same resolution as the sheet (`getWeaponAttackAbility`).
+ * When Thrown/Reach/Range rows are missing (legacy `rangeLevel`, damage-only payloads),
+ * pass a range display string so the sheet function sees creator range type.
  */
 export function deriveWeaponAbilityUtilized(
   properties: WeaponPropertyRef[] | undefined,
   rangeType: WeaponRangeType,
 ): WeaponAttackAbility {
-  return getWeaponAttackAbility(properties, creatorWeaponRangeOverride(properties, rangeType));
+  if (hasWeaponRangeMechanicProperty(properties)) {
+    return getWeaponAttackAbility(properties, null);
+  }
+  if (rangeType === 'ranged') {
+    const spaces = weaponRangeSpaceLadder('ranged')[0] ?? 8;
+    return getWeaponAttackAbility(properties, formatWeaponRangeConfig({ type: 'ranged', spaces }));
+  }
+  return getWeaponAttackAbility(properties, formatWeaponRangeConfig({ type: 'melee', spaces: 0 }));
 }
 
 /**
@@ -192,10 +198,10 @@ export function getWeaponAttackAbility(
   if (hasReachProperty(properties)) return 'strength';
   if (hasHeavyProperty(properties)) return 'strength';
 
-  const rangeStr = resolveWeaponRangeDisplay(
-    rangeOverride,
-    (properties ?? []) as ItemPropertyPayload[],
-  );
+  const propertyPayloads = (properties ?? []) as ItemPropertyPayload[];
+  const rangeStr = hasWeaponRangeMechanicProperty(properties)
+    ? resolveWeaponRangeDisplay(rangeOverride, propertyPayloads)
+    : resolveWeaponRangeDisplay(rangeOverride, []);
   if (rangeStr.toLowerCase() !== 'melee') return 'acuity';
 
   return 'strength';

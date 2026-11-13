@@ -108,9 +108,9 @@ describe('weapon-attack-ability', () => {
       expect(deriveWeaponAbilityUtilized(props, 'ranged')).toBe(sheetAbility);
     });
 
-    it('matches getWeaponAttackAbility for reach weapons', () => {
-      const props = [{ id: PROPERTY_IDS.REACH, name: 'Reach', op_1_lvl: 1 }];
-      expect(deriveWeaponAbilityUtilized(props, 'reach')).toBe(getWeaponAttackAbility(props));
+    it('uses acuity for ranged legacy payloads with only non-range properties', () => {
+      const props = [{ id: PROPERTY_IDS.WEAPON_DAMAGE, name: 'Weapon Damage', op_1_lvl: 0 }];
+      expect(deriveWeaponAbilityUtilized(props, 'ranged')).toBe('acuity');
     });
 
     it('lists acuity + strength + agility for ranged and strength + agility otherwise', () => {
