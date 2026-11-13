@@ -18,7 +18,10 @@ import {
   useCreatureFeats,
 } from '@/hooks';
 import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
-import { isCreatureMovementEffectFeat } from '@/app/(main)/creature-creator/creature-movement';
+import {
+  builtInSenseSummaryLines,
+  isCreatureCreatorHiddenFeat,
+} from '@/app/(main)/creature-creator/creature-movement';
 import type { CreatureFeat as CodexCreatureFeat } from '@/hooks';
 import { calculateCreatureSpeed, calculateEvasion } from '@/lib/game/calculations';
 import { CREATURE_STAT_BLOCK_GRID } from '@/lib/library/official-creature-list';
@@ -142,7 +145,7 @@ export function CreatureStatBlock({
     }));
   }, [creature.skills]);
   const hasFeats = (creature.feats ?? []).some(
-    (feat) => !isCreatureMovementEffectFeat(feat, creatureFeatsById.get(String(feat.id)) ?? null),
+    (feat) => !isCreatureCreatorHiddenFeat(feat, creatureFeatsById.get(String(feat.id)) ?? null),
   );
   const hasWeapons = weapons.length > 0;
   const hasShields = shields.length > 0;
@@ -163,7 +166,13 @@ export function CreatureStatBlock({
 
   const damageReduction = useMemo(() => creatureArmorDamageReduction(armor), [armor]);
 
+  const senseLines = useMemo(
+    () => builtInSenseSummaryLines({ senses: creature.senses ?? [] }, creatureFeatsCatalog),
+    [creature.senses, creatureFeatsCatalog],
+  );
+
   const summaryLines = [
+    ...senseLines,
     compactLine('Resistances', creature.resistances),
     compactLine('Weaknesses', creature.weaknesses),
     compactLine('Immunities', creature.immunities),

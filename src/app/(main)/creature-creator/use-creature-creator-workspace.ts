@@ -62,9 +62,7 @@ import {
 import { normalizeCreatureInventoryType } from '@/lib/game/creature-inventory';
 import { mergeLibraryBySource } from '@/lib/library/source-scope';
 import { codexCreatureFeatToCreatureFeat, mergeCreatureFeatsOnAdd } from './creature-feat-utils';
-import {
-  isCreatureMovementEffectFeat,
-} from './creature-movement';
+import { isCreatureCreatorHiddenFeat } from './creature-movement';
 import { canAddDamageModifier } from './creature-damage-modifiers';
 import {
   buildArmamentLibraryList,
@@ -244,7 +242,13 @@ export function useCreatureCreatorWorkspace() {
   const [bootstrapKey, setBootstrapKey] = useState<string | null>(null);
   if (bootstrapReady && bootstrapKey !== sessionKey) {
     setBootstrapKey(sessionKey);
-    setCreature(bootstrapCreatureState({ editCreatureId, rawItems: load.rawItems }));
+    setCreature(
+      bootstrapCreatureState({
+        editCreatureId,
+        rawItems: load.rawItems,
+        creatureFeatsCatalog: creatureFeatsData as CodexCreatureFeatRow[],
+      }),
+    );
   }
   const bootstrapApplied = bootstrapKey === sessionKey;
   const editReplacesDraft = creatorEditReplacesDraft(editCreatureId, load.rawItems);
@@ -383,7 +387,7 @@ export function useCreatureCreatorWorkspace() {
       sortFeatItems(
         featsWithTypeLabel.filter((feat) => {
           const row = codexCreatureFeatsById.get(String(feat.id));
-          return !isCreatureMovementEffectFeat(feat, row ?? null);
+          return !isCreatureCreatorHiddenFeat(feat, row ?? null);
         }),
       ),
     [codexCreatureFeatsById, featsWithTypeLabel, sortFeatItems],

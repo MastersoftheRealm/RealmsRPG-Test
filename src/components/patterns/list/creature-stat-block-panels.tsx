@@ -28,7 +28,7 @@ import type { Abilities } from '@/types';
 import type { CreatureFeat as CodexCreatureFeat } from '@/hooks';
 import type { CreatureData, CreatureStatBlockArmament } from './creature-stat-block-types';
 import {
-  isCreatureMovementEffectFeat,
+  isCreatureCreatorHiddenFeat,
   movementToggleLines,
   movementTravelLines,
 } from '@/app/(main)/creature-creator/creature-movement';
@@ -373,7 +373,7 @@ export function CreatureStatBlockExpandedContent({
                 items={(creature.feats ?? [])
                   .filter(
                     (f) =>
-                      !isCreatureMovementEffectFeat(f, creatureFeatsById.get(String(f.id)) ?? null),
+                      !isCreatureCreatorHiddenFeat(f, creatureFeatsById.get(String(f.id)) ?? null),
                   )
                   .map(
                     (f, idx): EntityFeatRow => ({

@@ -37,7 +37,6 @@ Export **names** for patterns, ui, hooks, and services are in [`FEATURE_INDEX_BA
 ## Routes with no page file
 
 `next.config.ts` `redirects()`:
-
 | From | To |
 |------|----|
 | `/browse` | `/library` |
@@ -828,6 +827,7 @@ Every path below is a non-test source file. The checker fails if one is missing 
 - `src/app/(main)/creature-creator/creature-creator-feat-armament-display.ts`
 - `src/app/(main)/creature-creator/creature-creator-library-selectables.ts`
 - `src/app/(main)/creature-creator/creature-creator-movement-section.tsx`
+- `src/app/(main)/creature-creator/creature-creator-senses-section.tsx`
 - `src/app/(main)/creature-creator/creature-creator-remove-section-confirm-placeholder.ts`
 - `src/app/(main)/creature-creator/creature-creator-skill-bonus.ts`
 - `src/app/(main)/creature-creator/creature-creator-summaries.ts`
@@ -837,6 +837,7 @@ Every path below is a non-test source file. The checker fails if one is missing 
 - `src/app/(main)/creature-creator/creature-damage-modifiers.ts`
 - `src/app/(main)/creature-creator/creature-feat-utils.ts`
 - `src/app/(main)/creature-creator/creature-movement.ts`
+- `src/app/(main)/creature-creator/creature-senses.ts`
 - `src/app/(main)/creature-creator/creature-over-budget-notification.ts`
 - `src/app/(main)/creature-creator/creature-skill-utils.ts`
 - `src/app/(main)/creature-creator/creature-sub-skill-highest-ability-label.ts`
@@ -3214,7 +3215,8 @@ No production file imports these names. A test import does not count. The file t
 - `src/app/(main)/admin/sources/actions.ts`: `addAdminCodexSourceMembership`
 - `src/app/(main)/admin/users/admin-users-directory-state.ts`: `tryApplyContinuationResult`
 - `src/app/(main)/creature-creator/creature-creator-library-selectables.ts`: `codexEquipmentAsLibraryItem`
-- `src/app/(main)/creature-creator/creature-movement.ts`: `isCreatureMovementControlFeatId`
+- `src/app/(main)/creature-creator/creature-movement.ts`: `isCreatureMovementControlFeatId`, `isCreatureMovementEffectFeat`
+- `src/app/(main)/creature-creator/creature-senses.ts`: `isCreatureSensesControlFeatId`, `readDarkvisionLevel`, `readLifesenseLevel`, `sensesAfterDarkvisionLevel`, `sensesAfterLifesenseLevel`
 - `src/app/(main)/creature-creator/creature-creator-remove-section-confirm-placeholder.ts`: `REMOVE_SECTION_CONFIRM_CONFIRM_LABEL`, `REMOVE_SECTION_CONFIRM_DESCRIPTION`
 - `src/app/(main)/creature-creator/map-creature-inventory-rows.ts`: `creatureArmamentToSheetItem`
 - `src/app/(main)/creature-creator/transformers.ts`: `customEquipmentItemToCreatureArmament`

@@ -19,6 +19,7 @@ import type { CreatureFeat as CodexCreatureFeat } from '@/hooks';
 import { codexCreatureFeatToCreatureFeat } from './creature-feat-utils';
 import type { CreatureState } from './creature-creator-types';
 import type { CreatureFeat } from './transformers';
+import { isCreatureSensesEffectFeat } from './creature-senses';
 
 const FLY_NAMES = ['Fly Half', 'Fly'] as const;
 const SWIM_NAMES = ['Swim Half', 'Swim'] as const;
@@ -500,6 +501,18 @@ export function movementTravelLines(
     });
   }
   return lines;
+}
+
+export { builtInSenseSummaryLines } from './creature-senses';
+
+export function isCreatureCreatorHiddenFeat(
+  feat: Parameters<typeof isCreatureMovementEffectFeat>[0],
+  catalogRow?: Pick<CodexCreatureFeat, 'id' | 'base_feat_id'> | null,
+): boolean {
+  return (
+    isCreatureMovementEffectFeat(feat, catalogRow) ||
+    isCreatureSensesEffectFeat(feat, catalogRow ?? null)
+  );
 }
 
 export type MovementToggleLine = { id: string; name: string; description?: string };
