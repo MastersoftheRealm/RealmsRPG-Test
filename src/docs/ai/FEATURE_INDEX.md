@@ -2481,7 +2481,7 @@ What the screen exposes (via `creature-creator-editor.tsx` and child sections): 
 
 ## Library entity creator screens (behavior pass)
 
-My Library / Realms Library authoring for powers, techniques, empowered techniques, armaments, and species. All use **`CreatorPageShell`** + `useCreatorSave` (except where noted). Routes under `src/app/(main)/*-creator/page.tsx`. **Partial pass:** workspace hooks and editor facades read; not every section island line-by-line.
+My Library / Realms Library authoring for powers, techniques, empowered techniques, armaments, and species. All use **`CreatorPageShell`** + `useCreatorSave` (except where noted). Creator routes: `power-creator`, `technique-creator`, `empowered-technique-creator`, `item-creator`, and `species-creator` under `src/app/(main)/`. **Partial pass:** workspace hooks and editor facades read; not every section island line-by-line.
 
 ### Screens walked (read through save wiring)
 

@@ -298,18 +298,6 @@ function allExportedNames(file, seen = new Set()) {
 const used = new Set();
 const testUsed = new Set();
 
-function mark(set, file, name) {
-  const owners = name === '*' ? allExportedNames(file).map((n) => [file, n]) : resolveExport(file, name).map((f) => [f, name]);
-  if (name !== '*') {
-    for (const owner of resolveExport(file, name)) set.add(owner + '#' + name);
-  } else {
-    const seen = new Set();
-    for (const n of allExportedNames(file, seen)) {
-      for (const owner of resolveExport(file, n)) set.add(owner + '#' + n);
-    }
-  }
-}
-
 for (const file of files) {
   const dest = isTest(file) ? testUsed : used;
   for (const imp of importsByFile.get(file)) {
