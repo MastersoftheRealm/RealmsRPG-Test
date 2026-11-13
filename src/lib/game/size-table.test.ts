@@ -139,6 +139,17 @@ describe('calculateCarryingCapacityKg', () => {
     expect(calculateCarryingCapacityKg('Medium', 0)?.capacityKg).toBe(100);
     expect(findSizeTableRow('Minuscule')?.value).toBe('miniscule');
   });
+
+  it('uses live SIZES.categories from Core Rules when provided', () => {
+    const liveCategories = CREATURE_SIZES.map((row) =>
+      row.value === 'medium' ? { ...row, baseCarry: 120 } : row,
+    );
+    expect(calculateCarryingCapacityKg('medium', 0, liveCategories)).toEqual({
+      capacityKg: 120,
+      minCarryKg: 50,
+    });
+    expect(calculateCarryingCapacityKg('medium', 0)?.capacityKg).toBe(100);
+  });
 });
 
 describe('reconcileSizeWithAllowedOptions', () => {

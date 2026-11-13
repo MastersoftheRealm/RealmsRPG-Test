@@ -2406,11 +2406,11 @@ Creature size table, carrying-capacity kg formula, and archetype-path browse fil
 
 ### Read to the end
 
-- `SIZE_TABLE_BASE`, `CREATURE_SIZES`, `formatSizeHeightRangeCm`, `findSizeTableRow`, `sizeLabelForKey`, `calculateCarryingCapacityKg`, and `reconcileSizeWithAllowedOptions` in `src/lib/game/size-table.ts`. Carrying capacity is `baseCarry + perStrCarry × Strength`, floored at `minCarry` for the matched size row (`Math.max`). Size lookup is case/whitespace-insensitive on value or label. `reconcileSizeWithAllowedOptions` picks allowed species sizes; no numeric formulas beyond table fields.
+- `SIZE_TABLE_BASE`, `CREATURE_SIZES`, `formatSizeHeightRangeCm`, `findSizeTableRow`, `sizeLabelForKey`, `calculateCarryingCapacityKg` (optional `sizeCategories` from Core Rules), and `reconcileSizeWithAllowedOptions` in `src/lib/game/size-table.ts`. Carrying capacity is `baseCarry + perStrCarry × Strength`, floored at `minCarry` for the matched size row (`Math.max`). Size lookup is case/whitespace-insensitive on value or label. `reconcileSizeWithAllowedOptions` picks allowed species sizes; no numeric formulas beyond table fields.
 - `character-size.ts` (size slice): `resolveEffectiveCharacterSize` and labels call `reconcileSizeWithAllowedOptions` / `findSizeTableRow` only; **no** carrying-capacity math.
 - `creator-constants.ts` re-exports `CREATURE_SIZES` and `CARRYING_CAPACITY_HALF_LOAD_RULE` from `size-table` (single table source for creator dropdowns).
 - `FALLBACK_RULES.SIZES` in `use-game-rules.ts` copies the same `CREATURE_SIZES` carry/spaces fields into the default core-rules payload; `mergeCoreRules` lets DB `SIZES` override that document client-side.
-- `notes-tab.tsx` carrying display calls `calculateCarryingCapacityKg(characterSize, strength)` only (does not read `rules.SIZES` from the hook).
+- `notes-tab.tsx` carrying display calls `calculateCarryingCapacityKg(characterSize, strength, rules.SIZES.categories)` via `useGameRules()`; `CREATURE_SIZES` remains the fallback when categories are omitted.
 - Full `path-recommendation-index.ts`: filter alias expansion, `buildPathRecommendationIndex` (`indexByNormalizedIds` + name map, then `collectPathRecommendedIds` per path/kind), union/intersection helpers (`pathRecommendedEntityIds`, `rowMatchesPathRecommendedIds`, `applyLivePathFilter`). **No** TP, skill, energy, or currency arithmetic—only id/name resolution.
 - `normalize-id.ts` (`normalizeId`, `indexByNormalizedIds`) read for path index lookups.
 - `use-path-recommendation-index.ts` (full): memo wrapper around `buildPathRecommendationIndex` and `pathRecommendedEntityIds`; no extra formulas.
@@ -2423,11 +2423,9 @@ Creature size table, carrying-capacity kg formula, and archetype-path browse fil
 
 ### Disagreements
 
-- math-disagree-bug:size-hardcoded-carry-vs-core-rules-sizes: **Bug (Kadin).** Carrying capacity must use edited rules sizes from `core_rules` / `useGameRules`, not the hardcoded `CREATURE_SIZES` chart in `size-table.ts`. `calculateCarryingCapacityKg` on the notes tab ignores live `SIZES.categories`. Not intentional.
-
 ### Same math, separate copies
 
-- `creator-constants` and `use-game-rules` fallback both source size rows from the same `size-table` export at build time; only the hook path can diverge after a DB edit (see disagreement above).
+- `creator-constants` and `use-game-rules` fallback both source size rows from the same `size-table` export at build time; sheet carry now follows merged `SIZES` from the hook after a DB edit.
 - Path browse lists share one `buildPathRecommendationIndex` via `usePathRecommendationIndex` / `usePathListFilter`; `guided-creator/feats-l2.ts` and codex list pages consume the same index helpers.
 - Path filter chip logic (`expandPathFilterSelection`, `addPathFilterSelection`) does not duplicate entity resolution; matching uses the prebuilt `entityIdsByPathId` map.
 - Character size pickers and sheet height hints use `findSizeTableRow` / `reconcileSizeWithAllowedOptions` from this module without a second carry table.

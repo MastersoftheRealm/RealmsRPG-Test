@@ -137,13 +137,27 @@ function normalizeSizeLookupKey(input: string): string {
   return input.trim().toLowerCase().replace(/\s+/g, '');
 }
 
+/** Carry fields from live `SIZES.categories` (Core Rules) or the static table. */
+export type SizeCarryLookupRow = Pick<
+  SizeTableRow,
+  'value' | 'label' | 'baseCarry' | 'perStrCarry' | 'minCarry'
+>;
+
+function findCarryLookupRow(
+  sizeKey: string,
+  categories?: readonly SizeCarryLookupRow[] | undefined,
+): SizeCarryLookupRow | undefined {
+  const key = normalizeSizeLookupKey(sizeKey);
+  const table = categories?.length ? categories : CREATURE_SIZES;
+  return table.find(
+    (row) => normalizeSizeLookupKey(row.value) === key || normalizeSizeLookupKey(row.label) === key,
+  );
+}
+
 /** Match a stored or codex size string to a size-table row (value or label). */
 export function findSizeTableRow(sizeKey: string | null | undefined): SizeTableRow | undefined {
   if (!sizeKey?.trim()) return undefined;
-  const key = normalizeSizeLookupKey(sizeKey);
-  return CREATURE_SIZES.find(
-    (row) => normalizeSizeLookupKey(row.value) === key || normalizeSizeLookupKey(row.label) === key,
-  );
+  return findCarryLookupRow(sizeKey) as SizeTableRow | undefined;
 }
 
 export function sizeLabelForKey(sizeKey: string | null | undefined): string | undefined {
@@ -159,8 +173,9 @@ export type CarryingCapacityResult = {
 export function calculateCarryingCapacityKg(
   sizeKey: string,
   strength: number,
+  sizeCategories?: readonly SizeCarryLookupRow[] | undefined,
 ): CarryingCapacityResult | null {
-  const row = findSizeTableRow(sizeKey);
+  const row = findCarryLookupRow(sizeKey, sizeCategories);
   if (!row) return null;
   const raw = row.baseCarry + row.perStrCarry * strength;
   return {
