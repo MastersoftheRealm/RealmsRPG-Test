@@ -8,7 +8,7 @@ import {
   readLifesenseLevel,
   senseControlDisplayValue,
   senseFamilyCap,
-  sensesAfterBlindsenseLevel,
+  sensesAfterBuiltInLevel,
   sensesAfterDarkvisionLevel,
   sensesAfterLifesenseLevel,
   sensesControlFeatIdsFromNames,
@@ -128,7 +128,7 @@ describe('creature senses section helpers', () => {
       },
     ];
     const withDark = sensesAfterDarkvisionLevel(initialState, 1, extended);
-    const withBlind = { ...withDark, ...sensesAfterBlindsenseLevel(withDark, 1, extended) };
+    const withBlind = { ...withDark, ...sensesAfterBuiltInLevel(withDark, 'blindsense', 1, extended) };
     expect(nextBuiltInSenseType(withBlind.senses)).toBe('lifesense');
   });
 });

@@ -297,20 +297,12 @@ export function readDarkvisionLevel(senses: readonly string[]): number {
   return readBuiltInSenseLevel(senses, 'darkvision');
 }
 
-export function readBlindsenseLevel(senses: readonly string[]): number {
+function readBlindsenseLevel(senses: readonly string[]): number {
   return readBuiltInSenseLevel(senses, 'blindsense');
 }
 
 export function readLifesenseLevel(senses: readonly string[]): number {
   return readBuiltInSenseLevel(senses, 'lifesense');
-}
-
-export function readEarthsenseLevel(senses: readonly string[]): number {
-  return readBuiltInSenseLevel(senses, 'earthsense');
-}
-
-export function readLiquidsenseLevel(senses: readonly string[]): number {
-  return readBuiltInSenseLevel(senses, 'liquidsense');
 }
 
 export function sensesAfterBuiltInLevel(
@@ -346,7 +338,7 @@ export function sensesAfterDarkvisionLevel(
   return sensesAfterBuiltInLevel(creature, 'darkvision', level, catalog);
 }
 
-export function sensesAfterBlindsenseLevel(
+function sensesAfterBlindsenseLevel(
   creature: Pick<CreatureState, 'senses' | 'feats'>,
   level: number,
   catalog: readonly CodexCreatureFeat[],
@@ -360,22 +352,6 @@ export function sensesAfterLifesenseLevel(
   catalog: readonly CodexCreatureFeat[],
 ): Pick<CreatureState, 'senses' | 'feats'> {
   return sensesAfterBuiltInLevel(creature, 'lifesense', level, catalog);
-}
-
-export function sensesAfterEarthsenseLevel(
-  creature: Pick<CreatureState, 'senses' | 'feats'>,
-  level: number,
-  catalog: readonly CodexCreatureFeat[],
-): Pick<CreatureState, 'senses' | 'feats'> {
-  return sensesAfterBuiltInLevel(creature, 'earthsense', level, catalog);
-}
-
-export function sensesAfterLiquidsenseLevel(
-  creature: Pick<CreatureState, 'senses' | 'feats'>,
-  level: number,
-  catalog: readonly CodexCreatureFeat[],
-): Pick<CreatureState, 'senses' | 'feats'> {
-  return sensesAfterBuiltInLevel(creature, 'liquidsense', level, catalog);
 }
 
 export function nextBuiltInSenseType(senses: readonly string[]): BuiltInSenseKind | null {
@@ -482,10 +458,6 @@ export function builtInSenseSummaryLines(
 function isStoredBuiltInSenseMarker(name: string): boolean {
   if (LEGACY_SENSE_NAMES.has(name)) return true;
   return BUILTIN_SENSE_FAMILIES.some((family) => family.token.test(name));
-}
-
-export function needsLegacySenseMigration(creature: Pick<CreatureState, 'senses'>): boolean {
-  return creature.senses.some((name) => !isStoredBuiltInSenseMarker(name));
 }
 
 export function migrateLegacySenseNames(
