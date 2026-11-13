@@ -15,8 +15,14 @@ import {
   useUserPowers,
   useUserTechniques,
   useGameRules,
+  useCreatureFeats,
 } from '@/hooks';
 import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
+import {
+  builtInSenseSummaryLines,
+  isCreatureCreatorHiddenFeat,
+} from '@/app/(main)/creature-creator/creature-movement';
+import type { CreatureFeat as CodexCreatureFeat } from '@/hooks';
 import { calculateCreatureSpeed, calculateEvasion } from '@/lib/game/calculations';
 import { CREATURE_STAT_BLOCK_GRID } from '@/lib/library/official-creature-list';
 import { formatCreatureLevel, formatCreatureLevelLabel } from '@/lib/game';
@@ -70,6 +76,11 @@ export function CreatureStatBlock({
   const { data: userTechniques = [] } = useUserTechniques();
   const { data: officialTechniques = [] } = useOfficialLibrary('techniques');
   const { rules } = useGameRules();
+  const { data: creatureFeatsCatalog = [] } = useCreatureFeats();
+  const creatureFeatsById = useMemo(
+    () => new Map(creatureFeatsCatalog.map((row) => [String(row.id), row as CodexCreatureFeat])),
+    [creatureFeatsCatalog],
+  );
   const level = creature.level ?? 1;
   const abilitiesRecord = creature.abilities ?? {};
   /** Normalized Realms abilities (legacy keys via getAbilityValue) for shared weapon attack math. */
@@ -112,9 +123,6 @@ export function CreatureStatBlock({
   const shields = inventory.shields;
   const armor = inventory.armor;
   const equipment = inventory.equipment;
-  const senses = creature.senses ?? [];
-  const movement = creature.movementTypes ?? [];
-  const hasSensesOrMovement = senses.length > 0 || movement.length > 0;
   const creatureSkills = useMemo(() => {
     if (!creature.skills)
       return [] as Array<{
@@ -136,7 +144,9 @@ export function CreatureStatBlock({
       proficient: true,
     }));
   }, [creature.skills]);
-  const hasFeats = (creature.feats ?? []).length > 0;
+  const hasFeats = (creature.feats ?? []).some(
+    (feat) => !isCreatureCreatorHiddenFeat(feat, creatureFeatsById.get(String(feat.id)) ?? null),
+  );
   const hasWeapons = weapons.length > 0;
   const hasShields = shields.length > 0;
   const hasArmor = armor.length > 0;
@@ -156,7 +166,13 @@ export function CreatureStatBlock({
 
   const damageReduction = useMemo(() => creatureArmorDamageReduction(armor), [armor]);
 
+  const senseLines = useMemo(
+    () => builtInSenseSummaryLines({ senses: creature.senses ?? [] }, creatureFeatsCatalog),
+    [creature.senses, creatureFeatsCatalog],
+  );
+
   const summaryLines = [
+    ...senseLines,
     compactLine('Resistances', creature.resistances),
     compactLine('Weaknesses', creature.weaknesses),
     compactLine('Immunities', creature.immunities),
@@ -231,9 +247,6 @@ export function CreatureStatBlock({
           rollContext={rollContext}
           attackAbilities={attackAbilities}
           itemPropertiesDb={itemPropertiesDb}
-          senses={senses}
-          movement={movement}
-          hasSensesOrMovement={hasSensesOrMovement}
           skillRows={skillRows}
           hasSkills={hasSkills}
           hasFeats={hasFeats}
@@ -249,6 +262,7 @@ export function CreatureStatBlock({
           equipment={equipment}
           powersForDisplay={powersForDisplay}
           techniquesForDisplay={techniquesForDisplay}
+          creatureFeatsById={creatureFeatsById}
         />
       }
     />

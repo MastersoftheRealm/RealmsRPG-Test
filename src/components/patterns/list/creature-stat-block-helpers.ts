@@ -4,7 +4,6 @@ import {
   type PartTpVariant,
 } from '@/lib/calculators/part-training-points';
 import { DEFENSE_DISPLAY_NAMES } from '@/lib/game/constants';
-import type { ListColumn } from './list-header';
 import type { CreatureAbilities, CreatureDefenses } from './creature-stat-block-types';
 
 export function formatModifier(value: number): string {
@@ -66,36 +65,6 @@ const LEGACY_ABILITY_MAP: Record<string, string> = {
   perception: 'acuity',
   willpower: 'charisma',
 };
-
-export const SENSE_DESCRIPTIONS: Record<string, string> = {
-  Darkvision: 'See in darkness up to 6 spaces as if it were dim light.',
-  'Darkvision II': 'See in darkness up to 12 spaces as if it were dim light.',
-  'Darkvision III': 'See in darkness up to 24 spaces as if it were dim light.',
-  Blindsense: 'Detect creatures within 3 spaces without relying on sight.',
-  'Blindsense II': 'Detect creatures within 6 spaces without relying on sight.',
-  'Blindsense III': 'Detect creatures within 12 spaces without relying on sight.',
-  Amphibious: 'Can breathe air and water.',
-  'All-Surface Climber': 'Can climb difficult surfaces, including ceilings, without checks.',
-  Telepathy: 'Mentally communicate with creatures within 12 spaces.',
-  'Telepathy II': 'Mentally communicate with creatures within 48 spaces.',
-  Waterbreathing: 'Can breathe underwater.',
-  'Unrestrained Movement':
-    'Movement is unaffected by difficult terrain and restraining movement effects.',
-};
-
-export const MOVEMENT_DESCRIPTIONS: Record<string, string> = {
-  Walk: 'Uses normal speed on the ground.',
-  Climb: 'Can move along vertical surfaces using movement speed.',
-  Swim: 'Can move through water without penalties using movement speed.',
-  Fly: 'Can move through the air using movement speed (see Flight rules for altitude and fall).',
-  Burrow:
-    'Can move through loose earth using movement speed (may leave a tunnel at RM discretion).',
-};
-
-export const SIMPLE_LIST_COLUMNS: ListColumn[] = [
-  { key: 'name', label: 'Name', width: 'minmax(160px, 1fr)' },
-];
-export const SIMPLE_LIST_GRID = 'minmax(160px, 1fr)';
 
 export function formatArchetype(power = 0, martial = 0): string {
   if (power > 0 && martial > 0) return 'Powered-Martial';

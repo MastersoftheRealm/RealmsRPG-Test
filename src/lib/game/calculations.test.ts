@@ -166,13 +166,16 @@ describe('calculateCreatureSpeed (M12 / D4)', () => {
   });
 
   it('Speedy and Slow change Speed, and Speedy tiers do not add (86e3jx63c)', () => {
-    expect(calculateCreatureSpeed(2, undefined, ['Speedy'])).toBe(9);
-    expect(calculateCreatureSpeed(2, undefined, ['Speedy II'])).toBe(11);
-    expect(calculateCreatureSpeed(2, undefined, ['Speedy III'])).toBe(13);
-    expect(calculateCreatureSpeed(2, undefined, ['Slow'])).toBe(5);
-    expect(calculateCreatureSpeed(2, undefined, ['Speedy', 'Speedy III'])).toBe(13);
-    expect(calculateCreatureSpeed(2, undefined, ['Speedy III', 'Slow'])).toBe(11);
+    expect(calculateCreatureSpeed(2, undefined, ['Speedy'])).toBe(8);
+    expect(calculateCreatureSpeed(2, undefined, ['Speedy II'])).toBe(9);
+    expect(calculateCreatureSpeed(2, undefined, ['Speedy III'])).toBe(10);
+    expect(calculateCreatureSpeed(2, undefined, ['Slow'])).toBe(6);
+    expect(calculateCreatureSpeed(2, undefined, ['Slow III'])).toBe(4);
+    expect(calculateCreatureSpeed(2, undefined, ['Speedy', 'Speedy III'])).toBe(10);
+    expect(calculateCreatureSpeed(2, undefined, ['Speedy III', 'Slow'])).toBe(9);
     expect(calculateCreatureSpeed(2, undefined, ['Fly'])).toBe(7);
+    expect(calculateCreatureSpeed(2, undefined, ['walk:+4'])).toBe(11);
+    expect(calculateCreatureSpeed(2, undefined, ['walk:-4'])).toBe(3);
   });
 });
 

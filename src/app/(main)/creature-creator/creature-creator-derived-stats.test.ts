@@ -29,8 +29,110 @@ describe('calculateCreatureCreatorStats', () => {
       new Set(),
       undefined,
     );
-    expect(speedy.speed).toBe(base.speed + 2);
-    expect(slow.speed).toBe(base.speed - 2);
+    expect(speedy.speed).toBe(base.speed + 1);
+    expect(slow.speed).toBe(base.speed - 1);
+  });
+
+  it('charges the codex row for walk:+4 when only movementTypes carry the level', () => {
+    const catalog = [
+      {
+        id: String(CREATURE_FEAT_IDS.SPEEDY),
+        name: 'Speedy',
+        description: '',
+        points: 0.5,
+        feat_lvl: 1,
+        category: 'Movement',
+      },
+      {
+        id: '166',
+        name: 'Speedy',
+        description: '',
+        points: 2.5,
+        feat_lvl: 4,
+        base_feat_id: String(CREATURE_FEAT_IDS.SPEEDY),
+        category: 'Movement',
+      },
+    ];
+    const map = new Map(featPointsMap);
+    map.set(String(CREATURE_FEAT_IDS.SPEEDY), 0.5);
+    map.set('166', 2.5);
+    const base = calculateCreatureCreatorStats(initialState, map, new Set(), undefined);
+    const speedy4 = calculateCreatureCreatorStats(
+      { ...initialState, movementTypes: ['walk:+4'], feats: [] },
+      map,
+      new Set(),
+      undefined,
+      undefined,
+      catalog,
+    );
+    expect(speedy4.featSpent).toBe(base.featSpent + 2.5);
+  });
+
+  it('charges the codex row for walk:-4 when only movementTypes carry the level', () => {
+    const catalog = [
+      {
+        id: String(CREATURE_FEAT_IDS.SLOW),
+        name: 'Slow',
+        description: '',
+        points: -0.5,
+        feat_lvl: 1,
+        category: 'Movement',
+      },
+      {
+        id: '167',
+        name: 'Slow',
+        description: '',
+        points: -2.5,
+        feat_lvl: 4,
+        base_feat_id: String(CREATURE_FEAT_IDS.SLOW),
+        category: 'Movement',
+      },
+    ];
+    const map = new Map(featPointsMap);
+    map.set(String(CREATURE_FEAT_IDS.SLOW), -0.5);
+    map.set('167', -2.5);
+    const base = calculateCreatureCreatorStats(initialState, map, new Set(), undefined);
+    const slow4 = calculateCreatureCreatorStats(
+      { ...initialState, movementTypes: ['walk:-4'], feats: [] },
+      map,
+      new Set(),
+      undefined,
+      undefined,
+      catalog,
+    );
+    expect(slow4.featSpent).toBe(base.featSpent - 2.5);
+  });
+
+  it('a Speedy name spends the Speedy feat cost once', () => {
+    const map = new Map(featPointsMap);
+    map.set(String(CREATURE_FEAT_IDS.SPEEDY), 0.5);
+    const base = calculateCreatureCreatorStats(initialState, map, new Set(), undefined);
+    const speedy = calculateCreatureCreatorStats(
+      { ...initialState, movementTypes: ['Speedy'] },
+      map,
+      new Set(),
+      undefined,
+    );
+    const alsoOnFeats = calculateCreatureCreatorStats(
+      {
+        ...initialState,
+        movementTypes: ['Speedy'],
+        feats: [
+          {
+            id: String(CREATURE_FEAT_IDS.SPEEDY),
+            name: 'Speedy',
+            points: 0.5,
+            featSourceType: 'creature',
+          },
+        ],
+      },
+      map,
+      new Set(),
+      undefined,
+    );
+    expect(speedy.speed).toBe(base.speed + 1);
+    expect(speedy.featSpent).toBe(base.featSpent + 0.5);
+    expect(alsoOnFeats.featSpent).toBe(base.featSpent + 0.5);
   });
 
   it('returns positive remaining budgets for a fresh level-1 creature', () => {

@@ -8,24 +8,13 @@ import { rawRecordToCreatureState } from './creature-skill-utils';
 import {
   appendCreatureLanguage,
   creatureFeatRowsShowLevel,
-  creatureMovementDescription,
-  creatureMovementLabel,
   creaturePickerMaxSelections,
-  creatureSenseLabel,
   creatureSizeDisplayLabel,
   formatCreatureGroupedNumber,
   uniqueCreatureLanguages,
 } from './creature-trait-labels';
 
-describe('creature sense and movement labels (86e3jx63g)', () => {
-  it('labels Flying II, half-speed flight, and Darkvision range', () => {
-    expect(creatureMovementLabel('Fly')).toBe('Flying II (Full Speed)');
-    expect(creatureMovementLabel('Fly Half')).toBe('Flying (Half Speed)');
-    expect(creatureSenseLabel('Darkvision')).toBe('Darkvision (6 spaces)');
-    expect(creatureMovementDescription('Fly Half')).toContain('half');
-    expect(creatureMovementDescription('Fly')).not.toBe('See movement rules for details.');
-  });
-
+describe('creature language labels (86e3jx63g)', () => {
   it('refuses a language that differs only by case and keeps the first spelling', () => {
     expect(appendCreatureLanguage(['Common', 'Elvish'], 'common')).toBeNull();
     expect(appendCreatureLanguage(['Common'], '  Dwarvish ')).toEqual(['Common', 'Dwarvish']);

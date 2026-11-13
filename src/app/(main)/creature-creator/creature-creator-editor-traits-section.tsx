@@ -1,5 +1,5 @@
 /**
- * Creature Creator — resistances, senses, movement, conditions, languages (TASK-610)
+ * Creature Creator — resistances, weaknesses, immunities, condition immunities, languages (TASK-610)
  */
 
 'use client';
@@ -7,35 +7,20 @@
 import { useState } from 'react';
 import { Button, Input, Card } from '@/components/ui';
 import { CONDITIONS } from '@/lib/game/creator-constants';
-import { DAMAGE_TYPES, SENSES, MOVEMENT_TYPES } from './creature-creator-constants';
+import { DAMAGE_TYPES } from './creature-creator-constants';
 import { takenDamageModifiers } from './creature-damage-modifiers';
-import { ChipList, ExpandableChipList, AddItemDropdown } from './CreatureCreatorHelpers';
-import {
-  appendCreatureLanguage,
-  creatureMovementLabel,
-  creatureSenseLabel,
-} from './creature-trait-labels';
+import { ChipList, AddItemDropdown } from './CreatureCreatorHelpers';
+import { appendCreatureLanguage } from './creature-trait-labels';
 import type { CreatureCreatorEditorProps } from './creature-creator-editor';
 
 type TraitsSectionProps = Pick<
   CreatureCreatorEditorProps,
-  | 'creature'
-  | 'stats'
-  | 'senseDescriptions'
-  | 'movementDescriptions'
-  | 'getSenseCostLabel'
-  | 'getMovementCostLabel'
-  | 'addToArray'
-  | 'removeFromArray'
+  'creature' | 'stats' | 'addToArray' | 'removeFromArray'
 >;
 
 export function CreatureCreatorEditorTraitsSection({
   creature,
   stats,
-  senseDescriptions,
-  movementDescriptions,
-  getSenseCostLabel,
-  getMovementCostLabel,
   addToArray,
   removeFromArray,
 }: TraitsSectionProps) {
@@ -125,57 +110,6 @@ export function CreatureCreatorEditorTraitsSection({
               onAdd={(item) => addToArray('immunities', item)}
               placeholder="Add immunity..."
               costForOption={() => stats.immunityFeatCost}
-            />
-          </div>
-        </div>
-      </Card>
-
-      <Card className="p-6 shadow-md">
-        <h2 className="mb-4 text-lg font-bold text-text-primary">Senses & Movement</h2>
-        <p className="mb-3 text-sm text-text-muted">
-          Each sense and movement type has a feat point cost shown when adding and on each row.
-        </p>
-        <div className="grid min-w-0 gap-4 md:grid-cols-2">
-          <div className="min-w-0">
-            <label className="mb-2 block text-sm font-medium text-text-secondary">Senses</label>
-            <ExpandableChipList
-              items={creature.senses}
-              onRemove={(item) => removeFromArray('senses', item)}
-              color="bg-info-light text-info-fg"
-              rowHoverClass="hover:bg-info-200 dark:hover:bg-info-900/40"
-              descriptions={senseDescriptions}
-              costLabel={getSenseCostLabel}
-              labelFor={creatureSenseLabel}
-              removeLabel={(item) => `Remove ${creatureSenseLabel(item)} sense`}
-            />
-            <AddItemDropdown
-              options={SENSES}
-              selectedItems={creature.senses}
-              onAdd={(item) => addToArray('senses', item)}
-              placeholder="Add sense..."
-              costForOption={(value) => getSenseCostLabel(value)?.replace(' pt', '')}
-            />
-          </div>
-          <div className="min-w-0">
-            <label className="mb-2 block text-sm font-medium text-text-secondary">
-              Movement Types
-            </label>
-            <ExpandableChipList
-              items={creature.movementTypes}
-              onRemove={(item) => removeFromArray('movementTypes', item)}
-              color="bg-warning-light text-warning-fg"
-              rowHoverClass="hover:bg-warning-200 dark:hover:bg-warning-800/40"
-              descriptions={movementDescriptions}
-              costLabel={getMovementCostLabel}
-              labelFor={creatureMovementLabel}
-              removeLabel={(item) => `Remove ${creatureMovementLabel(item)} movement`}
-            />
-            <AddItemDropdown
-              options={MOVEMENT_TYPES}
-              selectedItems={creature.movementTypes}
-              onAdd={(item) => addToArray('movementTypes', item)}
-              placeholder="Add movement..."
-              costForOption={(value) => getMovementCostLabel(value)?.replace(' pt', '')}
             />
           </div>
         </div>

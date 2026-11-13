@@ -35,7 +35,6 @@ import {
   UnifiedSelectionModal,
   type SelectableItem,
 } from '@/components/patterns/select/unified-selection-modal';
-import { MECHANICAL_CREATURE_FEAT_IDS } from '@/lib/id-constants';
 import {
   displayItemToCreatureFeat,
   transformCreatureFeatToDisplayItem,
@@ -205,8 +204,7 @@ export function AddCreatureFeatModal({
   const creatureTabItems = useMemo((): SelectableItem[] => {
     const baseFiltered = (creatureFeatsData as CodexCreatureFeatRow[]).filter((feat) => {
       if (existingFeatIdSet.has(String(feat.id))) return false;
-      const numId = parseInt(String(feat.id), 10);
-      if (!isNaN(numId) && MECHANICAL_CREATURE_FEAT_IDS.has(numId)) return false;
+      if (feat.mechanic === true) return false;
       return true;
     });
     const families = groupFeatFamilies(baseFiltered);
@@ -226,11 +224,7 @@ export function AddCreatureFeatModal({
           .slice()
           .sort((a, b) => getFeatLevel(b) - getFeatLevel(a))[0];
         if (!blocked) return [];
-        const di = transformCreatureFeatToDisplayItem(
-          blocked,
-          existingFeatIdSet,
-          MECHANICAL_CREATURE_FEAT_IDS,
-        );
+        const di = transformCreatureFeatToDisplayItem(blocked, existingFeatIdSet);
         if (!di) return [];
         const lr = blocked.lvl_req;
         const base = displayItemToSelectableItem(di);
@@ -247,11 +241,7 @@ export function AddCreatureFeatModal({
       }
       const displayFeat = selectableLevels[0];
       if (!displayFeat) return [];
-      const di = transformCreatureFeatToDisplayItem(
-        displayFeat,
-        existingFeatIdSet,
-        MECHANICAL_CREATURE_FEAT_IDS,
-      );
+      const di = transformCreatureFeatToDisplayItem(displayFeat, existingFeatIdSet);
       if (!di) return [];
       const base = displayItemToSelectableItem(di);
       return [

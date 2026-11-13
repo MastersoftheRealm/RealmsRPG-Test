@@ -17,7 +17,7 @@ import {
 } from '@/components/creator/creator-text-fields';
 import { HealthEnergyAllocator, AbilityScoreEditor, ArchetypeSelector } from '@/components/creator';
 import type { AbilityName } from '@/types';
-import type { Feat } from '@/hooks';
+import type { CreatureFeat as CodexCreatureFeat, Feat } from '@/hooks';
 import type { SortState } from '@/components/patterns/list/list-header';
 import type { CreatureState } from './creature-creator-types';
 import type { CreatureFeat } from './transformers';
@@ -26,6 +26,8 @@ import { CREATURE_TYPE_OPTIONS } from './creature-creator-constants';
 import { CREATURE_LEVEL_SELECT_OPTIONS } from '@/lib/game';
 import { CREATURE_SIZES } from '@/lib/game/creator-constants';
 import { CreatureCreatorEditorTraitsSection } from './creature-creator-editor-traits-section';
+import { CreatureCreatorMovementSection } from './creature-creator-movement-section';
+import { CreatureCreatorSensesSection } from './creature-creator-senses-section';
 import { CreatureCreatorEditorLoadoutSections } from './creature-creator-editor-loadout-sections';
 
 const EMPTY_SPECIES_SKILL_IDS = new Set<string>();
@@ -46,6 +48,8 @@ export type CreatureCreatorStatsSlice = {
   currencyRemaining: number;
   currency: number;
   currencySpent: number;
+  speed: number;
+  evasion: number;
 };
 
 export type CreatureCreatorEditorProps = {
@@ -57,10 +61,6 @@ export type CreatureCreatorEditorProps = {
   stats: CreatureCreatorStatsSlice;
   skillPointsHelp: ReactNode;
   skillAllocations: Record<string, number>;
-  senseDescriptions: Record<string, string>;
-  movementDescriptions: Record<string, string>;
-  getSenseCostLabel: (sense: string) => string | undefined;
-  getMovementCostLabel: (movement: string) => string | undefined;
   featsSummary: string;
   powersSummary: string;
   techniquesSummary: string;
@@ -114,6 +114,8 @@ export type CreatureCreatorEditorProps = {
   onOpenPowerModal: () => void;
   onOpenTechniqueModal: () => void;
   onOpenArmamentModal: (tab?: CreatureInventoryTab) => void;
+  creatureFeatsCatalog: CodexCreatureFeat[];
+  onAddMovementFeat: (featId: string) => void;
 };
 
 export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {
@@ -267,6 +269,18 @@ export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {
       />
 
       <CreatureCreatorEditorTraitsSection {...props} />
+      <CreatureCreatorMovementSection
+        creature={creature}
+        walkSpeed={stats.speed}
+        catalog={props.creatureFeatsCatalog}
+        updateCreature={props.updateCreature}
+        onAddMovementFeat={props.onAddMovementFeat}
+      />
+      <CreatureCreatorSensesSection
+        creature={creature}
+        catalog={props.creatureFeatsCatalog}
+        updateCreature={props.updateCreature}
+      />
       <CreatureCreatorEditorLoadoutSections {...props} />
     </div>
   );

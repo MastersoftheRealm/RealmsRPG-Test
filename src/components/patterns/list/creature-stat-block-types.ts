@@ -157,7 +157,14 @@ export interface CreatureData {
           | undefined;
       }>
     | undefined;
-  feats?: Array<{ name: string; description?: string | undefined }> | undefined;
+  feats?:
+    | Array<{
+        id?: string | number | undefined;
+        name: string;
+        description?: string | undefined;
+        boundControl?: boolean | undefined;
+      }>
+    | undefined;
   weapons?: CreatureStatBlockArmament[] | undefined;
   armor?: CreatureStatBlockArmament[] | undefined;
   shields?: CreatureStatBlockArmament[] | undefined;

@@ -25,20 +25,18 @@ import { getWeaponAttackBonusFromProperties } from '@/lib/game/weapon-attack-abi
 import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import { normalizeRangeDisplay } from '@/lib/utils';
 import type { Abilities } from '@/types';
+import type { CreatureFeat as CodexCreatureFeat } from '@/hooks';
 import type { CreatureData, CreatureStatBlockArmament } from './creature-stat-block-types';
-import { StatBlockSection } from './creature-stat-block-section';
 import {
-  creatureMovementDescription,
-  creatureMovementLabel,
-  creatureSenseDescription,
-  creatureSenseLabel,
-} from '@/app/(main)/creature-creator/creature-trait-labels';
+  isCreatureCreatorHiddenFeat,
+  movementToggleLines,
+  movementTravelLines,
+} from '@/app/(main)/creature-creator/creature-movement';
+import { StatBlockSection } from './creature-stat-block-section';
 import {
   REALMS_ABILITY_ORDER,
   REALMS_ABILITY_ABBR,
   DEFENSES_BY_ABILITY,
-  SIMPLE_LIST_COLUMNS,
-  SIMPLE_LIST_GRID,
   formatModifier,
   getAbilityValue,
   propertiesToChips,
@@ -62,9 +60,6 @@ interface CreatureStatBlockExpandedContentProps {
   rollContext: RollContext;
   attackAbilities: Abilities;
   itemPropertiesDb: CodexProperty[];
-  senses: string[];
-  movement: string[];
-  hasSensesOrMovement: boolean;
   skillRows: Array<{
     key: string;
     rowId: string;
@@ -87,6 +82,7 @@ interface CreatureStatBlockExpandedContentProps {
   equipment: CreatureStatBlockArmament[];
   powersForDisplay: EntityPowerRow[];
   techniquesForDisplay: EntityTechniqueRow[];
+  creatureFeatsById: ReadonlyMap<string, CodexCreatureFeat>;
 }
 
 export function CreatureStatBlockExpandedContent({
@@ -103,9 +99,6 @@ export function CreatureStatBlockExpandedContent({
   rollContext,
   attackAbilities,
   itemPropertiesDb,
-  senses,
-  movement,
-  hasSensesOrMovement,
   skillRows,
   hasSkills,
   hasFeats,
@@ -121,7 +114,10 @@ export function CreatureStatBlockExpandedContent({
   equipment,
   powersForDisplay,
   techniquesForDisplay,
+  creatureFeatsById,
 }: CreatureStatBlockExpandedContentProps) {
+  const travelLines = movementTravelLines(creature.movementTypes ?? [], speed);
+  const toggleLines = movementToggleLines(creature.feats ?? []);
   return (
     <div className="space-y-4">
       {/* Header (character-sheet style, simplified) */}
@@ -188,9 +184,30 @@ export function CreatureStatBlockExpandedContent({
                 </span>
                 <span className="text-lg font-bold text-info-fg">{maxEnDisplay}</span>
               </div>
+              {travelLines.map((line) => (
+                <div
+                  key={line.label}
+                  className="flex min-w-0 flex-col rounded-lg border border-border-light bg-surface-alt p-3 dark:border-border dark:bg-surface"
+                >
+                  <span className="text-xs font-semibold tracking-wide text-text-secondary uppercase dark:text-text-primary">
+                    {line.label}
+                  </span>
+                  <span className="text-lg font-bold text-text-primary">{line.value}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
+        {toggleLines.length > 0 ? (
+          <div className="mt-3 space-y-1">
+            {toggleLines.map((line) => (
+              <p key={line.id} className="text-sm text-text-primary">
+                <span className="font-semibold">{line.name}</span>
+                {line.description ? ` — ${line.description}` : null}
+              </p>
+            ))}
+          </div>
+        ) : null}
 
         {/* Abilities row (mini boxes with roll buttons) */}
         {creature.abilities && (
@@ -285,46 +302,6 @@ export function CreatureStatBlockExpandedContent({
       {/* Sections start full-width under the header */}
       <div className="grid gap-4 xl:grid-cols-2">
         <div className="space-y-4">
-          {hasSensesOrMovement && (
-            <>
-              {senses.length > 0 && (
-                <StatBlockSection title="Senses" defaultExpanded>
-                  <ListHeader columns={SIMPLE_LIST_COLUMNS} gridColumns={SIMPLE_LIST_GRID} />
-                  <div className="mt-2 space-y-1">
-                    {senses.map((sense) => (
-                      <GridListRow
-                        key={`${creature.id}-sense-${sense}`}
-                        id={`${creature.id}-sense-${sense}`}
-                        name={creatureSenseLabel(sense)}
-                        description={creatureSenseDescription(sense)}
-                        gridColumns={SIMPLE_LIST_GRID}
-                        compact
-                      />
-                    ))}
-                  </div>
-                </StatBlockSection>
-              )}
-
-              {movement.length > 0 && (
-                <StatBlockSection title="Movement" defaultExpanded>
-                  <ListHeader columns={SIMPLE_LIST_COLUMNS} gridColumns={SIMPLE_LIST_GRID} />
-                  <div className="mt-2 space-y-1">
-                    {movement.map((m) => (
-                      <GridListRow
-                        key={`${creature.id}-move-${m}`}
-                        id={`${creature.id}-move-${m}`}
-                        name={creatureMovementLabel(m)}
-                        description={creatureMovementDescription(m)}
-                        gridColumns={SIMPLE_LIST_GRID}
-                        compact
-                      />
-                    ))}
-                  </div>
-                </StatBlockSection>
-              )}
-            </>
-          )}
-
           {hasSkills && (
             <StatBlockSection title="Skills" defaultExpanded>
               <div className="mt-2 grid grid-cols-1 gap-3 xl:grid-cols-2">
@@ -393,13 +370,18 @@ export function CreatureStatBlockExpandedContent({
                 showListHeader
                 compactRows
                 showTitle={false}
-                items={(creature.feats ?? []).map(
-                  (f, idx): EntityFeatRow => ({
-                    id: `${creature.id}-feat-${idx}`,
-                    name: f.name,
-                    description: f.description,
-                  }),
-                )}
+                items={(creature.feats ?? [])
+                  .filter(
+                    (f) =>
+                      !isCreatureCreatorHiddenFeat(f, creatureFeatsById.get(String(f.id)) ?? null),
+                  )
+                  .map(
+                    (f, idx): EntityFeatRow => ({
+                      id: `${creature.id}-feat-${idx}`,
+                      name: f.name,
+                      description: f.description,
+                    }),
+                  )}
               />
             </StatBlockSection>
           )}
