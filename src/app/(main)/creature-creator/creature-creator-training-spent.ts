@@ -61,10 +61,19 @@ function listedCreaturePowerParts(power: CreaturePower): unknown[] {
   return listed;
 }
 
-/** Live proficiency pricing only when every listed part resolves; else stored `tp` only. */
+function proficiencyPartsAfterRebuild(power: CreaturePower, partsDb: PowerPart[]): boolean {
+  const { parts } = creaturePowerForProficiency(power, partsDb);
+  return Array.isArray(parts) && parts.length > 0;
+}
+
+/**
+ * Live proficiency pricing when every listed part resolves, or when the row has no listed
+ * parts but a document rebuild still yields proficiency parts (e.g. range steps). Otherwise
+ * stored `tp` only.
+ */
 function powerRowUsesLiveProficiencyPricing(power: CreaturePower, partsDb: PowerPart[]): boolean {
   const listed = listedCreaturePowerParts(power);
-  if (listed.length === 0) return true;
+  if (listed.length === 0) return proficiencyPartsAfterRebuild(power, partsDb);
   return listed.every((raw) => savedPartResolvesInCodex(partsDb, raw));
 }
 
@@ -73,7 +82,7 @@ function techniqueRowUsesLiveProficiencyPricing(
   partsDb: CreatureProficiencyDbContext['techniquePartsDb'],
 ): boolean {
   const listed = technique.parts ?? [];
-  if (listed.length === 0) return true;
+  if (listed.length === 0) return false;
   return listed.every((raw) => savedPartResolvesInCodex(partsDb, raw));
 }
 

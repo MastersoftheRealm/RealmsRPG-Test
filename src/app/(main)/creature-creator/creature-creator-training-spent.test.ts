@@ -138,6 +138,91 @@ describe('computeCreatureTrainingSpent (86e3krpzp)', () => {
     expect(legacyHidden).toBe(0);
   });
 
+  it('uses stored tp for part-less power and technique when codex is loaded (1dfe8wf3xet)', () => {
+    const powerOnlyStored = {
+      ...initialState,
+      enablePowers: true,
+      powers: [
+        {
+          id: 'p1',
+          name: 'A',
+          energy: 1,
+          action: 'Action',
+          duration: '-',
+          range: '-',
+          area: '-',
+          damage: '-',
+          tp: 7,
+        },
+      ],
+    };
+    const powerEmptyParts = {
+      ...initialState,
+      enablePowers: true,
+      powers: [
+        {
+          id: 'p2',
+          name: 'B',
+          energy: 1,
+          action: 'Action',
+          duration: '-',
+          range: '-',
+          area: '-',
+          damage: '-',
+          tp: 7,
+          parts: [],
+        },
+      ],
+    };
+    const techniqueNoParts = {
+      ...initialState,
+      enableTechniques: true,
+      techniques: [
+        {
+          id: 't1',
+          name: 'Strike',
+          energy: 1,
+          tp: 7,
+          action: 'Action',
+          weapon: '-',
+          damage: '1',
+        },
+      ],
+    };
+    expect(computeCreatureTrainingSpent(powerOnlyStored, { powerPartsDb: [range] })).toBe(7);
+    expect(computeCreatureTrainingSpent(powerEmptyParts, { powerPartsDb: [range] })).toBe(7);
+    expect(
+      computeCreatureTrainingSpent(techniqueNoParts, {
+        powerPartsDb: [range],
+        techniquePartsDb: [],
+      }),
+    ).toBe(7);
+    expect(computeCreatureTrainingSpent(techniqueNoParts, { techniquePartsDb: [range] })).toBe(7);
+  });
+
+  it('still prices range from document when no parts are listed (1dfe8wf3xet)', () => {
+    const creature = {
+      ...initialState,
+      enablePowers: true,
+      powers: [
+        {
+          id: 'p1',
+          name: 'A',
+          energy: 1,
+          action: 'Action',
+          duration: '-',
+          range: '1',
+          area: '-',
+          damage: '-',
+          tp: 99,
+          actionType: 'basic',
+          rangeValue: { steps: 1 },
+        },
+      ],
+    };
+    expect(computeCreatureTrainingSpent(creature, { powerPartsDb: [range] })).toBe(1);
+  });
+
   it('falls back to stored tp when listed parts are missing from codex (1dfe8wf3xet)', () => {
     const creature = {
       ...initialState,
