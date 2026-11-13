@@ -48,28 +48,33 @@ function creaturePowerDocumentForProficiency(power: CreaturePower) {
   };
 }
 
-/** Live part pricing applies when composition resolves or at least one saved part is in the Codex DB. */
-function powerUsesLivePartPricing(power: CreaturePower, partsDb: PowerPart[]): boolean {
-  const doc = creaturePowerDocumentForProficiency(power);
-  if (power.composition) {
-    const composition = resolvePowerComposition(doc, partsDb);
-    if (composition) {
-      const parts = composedPowerProficiencyParts(composition, partsDb);
-      return parts.length > 0;
-    }
+/** Every part row listed on the creature power snapshot (including composition variants). */
+function listedCreaturePowerParts(power: CreaturePower): unknown[] {
+  const listed: unknown[] = [...(power.parts ?? [])];
+  const composition = power.composition;
+  if (!composition) return listed;
+  for (const variant of composition.variants ?? []) {
+    if (Array.isArray(variant.parts)) listed.push(...variant.parts);
   }
-  const savedParts = power.parts ?? [];
-  if (savedParts.length === 0) return false;
-  return savedParts.some((raw) => savedPartResolvesInCodex(partsDb, raw));
+  const reverse = composition.reverse;
+  if (reverse && Array.isArray(reverse.parts)) listed.push(...reverse.parts);
+  return listed;
 }
 
-function techniqueUsesLivePartPricing(
+/** Live proficiency pricing only when every listed part resolves; else stored `tp` only. */
+function powerRowUsesLiveProficiencyPricing(power: CreaturePower, partsDb: PowerPart[]): boolean {
+  const listed = listedCreaturePowerParts(power);
+  if (listed.length === 0) return true;
+  return listed.every((raw) => savedPartResolvesInCodex(partsDb, raw));
+}
+
+function techniqueRowUsesLiveProficiencyPricing(
   technique: CreatureTechnique,
   partsDb: CreatureProficiencyDbContext['techniquePartsDb'],
 ): boolean {
-  const savedParts = technique.parts ?? [];
-  if (savedParts.length === 0) return false;
-  return savedParts.some((raw) => savedPartResolvesInCodex(partsDb, raw));
+  const listed = technique.parts ?? [];
+  if (listed.length === 0) return true;
+  return listed.every((raw) => savedPartResolvesInCodex(partsDb, raw));
 }
 
 export type CreatureProficiencyDbContext = {
@@ -207,21 +212,19 @@ export function computeCreatureTrainingSpent(
 
   const buckets = resolveCreatureInventoryBuckets(active);
   const powerPartsDb = (ctx.powerPartsDb ?? []) as PowerPart[];
-  const powers = active.powers.map((power) => creaturePowerForProficiency(power, powerPartsDb));
-  const coveredPowerIds = new Set(
-    active.powers
-      .filter((power) => powerUsesLivePartPricing(power, powerPartsDb))
-      .map((power) => String(power.id)),
-  );
   const techniquePartsDb = ctx.techniquePartsDb ?? [];
-  const coveredTechniqueIds = new Set(
-    active.techniques
-      .filter((technique) => techniqueUsesLivePartPricing(technique, techniquePartsDb))
-      .map((technique) => String(technique.id)),
+  const livePowers = active.powers.filter((power) =>
+    powerRowUsesLiveProficiencyPricing(power, powerPartsDb),
   );
+  const liveTechniques = active.techniques.filter((technique) =>
+    techniqueRowUsesLiveProficiencyPricing(technique, techniquePartsDb),
+  );
+  const powers = livePowers.map((power) => creaturePowerForProficiency(power, powerPartsDb));
+  const coveredPowerIds = new Set(livePowers.map((power) => String(power.id)));
+  const coveredTechniqueIds = new Set(liveTechniques.map((technique) => String(technique.id)));
   const deduped = sumRequiredProficiencyTrainingPoints({
     powers,
-    techniques: active.techniques as CharacterTechnique[],
+    techniques: liveTechniques as CharacterTechnique[],
     weapons: buckets.weapons.map(armamentToItem),
     shields: buckets.shields.map(armamentToItem),
     armor: buckets.armor.map(armamentToItem),
