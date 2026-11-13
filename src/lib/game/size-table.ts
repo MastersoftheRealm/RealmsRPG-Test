@@ -177,7 +177,7 @@ export type CarryingCapacityResult = {
 export function calculateCarryingCapacityKg(
   sizeKey: string,
   strength: number,
-  sizeCategories?: readonly SizeCarryLookupRow[] | undefined,
+  sizeCategories: readonly SizeCarryLookupRow[],
 ): CarryingCapacityResult | null {
   const row = findCarryLookupRow(sizeKey, sizeCategories);
   if (!row) return null;

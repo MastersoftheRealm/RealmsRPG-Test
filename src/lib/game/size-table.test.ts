@@ -154,12 +154,8 @@ describe('calculateCarryingCapacityKg', () => {
     });
   });
 
-  it('does not use hardcoded Medium 100 when an empty category list is provided', () => {
+  it('does not use hardcoded Medium 100 when the category list is empty', () => {
     expect(calculateCarryingCapacityKg('medium', 0, [])).toBeNull();
-    expect(calculateCarryingCapacityKg('medium', 0)).toEqual({
-      capacityKg: 100,
-      minCarryKg: 50,
-    });
   });
 });
 
