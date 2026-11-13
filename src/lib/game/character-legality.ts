@@ -237,7 +237,18 @@ function defenseSkillsFromCandidate(
   return out;
 }
 
-function skillRowsFromCandidate(candidate: CharacterLegalityCandidate): Array<{
+function skillRowIdFromName(name: string, codexSkills: CodexSkillForFeat[]): string | undefined {
+  const nameLower = name.toLowerCase();
+  for (const row of codexSkills) {
+    if (String(row.name ?? '').toLowerCase() === nameLower) return String(row.id);
+  }
+  return undefined;
+}
+
+function skillRowsFromCandidate(
+  candidate: CharacterLegalityCandidate,
+  codexSkills: CodexSkillForFeat[] = [],
+): Array<{
   id: string;
   name?: string | undefined;
   skill_val: number;
@@ -258,13 +269,18 @@ function skillRowsFromCandidate(candidate: CharacterLegalityCandidate): Array<{
     selectedBaseSkillId?: string | undefined;
   }> = [];
   for (const row of skills) {
-    const entry = asRecord(row);
+    const entry =
+      typeof row === 'string' ? { name: row.trim(), prof: false, skill_val: 0 } : asRecord(row);
     if (!entry) continue;
-    const id = entry.id != null ? String(entry.id) : '';
+    const name = typeof entry.name === 'string' ? entry.name : undefined;
+    let id = entry.id != null ? String(entry.id) : '';
+    if (!id && name) {
+      id = skillRowIdFromName(name, codexSkills) ?? name;
+    }
     if (!id) continue;
     rows.push({
       id,
-      name: typeof entry.name === 'string' ? entry.name : undefined,
+      name,
       skill_val: toFiniteNumber(entry.skill_val) ?? toFiniteNumber(entry.val) ?? 0,
       prof: entry.prof === true,
       baseSkill: typeof entry.baseSkill === 'string' ? entry.baseSkill : undefined,
@@ -284,7 +300,7 @@ function skillPointsSpentExact(
   codexSkills: CodexSkillForFeat[],
 ): number {
   const defenseSkills = defenseSkillsFromCandidate(candidate);
-  const skillRows = skillRowsFromCandidate(candidate);
+  const skillRows = skillRowsFromCandidate(candidate, codexSkills);
   const speciesSkillIdSet = buildSpeciesSkillIdSet(
     speciesSkillRefs.filter((id) => id !== '0'),
     [
@@ -637,8 +653,8 @@ async function resolveLegalitySpeciesSkillRefs(
     .select('skills')
     .eq('id', speciesId)
     .maybeSingle();
-  if (error || !data?.skills || !Array.isArray(data.skills)) return [];
-  return data.skills.map(String);
+  if (error || data?.skills == null) return [];
+  return toStrArray(data.skills);
 }
 
 export async function evaluateCharacterLegalityForSave(
