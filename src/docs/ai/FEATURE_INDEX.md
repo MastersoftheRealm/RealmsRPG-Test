@@ -2188,7 +2188,7 @@ This pass read the health, energy, and currency formulas in the code through the
 - `rawEnergyOf`, `beneficialTabExtra`, `ownRangeEnergy`, and `reverseDrawbackEnergy` in `src/lib/calculators/power-composition.ts`. Tab energy is the difference of two `calculatePowerCosts` runs on footprints (not a hand-written delta). Range extra charges the full tab range, not a refund when shorter than Shared.
 - `powerCompositionEnergyLines`, `deriveComposedPowerDisplay`, and `formatPowerCompositionSummary` in `src/lib/calculators/power-composition.ts`. They format `resolvePowerComposition` results; published `energy` and `tp` on the display come from that resolution, not a second calculator.
 - `weaponRangeSpaceLadder`, `weaponRangeSpacesFromOpLevel`, `deriveWeaponRangeConfig`, `formatRange`, and `resolveWeaponRangeDisplay` in `src/lib/calculators/item-calc.ts`. Thrown, reach, and ranged use fixed space ladders from `ITEM_PROPERTY_CONSTANTS`; option level picks the ladder index (clamped). Legacy `rangeLevel` is 1-based and maps to ranged option `level − 1`. Bare stored integers without properties are treated as corrupt and show Melee.
-- `sumInnatePowerEnergyCosts` and `calculateRemainingInnateEnergy` in `src/lib/game/formulas.ts`. Remaining innate budget is `maxInnateEnergy` minus the sum of `cost` on innate powers. It does not call `calculatePowerCosts`.
+- `sumInnatePowerEnergyCosts` and `calculateRemainingInnateEnergy` in `src/lib/game/formulas.ts`. Remaining innate budget is `maxInnateEnergy` minus the sum of live innate power energy from `derivePowerDisplay` on each innate row (same path as sheet power rows).
 - `computePartTrainingPoints` in `src/lib/calculators/part-training-points.ts`. Training points round base plus option products up once per part; power and technique share the same function.
 - `computeSplits` in `src/lib/calculators/dice-splits.ts`. One split formula shared by mechanic builder and calculators.
 
@@ -2209,8 +2209,6 @@ These IDs are required; dropping a line makes `scripts/validate-feature-index.js
 - math-disagree-intentional:modify-variant-ceil-vs-composition-finalize: **Intentional display split.** Modify variant tabs round with `publishContribution` per tab; the published power total uses one `finalizeCompositionEnergy` on summed raw energy. Per-tab rounded sums can exceed the header total.
 
 **Bug**
-
-- math-disagree-bug:innate-remaining-uses-stored-cost: **Bug.** `calculateRemainingInnateEnergy` subtracts each innate power’s saved `cost` field. Live energy comes from parts via `buildPowerPartsPayloadForCost` / `calculatePowerCosts`. A stale saved `cost` makes remaining innate energy wrong.
 
 ### Same math, separate copies
 
@@ -2280,7 +2278,7 @@ Save legality budgets, feat requirement checks, path publish validation, innate 
 - `findCharacterLegalityViolations` and `calculateGuidedSkillPointBudget` both call `getTotalSkillPoints` with rules when computing skill **budget** (legality at character level; guided at 1).
 - `validateRecommendedInnatePowers` and sheet innate pools both source threshold/energy from `calculateArchetypeProgression` via `getLevel1InnateBudget` or `calculateArchetypeProgression` directly; path validation passes path L1 proficiencies into that budget.
 - `checkFeatRequirements` is the single feat gate for legality, sheet, creator, and codex filter; `getMaxQualifiedFeatLevel` loops the same function.
-- Innate path validation energy uses live `derivePowerDisplay` / `resolvePowerComposition`, same family as `calculatePowerCosts` (contrast `math-disagree-bug:innate-remaining-uses-stored-cost` on the sheet budget field).
+- Innate path validation and sheet remaining innate energy both use live `derivePowerDisplay` / `resolvePowerComposition`, same family as `calculatePowerCosts`.
 - `validateLoadoutTrainingPoints` uses `flattenLoadoutEntries` only; no second TP sum formula in this slice.
 
 ## Creature creator budget math (line-by-line pass)

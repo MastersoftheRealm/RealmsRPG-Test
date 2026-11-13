@@ -8,7 +8,13 @@
  * When provided, DB-stored values are used. Otherwise, constants.ts fallbacks apply.
  */
 
-import type { EntityType, Abilities } from '@/types';
+import { derivePowerDisplay } from '@/lib/calculators/power-calc';
+import type { PowerPart } from '@/hooks/codex-types';
+import {
+  libraryItemToPowerDocument,
+  type PowerTechniqueBudgetItem,
+} from '@/lib/library-selectable-builders';
+import type { EntityType, Abilities, CharacterPower } from '@/types';
 import type { ArchetypeCategory, ProficiencyDerivedArchetype } from '@/types';
 import type { CoreRulesMap, ArchetypeConfigRules } from '@/types/core-rules';
 import {
@@ -585,19 +591,52 @@ export function calculateArchetypeProgression(
   };
 }
 
-/** Sum energy costs of powers marked innate (innate energy budget spent). */
-function sumInnatePowerEnergyCosts(
-  powers: Array<{ innate?: boolean | undefined; cost?: number | undefined }> = [],
+type CharacterPowerForInnateEnergy = CharacterPower & {
+  isReaction?: boolean | undefined;
+  libraryItem?: PowerTechniqueBudgetItem | undefined;
+};
+
+/** Live energy for one character power row (same path as sheet rows / innate path validation). */
+function liveInnatePowerEnergyCost(
+  power: CharacterPowerForInnateEnergy,
+  partsDb: PowerPart[],
 ): number {
-  return powers.filter((p) => p.innate === true).reduce((sum, p) => sum + (p.cost ?? 0), 0);
+  const libraryItem = power.libraryItem;
+  const doc = libraryItem
+    ? libraryItemToPowerDocument({
+        ...libraryItem,
+        ...(power.composition ? { composition: power.composition } : {}),
+      })
+    : libraryItemToPowerDocument({
+        name: power.name,
+        description: power.description,
+        parts: power.parts,
+        damage: Array.isArray(power.damage) ? power.damage : undefined,
+        isReaction: power.isReaction,
+      });
+  const display = derivePowerDisplay(doc, partsDb, {
+    selectedVariantId: power.selectedVariantId,
+  });
+  return Math.max(0, Math.round(display.energy ?? 0));
 }
 
-/** Remaining innate energy budget after innate power costs. */
+/** Sum live energy costs of powers marked innate (innate energy budget spent). */
+function sumInnatePowerEnergyCosts(
+  powers: CharacterPowerForInnateEnergy[] = [],
+  partsDb: PowerPart[],
+): number {
+  return powers
+    .filter((p) => p.innate === true)
+    .reduce((sum, p) => sum + liveInnatePowerEnergyCost(p, partsDb), 0);
+}
+
+/** Remaining innate energy budget after live innate power energy costs. */
 export function calculateRemainingInnateEnergy(
   maxInnateEnergy: number,
-  powers: Array<{ innate?: boolean | undefined; cost?: number | undefined }> = [],
+  powers: CharacterPowerForInnateEnergy[] = [],
+  partsDb: PowerPart[],
 ): number {
-  return maxInnateEnergy - sumInnatePowerEnergyCosts(powers);
+  return maxInnateEnergy - sumInnatePowerEnergyCosts(powers, partsDb);
 }
 
 // =============================================================================

@@ -9,6 +9,7 @@ import { CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME, type SortState } from '@/compo
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
 import { useRollsOptional } from '@/components/rolls';
 import { calculateRemainingInnateEnergy } from '@/lib/game/formulas';
+import type { PowerPart } from '@/hooks/codex-types';
 import { buildRequiredProficiencies, getMissingRequiredProficiencies } from '@/lib/proficiencies';
 import type {
   CharacterPower,
@@ -271,8 +272,8 @@ export function useLibrarySectionRows({
     () =>
       currentInnateEnergy !== undefined
         ? currentInnateEnergy
-        : calculateRemainingInnateEnergy(innateEnergy, powers),
-    [currentInnateEnergy, innateEnergy, powers],
+        : calculateRemainingInnateEnergy(innateEnergy, powers, powerPartsDb as PowerPart[]),
+    [currentInnateEnergy, innateEnergy, powers, powerPartsDb],
   );
   const innateEnergyOverBudget = displayedCurrentInnateEnergy < 0;
   const regularPowerRows = useMemo(
