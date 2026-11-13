@@ -30,9 +30,9 @@ function legalBuild() {
     level: 1,
     abilities: { strength: 2, vitality: 2, agility: 1, acuity: 1, intelligence: 1, charisma: 0 },
     skills: [
-      { id: '1', skill_val: 1, prof: true },
-      { id: '2', skill_val: 1, prof: true },
-      { id: '3', skill_val: 1, prof: true },
+      { id: '1', skill_val: 0, prof: true },
+      { id: '2', skill_val: 0, prof: true },
+      { id: '3', skill_val: 0, prof: true },
     ],
     defenseVals: {
       might: 0,
@@ -145,6 +145,20 @@ describe('findCharacterLegalityViolations', () => {
     });
     expect(result.warnings[0]?.code).toBe('skill_points_over_budget');
     expect(result.warnings[0]?.level).toBe(1);
+  });
+
+  it('warns when proficiency-only spend exceeds the skill budget (1dfe8wf3xer)', () => {
+    const result = evaluate({
+      ...legalBuild(),
+      skills: [
+        { id: '1', skill_val: 0, prof: true },
+        { id: '2', skill_val: 0, prof: true },
+        { id: '3', skill_val: 0, prof: true },
+        { id: '4', skill_val: 0, prof: true },
+      ],
+    });
+    const warning = result.warnings.find((w) => w.code === 'skill_points_over_budget');
+    expect(warning).toMatchObject({ level: 1, spent: 4, budget: 3 });
   });
 
   it('does not warn on negative currency (1dfe8wf2rd0 ph9)', () => {

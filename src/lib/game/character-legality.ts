@@ -8,7 +8,8 @@
  * **All levels (Kadin Oct 31, 2026 for L1; Oct 29 for L2+):** warn and save — structured
  * `legalityWarnings` on 200; no legality 400. Bad payloads still fail Zod validation.
  *
- * Skill spend is a deliberate lower bound (allocated values only). Feat requirements
+ * Skill spend uses the same allocation math as the sheet (`calculateSimpleSkillPointsSpent`).
+ * Feat requirements
  * use `checkFeatRequirements` when the feat catalog loaded; catalog load failure is
  * `feat_catalog_unavailable` (save still succeeds).
  */
@@ -34,7 +35,14 @@ import {
   calculateMaxCharacterFeats,
   type CodexSkillForFeat,
 } from './formulas';
-import { getTotalSkillPoints, resolveSkillAllocationRules } from './skill-allocation';
+import {
+  calculateCharacterSkillPointsSpent,
+  calculateSimpleSkillPointsSpent,
+  getTotalSkillPoints,
+  resolveSkillAllocationRules,
+} from './skill-allocation';
+import type { DefenseSkills } from '@/types/skills';
+import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 
 type Rules = Partial<CoreRulesMap>;
 
@@ -198,39 +206,73 @@ function abilityPointsSpent(abilities: Record<string, unknown>, rules?: Rules): 
   }, 0);
 }
 
-function skillPointsSpentFloor(candidate: CharacterLegalityCandidate, rules?: Rules): number {
-  let spent = 0;
+function defenseSkillsFromCandidate(
+  candidate: CharacterLegalityCandidate,
+): DefenseSkills | undefined {
+  const defenses = asRecord(candidate.defenseVals) ?? asRecord(candidate.defenseSkills);
+  if (!defenses) return undefined;
+  const out: DefenseSkills = { ...DEFAULT_DEFENSE_SKILLS };
+  for (const key of DEFENSE_KEYS) {
+    const n = toFiniteNumber(defenses[key]);
+    if (n !== null) out[key] = n;
+  }
+  return out;
+}
 
+/** Exact skill-point spend (proficiency + rank steps + defense), same as allocation UI. */
+function skillPointsSpentExact(candidate: CharacterLegalityCandidate, rules?: Rules): number {
+  const defenseSkills = defenseSkillsFromCandidate(candidate);
   const skills = candidate.skills;
+
   if (Array.isArray(skills)) {
+    const rows: Parameters<typeof calculateCharacterSkillPointsSpent>[0] = [];
     for (const row of skills) {
       const entry = asRecord(row);
       if (!entry) continue;
-      const value = toFiniteNumber(entry.skill_val) ?? toFiniteNumber(entry.val) ?? 0;
-      spent += Math.max(0, value);
+      const id = entry.id != null ? String(entry.id) : '';
+      if (!id) continue;
+      rows.push({
+        id,
+        skill_val: toFiniteNumber(entry.skill_val) ?? toFiniteNumber(entry.val) ?? 0,
+        prof: entry.prof === true,
+        baseSkill: typeof entry.baseSkill === 'string' ? entry.baseSkill : undefined,
+        baseSkillId: toFiniteNumber(entry.baseSkillId) ?? undefined,
+        selectedBaseSkillId:
+          entry.selectedBaseSkillId != null ? String(entry.selectedBaseSkillId) : undefined,
+      });
     }
-  } else {
-    const record = asRecord(skills);
-    if (record) {
-      for (const raw of Object.values(record)) {
-        const entry = asRecord(raw);
-        const value = entry ? (toFiniteNumber(entry.val) ?? 0) : (toFiniteNumber(raw) ?? 0);
-        spent += Math.max(0, value);
-      }
-    }
+    return calculateCharacterSkillPointsSpent(rows, new Set(), defenseSkills, rules);
   }
 
-  const defenses = asRecord(candidate.defenseVals) ?? asRecord(candidate.defenseSkills);
-  if (defenses) {
+  const record = asRecord(skills);
+  if (!record) {
+    if (!defenseSkills) return 0;
+    const r = resolveSkillAllocationRules(rules);
     const defenseTotal = DEFENSE_KEYS.reduce(
-      (sum, key) => sum + Math.max(0, toFiniteNumber(defenses[key]) ?? 0),
+      (sum, key) => sum + Math.max(0, defenseSkills[key] ?? 0),
       0,
     );
-    const cost = resolveSkillAllocationRules(rules).defenseIncreaseCost;
-    spent += defenseTotal * cost;
+    return defenseTotal * r.defenseIncreaseCost;
   }
 
-  return spent;
+  const allocations: Record<string, number> = {};
+  const skillMeta = new Map<string, { isSubSkill: boolean }>();
+  for (const [id, raw] of Object.entries(record)) {
+    const entry = asRecord(raw);
+    const value = entry ? (toFiniteNumber(entry.val) ?? 0) : (toFiniteNumber(raw) ?? 0);
+    if (value < 0) continue;
+    const prof = entry ? entry.prof === true : typeof raw === 'number' ? raw >= 0 : false;
+    if (!prof) continue;
+    allocations[id] = typeof raw === 'number' ? raw : value;
+    skillMeta.set(id, { isSubSkill: false });
+  }
+  return calculateSimpleSkillPointsSpent(
+    allocations,
+    new Set(),
+    skillMeta,
+    defenseSkills,
+    resolveSkillAllocationRules(rules),
+  );
 }
 
 function countRefs(value: unknown): number | null {
@@ -435,7 +477,7 @@ export function findCharacterLegalityViolations(
   }
 
   const skillBudget = getTotalSkillPoints(level, 'character', budgetRules);
-  const skillSpent = skillPointsSpentFloor(candidate, budgetRules);
+  const skillSpent = skillPointsSpentExact(candidate, budgetRules);
   addSkillOverBudget(level, warnings, skillSpent, skillBudget);
 
   const archetypeType = asRecord(candidate.archetype)?.type;

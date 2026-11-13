@@ -162,7 +162,14 @@ function normalizeSkills(
     skills.forEach((s) => {
       const id = s.id != null ? String(s.id) : '';
       const name = s.name != null ? String(s.name) : '';
-      const entry = { prof: s.prof ?? false, val: s.skill_val ?? 0 };
+      const entry: {
+        prof?: boolean | undefined;
+        val?: number | undefined;
+        ability?: string | undefined;
+      } = { prof: s.prof ?? false, val: s.skill_val ?? 0 };
+      if (typeof s.ability === 'string' && s.ability.trim()) {
+        entry.ability = s.ability.trim().toLowerCase();
+      }
       if (id) record[id] = entry;
       if (name && name !== id) record[name] = entry;
     });
@@ -427,7 +434,14 @@ export function characterToFeatRequirementCharacter(
   if (rawSkills) {
     Object.entries(rawSkills).forEach(([key, sk]) => {
       if (sk && typeof sk === 'object' && 'val' in sk) {
-        skillsRecord[key] = { prof: sk.prof, val: sk.val };
+        const row: { prof?: boolean | undefined; val?: number | undefined; ability?: string } = {
+          prof: sk.prof,
+          val: sk.val,
+        };
+        if (typeof sk.ability === 'string' && sk.ability.trim()) {
+          row.ability = sk.ability.trim().toLowerCase();
+        }
+        skillsRecord[key] = row;
       } else if (typeof sk === 'number') {
         // Pass the number through: `{ val: sk }` would drop `prof` and make every
         // skill-gated feat report "Requires proficiency" (readProficiency in formulas.ts
