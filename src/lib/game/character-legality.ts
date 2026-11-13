@@ -8,7 +8,8 @@
  * **All levels (Kadin Oct 31, 2026 for L1; Oct 29 for L2+):** warn and save — structured
  * `legalityWarnings` on 200; no legality 400. Bad payloads still fail Zod validation.
  *
- * Skill spend uses the same allocation math as the sheet (`calculateSimpleSkillPointsSpent`).
+ * Skill spend uses the same allocation math as the sheet (`calculateCharacterSkillPointsSpent`),
+ * including free species skills and codex sub-skill steps when the feat catalog is loaded.
  * Feat requirements
  * use `checkFeatRequirements` when the feat catalog loaded; catalog load failure is
  * `feat_catalog_unavailable` (save still succeeds).
@@ -36,6 +37,7 @@ import {
   type CodexSkillForFeat,
 } from './formulas';
 import {
+  buildSpeciesSkillIdSet,
   calculateCharacterSkillPointsSpent,
   calculateSimpleSkillPointsSpent,
   getTotalSkillPoints,
@@ -128,6 +130,7 @@ export interface CharacterLegalityCandidate {
   level?: unknown | undefined;
   abilities?: unknown | undefined;
   skills?: unknown | undefined;
+  ancestry?: unknown | undefined;
   defenseVals?: unknown | undefined;
   defenseSkills?: unknown | undefined;
   archetype?: unknown | undefined;
@@ -150,6 +153,21 @@ export interface FeatRequirementCatalog {
 export interface EvaluateCharacterLegalityOptions {
   /** When false, skip codex catalog fetch (feat requirement checks omitted). */
   loadFeatCatalog?: boolean | undefined;
+}
+
+/** Inputs for skill-point spend parity with the sheet (species grants exempt). */
+export interface CharacterLegalitySpendOptions {
+  speciesSkillRefs?: string[] | undefined;
+}
+
+export function speciesSkillRefsFromAncestry(candidate: CharacterLegalityCandidate): string[] {
+  const ancestry = asRecord(candidate.ancestry);
+  if (!ancestry) return [];
+  const selected = ancestry.selectedSpeciesSkillIds;
+  if (Array.isArray(selected) && selected.length > 0) {
+    return selected.map(String);
+  }
+  return [];
 }
 
 function toFiniteNumber(value: unknown): number | null {
@@ -219,31 +237,73 @@ function defenseSkillsFromCandidate(
   return out;
 }
 
-/** Exact skill-point spend (proficiency + rank steps + defense), same as allocation UI. */
-function skillPointsSpentExact(candidate: CharacterLegalityCandidate, rules?: Rules): number {
-  const defenseSkills = defenseSkillsFromCandidate(candidate);
+function skillRowsFromCandidate(candidate: CharacterLegalityCandidate): Array<{
+  id: string;
+  name?: string | undefined;
+  skill_val: number;
+  prof: boolean;
+  baseSkill?: string | undefined;
+  baseSkillId?: number | undefined;
+  selectedBaseSkillId?: string | undefined;
+}> {
   const skills = candidate.skills;
+  if (!Array.isArray(skills)) return [];
+  const rows: Array<{
+    id: string;
+    name?: string | undefined;
+    skill_val: number;
+    prof: boolean;
+    baseSkill?: string | undefined;
+    baseSkillId?: number | undefined;
+    selectedBaseSkillId?: string | undefined;
+  }> = [];
+  for (const row of skills) {
+    const entry = asRecord(row);
+    if (!entry) continue;
+    const id = entry.id != null ? String(entry.id) : '';
+    if (!id) continue;
+    rows.push({
+      id,
+      name: typeof entry.name === 'string' ? entry.name : undefined,
+      skill_val: toFiniteNumber(entry.skill_val) ?? toFiniteNumber(entry.val) ?? 0,
+      prof: entry.prof === true,
+      baseSkill: typeof entry.baseSkill === 'string' ? entry.baseSkill : undefined,
+      baseSkillId: toFiniteNumber(entry.baseSkillId) ?? undefined,
+      selectedBaseSkillId:
+        entry.selectedBaseSkillId != null ? String(entry.selectedBaseSkillId) : undefined,
+    });
+  }
+  return rows;
+}
 
-  if (Array.isArray(skills)) {
-    const rows: Parameters<typeof calculateCharacterSkillPointsSpent>[0] = [];
-    for (const row of skills) {
-      const entry = asRecord(row);
-      if (!entry) continue;
-      const id = entry.id != null ? String(entry.id) : '';
-      if (!id) continue;
-      rows.push({
-        id,
-        skill_val: toFiniteNumber(entry.skill_val) ?? toFiniteNumber(entry.val) ?? 0,
-        prof: entry.prof === true,
-        baseSkill: typeof entry.baseSkill === 'string' ? entry.baseSkill : undefined,
-        baseSkillId: toFiniteNumber(entry.baseSkillId) ?? undefined,
-        selectedBaseSkillId:
-          entry.selectedBaseSkillId != null ? String(entry.selectedBaseSkillId) : undefined,
-      });
-    }
-    return calculateCharacterSkillPointsSpent(rows, new Set(), defenseSkills, rules);
+/** Exact skill-point spend (proficiency + rank steps + defense), matching sheet/creator spend helpers. */
+function skillPointsSpentExact(
+  candidate: CharacterLegalityCandidate,
+  rules: Rules | undefined,
+  speciesSkillRefs: string[],
+  codexSkills: CodexSkillForFeat[],
+): number {
+  const defenseSkills = defenseSkillsFromCandidate(candidate);
+  const skillRows = skillRowsFromCandidate(candidate);
+  const speciesSkillIdSet = buildSpeciesSkillIdSet(
+    speciesSkillRefs.filter((id) => id !== '0'),
+    [
+      ...skillRows.map((row) => ({ id: row.id, name: row.name })),
+      ...codexSkills.map((row) => ({ id: String(row.id), name: row.name })),
+    ],
+  );
+
+  if (skillRows.length > 0) {
+    return calculateCharacterSkillPointsSpent(
+      skillRows,
+      speciesSkillIdSet,
+      defenseSkills,
+      rules,
+      codexSkills,
+    );
   }
 
+  const skills = candidate.skills;
   const record = asRecord(skills);
   if (!record) {
     if (!defenseSkills) return 0;
@@ -255,6 +315,7 @@ function skillPointsSpentExact(candidate: CharacterLegalityCandidate, rules?: Ru
     return defenseTotal * r.defenseIncreaseCost;
   }
 
+  const codexById = new Map(codexSkills.map((row) => [String(row.id), row]));
   const allocations: Record<string, number> = {};
   const skillMeta = new Map<string, { isSubSkill: boolean }>();
   for (const [id, raw] of Object.entries(record)) {
@@ -264,11 +325,15 @@ function skillPointsSpentExact(candidate: CharacterLegalityCandidate, rules?: Ru
     const prof = entry ? entry.prof === true : typeof raw === 'number' ? raw >= 0 : false;
     if (!prof) continue;
     allocations[id] = typeof raw === 'number' ? raw : value;
-    skillMeta.set(id, { isSubSkill: false });
+    const codex = codexById.get(id);
+    const baseId = codex?.base_skill_id;
+    const isSubSkill =
+      baseId !== undefined && baseId !== null && String(baseId) !== '' && Number(baseId) !== 0;
+    skillMeta.set(id, { isSubSkill });
   }
   return calculateSimpleSkillPointsSpent(
     allocations,
-    new Set(),
+    speciesSkillIdSet,
     skillMeta,
     defenseSkills,
     resolveSkillAllocationRules(rules),
@@ -441,6 +506,7 @@ export function findCharacterLegalityViolations(
   rulesStatus: CharacterLegalityRulesStatus,
   rules?: Rules,
   featCatalog?: FeatRequirementCatalog,
+  spendOptions?: CharacterLegalitySpendOptions,
 ): CharacterLegalityResult {
   const uncomputable: CharacterLegalityUncomputableCode[] = [];
   let effectiveRules = rules;
@@ -477,7 +543,10 @@ export function findCharacterLegalityViolations(
   }
 
   const skillBudget = getTotalSkillPoints(level, 'character', budgetRules);
-  const skillSpent = skillPointsSpentExact(candidate, budgetRules);
+  const speciesSkillRefs =
+    spendOptions?.speciesSkillRefs ?? speciesSkillRefsFromAncestry(candidate);
+  const codexSkills = featCatalog?.skills ?? [];
+  const skillSpent = skillPointsSpentExact(candidate, budgetRules, speciesSkillRefs, codexSkills);
   addSkillOverBudget(level, warnings, skillSpent, skillBudget);
 
   const archetypeType = asRecord(candidate.archetype)?.type;
@@ -552,6 +621,26 @@ export function appendCharacterLegalityToResponse<T extends Record<string, unkno
   return next;
 }
 
+async function resolveLegalitySpeciesSkillRefs(
+  supabase: TypedSupabaseClient,
+  candidate: CharacterLegalityCandidate,
+): Promise<string[]> {
+  const fromAncestry = speciesSkillRefsFromAncestry(candidate);
+  if (fromAncestry.length > 0) return fromAncestry;
+
+  const ancestry = asRecord(candidate.ancestry);
+  const speciesId = ancestry?.id != null ? String(ancestry.id) : '';
+  if (!speciesId) return [];
+
+  const { data, error } = await supabase
+    .from('codex_species')
+    .select('skills')
+    .eq('id', speciesId)
+    .maybeSingle();
+  if (error || !data?.skills || !Array.isArray(data.skills)) return [];
+  return data.skills.map(String);
+}
+
 export async function evaluateCharacterLegalityForSave(
   supabase: TypedSupabaseClient,
   candidate: CharacterLegalityCandidate,
@@ -572,11 +661,14 @@ export async function evaluateCharacterLegalityForSave(
     }
   }
 
+  const speciesSkillRefs = await resolveLegalitySpeciesSkillRefs(supabase, candidate);
+
   const result = findCharacterLegalityViolations(
     candidate,
     rulesStatusFromFetch(rules),
     rules,
     featCatalog,
+    { speciesSkillRefs },
   );
   if (extraUncomputable.length > 0) {
     result.uncomputable.push(...extraUncomputable);

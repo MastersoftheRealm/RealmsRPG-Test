@@ -147,6 +147,21 @@ describe('findCharacterLegalityViolations', () => {
     expect(result.warnings[0]?.level).toBe(1);
   });
 
+  it('does not charge free species skills on a legal level-1 build (1dfe8wf3xer)', () => {
+    const result = evaluate({
+      ...legalBuild(),
+      ancestry: { selectedSpeciesSkillIds: ['sp-a', 'sp-b'] },
+      skills: [
+        { id: 'sp-a', skill_val: 0, prof: true },
+        { id: 'sp-b', skill_val: 0, prof: true },
+        { id: '3', skill_val: 0, prof: true },
+        { id: '4', skill_val: 0, prof: true },
+        { id: '5', skill_val: 0, prof: true },
+      ],
+    });
+    expect(result.warnings.filter((w) => w.code === 'skill_points_over_budget')).toEqual([]);
+  });
+
   it('warns when proficiency-only spend exceeds the skill budget (1dfe8wf3xer)', () => {
     const result = evaluate({
       ...legalBuild(),
