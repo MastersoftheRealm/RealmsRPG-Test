@@ -138,10 +138,13 @@ function normalizeSizeLookupKey(input: string): string {
 }
 
 /** Carry fields from live `SIZES.categories` (Core Rules) or the static table. */
-export type SizeCarryLookupRow = Pick<
-  SizeTableRow,
-  'value' | 'label' | 'baseCarry' | 'perStrCarry' | 'minCarry'
->;
+export type SizeCarryLookupRow = {
+  value: string;
+  label: string;
+  baseCarry: number;
+  perStrCarry: number;
+  minCarry: number;
+};
 
 function findCarryLookupRow(
   sizeKey: string,
