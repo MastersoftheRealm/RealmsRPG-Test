@@ -31,9 +31,14 @@ export function bootstrapCreatureState(options: {
         String((x as { id?: string | undefined; docId?: string | undefined }).docId) ===
           editCreatureId,
     );
-    state = match
-      ? rawRecordToCreatureState(match as Record<string, unknown>)
-      : initialState;
+    if (match) {
+      state = rawRecordToCreatureState(match as Record<string, unknown>);
+    } else {
+      const parsed = readNewCreatorDraftCache<CreatureCreatorCache>(CREATURE_CREATOR_CACHE_KEY);
+      state = parsed?.creature
+        ? rawRecordToCreatureState(parsed.creature as unknown as Record<string, unknown>)
+        : initialState;
+    }
   } else {
     const parsed = readNewCreatorDraftCache<CreatureCreatorCache>(CREATURE_CREATOR_CACHE_KEY);
     state = parsed?.creature

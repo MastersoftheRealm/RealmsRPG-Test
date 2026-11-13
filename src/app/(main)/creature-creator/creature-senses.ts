@@ -297,10 +297,6 @@ export function readDarkvisionLevel(senses: readonly string[]): number {
   return readBuiltInSenseLevel(senses, 'darkvision');
 }
 
-function readBlindsenseLevel(senses: readonly string[]): number {
-  return readBuiltInSenseLevel(senses, 'blindsense');
-}
-
 export function readLifesenseLevel(senses: readonly string[]): number {
   return readBuiltInSenseLevel(senses, 'lifesense');
 }
@@ -336,14 +332,6 @@ export function sensesAfterDarkvisionLevel(
   catalog: readonly CodexCreatureFeat[],
 ): Pick<CreatureState, 'senses' | 'feats'> {
   return sensesAfterBuiltInLevel(creature, 'darkvision', level, catalog);
-}
-
-function sensesAfterBlindsenseLevel(
-  creature: Pick<CreatureState, 'senses' | 'feats'>,
-  level: number,
-  catalog: readonly CodexCreatureFeat[],
-): Pick<CreatureState, 'senses' | 'feats'> {
-  return sensesAfterBuiltInLevel(creature, 'blindsense', level, catalog);
 }
 
 export function sensesAfterLifesenseLevel(
