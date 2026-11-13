@@ -6,11 +6,14 @@ import type { LibraryPower } from '@/types/library';
 import type { GuidedDraft } from '@/stores/guided-creator-store';
 import { PART_IDS } from '@/lib/id-constants';
 import { snapshotParts } from '@/lib/calculators/power-composition.fixture';
-import { computeGuidedTrainingPointsBudgetSpent } from '@/lib/guided-creator/build-character';
+import {
+  computeGuidedRequiredTrainingSpent,
+  computeGuidedTrainingPointsBudgetSpent,
+} from '@/lib/guided-creator/build-character';
 import { LoadoutBudgetBar } from './loadout-budget-bar';
 
 describe('LoadoutBudgetBar Training Points over pool', () => {
-  it('shows −2 and the warn-only alert when pool spent is 27 of 25', () => {
+  it('uses sheet-style deduped TP instead of summed catalog chips', () => {
     const range = snapshotParts([PART_IDS.POWER_RANGE])[0]!;
     const officialPowers: LibraryPower[] = [
       {
@@ -35,19 +38,22 @@ describe('LoadoutBudgetBar Training Points over pool', () => {
       loadoutArmor: [],
       equipment: [],
     } as unknown as GuidedDraft;
+    const deduped = computeGuidedRequiredTrainingSpent(draft, {
+      officialPowers,
+      powerPartsDb: [range],
+    });
     const poolSpent = computeGuidedTrainingPointsBudgetSpent(
       draft,
       { officialPowers, powerPartsDb: [range] },
       0,
       tpCostOf,
     );
-    expect(poolSpent).toBe(27);
+    expect(poolSpent).toBe(deduped);
+    expect(poolSpent).toBeLessThan(27);
 
     render(<LoadoutBudgetBar tpTotal={25} tpSpent={poolSpent} />);
 
-    expect(screen.getByText('-2')).toBeTruthy();
-    expect(screen.getByRole('alert').textContent).toContain(
-      'You are 2 Training Points over budget. You can still continue.',
-    );
+    expect(screen.queryByText('-2')).toBeNull();
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 });

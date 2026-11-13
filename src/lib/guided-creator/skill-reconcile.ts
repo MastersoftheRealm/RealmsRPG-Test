@@ -154,7 +154,7 @@ export function calculateGuidedSkillPointBudget(args: {
   });
   const extraSkillPoints = speciesSkillIds.has('0') ? 1 : 0;
   const skillRules = resolveSkillAllocationRules(args.rules);
-  const totalPoints = getTotalSkillPoints(1, 'character') + extraSkillPoints;
+  const totalPoints = getTotalSkillPoints(1, 'character', args.rules) + extraSkillPoints;
   const spentPoints = calculateSimpleSkillPointsSpent(
     allocationsWithDefaults,
     speciesSkillIds,
