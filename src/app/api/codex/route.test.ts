@@ -75,6 +75,7 @@ const ROWS: Record<string, Record<string, unknown>[]> = {
   ],
   codex_properties: [{ id: 'prop-1', name: 'Heavy' }],
   codex_equipment: [{ id: 'equip-1', name: 'Rope', currency: 5 }],
+  official_items: [],
   codex_archetypes: [{ id: 'arch-1', name: 'Guardian', type: 'martial' }],
   codex_archetype_levels: [{ archetype_id: 'arch-1', level: 2, feats: 'feat-1' }],
   codex_creature_feats: [{ id: 'cfeat-1', name: 'Pounce', feat_points: 2 }],
@@ -84,14 +85,23 @@ const ROWS: Record<string, Record<string, unknown>[]> = {
 let queriedTables: string[] = [];
 let lastSelectByTable: Record<string, string> = {};
 
+function supabaseSelectResult(table: string, columns: string) {
+  queriedTables.push(table);
+  lastSelectByTable[table] = columns;
+  const result = { data: ROWS[table] ?? [], error: null as null };
+  return {
+    eq: async () => result,
+    then: (
+      onFulfilled?: (value: typeof result) => unknown,
+      onRejected?: (reason: unknown) => unknown,
+    ) => Promise.resolve(result).then(onFulfilled, onRejected),
+  };
+}
+
 function mockSupabase() {
   return {
     from: (table: string) => ({
-      select: async (columns: string) => {
-        queriedTables.push(table);
-        lastSelectByTable[table] = columns;
-        return { data: ROWS[table] ?? [], error: null };
-      },
+      select: (columns: string) => supabaseSelectResult(table, columns),
       in: async () => ({ data: [], error: null }),
     }),
   } as never;

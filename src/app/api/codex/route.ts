@@ -41,7 +41,7 @@ import {
   indexOfficialArmamentsForCodexEquipmentMerge,
   mergeOfficialArmamentIntoCodexEquipmentRow,
 } from '@/lib/codex/equipment-armament-merge';
-import { fetchOfficialColumnarRows } from '@/lib/official-library-server';
+import { queryOfficialColumnarRowsUncached } from '@/lib/official-library-server';
 import { CODEX_PAYLOAD_KEYS, type CodexPayload, type CodexPayloadKey } from '@/types/codex';
 import { CODEX_DATA_TABLES, type CodexDataTable } from '@/lib/codex/codex-tables';
 import { CODEX_API_TABLE_SELECT, omitCodexSourcesColumn } from '@/lib/codex/public-table-select';
@@ -255,7 +255,7 @@ async function buildCodexPayloadUncached(
   const propRows = ((isCodexTableMissing(eProps) ? [] : properties) ?? []) as Row[];
   const officialArmamentById = needed.has('codex_equipment')
     ? indexOfficialArmamentsForCodexEquipmentMerge(
-        await fetchOfficialColumnarRows(supabase, 'items', includeUnlisted),
+        await queryOfficialColumnarRowsUncached(supabase, 'items', includeUnlisted),
       )
     : new Map();
   const equipRows = equipRowsRaw.map((row) =>
