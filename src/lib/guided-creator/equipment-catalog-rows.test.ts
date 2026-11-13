@@ -27,6 +27,38 @@ describe('equipment-catalog-rows currency', () => {
     expect(row?.gold_cost).not.toBe(2);
   });
 
+  it('codex armament keeps stored rarity when property name does not match (1dfe8wf3xew)', () => {
+    const propertiesDb = [
+      {
+        id: 1,
+        name: 'Sharp',
+        base_c: 2,
+        op_1_c: 0,
+        base_ip: 2,
+        op_1_ip: 0,
+        base_tp: 4,
+      },
+    ];
+    const catalog = buildEquipmentCatalogRows(
+      [],
+      [
+        {
+          id: 'blade',
+          name: 'Blade',
+          type: 'weapon',
+          description: '',
+          gold_cost: 5,
+          currency: 5,
+          rarity: 'Rare',
+          properties: [{ name: 'Nope' }],
+        },
+      ],
+      propertiesDb,
+    );
+    expect(catalog.get('blade')?.rarity).toBe('Rare');
+    expect(catalog.get('blade')?.gold_cost).toBe(5);
+  });
+
   it('codex armament gold_cost is calculated market currency (1dfe8wf3xew)', () => {
     const propertiesDb = [
       {

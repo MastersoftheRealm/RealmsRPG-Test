@@ -84,7 +84,8 @@ export function codexEquipmentDisplayCurrency(
   return equipmentCurrency(item);
 }
 
-function codexEquipmentDisplayRarity(
+/** Same `resolvedFromProperties` gate as `codexEquipmentDisplayCurrency` (browse + guided). */
+export function codexEquipmentDisplayRarity(
   item: CodexEquipmentPricingRow & { rarity?: string | undefined },
   propertiesDb: ItemPropertyTpRow[] = [],
 ): string | undefined {
@@ -96,7 +97,10 @@ function codexEquipmentDisplayRarity(
     propertiesDb,
     item.costs,
   );
-  return pricing.rarity || item.rarity;
+  if (pricing.resolvedFromProperties && pricing.rarity) {
+    return pricing.rarity;
+  }
+  return item.rarity;
 }
 
 /** Persist catalog Currency onto sheet equipment — never property C sum (TASK-873). */

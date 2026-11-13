@@ -114,6 +114,23 @@ describe('codex equipment-list', () => {
     expect(cols.find((c) => c.key === 'currency')?.value).toBe(5);
   });
 
+  it('armament with unmatched property keeps stored rarity (1dfe8wf3xew)', () => {
+    const cols = buildCodexEquipmentColumns(
+      item({
+        id: 'blade',
+        name: 'Blade',
+        type: 'weapon',
+        currency: 5,
+        gold_cost: 5,
+        category: 'Weapon',
+        rarity: 'Rare',
+        properties: [{ name: 'Nope' }],
+      }),
+      [SHARP],
+    );
+    expect(cols.find((c) => c.key === 'rarity')?.value).toBe('Rare');
+  });
+
   it('codex gear columns keep stored catalog currency', () => {
     const cols = buildCodexEquipmentColumns(
       item({ id: 'rope', name: 'Rope', currency: 12, category: 'Adventuring', rarity: 'Common' }),
