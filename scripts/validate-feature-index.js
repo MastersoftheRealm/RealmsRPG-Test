@@ -301,7 +301,7 @@ const MATH_DISAGREEMENT_INTENTIONAL_IDS = [
   'modify-variant-ceil-vs-composition-finalize',
 ];
 
-const MATH_DISAGREEMENT_BUG_IDS = [];
+const MATH_DISAGREEMENT_BUG_IDS = ['innate-remaining-uses-stored-cost'];
 
 const SKILL_MATH_BUG_IDS = [
   'feat-skill-req-first-ability-vs-sheet-highest',

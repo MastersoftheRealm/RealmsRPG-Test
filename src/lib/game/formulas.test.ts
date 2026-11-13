@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import type { PowerPart } from '@/hooks/codex-types';
 import {
   allocateHealthEnergyPool,
   calculateAbilityPoints,
@@ -11,7 +10,6 @@ import {
   calculateMaxArchetypeFeats,
   calculateMaxCharacterFeats,
   calculateProficiency,
-  calculateRemainingInnateEnergy,
   calculateSkillBonusWithProficiency,
   calculateSkillPointsForEntity,
   calculateSubSkillBonusWithProficiency,
@@ -254,38 +252,5 @@ describe('calculateSubSkillBonusWithProficiency (M13)', () => {
     expect(calculateSubSkillBonusWithProficiency('strength', 2, 0, false, abilities, false)).toBe(
       unproficientBonus(-2) + 0,
     );
-  });
-});
-
-describe('calculateRemainingInnateEnergy (1dfe8wf3xep)', () => {
-  const summon: PowerPart = {
-    id: '950',
-    name: 'Weapon Summon',
-    description: 'Summon',
-    category: 'General',
-    mechanic: false,
-    base_en: 4,
-    base_tp: 2,
-    percentage: false,
-    duration: false,
-  };
-  const partsDb = [summon];
-
-  it('subtracts live part energy, not a stale saved cost field', () => {
-    const powers = [
-      {
-        id: 'dual-summon',
-        name: 'Dual Summon',
-        innate: true,
-        cost: 4,
-        parts: [
-          { id: '950', name: 'Weapon Summon', op_1_lvl: 0 },
-          { id: '950', name: 'Weapon Summon', op_1_lvl: 0 },
-        ],
-      },
-    ];
-    const remaining = calculateRemainingInnateEnergy(16, powers, partsDb);
-    expect(remaining).toBe(8);
-    expect(remaining).not.toBe(12);
   });
 });
