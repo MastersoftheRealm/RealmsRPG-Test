@@ -13,17 +13,22 @@ import {
   movementAfterSwimLevel,
   movementAfterWalkLevel,
   movementDropdownFeats,
+  movementModeStepperLabel,
   movementSectionPointTotal,
   movementToggleFeats,
   movementTravelSpeed,
+  burrowLevelCap,
+  flyLevelCap,
   nextSpeedType,
   readBurrowLevel,
   readFlyLevel,
   readSwimLevel,
   readWalkLevel,
+  swimLevelCap,
   toggleMovementFeat,
   walkLevelCap,
 } from './creature-movement';
+import { CREATURE_FEAT_IDS } from '@/lib/id-constants';
 import type { CreatureState } from './creature-creator-types';
 
 function LevelStepper({
@@ -66,26 +71,30 @@ function SpeedTypeBox({
   label,
   walkSpeed,
   level,
+  max,
+  stepperText,
   onChange,
 }: {
   label: string;
   walkSpeed: number;
-  level: 0 | 1 | 2;
-  onChange: (next: 0 | 1 | 2) => void;
+  level: number;
+  max: number;
+  stepperText: string;
+  onChange: (next: number) => void;
 }) {
   if (level === 0) return null;
   return (
     <LargeStatBlock
       label={label}
-      value={formatMovementSpeed(movementTravelSpeed(walkSpeed, level === 1 ? 1 : 2))}
+      value={formatMovementSpeed(movementTravelSpeed(walkSpeed, level))}
       footer={
         <LevelStepper
           label={label}
           value={level}
           min={0}
-          max={2}
-          text={level === 1 ? '1/2' : 'Full'}
-          onChange={(next) => onChange(next <= 0 ? 0 : next >= 2 ? 2 : 1)}
+          max={max}
+          text={stepperText}
+          onChange={(next) => onChange(Math.max(0, Math.min(max, next)))}
         />
       }
     />
@@ -146,6 +155,13 @@ export function CreatureCreatorMovementSection({
             label="Flying Speed"
             walkSpeed={walkSpeed}
             level={fly}
+            max={flyLevelCap(catalog)}
+            stepperText={movementModeStepperLabel(
+              catalog,
+              CREATURE_FEAT_IDS.FLYING,
+              fly,
+              [CREATURE_FEAT_IDS.FLYING, CREATURE_FEAT_IDS.FLYING_II],
+            )}
             onChange={(next) => updateCreature(movementAfterFlyLevel(creature, next, catalog))}
           />
         )}
@@ -154,7 +170,14 @@ export function CreatureCreatorMovementSection({
             label="Swimming Speed"
             walkSpeed={walkSpeed}
             level={swim}
-            onChange={(next) => updateCreature(movementAfterSwimLevel(creature, next))}
+            max={swimLevelCap(catalog)}
+            stepperText={movementModeStepperLabel(
+              catalog,
+              CREATURE_FEAT_IDS.SWIMMING,
+              swim,
+              [CREATURE_FEAT_IDS.SWIMMING, CREATURE_FEAT_IDS.SWIMMING_II],
+            )}
+            onChange={(next) => updateCreature(movementAfterSwimLevel(creature, next, catalog))}
           />
         )}
         {burrow > 0 && (
@@ -162,6 +185,13 @@ export function CreatureCreatorMovementSection({
             label="Burrow Speed"
             walkSpeed={walkSpeed}
             level={burrow}
+            max={burrowLevelCap(catalog)}
+            stepperText={movementModeStepperLabel(
+              catalog,
+              CREATURE_FEAT_IDS.BURROW,
+              burrow,
+              [CREATURE_FEAT_IDS.BURROW, CREATURE_FEAT_IDS.BURROW_II],
+            )}
             onChange={(next) => updateCreature(movementAfterBurrowLevel(creature, next, catalog))}
           />
         )}
@@ -174,7 +204,7 @@ export function CreatureCreatorMovementSection({
               updateCreature(
                 nextType === 'fly'
                   ? movementAfterFlyLevel(creature, 1, catalog)
-                  : movementAfterSwimLevel(creature, 1),
+                  : movementAfterSwimLevel(creature, 1, catalog),
               )
             }
             title={nextType === 'fly' ? 'Add flying speed' : 'Add swimming speed'}

@@ -35,7 +35,12 @@ const SLOW_IDS = [
   CREATURE_FEAT_IDS.SLOW_III,
 ] as const;
 const FLY_IDS = [CREATURE_FEAT_IDS.FLYING, CREATURE_FEAT_IDS.FLYING_II] as const;
+const SWIM_IDS = [CREATURE_FEAT_IDS.SWIMMING, CREATURE_FEAT_IDS.SWIMMING_II] as const;
 const BURROW_IDS = [CREATURE_FEAT_IDS.BURROW, CREATURE_FEAT_IDS.BURROW_II] as const;
+
+const FLY_TOKEN = /^fly:(\d+)$/;
+const SWIM_TOKEN = /^swim:(\d+)$/;
+const BURROW_TOKEN = /^burrow:(\d+)$/;
 
 /** On/off controls. Terrain Bound is the named example; it has no Movement category yet. */
 const TOGGLE_IDS = [
@@ -50,6 +55,7 @@ const WALK_FAMILY_ROOTS = new Set<string>([
   String(CREATURE_FEAT_IDS.SPEEDY),
   String(CREATURE_FEAT_IDS.SLOW),
   String(CREATURE_FEAT_IDS.FLYING),
+  String(CREATURE_FEAT_IDS.SWIMMING),
   String(CREATURE_FEAT_IDS.BURROW),
 ]);
 const SPEED_ROOTS = new Set<string>([
@@ -65,6 +71,7 @@ const CONTROL_IDS = new Set<string>([
   ...SPEEDY_IDS.map(idString),
   ...SLOW_IDS.map(idString),
   ...FLY_IDS.map(idString),
+  ...SWIM_IDS.map(idString),
   ...BURROW_IDS.map(idString),
   ...TOGGLE_IDS.map(idString),
 ]);
@@ -116,9 +123,9 @@ export function formatMovementSpeed(speed: number): string {
   return Number.isInteger(speed) ? String(speed) : speed.toFixed(1);
 }
 
-/** Half or full of the walking speed already on the sheet. No extra rounding rule. */
-export function movementTravelSpeed(walkSpeed: number, level: 1 | 2): number {
-  return level === 1 ? walkSpeed / 2 : walkSpeed;
+/** Half at tier 1, full at tier 2+ of a movement mode family tied to walk speed. */
+export function movementTravelSpeed(walkSpeed: number, level: number): number {
+  return level <= 1 ? walkSpeed / 2 : walkSpeed;
 }
 
 type FamilyIds = readonly number[];
@@ -163,28 +170,81 @@ export function readWalkLevel(movementTypes: readonly string[]): number {
   return creatureWalkLevel(movementTypes);
 }
 
-function readSpeedMode(
+function readModeLevel(
   movementTypes: readonly string[],
   names: readonly string[],
-): 0 | 1 | 2 {
+  token: RegExp,
+): number {
   let level = 0;
   for (const name of movementTypes) {
     const index = names.indexOf(name);
     if (index >= 0) level = Math.max(level, index + 1);
+    const parsed = token.exec(name);
+    if (parsed) level = Math.max(level, Number(parsed[1]));
   }
-  return level === 0 ? 0 : level >= 2 ? 2 : 1;
+  return level;
 }
 
-export function readFlyLevel(movementTypes: readonly string[]): 0 | 1 | 2 {
-  return readSpeedMode(movementTypes, FLY_NAMES);
+function modeMovementToken(
+  prefix: string,
+  level: number,
+  names: readonly string[],
+): string | null {
+  if (level <= 0) return null;
+  return names[level - 1] ?? `${prefix}:${level}`;
 }
 
-export function readBurrowLevel(movementTypes: readonly string[]): 0 | 1 | 2 {
-  return readSpeedMode(movementTypes, BURROW_NAMES);
+function modeFamilyIdSet(
+  catalog: readonly CodexCreatureFeat[],
+  baseId: number,
+  knownIds: FamilyIds,
+): Set<string> {
+  const base = String(baseId);
+  const ids = new Set<string>(knownIds.map(idString));
+  for (const feat of catalog) {
+    const id = String(feat.id);
+    const featBase =
+      feat.base_feat_id == null || feat.base_feat_id === '' ? '' : String(feat.base_feat_id);
+    if (id === base || featBase === base) ids.add(id);
+  }
+  return ids;
 }
 
-export function readSwimLevel(movementTypes: readonly string[]): 0 | 1 | 2 {
-  return readSpeedMode(movementTypes, SWIM_NAMES);
+export function readFlyLevel(movementTypes: readonly string[]): number {
+  return readModeLevel(movementTypes, FLY_NAMES, FLY_TOKEN);
+}
+
+export function readBurrowLevel(movementTypes: readonly string[]): number {
+  return readModeLevel(movementTypes, BURROW_NAMES, BURROW_TOKEN);
+}
+
+export function readSwimLevel(movementTypes: readonly string[]): number {
+  return readModeLevel(movementTypes, SWIM_NAMES, SWIM_TOKEN);
+}
+
+export function swimLevelCap(catalog: readonly CodexCreatureFeat[]): number {
+  return familyCap(catalog, CREATURE_FEAT_IDS.SWIMMING, SWIM_IDS);
+}
+
+export function flyLevelCap(catalog: readonly CodexCreatureFeat[]): number {
+  return familyCap(catalog, CREATURE_FEAT_IDS.FLYING, FLY_IDS);
+}
+
+export function burrowLevelCap(catalog: readonly CodexCreatureFeat[]): number {
+  return familyCap(catalog, CREATURE_FEAT_IDS.BURROW, BURROW_IDS);
+}
+
+export function movementModeStepperLabel(
+  catalog: readonly CodexCreatureFeat[],
+  baseId: number,
+  level: number,
+  knownIds: FamilyIds,
+): string {
+  if (level <= 0) return '';
+  const id = featIdForLevel(catalog, baseId, level, knownIds);
+  const description = catalog.find((feat) => String(feat.id) === id)?.description?.trim();
+  if (description) return description;
+  return level === 1 ? '1/2' : 'Full';
 }
 
 function stripNames(movementTypes: readonly string[], names: Set<string>): string[] {
@@ -220,8 +280,6 @@ function withoutSpeedFamily(
 }
 
 const WALK_IDS = new Set<string>([...SPEEDY_IDS, ...SLOW_IDS].map(idString));
-const FLY_ID_SET = new Set<string>(FLY_IDS.map(idString));
-const BURROW_ID_SET = new Set<string>(BURROW_IDS.map(idString));
 
 export function movementAfterWalkLevel(
   creature: Pick<CreatureState, 'movementTypes' | 'feats'>,
@@ -252,27 +310,32 @@ export function movementAfterWalkLevel(
 
 function movementAfterMode(
   creature: Pick<CreatureState, 'movementTypes' | 'feats'>,
-  level: 0 | 1 | 2,
+  level: number,
   names: readonly string[],
   nameSet: Set<string>,
-  ids: Set<string>,
+  token: RegExp,
+  tokenPrefix: string,
   baseId: number,
   knownIds: FamilyIds,
   catalog: readonly CodexCreatureFeat[],
 ): Pick<CreatureState, 'movementTypes' | 'feats'> {
+  const cap = familyCap(catalog, baseId, knownIds);
+  const nextLevel = Math.max(0, Math.min(cap, level));
+  const familyIds = modeFamilyIdSet(catalog, baseId, knownIds);
   let movementTypes = stripNames(creature.movementTypes, nameSet);
-  let feats = withoutIds(creature.feats, ids);
-  if (level > 0) {
-    const name = names[level - 1] ?? names[0];
-    if (name) movementTypes = [...movementTypes, name];
-    feats = withFeat(feats, catalog, featIdForLevel(catalog, baseId, level, knownIds));
+  movementTypes = movementTypes.filter((name) => !token.test(name));
+  let feats = withoutIds(creature.feats, familyIds);
+  if (nextLevel > 0) {
+    const modeName = modeMovementToken(tokenPrefix, nextLevel, names);
+    if (modeName) movementTypes = [...movementTypes, modeName];
+    feats = withFeat(feats, catalog, featIdForLevel(catalog, baseId, nextLevel, knownIds));
   }
   return { movementTypes, feats };
 }
 
 export function movementAfterFlyLevel(
   creature: Pick<CreatureState, 'movementTypes' | 'feats'>,
-  level: 0 | 1 | 2,
+  level: number,
   catalog: readonly CodexCreatureFeat[],
 ): Pick<CreatureState, 'movementTypes' | 'feats'> {
   return movementAfterMode(
@@ -280,7 +343,8 @@ export function movementAfterFlyLevel(
     level,
     FLY_NAMES,
     new Set(FLY_NAMES),
-    FLY_ID_SET,
+    FLY_TOKEN,
+    'fly',
     CREATURE_FEAT_IDS.FLYING,
     FLY_IDS,
     catalog,
@@ -289,7 +353,7 @@ export function movementAfterFlyLevel(
 
 export function movementAfterBurrowLevel(
   creature: Pick<CreatureState, 'movementTypes' | 'feats'>,
-  level: 0 | 1 | 2,
+  level: number,
   catalog: readonly CodexCreatureFeat[],
 ): Pick<CreatureState, 'movementTypes' | 'feats'> {
   return movementAfterMode(
@@ -297,24 +361,30 @@ export function movementAfterBurrowLevel(
     level,
     BURROW_NAMES,
     new Set(BURROW_NAMES),
-    BURROW_ID_SET,
+    BURROW_TOKEN,
+    'burrow',
     CREATURE_FEAT_IDS.BURROW,
     BURROW_IDS,
     catalog,
   );
 }
 
-/** No swimming tier feat is in the codex yet. Half/full speeds are stored on movementTypes only. */
 export function movementAfterSwimLevel(
   creature: Pick<CreatureState, 'movementTypes' | 'feats'>,
-  level: 0 | 1 | 2,
+  level: number,
+  catalog: readonly CodexCreatureFeat[],
 ): Pick<CreatureState, 'movementTypes' | 'feats'> {
-  const swimNames = new Set<string>(SWIM_NAMES);
-  let movementTypes = stripNames(creature.movementTypes, swimNames);
-  if (level > 0) {
-    movementTypes = [...movementTypes, SWIM_NAMES[level - 1] ?? 'Swim Half'];
-  }
-  return { movementTypes, feats: creature.feats };
+  return movementAfterMode(
+    creature,
+    level,
+    SWIM_NAMES,
+    new Set(SWIM_NAMES),
+    SWIM_TOKEN,
+    'swim',
+    CREATURE_FEAT_IDS.SWIMMING,
+    SWIM_IDS,
+    catalog,
+  );
 }
 
 export function nextSpeedType(movementTypes: readonly string[]): 'fly' | 'swim' | null {
@@ -353,9 +423,17 @@ export function movementControlFeatIdsFromNames(
     ids.push(featIdForLevel(catalog, CREATURE_FEAT_IDS.SLOW, -walk, SLOW_IDS));
   }
   const fly = readFlyLevel(movementTypes);
-  if (fly > 0) ids.push(String(FLY_IDS[fly - 1]));
+  if (fly > 0) {
+    ids.push(featIdForLevel(catalog, CREATURE_FEAT_IDS.FLYING, fly, FLY_IDS));
+  }
+  const swim = readSwimLevel(movementTypes);
+  if (swim > 0) {
+    ids.push(featIdForLevel(catalog, CREATURE_FEAT_IDS.SWIMMING, swim, SWIM_IDS));
+  }
   const burrow = readBurrowLevel(movementTypes);
-  if (burrow > 0) ids.push(String(BURROW_IDS[burrow - 1]));
+  if (burrow > 0) {
+    ids.push(featIdForLevel(catalog, CREATURE_FEAT_IDS.BURROW, burrow, BURROW_IDS));
+  }
   return ids;
 }
 
@@ -401,21 +479,21 @@ export function movementTravelLines(
 ): MovementSpeedLine[] {
   const lines: MovementSpeedLine[] = [];
   const fly = readFlyLevel(movementTypes);
-  if (fly === 1 || fly === 2) {
+  if (fly > 0) {
     lines.push({
       label: 'Flying Speed',
       value: formatMovementSpeed(movementTravelSpeed(walkSpeed, fly)),
     });
   }
   const swim = readSwimLevel(movementTypes);
-  if (swim === 1 || swim === 2) {
+  if (swim > 0) {
     lines.push({
       label: 'Swimming Speed',
       value: formatMovementSpeed(movementTravelSpeed(walkSpeed, swim)),
     });
   }
   const burrow = readBurrowLevel(movementTypes);
-  if (burrow === 1 || burrow === 2) {
+  if (burrow > 0) {
     lines.push({
       label: 'Burrow Speed',
       value: formatMovementSpeed(movementTravelSpeed(walkSpeed, burrow)),

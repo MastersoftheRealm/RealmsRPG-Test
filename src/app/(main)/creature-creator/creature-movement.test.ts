@@ -14,7 +14,9 @@ import {
   movementToggleLines,
   movementTravelLines,
   nextSpeedType,
+  readSwimLevel,
   readWalkLevel,
+  swimLevelCap,
   walkLevelCap,
 } from './creature-movement';
 
@@ -44,6 +46,35 @@ const catalog = [
     description: '',
     points: 2,
     feat_lvl: 1,
+    mechanic: true,
+    category: 'Movement',
+  },
+  {
+    id: String(CREATURE_FEAT_IDS.FLYING_II),
+    name: 'Fly',
+    description: 'Fly at full regular speed.',
+    points: 3,
+    feat_lvl: 2,
+    base_feat_id: String(CREATURE_FEAT_IDS.FLYING),
+    mechanic: true,
+    category: 'Movement',
+  },
+  {
+    id: String(CREATURE_FEAT_IDS.SWIMMING),
+    name: 'Swimming',
+    description: 'Swim at half regular speed.',
+    points: 0.5,
+    feat_lvl: 1,
+    mechanic: true,
+    category: 'Movement',
+  },
+  {
+    id: String(CREATURE_FEAT_IDS.SWIMMING_II),
+    name: 'Swimming II',
+    description: 'Swim at full regular speed.',
+    points: 1,
+    feat_lvl: 2,
+    base_feat_id: String(CREATURE_FEAT_IDS.SWIMMING),
     mechanic: true,
     category: 'Movement',
   },
@@ -78,8 +109,9 @@ describe('creature movement section helpers', () => {
     expect(nextSpeedType([])).toBe('fly');
     const withFly = movementAfterFlyLevel(initialState, 1, catalog);
     expect(nextSpeedType(withFly.movementTypes)).toBe('swim');
-    const withSwim = movementAfterSwimLevel(withFly, 1);
+    const withSwim = movementAfterSwimLevel(withFly, 1, catalog);
     expect(withSwim.movementTypes).toContain('Swim Half');
+    expect(withSwim.feats.map((f) => f.id)).toContain(String(CREATURE_FEAT_IDS.SWIMMING));
     expect(nextSpeedType(withSwim.movementTypes)).toBeNull();
   });
 
@@ -206,10 +238,37 @@ describe('creature movement section helpers', () => {
     ).toBe(2);
   });
 
+  it('clamps swimming at the highest catalog level and charges the matching row', () => {
+    expect(swimLevelCap(catalog)).toBe(2);
+    const stepped = movementAfterSwimLevel(initialState, 2, catalog);
+    expect(readSwimLevel(stepped.movementTypes)).toBe(2);
+    expect(stepped.feats.map((feat) => feat.id)).toEqual([String(CREATURE_FEAT_IDS.SWIMMING_II)]);
+    const capped = movementAfterSwimLevel(stepped, 99, catalog);
+    expect(readSwimLevel(capped.movementTypes)).toBe(2);
+    expect(capped.feats.map((feat) => feat.id)).toEqual([String(CREATURE_FEAT_IDS.SWIMMING_II)]);
+    expect(movementControlFeatIdsFromNames(capped.movementTypes, catalog)).toEqual([
+      String(CREATURE_FEAT_IDS.SWIMMING_II),
+    ]);
+    expect(
+      movementSectionPointTotal(
+        { ...initialState, movementTypes: capped.movementTypes, feats: capped.feats },
+        catalog,
+      ),
+    ).toBe(1);
+  });
+
+  it('does not bind a swim level above the last catalog row', () => {
+    const oneTier = catalog.filter((feat) => String(feat.id) !== String(CREATURE_FEAT_IDS.SWIMMING_II));
+    expect(swimLevelCap(oneTier)).toBe(1);
+    const atCap = movementAfterSwimLevel(initialState, 2, oneTier);
+    expect(readSwimLevel(atCap.movementTypes)).toBe(1);
+    expect(atCap.feats.map((feat) => feat.id)).toEqual([String(CREATURE_FEAT_IDS.SWIMMING)]);
+  });
+
   it('publishes fly, swim, and burrow speeds, and toggle feats by their saved text', () => {
     const withFly = movementAfterFlyLevel(initialState, 2, catalog);
     const withBurrow = movementAfterBurrowLevel(withFly, 2, catalog);
-    const types = movementAfterSwimLevel(withBurrow, 1).movementTypes;
+    const types = movementAfterSwimLevel(withBurrow, 1, catalog).movementTypes;
     expect(movementTravelLines(types, 10)).toEqual([
       { label: 'Flying Speed', value: '10' },
       { label: 'Swimming Speed', value: '5' },
