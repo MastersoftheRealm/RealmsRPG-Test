@@ -14,6 +14,7 @@ import {
   type ItemStoredCostSums,
 } from '@/lib/calculators/item-calc';
 import { applyArmamentFilters, type ArmamentFilterState } from '@/lib/library/armament-filters';
+import { normalizeArmamentKind } from '@/lib/library/official-item-list';
 import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
 import type { CodexEquipmentItem } from '@/types/codex';
 import { formatListCellLabel } from '@/lib/utils';
@@ -47,14 +48,6 @@ export function equipmentCurrency(item: {
   return typeof value === 'number' && !Number.isNaN(value) ? value : 0;
 }
 
-/** Weapon, armor, and shield codex rows (not adventuring gear). */
-export function isCodexArmamentType(type: string | undefined): boolean {
-  const t = String(type ?? '')
-    .toLowerCase()
-    .trim();
-  return t === 'weapon' || t === 'armor' || t === 'shield';
-}
-
 type CodexEquipmentPricingRow = {
   type?: string | undefined;
   currency?: number | undefined;
@@ -77,7 +70,7 @@ export function codexEquipmentDisplayCurrency(
   item: CodexEquipmentPricingRow,
   propertiesDb: ItemPropertyTpRow[] = [],
 ): number {
-  if (!isCodexArmamentType(item.type)) {
+  if (!normalizeArmamentKind(item.type)) {
     return equipmentCurrency(item);
   }
   const pricing = resolveItemMarketPricing(
@@ -85,7 +78,7 @@ export function codexEquipmentDisplayCurrency(
     propertiesDb,
     item.costs,
   );
-  if (pricing.currencyCost > 0) {
+  if (pricing.resolvedFromProperties && pricing.currencyCost > 0) {
     return pricing.currencyCost;
   }
   return equipmentCurrency(item);
@@ -95,7 +88,7 @@ function codexEquipmentDisplayRarity(
   item: CodexEquipmentPricingRow & { rarity?: string | undefined },
   propertiesDb: ItemPropertyTpRow[] = [],
 ): string | undefined {
-  if (!isCodexArmamentType(item.type) || propertiesDb.length === 0) {
+  if (!normalizeArmamentKind(item.type) || propertiesDb.length === 0) {
     return item.rarity;
   }
   const pricing = resolveItemMarketPricing(
@@ -155,7 +148,7 @@ export function buildCodexEquipmentDetailSections(
   item: CodexEquipmentItem,
   propertiesDb: ItemPropertyTpRow[] = [],
 ): MetadataDetailSection[] {
-  const payloads: ItemPropertyPayload[] = (item.properties ?? []).map((name) => ({ name }));
+  const payloads: ItemPropertyPayload[] = codexArmamentPropertyPayloads(item.properties);
   const costs = calculateItemCosts(payloads, propertiesDb);
   const tp = Math.round(costs.totalTP);
   const propertyChips = namedPropertyDescriptorChips(item.properties, propertiesDb);

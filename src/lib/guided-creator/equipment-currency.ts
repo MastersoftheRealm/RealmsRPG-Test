@@ -11,7 +11,8 @@ import {
   type ItemPropertyTpRow,
 } from '@/lib/calculators/item-calc';
 import { CHARACTER_STARTING_CURRENCY } from '@/lib/game/constants';
-import { codexEquipmentDisplayCurrency, isCodexArmamentType } from '@/lib/codex/equipment-list';
+import { codexEquipmentDisplayCurrency } from '@/lib/codex/equipment-list';
+import { normalizeArmamentKind } from '@/lib/library/official-item-list';
 import type { WeaponPropertyRef } from '@/lib/game/weapon-attack-ability';
 
 /** Max unit cost for Equipment items in guided Layer 2 shop. */
@@ -53,7 +54,7 @@ export function resolveCatalogRowUnitCost(
   itemProperties: ItemPropertyTpRow[] = [],
 ): number {
   if (!row) return 0;
-  if (isCodexArmamentType(row.type) && itemProperties.length > 0) {
+  if (normalizeArmamentKind(row.type) && itemProperties.length > 0) {
     return codexEquipmentDisplayCurrency(row, itemProperties);
   }
   return resolveItemUnitCost(
@@ -76,7 +77,7 @@ export function resolveItemUnitCost(
   item: CurrencyLineItem & { type?: string | undefined },
   itemProperties: ItemPropertyTpRow[] = [],
 ): number {
-  if (isCodexArmamentType(item.type) && itemProperties.length > 0) {
+  if (normalizeArmamentKind(item.type) && itemProperties.length > 0) {
     const calculated = codexEquipmentDisplayCurrency(item, itemProperties);
     if (calculated > 0) return calculated;
   }

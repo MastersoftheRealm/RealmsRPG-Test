@@ -17,7 +17,7 @@ import { resolveItemTrainingPoints } from '@/lib/guided-creator/loadout-tp';
 import { formatWeaponDamageLine } from '@/lib/guided-creator/equipment-phase-stats';
 import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import { findByNormalizedId, normalizeId } from '@/lib/utils';
-import { codexEquipmentDisplayCurrency, isCodexArmamentType } from '@/lib/codex/equipment-list';
+import { codexEquipmentDisplayCurrency } from '@/lib/codex/equipment-list';
 
 function readTaxonomyCategory(item: unknown): string | undefined {
   if (!item || typeof item !== 'object') return undefined;
@@ -61,18 +61,26 @@ function rowFromCodex(
   item: CodexEquipmentItem,
   itemProperties: ItemPropertyTpRow[],
 ): EligibleEquipmentRow {
-  const props = (item.properties ?? []).map((name) => ({ name }));
+  const props = (item.properties ?? []).map((p) => (typeof p === 'string' ? { name: p } : p));
   const tp = resolveItemTrainingPoints(String(item.id), [], [item], itemProperties) ?? 0;
-  const displayCurrency = codexEquipmentDisplayCurrency(item, itemProperties);
-  const pricing = isCodexArmamentType(item.type)
-    ? resolveItemMarketPricing(props, itemProperties)
-    : null;
+  const displayCurrency = codexEquipmentDisplayCurrency(
+    {
+      type: item.type,
+      currency: item.currency,
+      gold_cost: item.gold_cost,
+      properties: props,
+      costs: item.costs,
+    },
+    itemProperties,
+  );
+  const pricing = resolveItemMarketPricing(props, itemProperties, item.costs);
   return {
     id: String(item.id),
     name: item.name,
     type: item.type,
     itemCategory: readTaxonomyCategory(item),
-    rarity: pricing?.rarity || item.rarity || 'common',
+    rarity:
+      pricing.resolvedFromProperties && pricing.rarity ? pricing.rarity : (item.rarity ?? 'common'),
     properties: props,
     gold_cost: displayCurrency,
     currency: displayCurrency,
@@ -150,7 +158,7 @@ export function armorStatsForRef(
   if (codex) {
     const damageReduction = resolveArmorDamageReduction({
       armor_value: codex.armor_value,
-      properties: (codex.properties ?? []).map((name) => ({ name })),
+      properties: (codex.properties ?? []).map((p) => (typeof p === 'string' ? { name: p } : p)),
     });
     if (damageReduction > 0) {
       return { damageReduction, agilityPenalty: null };

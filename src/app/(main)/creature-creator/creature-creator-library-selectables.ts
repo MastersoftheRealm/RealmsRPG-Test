@@ -64,7 +64,9 @@ export type CreatureCodexEquipmentRow = {
   rarity?: string | undefined;
   currency?: number | undefined;
   gold_cost?: number | undefined;
-  properties?: string[] | undefined;
+  properties?:
+    | Array<string | import('@/lib/calculators/item-calc').ItemPropertyPayload>
+    | undefined;
   image_id?: string | null | undefined;
   image_url?: string | null | undefined;
 };
@@ -92,7 +94,7 @@ export function codexEquipmentAsLibraryItem(
     description: row.description,
     type: 'equipment',
     category: row.category,
-    properties: (row.properties ?? []).map((name) => ({ name })),
+    properties: (row.properties ?? []).map((p) => (typeof p === 'string' ? { name: p } : p)),
     rarity: row.rarity,
     image_id: row.image_id ?? null,
     image_url: row.image_url ?? null,

@@ -217,7 +217,7 @@ function drForGuidedInventoryRow(row: { id: string }, ctx: BuildGuidedCharacterC
   if (codex) {
     return resolveArmorDamageReduction({
       armorValue: codex.armor_value,
-      properties: codex.properties?.map((name) => ({ name })),
+      properties: codex.properties?.map((p) => (typeof p === 'string' ? { name: p } : p)),
     });
   }
   return 0;

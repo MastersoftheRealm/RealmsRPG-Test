@@ -10,6 +10,8 @@ import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 import { codexSourcesOrCore } from '@/lib/codex/sources';
 import { mapCodexBaseSkillToId } from '@/lib/game/character-legality';
 import { parseCatalogListing } from '@/lib/library/catalog-listing';
+import { normalizeArmamentKind } from '@/lib/library/official-item-list';
+import type { ItemPropertyPayload, ItemStoredCostSums } from '@/lib/calculators/item-calc';
 import type {
   CodexCreatureFeat,
   CodexEquipmentItem,
@@ -233,17 +235,74 @@ export function mapCodexProperty(r: CodexDbRow): CodexItemProperty {
   };
 }
 
+function mapCodexEquipmentProperties(raw: unknown): CodexEquipmentItem['properties'] | undefined {
+  if (raw == null) return undefined;
+  if (Array.isArray(raw)) {
+    const out: ItemPropertyPayload[] = [];
+    for (const entry of raw) {
+      if (typeof entry === 'string' && entry.trim()) {
+        out.push({ name: entry.trim() });
+        continue;
+      }
+      if (entry && typeof entry === 'object') {
+        const o = entry as Record<string, unknown>;
+        const name = typeof o.name === 'string' ? o.name.trim() : '';
+        if (!name) continue;
+        const payload: ItemPropertyPayload = { name };
+        const idRaw = o.id;
+        if (typeof idRaw === 'number' && !Number.isNaN(idRaw)) payload.id = idRaw;
+        else if (typeof idRaw === 'string') {
+          const id = parseInt(idRaw, 10);
+          if (!Number.isNaN(id)) payload.id = id;
+        }
+        if (o.op_1_lvl != null && !Number.isNaN(Number(o.op_1_lvl))) {
+          payload.op_1_lvl = Number(o.op_1_lvl);
+        }
+        out.push(payload);
+      }
+    }
+    return out.length > 0 ? out : undefined;
+  }
+  const names = toStrArray(raw);
+  return names.length > 0 ? names.map((name) => ({ name })) : undefined;
+}
+
+function mapCodexEquipmentType(r: CodexDbRow): CodexEquipmentItem['type'] {
+  const kind = normalizeArmamentKind(typeof r.type === 'string' ? r.type : undefined);
+  if (kind) return kind;
+  return 'equipment';
+}
+
+function mapCodexEquipmentCosts(r: CodexDbRow): ItemStoredCostSums | undefined {
+  const raw = r.costs;
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return undefined;
+  const o = raw as Record<string, unknown>;
+  const totalCurrency = toNum(o.totalCurrency ?? o.total_currency);
+  const totalIP = toNum(o.totalIP ?? o.total_ip);
+  const totalTP = toNum(o.totalTP ?? o.total_tp);
+  if (totalCurrency == null && totalIP == null && totalTP == null) return undefined;
+  return {
+    ...(totalCurrency != null ? { totalCurrency } : {}),
+    ...(totalIP != null ? { totalIP } : {}),
+    ...(totalTP != null ? { totalTP } : {}),
+  };
+}
+
 export function mapCodexEquipment(r: CodexDbRow): CodexEquipmentItem {
   const cost = toNum(r.currency) ?? 0;
+  const properties = mapCodexEquipmentProperties(r.properties);
+  const costs = mapCodexEquipmentCosts(r);
   return {
     id: asString(r.id),
     name: asString(r.name),
-    type: 'equipment',
+    type: mapCodexEquipmentType(r),
     category: optionalString(r.category),
     sources: mapCodexSources(r.sources, r.source),
     description: asString(r.description),
     gold_cost: cost,
     currency: cost,
+    properties,
+    costs,
     rarity: optionalString(r.rarity),
     image_url: optionalImage(r.image_url),
     image_id: optionalImage(r.image_id),

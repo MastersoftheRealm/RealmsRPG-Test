@@ -11,6 +11,10 @@ import type { ItemPropertyTpRow } from '@/lib/calculators/item-calc';
 import { CODEX_DESC_MAX_LENGTH } from '@/lib/codex-columnar-keys';
 import { selectPowerParts } from '@/lib/codex/part-type';
 import {
+  indexOfficialArmamentsForCodexEquipmentMerge,
+  mergeOfficialArmamentIntoCodexEquipmentRow,
+} from '@/lib/codex/equipment-armament-merge';
+import {
   mapCodexEquipment,
   mapCodexPart,
   mapCodexProperty,
@@ -421,8 +425,16 @@ export async function buildSaveArchetypePathValidationContext(
 
   const officialItems = officialItemsRows as unknown as LibraryItem[];
   const officialPowers = officialPowersRows as unknown as LibraryPower[];
+  const officialArmamentById = indexOfficialArmamentsForCodexEquipmentMerge(
+    officialItemsRows as Record<string, unknown>[],
+  );
   const codexEquipment = (equipmentResult.data ?? []).map((row) =>
-    mapCodexEquipment(row as Record<string, unknown>),
+    mapCodexEquipment(
+      mergeOfficialArmamentIntoCodexEquipmentRow(
+        row as Record<string, unknown>,
+        officialArmamentById,
+      ),
+    ),
   );
   const itemProperties = (propertiesResult.data ?? []).map((row) =>
     mapCodexProperty(row as Record<string, unknown>),

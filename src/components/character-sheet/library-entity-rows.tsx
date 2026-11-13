@@ -94,8 +94,8 @@ import {
   buildEquipmentCatalogFactColumns,
   codexEquipmentDisplayCurrency,
   equipmentCurrency,
-  isCodexArmamentType,
 } from '@/lib/codex/equipment-list';
+import { normalizeArmamentKind } from '@/lib/library/official-item-list';
 import type { GlrSurfaceId } from '@/lib/glr';
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import {
@@ -195,15 +195,13 @@ function sheetItemCostFacts(
       gold_cost?: number | undefined;
       properties?: ItemPropertyPayload[] | undefined;
     };
-    const currency = isCodexArmamentType(typed.type)
+    const currency = normalizeArmamentKind(typed.type)
       ? codexEquipmentDisplayCurrency(
           {
             type: typed.type,
             currency: typed.currency,
             gold_cost: typed.gold_cost,
-            properties: typed.properties?.map((p) =>
-              typeof p === 'string' ? p : String(p.name ?? ''),
-            ),
+            properties: typed.properties,
             costs: storedSums,
           },
           ctx.itemPropertiesDb as ItemPropertyTpRow[],

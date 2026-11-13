@@ -6,6 +6,7 @@
  * Archetype path join stays in the route.
  */
 
+import type { ItemPropertyPayload, ItemStoredCostSums } from '@/lib/calculators/item-calc';
 import type { AllowUndefinedOptionals } from '@/lib/utils/exact-optional';
 import type { Archetype, PathGuidanceGroup } from './archetype';
 
@@ -191,7 +192,7 @@ export type CodexTrait = AllowUndefinedOptionals<CodexTraitFields>;
 interface CodexEquipmentItemFields extends CodexRowVersion {
   id: string;
   name: string;
-  type: 'weapon' | 'armor' | 'equipment';
+  type: 'weapon' | 'armor' | 'shield' | 'equipment';
   subtype?: string | undefined;
   category?: string | undefined;
   sources?: string[] | undefined;
@@ -200,7 +201,8 @@ interface CodexEquipmentItemFields extends CodexRowVersion {
   armor_value?: number | undefined;
   gold_cost: number;
   currency: number;
-  properties?: string[] | undefined;
+  properties?: Array<string | ItemPropertyPayload> | undefined;
+  costs?: ItemStoredCostSums | undefined;
   rarity?: string | undefined;
   weight?: number | undefined;
   image_id?: string | null | undefined;
