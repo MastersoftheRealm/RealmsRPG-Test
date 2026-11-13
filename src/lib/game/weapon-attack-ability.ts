@@ -1,10 +1,14 @@
 /**
  * Weapon attack ability resolution — single source for sheet + guided equipment.
- * @see GAME_RULES.md — Melee/Thrown → Strength, Ranged → Acuity, Finesse → Agility,
- * Heavy ranged → Strength
+ * @see GAME_RULES.md — attack ability order in `getWeaponAttackAbility` (sheet + creator).
  */
 
-import { resolveWeaponRangeDisplay, type ItemPropertyPayload } from '@/lib/calculators/item-calc';
+import {
+  formatWeaponRangeConfig,
+  resolveWeaponRangeDisplay,
+  weaponRangeSpaceLadder,
+  type ItemPropertyPayload,
+} from '@/lib/calculators/item-calc';
 import type { WeaponRangeType } from '@/lib/game/creator-constants';
 import { PROPERTY_IDS } from '@/lib/id-constants';
 import type { Abilities, AbilityName } from '@/types';
@@ -149,16 +153,29 @@ export function clampWeaponAbilityUtilized(
 }
 
 /**
- * Creator Ability utilized from saved mechanic properties (not a stored ability string).
- * Finesse → Agility; Heavy on ranged → Strength; else the range-type default.
+ * Range override for creator when saved properties are absent; matches sheet fallback
+ * via `resolveWeaponRangeDisplay` without duplicating attack-ability rules.
+ */
+function creatorWeaponRangeOverride(
+  properties: WeaponPropertyRef[] | undefined,
+  rangeType: WeaponRangeType,
+): string | null {
+  if ((properties ?? []).length > 0) return null;
+  if (rangeType === 'melee' || rangeType === 'thrown' || rangeType === 'reach') {
+    return formatWeaponRangeConfig({ type: 'melee', spaces: 0 });
+  }
+  const spaces = weaponRangeSpaceLadder(rangeType)[0] ?? 0;
+  return formatWeaponRangeConfig({ type: rangeType, spaces });
+}
+
+/**
+ * Creator Ability utilized — same resolution as the sheet (`getWeaponAttackAbility`).
  */
 export function deriveWeaponAbilityUtilized(
   properties: WeaponPropertyRef[] | undefined,
   rangeType: WeaponRangeType,
 ): WeaponAttackAbility {
-  if (hasFinesseProperty(properties)) return 'agility';
-  if (rangeType === 'ranged' && hasHeavyProperty(properties)) return 'strength';
-  return defaultWeaponAbilityUtilized(rangeType);
+  return getWeaponAttackAbility(properties, creatorWeaponRangeOverride(properties, rangeType));
 }
 
 /**

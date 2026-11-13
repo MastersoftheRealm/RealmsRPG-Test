@@ -98,6 +98,21 @@ describe('weapon-attack-ability', () => {
       expect(deriveWeaponAbilityUtilized(heavy, 'melee')).toBe('strength');
     });
 
+    it('matches getWeaponAttackAbility when thrown and range share range type ranged', () => {
+      const props = [
+        { id: PROPERTY_IDS.THROWN, name: 'Thrown' },
+        { id: PROPERTY_IDS.RANGE, name: 'Range', op_1_lvl: 1 },
+      ];
+      const sheetAbility = getWeaponAttackAbility(props);
+      expect(sheetAbility).toBe('strength');
+      expect(deriveWeaponAbilityUtilized(props, 'ranged')).toBe(sheetAbility);
+    });
+
+    it('matches getWeaponAttackAbility for reach weapons', () => {
+      const props = [{ id: PROPERTY_IDS.REACH, name: 'Reach', op_1_lvl: 1 }];
+      expect(deriveWeaponAbilityUtilized(props, 'reach')).toBe(getWeaponAttackAbility(props));
+    });
+
     it('lists acuity + strength + agility for ranged and strength + agility otherwise', () => {
       expect(weaponAbilityUtilizedOptions('ranged').map((o) => o.value)).toEqual([
         'acuity',
