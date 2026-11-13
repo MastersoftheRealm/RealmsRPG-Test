@@ -12,6 +12,7 @@ import {
 } from '@/lib/calculators/item-calc';
 import { CHARACTER_STARTING_CURRENCY } from '@/lib/game/constants';
 import { codexEquipmentDisplayCurrency, isCodexArmamentType } from '@/lib/codex/equipment-list';
+import type { WeaponPropertyRef } from '@/lib/game/weapon-attack-ability';
 
 /** Max unit cost for Equipment items in guided Layer 2 shop. */
 export const GUIDED_GEAR_L2_MAX_UNIT_COST = 50;
@@ -39,8 +40,11 @@ export interface CurrencyLineItem {
 /** Pre-derived catalog row cost fields (avoids WeaponPropertyRef vs ItemPropertyPayload clash). */
 export type CatalogRowCostFields = Pick<
   CurrencyLineItem,
-  'gold_cost' | 'currency' | 'cost' | 'costs' | 'properties'
-> & { type?: string | undefined };
+  'gold_cost' | 'currency' | 'cost' | 'costs'
+> & {
+  type?: string | undefined;
+  properties?: readonly WeaponPropertyRef[] | undefined;
+};
 
 export type RefCostLookupItem = { id?: string | number | undefined } & CatalogRowCostFields;
 
@@ -52,7 +56,10 @@ export function resolveCatalogRowUnitCost(
   if (isCodexArmamentType(row.type) && itemProperties.length > 0) {
     return codexEquipmentDisplayCurrency(row, itemProperties);
   }
-  return resolveItemUnitCost(row, itemProperties);
+  return resolveItemUnitCost(
+    { ...row, properties: row.properties as ItemPropertyPayload[] | undefined },
+    itemProperties,
+  );
 }
 
 /** Starting currency by level (matches equipment-step). */
@@ -99,13 +106,17 @@ export function computeRemainingCurrency(starting: number, spent: number): numbe
 /** Resolve unit cost for a path item ref from official + codex libraries. */
 export function resolveRefUnitCost(
   ref: { id: string },
-  officialItems: Array<RefCostLookupItem & Pick<CurrencyLineItem, 'properties'>>,
+  officialItems: RefCostLookupItem[],
   codexEquipment: RefCostLookupItem[],
   itemProperties: ItemPropertyTpRow[] = [],
 ): number {
   const key = String(ref.id).trim().toLowerCase();
   const official = officialItems.find((i) => String(i.id).trim().toLowerCase() === key);
-  if (official) return resolveItemUnitCost(official, itemProperties);
+  if (official)
+    return resolveItemUnitCost(
+      { ...official, properties: official.properties as ItemPropertyPayload[] | undefined },
+      itemProperties,
+    );
   const codex = codexEquipment.find((i) => String(i.id).trim().toLowerCase() === key);
   if (codex) return resolveCatalogRowUnitCost(codex, itemProperties);
   return 0;
