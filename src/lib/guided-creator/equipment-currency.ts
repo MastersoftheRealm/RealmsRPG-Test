@@ -11,6 +11,7 @@ import {
   type ItemPropertyTpRow,
 } from '@/lib/calculators/item-calc';
 import { CHARACTER_STARTING_CURRENCY } from '@/lib/game/constants';
+import { codexEquipmentDisplayCurrency, isCodexArmamentType } from '@/lib/codex/equipment-list';
 
 /** Max unit cost for Equipment items in guided Layer 2 shop. */
 export const GUIDED_GEAR_L2_MAX_UNIT_COST = 50;
@@ -38,14 +39,20 @@ export interface CurrencyLineItem {
 /** Pre-derived catalog row cost fields (avoids WeaponPropertyRef vs ItemPropertyPayload clash). */
 export type CatalogRowCostFields = Pick<
   CurrencyLineItem,
-  'gold_cost' | 'currency' | 'cost' | 'costs'
->;
+  'gold_cost' | 'currency' | 'cost' | 'costs' | 'properties'
+> & { type?: string | undefined };
 
 export type RefCostLookupItem = { id?: string | number | undefined } & CatalogRowCostFields;
 
-export function resolveCatalogRowUnitCost(row: CatalogRowCostFields | null | undefined): number {
+export function resolveCatalogRowUnitCost(
+  row: CatalogRowCostFields | null | undefined,
+  itemProperties: ItemPropertyTpRow[] = [],
+): number {
   if (!row) return 0;
-  return resolveItemUnitCost(row);
+  if (isCodexArmamentType(row.type) && itemProperties.length > 0) {
+    return codexEquipmentDisplayCurrency(row, itemProperties);
+  }
+  return resolveItemUnitCost(row, itemProperties);
 }
 
 /** Starting currency by level (matches equipment-step). */
@@ -59,9 +66,13 @@ export function computeStartingCurrency(level = 1): number {
  * Prefer already-derived display fields; otherwise convert property C+IP like Library GLR.
  */
 export function resolveItemUnitCost(
-  item: CurrencyLineItem,
+  item: CurrencyLineItem & { type?: string | undefined },
   itemProperties: ItemPropertyTpRow[] = [],
 ): number {
+  if (isCodexArmamentType(item.type) && itemProperties.length > 0) {
+    const calculated = codexEquipmentDisplayCurrency(item, itemProperties);
+    if (calculated > 0) return calculated;
+  }
   const explicit = item.gold_cost ?? item.currency ?? item.cost;
   if (explicit != null && Number.isFinite(Number(explicit))) {
     return Number(explicit) || 0;
@@ -96,7 +107,7 @@ export function resolveRefUnitCost(
   const official = officialItems.find((i) => String(i.id).trim().toLowerCase() === key);
   if (official) return resolveItemUnitCost(official, itemProperties);
   const codex = codexEquipment.find((i) => String(i.id).trim().toLowerCase() === key);
-  if (codex) return resolveCatalogRowUnitCost(codex);
+  if (codex) return resolveCatalogRowUnitCost(codex, itemProperties);
   return 0;
 }
 

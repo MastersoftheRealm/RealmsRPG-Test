@@ -17,6 +17,7 @@ import { resolveItemTrainingPoints } from '@/lib/guided-creator/loadout-tp';
 import { formatWeaponDamageLine } from '@/lib/guided-creator/equipment-phase-stats';
 import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import { findByNormalizedId, normalizeId } from '@/lib/utils';
+import { codexEquipmentDisplayCurrency, isCodexArmamentType } from '@/lib/codex/equipment-list';
 
 function readTaxonomyCategory(item: unknown): string | undefined {
   if (!item || typeof item !== 'object') return undefined;
@@ -62,15 +63,19 @@ function rowFromCodex(
 ): EligibleEquipmentRow {
   const props = (item.properties ?? []).map((name) => ({ name }));
   const tp = resolveItemTrainingPoints(String(item.id), [], [item], itemProperties) ?? 0;
+  const displayCurrency = codexEquipmentDisplayCurrency(item, itemProperties);
+  const pricing = isCodexArmamentType(item.type)
+    ? resolveItemMarketPricing(props, itemProperties)
+    : null;
   return {
     id: String(item.id),
     name: item.name,
     type: item.type,
     itemCategory: readTaxonomyCategory(item),
-    rarity: item.rarity ?? 'common',
+    rarity: pricing?.rarity || item.rarity || 'common',
     properties: props,
-    gold_cost: item.gold_cost ?? item.currency,
-    currency: item.currency,
+    gold_cost: displayCurrency,
+    currency: displayCurrency,
     trainingPoints: tp,
     range: null,
   };

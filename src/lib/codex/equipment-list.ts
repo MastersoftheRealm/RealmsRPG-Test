@@ -8,8 +8,10 @@ import { glrSurfaceDetailSections, type MetadataDetailSection } from '@/lib/chip
 import { namedPropertyDescriptorChips } from '@/lib/detail-option/compact-facts';
 import {
   calculateItemCosts,
+  resolveItemMarketPricing,
   type ItemPropertyPayload,
   type ItemPropertyTpRow,
+  type ItemStoredCostSums,
 } from '@/lib/calculators/item-calc';
 import { applyArmamentFilters, type ArmamentFilterState } from '@/lib/library/armament-filters';
 import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
@@ -45,6 +47,65 @@ export function equipmentCurrency(item: {
   return typeof value === 'number' && !Number.isNaN(value) ? value : 0;
 }
 
+/** Weapon, armor, and shield codex rows (not adventuring gear). */
+export function isCodexArmamentType(type: string | undefined): boolean {
+  const t = String(type ?? '')
+    .toLowerCase()
+    .trim();
+  return t === 'weapon' || t === 'armor' || t === 'shield';
+}
+
+type CodexEquipmentPricingRow = {
+  type?: string | undefined;
+  currency?: number | undefined;
+  gold_cost?: number | undefined;
+  properties?: readonly (string | ItemPropertyPayload)[] | undefined;
+  costs?: ItemStoredCostSums | undefined;
+};
+
+function codexArmamentPropertyPayloads(
+  properties: CodexEquipmentPricingRow['properties'],
+): ItemPropertyPayload[] {
+  return (properties ?? []).map((p) => (typeof p === 'string' ? { name: p } : p));
+}
+
+/**
+ * Codex browse / guided display currency: armaments use item-calc market price;
+ * gear bags keep the stored catalog column (crafting picker still uses `equipmentCurrency`).
+ */
+export function codexEquipmentDisplayCurrency(
+  item: CodexEquipmentPricingRow,
+  propertiesDb: ItemPropertyTpRow[] = [],
+): number {
+  if (!isCodexArmamentType(item.type)) {
+    return equipmentCurrency(item);
+  }
+  const pricing = resolveItemMarketPricing(
+    codexArmamentPropertyPayloads(item.properties),
+    propertiesDb,
+    item.costs,
+  );
+  if (pricing.currencyCost > 0) {
+    return pricing.currencyCost;
+  }
+  return equipmentCurrency(item);
+}
+
+function codexEquipmentDisplayRarity(
+  item: CodexEquipmentPricingRow & { rarity?: string | undefined },
+  propertiesDb: ItemPropertyTpRow[] = [],
+): string | undefined {
+  if (!isCodexArmamentType(item.type) || propertiesDb.length === 0) {
+    return item.rarity;
+  }
+  const pricing = resolveItemMarketPricing(
+    codexArmamentPropertyPayloads(item.properties),
+    propertiesDb,
+    item.costs,
+  );
+  return pricing.rarity || item.rarity;
+}
+
 /** Persist catalog Currency onto sheet equipment — never property C sum (TASK-873). */
 export function persistEquipmentCost(item: {
   currency?: number | undefined;
@@ -75,8 +136,19 @@ export function buildEquipmentCatalogFactColumns(item: {
   ];
 }
 
-export function buildCodexEquipmentColumns(item: CodexEquipmentItem): ColumnValue[] {
-  return buildEquipmentCatalogFactColumns(item);
+export function buildCodexEquipmentColumns(
+  item: CodexEquipmentItem,
+  propertiesDb: ItemPropertyTpRow[] = [],
+): ColumnValue[] {
+  const currency = codexEquipmentDisplayCurrency(item, propertiesDb);
+  const rarity =
+    formatListCellLabel(codexEquipmentDisplayRarity(item, propertiesDb)) ||
+    formatListCellLabel(item.rarity);
+  return [
+    { key: 'category', value: formatListCellLabel(item.category), align: 'center' },
+    { key: 'currency', value: currency, align: 'center' },
+    { key: 'rarity', value: rarity, align: 'center' },
+  ];
 }
 
 export function buildCodexEquipmentDetailSections(
@@ -121,6 +193,7 @@ export function filterCodexEquipment<T extends CodexEquipmentItem>(
   armamentFilters: ArmamentFilterState,
   characterContext: ArmamentCharacterContext | null,
   pathRecommendedIds?: ReadonlySet<string> | null,
+  propertiesDb: ItemPropertyTpRow[] = [],
 ): Array<T & { currency: number; category: string; rarity: string }> {
   const q = listFilters.search.trim().toLowerCase();
   const narrowed = items.filter((item) => {
@@ -138,7 +211,7 @@ export function filterCodexEquipment<T extends CodexEquipmentItem>(
     ...item,
     category: item.category || '',
     rarity: item.rarity || '',
-    currency: equipmentCurrency(item),
+    currency: codexEquipmentDisplayCurrency(item, propertiesDb),
   }));
 
   return applyArmamentFilters(withCurrency, armamentFilters, characterContext, 'equipment');

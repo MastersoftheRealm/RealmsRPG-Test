@@ -82,9 +82,16 @@ export function AdminEquipmentTab() {
   const filteredEquipment = useMemo(() => {
     if (!equipment) return [];
     return sortItems(
-      filterCodexEquipment(equipment, filters, EMPTY_ARMAMENT_FILTERS, null, pathRecommendedIds),
+      filterCodexEquipment(
+        equipment,
+        filters,
+        EMPTY_ARMAMENT_FILTERS,
+        null,
+        pathRecommendedIds,
+        propertiesDb,
+      ),
     );
-  }, [equipment, filters, sortItems, pathRecommendedIds]);
+  }, [equipment, filters, sortItems, pathRecommendedIds, propertiesDb]);
 
   const openAdd = () =>
     beginAdd(() => {
@@ -216,7 +223,7 @@ export function AdminEquipmentTab() {
               description={e.description || ''}
               thumbnail={resolveListRowThumbnail('equipment', e, e.name)}
               gridColumns={EQUIPMENT_GRID_COLUMNS}
-              columns={buildCodexEquipmentColumns(e)}
+              columns={buildCodexEquipmentColumns(e, propertiesDb)}
               detailSections={detailSections.length > 0 ? detailSections : undefined}
               badges={nameChips}
               showBadgesInName={Boolean(nameChips)}

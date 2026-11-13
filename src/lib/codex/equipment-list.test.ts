@@ -15,6 +15,17 @@ import {
 } from '@/lib/game/path-recommendation-index';
 import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
 import type { CodexEquipmentItem } from '@/types/codex';
+import type { ItemPropertyTpRow } from '@/lib/calculators/item-calc';
+
+const SHARP: ItemPropertyTpRow = {
+  id: 1,
+  name: 'Sharp',
+  base_c: 2,
+  op_1_c: 0,
+  base_ip: 2,
+  op_1_ip: 0,
+  base_tp: 4,
+};
 
 const ctx: ArmamentCharacterContext = {
   abilities: {
@@ -65,6 +76,32 @@ describe('codex equipment-list', () => {
   it('prefers currency over gold_cost', () => {
     expect(equipmentCurrency({ currency: 5, gold_cost: 99 })).toBe(5);
     expect(equipmentCurrency({ gold_cost: 7 })).toBe(7);
+  });
+
+  it('codex armament columns use calculated market currency, not stored catalog (1dfe8wf3xew)', () => {
+    const cols = buildCodexEquipmentColumns(
+      item({
+        id: 'blade',
+        name: 'Blade',
+        type: 'weapon',
+        currency: 5,
+        gold_cost: 5,
+        category: 'Weapon',
+        rarity: 'Common',
+        properties: ['Sharp'],
+      }),
+      [SHARP],
+    );
+    const currencyCol = cols.find((c) => c.key === 'currency');
+    expect(currencyCol?.value).toBe(31);
+    expect(currencyCol?.value).not.toBe(5);
+  });
+
+  it('codex gear columns keep stored catalog currency', () => {
+    const cols = buildCodexEquipmentColumns(
+      item({ id: 'rope', name: 'Rope', currency: 12, category: 'Adventuring', rarity: 'Common' }),
+    );
+    expect(cols.find((c) => c.key === 'currency')?.value).toBe(12);
   });
 
   it('persistEquipmentCost prefers catalog currency over stored cost (TASK-873)', () => {

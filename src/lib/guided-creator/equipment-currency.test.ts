@@ -55,8 +55,38 @@ describe('equipment-currency', () => {
     const cost = resolveRefUnitCost(
       { id: 'rope' },
       [],
-      [{ id: 'rope', currency: 5, gold_cost: 5 }],
+      [{ id: 'rope', type: 'equipment', currency: 5, gold_cost: 5 }],
     );
     expect(cost).toBe(5);
+  });
+
+  it('resolveRefUnitCost calculates codex armament currency from properties (1dfe8wf3xew)', () => {
+    const propertiesDb = [
+      {
+        id: 1,
+        name: 'Sharp',
+        base_c: 2,
+        op_1_c: 0,
+        base_ip: 2,
+        op_1_ip: 0,
+        base_tp: 4,
+      },
+    ];
+    const cost = resolveRefUnitCost(
+      { id: 'blade' },
+      [],
+      [
+        {
+          id: 'blade',
+          type: 'weapon',
+          currency: 5,
+          gold_cost: 5,
+          properties: [{ name: 'Sharp', op_1_lvl: 0 }],
+        },
+      ],
+      propertiesDb,
+    );
+    expect(cost).toBe(31);
+    expect(cost).not.toBe(5);
   });
 });

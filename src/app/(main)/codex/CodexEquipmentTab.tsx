@@ -62,7 +62,7 @@ function EquipmentCard({
       description={item.description}
       thumbnail={resolveListRowThumbnail('equipment', item, item.name)}
       gridColumns={EQUIPMENT_GRID_COLUMNS}
-      columns={buildCodexEquipmentColumns(item)}
+      columns={buildCodexEquipmentColumns(item, propertiesDb)}
       detailSections={detailSections.length > 0 ? detailSections : undefined}
       badges={nameChips}
       showBadgesInName={Boolean(nameChips)}
@@ -106,9 +106,18 @@ export function CodexEquipmentTab({
         armamentFilters,
         characterContext,
         pathRecommendedIds,
+        propertiesDb,
       ),
     );
-  }, [equipment, listFilters, armamentFilters, characterContext, sortItems, pathRecommendedIds]);
+  }, [
+    equipment,
+    listFilters,
+    armamentFilters,
+    characterContext,
+    sortItems,
+    pathRecommendedIds,
+    propertiesDb,
+  ]);
 
   if (codexMode === 'my') {
     return (
