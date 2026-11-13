@@ -229,9 +229,13 @@ if (omitted.length) {
 
 console.log(`FEATURE_INDEX coverage check OK (${required.length} required paths).`);
 
-const unusedScan = spawnSync(process.execPath, [path.join(__dirname, 'unused-production-exports.mjs')], {
-  encoding: 'utf8',
-});
+const unusedScan = spawnSync(
+  process.execPath,
+  [path.join(__dirname, 'unused-production-exports.mjs')],
+  {
+    encoding: 'utf8',
+  },
+);
 if (unusedScan.status !== 0) {
   if (unusedScan.stderr) process.stderr.write(unusedScan.stderr);
   console.error('unused-production-exports failed');
@@ -310,7 +314,7 @@ const CREATURE_BUDGET_MATH_BUG_IDS = ['creature-training-stored-tp-without-parts
 
 const PROFICIENCY_TRAINING_MATH_BUG_IDS = ['guided-tp-bar-max-of-dedupe-vs-listed'];
 
-const DEFENSE_WEAPON_MATH_BUG_IDS = ['weapon-derive-utilized-vs-get-attack-ability'];
+const DEFENSE_WEAPON_MATH_BUG_IDS = [];
 
 const CRAFTING_COST_MATH_BUG_IDS = ['official-armament-codex-stored-currency-vs-item-calc'];
 
@@ -378,7 +382,12 @@ requireDisagreementTokens(
   MATH_DISAGREEMENT_INTENTIONAL_IDS,
   'intentional',
 );
-requireDisagreementTokens(healthDisagreements, 'math-disagree-bug', MATH_DISAGREEMENT_BUG_IDS, 'bug');
+requireDisagreementTokens(
+  healthDisagreements,
+  'math-disagree-bug',
+  MATH_DISAGREEMENT_BUG_IDS,
+  'bug',
+);
 
 const skillMathSection = mathSectionSlice(indexText, '## Skill and allocation math');
 if (!skillMathSection) {
@@ -452,9 +461,7 @@ if (!proficiencyMathSection.includes('### Disagreements')) {
 }
 const proficiencyDisagreements = disagreementsSubsection(proficiencyMathSection);
 if (!proficiencyDisagreements) {
-  console.error(
-    'FEATURE_INDEX proficiency/training section has no ### Disagreements body.',
-  );
+  console.error('FEATURE_INDEX proficiency/training section has no ### Disagreements body.');
   process.exit(2);
 }
 requireDisagreementTokens(
@@ -519,10 +526,7 @@ requireDisagreementTokens(
   'crafting cost deferred',
 );
 
-const sizePathSection = mathSectionSlice(
-  indexText,
-  '## Size and path recommendation math',
-);
+const sizePathSection = mathSectionSlice(indexText, '## Size and path recommendation math');
 if (!sizePathSection) {
   console.error('FEATURE_INDEX is missing the size and path recommendation math section.');
   process.exit(2);
@@ -613,16 +617,15 @@ const CHARACTER_CREATOR_SCREEN_NOTE_IDS = [
   'legacy-character-creator-store-removed',
 ];
 
-const characterCreatorScreensSection = mathSectionSlice(
-  indexText,
-  '## Character creator screens',
-);
+const characterCreatorScreensSection = mathSectionSlice(indexText, '## Character creator screens');
 if (!characterCreatorScreensSection) {
   console.error('FEATURE_INDEX is missing the character creator screens section.');
   process.exit(2);
 }
 if (!characterCreatorScreensSection.includes('### Same job, different behavior')) {
-  console.error('FEATURE_INDEX character creator section is missing ### Same job, different behavior.');
+  console.error(
+    'FEATURE_INDEX character creator section is missing ### Same job, different behavior.',
+  );
   process.exit(2);
 }
 const screenBehaviorStart = characterCreatorScreensSection.indexOf(
@@ -742,9 +745,7 @@ for (const id of ENCOUNTER_SCREEN_NOTE_IDS) {
     process.exit(2);
   }
 }
-console.log(
-  `FEATURE_INDEX encounter screen check OK (${ENCOUNTER_SCREEN_NOTE_IDS.length} notes).`,
-);
+console.log(`FEATURE_INDEX encounter screen check OK (${ENCOUNTER_SCREEN_NOTE_IDS.length} notes).`);
 
 const LIBRARY_SCREEN_NOTE_IDS = [
   'library-my-vs-realms-one-page-toggle',
@@ -767,7 +768,9 @@ if (!libraryScreensSection.includes('### Same job, different behavior')) {
   console.error('FEATURE_INDEX library section is missing ### Same job, different behavior.');
   process.exit(2);
 }
-const libraryScreenBehaviorStart = libraryScreensSection.indexOf('### Same job, different behavior');
+const libraryScreenBehaviorStart = libraryScreensSection.indexOf(
+  '### Same job, different behavior',
+);
 const libraryScreenDeadStart = libraryScreensSection.indexOf('### Dead or unreachable paths');
 if (libraryScreenBehaviorStart < 0 || libraryScreenDeadStart < 0) {
   console.error('FEATURE_INDEX library section missing behavior or dead-path headings.');
@@ -857,7 +860,9 @@ if (!campaignScreensSection.includes('### Same job, different behavior')) {
   console.error('FEATURE_INDEX campaign section is missing ### Same job, different behavior.');
   process.exit(2);
 }
-const campaignScreenBehaviorStart = campaignScreensSection.indexOf('### Same job, different behavior');
+const campaignScreenBehaviorStart = campaignScreensSection.indexOf(
+  '### Same job, different behavior',
+);
 const campaignScreenDeadStart = campaignScreensSection.indexOf('### Dead or unreachable paths');
 if (campaignScreenBehaviorStart < 0 || campaignScreenDeadStart < 0) {
   console.error('FEATURE_INDEX campaign section missing behavior or dead-path headings.');
@@ -876,9 +881,7 @@ for (const id of CAMPAIGN_SCREEN_NOTE_IDS) {
     process.exit(2);
   }
 }
-console.log(
-  `FEATURE_INDEX campaign screen check OK (${CAMPAIGN_SCREEN_NOTE_IDS.length} notes).`,
-);
+console.log(`FEATURE_INDEX campaign screen check OK (${CAMPAIGN_SCREEN_NOTE_IDS.length} notes).`);
 
 const CAMPAIGN_TABLETOP_SCREEN_NOTE_IDS = [
   'tabletop-entry-via-encounter-open-not-campaign-hub',
@@ -892,10 +895,7 @@ const CAMPAIGN_TABLETOP_SCREEN_NOTE_IDS = [
   'tabletop-encounter-without-campaign-id',
 ];
 
-const campaignTabletopScreensSection = mathSectionSlice(
-  indexText,
-  '## Campaign tabletop screen',
-);
+const campaignTabletopScreensSection = mathSectionSlice(indexText, '## Campaign tabletop screen');
 if (!campaignTabletopScreensSection) {
   console.error('FEATURE_INDEX is missing the campaign tabletop screen section.');
   process.exit(2);
@@ -913,9 +913,7 @@ const tabletopScreenDeadStart = campaignTabletopScreensSection.indexOf(
   '### Dead or unreachable paths',
 );
 if (tabletopScreenBehaviorStart < 0 || tabletopScreenDeadStart < 0) {
-  console.error(
-    'FEATURE_INDEX campaign tabletop section missing behavior or dead-path headings.',
-  );
+  console.error('FEATURE_INDEX campaign tabletop section missing behavior or dead-path headings.');
   process.exit(2);
 }
 const tabletopScreenBehaviorBody = campaignTabletopScreensSection.slice(
@@ -976,9 +974,7 @@ for (const id of ADMIN_SCREEN_NOTE_IDS) {
     process.exit(2);
   }
 }
-console.log(
-  `FEATURE_INDEX admin screen check OK (${ADMIN_SCREEN_NOTE_IDS.length} notes).`,
-);
+console.log(`FEATURE_INDEX admin screen check OK (${ADMIN_SCREEN_NOTE_IDS.length} notes).`);
 
 const CRAFTING_SCREEN_NOTE_IDS = [
   'crafting-guest-no-cloud-sessions',
@@ -1022,9 +1018,7 @@ for (const id of CRAFTING_SCREEN_NOTE_IDS) {
     process.exit(2);
   }
 }
-console.log(
-  `FEATURE_INDEX crafting screen check OK (${CRAFTING_SCREEN_NOTE_IDS.length} notes).`,
-);
+console.log(`FEATURE_INDEX crafting screen check OK (${CRAFTING_SCREEN_NOTE_IDS.length} notes).`);
 
 const MARKETING_SCREEN_NOTE_IDS = [
   'marketing-hero-returning-vs-new-cta-targets',
@@ -1046,9 +1040,7 @@ if (!marketingScreensSection) {
   process.exit(2);
 }
 if (!marketingScreensSection.includes('### Same job, different behavior')) {
-  console.error(
-    'FEATURE_INDEX marketing section is missing ### Same job, different behavior.',
-  );
+  console.error('FEATURE_INDEX marketing section is missing ### Same job, different behavior.');
   process.exit(2);
 }
 const marketingScreenBehaviorStart = marketingScreensSection.indexOf(
@@ -1072,9 +1064,7 @@ for (const id of MARKETING_SCREEN_NOTE_IDS) {
     process.exit(2);
   }
 }
-console.log(
-  `FEATURE_INDEX marketing screen check OK (${MARKETING_SCREEN_NOTE_IDS.length} notes).`,
-);
+console.log(`FEATURE_INDEX marketing screen check OK (${MARKETING_SCREEN_NOTE_IDS.length} notes).`);
 
 const ACCOUNT_SCREEN_NOTE_IDS = [
   'account-protected-route-login-returnTo',
@@ -1117,9 +1107,7 @@ for (const id of ACCOUNT_SCREEN_NOTE_IDS) {
     process.exit(2);
   }
 }
-console.log(
-  `FEATURE_INDEX My Account screen check OK (${ACCOUNT_SCREEN_NOTE_IDS.length} notes).`,
-);
+console.log(`FEATURE_INDEX My Account screen check OK (${ACCOUNT_SCREEN_NOTE_IDS.length} notes).`);
 
 const CODEX_SCREEN_NOTE_IDS = [
   'codex-public-read-only-vs-admin-codex-editor',
@@ -1187,10 +1175,14 @@ if (!codexExpandedRowsSection.includes('### Same job, different behavior')) {
   );
   process.exit(2);
 }
-const codexExpandedBehaviorStart = codexExpandedRowsSection.indexOf('### Same job, different behavior');
+const codexExpandedBehaviorStart = codexExpandedRowsSection.indexOf(
+  '### Same job, different behavior',
+);
 const codexExpandedDeadStart = codexExpandedRowsSection.indexOf('### Dead or unreachable paths');
 if (codexExpandedBehaviorStart < 0 || codexExpandedDeadStart < 0) {
-  console.error('FEATURE_INDEX Codex expanded rows section missing behavior or dead-path headings.');
+  console.error(
+    'FEATURE_INDEX Codex expanded rows section missing behavior or dead-path headings.',
+  );
   process.exit(2);
 }
 const codexExpandedBehaviorBody = codexExpandedRowsSection.slice(
@@ -1237,7 +1229,9 @@ if (!adminCodexSpreadsheetSection.includes('### Same job, different behavior')) 
 const adminSpreadsheetBehaviorStart = adminCodexSpreadsheetSection.indexOf(
   '### Same job, different behavior',
 );
-const adminSpreadsheetDeadStart = adminCodexSpreadsheetSection.indexOf('### Dead or unreachable paths');
+const adminSpreadsheetDeadStart = adminCodexSpreadsheetSection.indexOf(
+  '### Dead or unreachable paths',
+);
 if (adminSpreadsheetBehaviorStart < 0 || adminSpreadsheetDeadStart < 0) {
   console.error(
     'FEATURE_INDEX Admin codex spreadsheet section missing behavior or dead-path headings.',
@@ -1323,19 +1317,17 @@ if (!creatorSectionIslandsSection) {
   process.exit(2);
 }
 if (!creatorSectionIslandsSection.includes('### Same job, different behavior')) {
-  console.error(
-    'FEATURE_INDEX creator section islands missing ### Same job, different behavior.',
-  );
+  console.error('FEATURE_INDEX creator section islands missing ### Same job, different behavior.');
   process.exit(2);
 }
 const creatorIslandsBehaviorStart = creatorSectionIslandsSection.indexOf(
   '### Same job, different behavior',
 );
-const creatorIslandsDeadStart = creatorSectionIslandsSection.indexOf('### Dead or unreachable paths');
+const creatorIslandsDeadStart = creatorSectionIslandsSection.indexOf(
+  '### Dead or unreachable paths',
+);
 if (creatorIslandsBehaviorStart < 0 || creatorIslandsDeadStart < 0) {
-  console.error(
-    'FEATURE_INDEX creator section islands missing behavior or dead-path headings.',
-  );
+  console.error('FEATURE_INDEX creator section islands missing behavior or dead-path headings.');
   process.exit(2);
 }
 const creatorIslandsBehaviorBody = creatorSectionIslandsSection.slice(
