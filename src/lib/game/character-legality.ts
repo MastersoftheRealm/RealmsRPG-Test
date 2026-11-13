@@ -160,7 +160,7 @@ export interface CharacterLegalitySpendOptions {
   speciesSkillRefs?: string[] | undefined;
 }
 
-export function speciesSkillRefsFromAncestry(candidate: CharacterLegalityCandidate): string[] {
+function speciesSkillRefsFromAncestry(candidate: CharacterLegalityCandidate): string[] {
   const ancestry = asRecord(candidate.ancestry);
   if (!ancestry) return [];
   const selected = ancestry.selectedSpeciesSkillIds;
