@@ -324,7 +324,7 @@ const CRAFTING_COST_MATH_DEFERRED_IDS = [
   'crafting-hub-currency-column-vs-requirements-market-price',
 ];
 
-/** Fixed: notes tab carry uses live SIZES (ClickUp 1dfe8wf3xf0 / PR #588). */
+/** size-hardcoded-carry-vs-core-rules-sizes fixed — notes tab uses live SIZES. */
 const SIZE_PATH_MATH_BUG_IDS = [];
 
 /** Guards `math-disagree-unclassified` documentation in FEATURE_INDEX (intro + math sections). */
