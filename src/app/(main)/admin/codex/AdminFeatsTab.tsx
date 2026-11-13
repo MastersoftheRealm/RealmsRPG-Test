@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useId } from 'react';
+import { useState, useMemo, useId } from 'react';
 import {
   ArchetypePathFilter,
   ChipSelect,
@@ -25,7 +25,7 @@ import {
 import { useSort } from '@/hooks/use-sort';
 import { useAdminCodexEntity } from './use-admin-codex-entity';
 import { AdminCodexRowActions, ADMIN_CODEX_ROW_ACTIONS_WIDTH } from './admin-codex-row-actions';
-import { persistCodexLevelEdits } from './admin-codex-level-save';
+import { persistCodexFamilyLevelEdits } from './admin-codex-level-save';
 import { Layers } from 'lucide-react';
 import {
   groupFeatFamilies,
@@ -160,18 +160,6 @@ export function AdminFeatsTab() {
       bumpModal();
     });
 
-  const openAddLevelFromEditModal = useCallback(
-    (sourceForm: FeatFormState, sourceDbFeatId: string) => {
-      beginAdd(() => {
-        setModalInitialForm(computeNextLevelFormState(sourceForm, sourceDbFeatId));
-        setModalInitialEditId(null);
-        setModalLevelFeats([]);
-        bumpModal();
-      });
-    },
-    [beginAdd],
-  );
-
   const handleSave = async (editId: string | null, form: FeatFormState) => {
     if (!form.name.trim()) return;
     const savingId = editing ? (editId ?? editing.id) : null;
@@ -185,12 +173,13 @@ export function AdminFeatsTab() {
   const handleSaveAllLevels = async (editsById: Record<string, FeatFormState>) => {
     if (Object.keys(editsById).length === 0) return;
     setSaving(true);
-    const error = await persistCodexLevelEdits({
+    const error = await persistCodexFamilyLevelEdits({
       collection: 'codex_feats',
       editsById,
       updatedAtForId: (id) => (feats ?? []).find((f) => String(f.id) === id)?.updated_at,
       toPayload: featFormToSavePayload,
-      invalidMessage: (id, form) => (form?.name?.trim() ? null : `Level ${id}: name is required`),
+      invalidMessage: (_id, form) =>
+        form?.name?.trim() ? null : `Level ${form?.feat_lvl ?? '?'}: name is required`,
       queryClient,
     });
     setSaving(false);
@@ -412,7 +401,6 @@ export function AdminFeatsTab() {
           initialForm={modalInitialForm}
           initialEditId={modalInitialEditId}
           enableAddLevel
-          onAddLevel={openAddLevelFromEditModal}
         />
       ) : null}
 
