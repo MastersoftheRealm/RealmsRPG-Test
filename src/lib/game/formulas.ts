@@ -10,10 +10,7 @@
 
 import { derivePowerDisplay } from '@/lib/calculators/power-calc';
 import type { PowerPart } from '@/hooks/codex-types';
-import {
-  libraryItemToPowerDocument,
-  type PowerTechniqueBudgetItem,
-} from '@/lib/library-selectable-builders';
+import { libraryItemToPowerDocument } from '@/lib/library-selectable-builders';
 import type { EntityType, Abilities, CharacterPower } from '@/types';
 import type { ArchetypeCategory, ProficiencyDerivedArchetype } from '@/types';
 import type { CoreRulesMap, ArchetypeConfigRules } from '@/types/core-rules';
@@ -593,7 +590,7 @@ export function calculateArchetypeProgression(
 
 type CharacterPowerForInnateEnergy = CharacterPower & {
   isReaction?: boolean | undefined;
-  libraryItem?: PowerTechniqueBudgetItem | undefined;
+  libraryItem?: Parameters<typeof libraryItemToPowerDocument>[0] | undefined;
 };
 
 /** Live energy for one character power row (same path as sheet rows / innate path validation). */
