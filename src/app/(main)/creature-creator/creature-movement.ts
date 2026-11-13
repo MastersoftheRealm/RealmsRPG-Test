@@ -74,7 +74,7 @@ export function isCreatureMovementControlFeatId(id: string | number): boolean {
 }
 
 /** A family row the Movement steppers own, including a mechanic-false child such as a further Speedy level. */
-export function isMovementBoundFamilyFeat(feat: {
+function isMovementBoundFamilyFeat(feat: {
   id: string | number;
   base_feat_id?: string | number | null | undefined;
 }): boolean {
