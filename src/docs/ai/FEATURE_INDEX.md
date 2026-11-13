@@ -2333,7 +2333,7 @@ Archetype proficiency caps on level change, player Training Point pool formula, 
 ### Same math, separate copies
 
 - `getTrainingPointLimit`, `computeGuidedLoadoutTpSummary`, and path admin `trainingPointLimit` all use `calculateTrainingPoints` for the pool size when rules match.
-- `buildGuidedCharacterPayload` and `computeGuidedRequiredTrainingSpent` share `buildGuidedProficiencyInput`; save persists `buildRequiredProficiencies` rows, not the budget counter max.
+- `buildGuidedCharacterPayload`, `computeGuidedRequiredTrainingSpent`, and `computeGuidedTrainingPointsBudgetSpent` share `buildGuidedProficiencyInput`; save and the guided training bar both use the same deduped `sumRequiredProficiencyTrainingPoints` walk (save persists `buildRequiredProficiencies` rows).
 - `applyProficiencyGainForLevelUp` and `applyProficiencyLossForLevelDown` use the same `calculateProficiency` cap function the sheet uses for proficiency **pools** (points spent are separate fields on the character).
 - `resolveItemTrainingPoints` and path `validateLoadoutTrainingPoints` both use `calculateItemCosts` property TP; path validation sums the same way with quantity.
 
