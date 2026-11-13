@@ -493,15 +493,21 @@ export function migrateLegacySenseNames(
   catalog: readonly CodexCreatureFeat[],
 ): CreatureState {
   if (creature.senses.length === 0) return creature;
-  const senses = creature.senses.filter((name) => isStoredBuiltInSenseMarker(name));
+  const senses: string[] = [];
   let feats = [...creature.feats];
   for (const name of creature.senses) {
-    if (isStoredBuiltInSenseMarker(name)) continue;
-    const row = catalog.find((feat) => feat.name === name);
-    if (!row || row.category !== 'Senses' || isCreatureSensesControlFeatId(row.id)) continue;
-    if (!feats.some((feat) => String(feat.id) === String(row.id))) {
-      feats = [...feats, codexCreatureFeatToCreatureFeat(row)];
+    if (isStoredBuiltInSenseMarker(name)) {
+      senses.push(name);
+      continue;
     }
+    const row = catalog.find((feat) => feat.name === name);
+    if (row && row.category === 'Senses' && !isCreatureSensesControlFeatId(row.id)) {
+      if (!feats.some((feat) => String(feat.id) === String(row.id))) {
+        feats = [...feats, codexCreatureFeatToCreatureFeat(row)];
+      }
+      continue;
+    }
+    senses.push(name);
   }
   let next: CreatureState = { ...creature, senses, feats };
   for (const family of BUILTIN_SENSE_FAMILIES) {

@@ -5,7 +5,7 @@
 import type { CreatureState } from './creature-creator-types';
 import { collectCreatureInventoryItems } from '@/lib/game/creature-inventory';
 import type { CreatureFeat as CodexCreatureFeat } from '@/hooks';
-import { isCreatureCreatorHiddenFeat } from './creature-creator-hidden-feats';
+import { isCreatureCreatorHiddenFeat } from './creature-movement';
 
 function summarizeNamedItems(
   items: Array<{ name?: string | undefined }>,

@@ -18,8 +18,10 @@ import {
   useCreatureFeats,
 } from '@/hooks';
 import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
-import { isCreatureCreatorHiddenFeat } from '@/app/(main)/creature-creator/creature-creator-hidden-feats';
-import { builtInSenseSummaryLines } from '@/app/(main)/creature-creator/creature-senses';
+import {
+  builtInSenseSummaryLines,
+  isCreatureCreatorHiddenFeat,
+} from '@/app/(main)/creature-creator/creature-movement';
 import type { CreatureFeat as CodexCreatureFeat } from '@/hooks';
 import { calculateCreatureSpeed, calculateEvasion } from '@/lib/game/calculations';
 import { CREATURE_STAT_BLOCK_GRID } from '@/lib/library/official-creature-list';

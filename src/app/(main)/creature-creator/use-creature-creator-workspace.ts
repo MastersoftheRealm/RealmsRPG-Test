@@ -62,8 +62,7 @@ import {
 import { normalizeCreatureInventoryType } from '@/lib/game/creature-inventory';
 import { mergeLibraryBySource } from '@/lib/library/source-scope';
 import { codexCreatureFeatToCreatureFeat, mergeCreatureFeatsOnAdd } from './creature-feat-utils';
-import { isCreatureCreatorHiddenFeat } from './creature-creator-hidden-feats';
-import { migrateLegacySenseNames, needsLegacySenseMigration } from './creature-senses';
+import { isCreatureCreatorHiddenFeat } from './creature-movement';
 import { canAddDamageModifier } from './creature-damage-modifiers';
 import {
   buildArmamentLibraryList,
@@ -136,13 +135,6 @@ export function useCreatureCreatorWorkspace() {
   const load = useLoadModalLibrary('creature', { prefetch: !!editCreatureId });
 
   const [creature, setCreature] = useState<CreatureState>(initialState);
-  useEffect(() => {
-    if (!creatureFeatsData.length) return;
-    setCreature((prev) => {
-      if (!needsLegacySenseMigration(prev)) return prev;
-      return migrateLegacySenseNames(prev, creatureFeatsData as CodexCreatureFeatRow[]);
-    });
-  }, [creatureFeatsData]);
   const creatureLevel = Math.max(1, Math.floor(creature.level));
   const skillPointsHelp = useMemo(
     () => getSkillPointsHelp(creatureLevel, rules, 'creature'),
@@ -250,7 +242,13 @@ export function useCreatureCreatorWorkspace() {
   const [bootstrapKey, setBootstrapKey] = useState<string | null>(null);
   if (bootstrapReady && bootstrapKey !== sessionKey) {
     setBootstrapKey(sessionKey);
-    setCreature(bootstrapCreatureState({ editCreatureId, rawItems: load.rawItems }));
+    setCreature(
+      bootstrapCreatureState({
+        editCreatureId,
+        rawItems: load.rawItems,
+        creatureFeatsCatalog: creatureFeatsData as CodexCreatureFeatRow[],
+      }),
+    );
   }
   const bootstrapApplied = bootstrapKey === sessionKey;
   const editReplacesDraft = creatorEditReplacesDraft(editCreatureId, load.rawItems);

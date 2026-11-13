@@ -79,6 +79,15 @@ describe('creature senses section helpers', () => {
     expect(migrated.feats.map((f) => f.name)).toContain('Keen Smell');
   });
 
+  it('keeps unmatched sense names on the creature record', () => {
+    const migrated = migrateLegacySenseNames(
+      { ...initialState, senses: ['Keen Smell', 'Custom notation'] },
+      catalog,
+    );
+    expect(migrated.senses).toEqual(['Custom notation']);
+    expect(migrated.feats.map((f) => f.name)).toContain('Keen Smell');
+  });
+
   it('counts implied control costs from senses names for legacy creatures', () => {
     expect(
       sensesSectionPointTotal({ ...initialState, senses: ['Darkvision'], feats: [] }, catalog),
