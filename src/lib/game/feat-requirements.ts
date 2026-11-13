@@ -29,6 +29,21 @@ import { getSkillBonusForFeatRequirement, type CodexSkillForFeat } from './formu
 import { getFeatFamilyId, getFeatLevel, formatFeatName } from '@/lib/leveled-feats';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 
+/** Proficient skill allocation row used by feat requirement checks (sheet rows may include chosen ability). */
+export type FeatRequirementSkillAllocation = {
+  prof?: boolean | undefined;
+  val?: number | undefined;
+  ability?: string | undefined;
+};
+
+export type FeatRequirementSkillArrayRow = {
+  id?: string | number | undefined;
+  name?: string | undefined;
+  skill_val?: number | undefined;
+  prof?: boolean | undefined;
+  ability?: string | undefined;
+};
+
 /** Minimal feat shape needed for requirement checks (structurally compatible with codex Feat). */
 export interface FeatForRequirement {
   id: string | number;
@@ -48,15 +63,10 @@ export interface FeatForRequirement {
 export interface CharacterForFeatRequirement {
   level?: number | undefined;
   abilities?: Partial<Abilities> | undefined;
-  /** Character: Record<id, { prof, val }>; Draft: Record<id, value (number)>; legacy: array. */
+  /** Character: Record<id, { prof, val, ability? }>; Draft: Record<id, value (number)>; legacy: array. */
   skills?:
-    | Record<string, number | { prof?: boolean | undefined; val?: number | undefined }>
-    | Array<{
-        id?: string | number | undefined;
-        name?: string | undefined;
-        skill_val?: number | undefined;
-        prof?: boolean | undefined;
-      }>
+    | Record<string, number | FeatRequirementSkillAllocation>
+    | FeatRequirementSkillArrayRow[]
     | null
     | undefined;
   /** Canonical defense allocation field. */
@@ -155,10 +165,10 @@ function getPreviousLevelFeatId(
 /** Normalize a character's skills into the shape `getSkillBonusForFeatRequirement` expects. */
 function normalizeSkills(
   skills: CharacterForFeatRequirement['skills'],
-): Record<string, number | { prof?: boolean | undefined; val?: number | undefined }> {
+): Record<string, number | FeatRequirementSkillAllocation> {
   if (!skills) return {};
   if (Array.isArray(skills)) {
-    const record: Record<string, { prof?: boolean | undefined; val?: number | undefined }> = {};
+    const record: Record<string, FeatRequirementSkillAllocation> = {};
     skills.forEach((s) => {
       const id = s.id != null ? String(s.id) : '';
       const name = s.name != null ? String(s.name) : '';
@@ -175,10 +185,7 @@ function normalizeSkills(
     });
     return record;
   }
-  return skills as Record<
-    string,
-    number | { prof?: boolean | undefined; val?: number | undefined }
-  >;
+  return skills as Record<string, number | FeatRequirementSkillAllocation>;
 }
 
 function ownedFeatEntries(character: CharacterForFeatRequirement) {
@@ -424,17 +431,14 @@ export function getSheetFeatRequirementWarning(
 export function characterToFeatRequirementCharacter(
   character: import('@/types').Character,
 ): CharacterForFeatRequirement {
-  const skillsRecord: Record<
-    string,
-    number | { prof?: boolean | undefined; val?: number | undefined }
-  > = {};
+  const skillsRecord: Record<string, number | FeatRequirementSkillAllocation> = {};
   const rawSkills = character.skills as
-    | Record<string, number | { prof?: boolean | undefined; val?: number | undefined }>
+    | Record<string, number | FeatRequirementSkillAllocation>
     | undefined;
   if (rawSkills) {
     Object.entries(rawSkills).forEach(([key, sk]) => {
       if (sk && typeof sk === 'object' && 'val' in sk) {
-        const row: { prof?: boolean | undefined; val?: number | undefined; ability?: string } = {
+        const row: FeatRequirementSkillAllocation = {
           prof: sk.prof,
           val: sk.val,
         };

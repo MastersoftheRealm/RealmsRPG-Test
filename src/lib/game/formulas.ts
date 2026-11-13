@@ -791,7 +791,10 @@ export interface CodexSkillForFeat {
 export function getSkillBonusForFeatRequirement(
   skillId: string,
   abilities: Partial<Abilities> | Abilities,
-  skills: Record<string, number | { prof?: boolean | undefined; val?: number | undefined }>,
+  skills: Record<
+    string,
+    number | { prof?: boolean | undefined; val?: number | undefined; ability?: string | undefined }
+  >,
   codexSkills: CodexSkillForFeat[],
 ): { bonus: number; proficient: boolean } {
   // Look up by ID first, then fall back to name match (feat data may use either)
