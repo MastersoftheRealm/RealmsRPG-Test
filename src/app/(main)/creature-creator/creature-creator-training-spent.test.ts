@@ -137,4 +137,55 @@ describe('computeCreatureTrainingSpent (86e3krpzp)', () => {
     });
     expect(legacyHidden).toBe(0);
   });
+
+  it('falls back to stored tp when listed parts are missing from codex (1dfe8wf3xet)', () => {
+    const creature = {
+      ...initialState,
+      enablePowers: true,
+      powers: [
+        {
+          id: 'p1',
+          name: 'A',
+          energy: 1,
+          action: 'Action',
+          duration: '-',
+          range: '-',
+          area: '-',
+          damage: '-',
+          tp: 7,
+          parts: [{ id: 999999, name: 'Missing', op_1_lvl: 0 }],
+        },
+      ],
+    };
+    const spentWithDb = computeCreatureTrainingSpent(creature, {
+      powerPartsDb: [range],
+    });
+    const spentLegacy = computeCreatureTrainingSpent(creature, { powerPartsDb: [] });
+    expect(spentWithDb).toBe(7);
+    expect(spentLegacy).toBe(7);
+  });
+
+  it('still prices from live codex when parts resolve (1dfe8wf3xet)', () => {
+    const creature = {
+      ...initialState,
+      enablePowers: true,
+      powers: [
+        {
+          id: 'p1',
+          name: 'A',
+          energy: 1,
+          action: 'Action',
+          duration: '-',
+          range: '-',
+          area: '-',
+          damage: '-',
+          tp: 99,
+          parts: [{ id: Number(range.id), name: range.name, op_1_lvl: 0 }],
+        },
+      ],
+    };
+    const spent = computeCreatureTrainingSpent(creature, { powerPartsDb: [range] });
+    expect(spent).toBeGreaterThan(0);
+    expect(spent).toBeLessThan(99);
+  });
 });

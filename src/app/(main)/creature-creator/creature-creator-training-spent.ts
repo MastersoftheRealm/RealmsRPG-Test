@@ -5,13 +5,72 @@ import {
   plainPowerProficiencyParts,
   resolvePowerComposition,
 } from '@/lib/calculators';
+import { findByIdOrName } from '@/lib/id-constants';
 import {
   resolveCreatureInventoryBuckets,
   creatureInventoryQuantityMultiplier,
 } from '@/lib/game/creature-inventory';
 import { sumRequiredProficiencyTrainingPoints } from '@/lib/proficiencies';
 import type { CreatureState } from './creature-creator-types';
-import type { CreatureArmament, CreaturePower } from './transformers';
+import type { CreatureArmament, CreaturePower, CreatureTechnique } from './transformers';
+
+type CodexPartRef = {
+  id?: string | number | undefined;
+  name?: string | undefined;
+};
+
+function savedPartResolvesInCodex(
+  codex: CreatureProficiencyDbContext['powerPartsDb'] | undefined,
+  raw: unknown,
+): boolean {
+  if (!Array.isArray(codex) || codex.length === 0) return false;
+  const partObj =
+    typeof raw === 'string' ? { name: raw } : (raw as Record<string, unknown> | null | undefined);
+  if (!partObj || typeof partObj !== 'object') return false;
+  const ref: CodexPartRef = {
+    id: partObj.id as string | number | undefined,
+    name: partObj.name as string | undefined,
+  };
+  return findByIdOrName(codex, ref) != null;
+}
+
+function creaturePowerDocumentForProficiency(power: CreaturePower) {
+  return {
+    name: power.name,
+    parts: power.parts ?? [],
+    actionType: power.actionType,
+    isReaction: power.isReaction,
+    range: power.rangeValue,
+    area: power.areaValue,
+    duration: power.durationValue,
+    damage: power.damageValue,
+    ...(power.composition ? { composition: power.composition } : {}),
+  };
+}
+
+/** Live part pricing applies when composition resolves or at least one saved part is in the Codex DB. */
+function powerUsesLivePartPricing(power: CreaturePower, partsDb: PowerPart[]): boolean {
+  const doc = creaturePowerDocumentForProficiency(power);
+  if (power.composition) {
+    const composition = resolvePowerComposition(doc, partsDb);
+    if (composition) {
+      const parts = composedPowerProficiencyParts(composition, partsDb);
+      return parts.length > 0;
+    }
+  }
+  const savedParts = power.parts ?? [];
+  if (savedParts.length === 0) return false;
+  return savedParts.some((raw) => savedPartResolvesInCodex(partsDb, raw));
+}
+
+function techniqueUsesLivePartPricing(
+  technique: CreatureTechnique,
+  partsDb: CreatureProficiencyDbContext['techniquePartsDb'],
+): boolean {
+  const savedParts = technique.parts ?? [];
+  if (savedParts.length === 0) return false;
+  return savedParts.some((raw) => savedPartResolvesInCodex(partsDb, raw));
+}
 
 export type CreatureProficiencyDbContext = {
   powerPartsDb?: Array<{
@@ -88,17 +147,7 @@ function storedTpWithoutResolvableParts(armaments: CreatureArmament[]): number {
 }
 
 function creaturePowerForProficiency(power: CreaturePower, partsDb: PowerPart[]): CharacterPower {
-  const doc = {
-    name: power.name,
-    parts: power.parts ?? [],
-    actionType: power.actionType,
-    isReaction: power.isReaction,
-    range: power.rangeValue,
-    area: power.areaValue,
-    duration: power.durationValue,
-    damage: power.damageValue,
-    ...(power.composition ? { composition: power.composition } : {}),
-  };
+  const doc = creaturePowerDocumentForProficiency(power);
   const composition = power.composition ? resolvePowerComposition(doc, partsDb) : null;
   const parts = composition
     ? composedPowerProficiencyParts(composition, partsDb)
@@ -115,15 +164,14 @@ function storedTpWithoutParts(
   powers: CreatureState['powers'],
   techniques: CreatureState['techniques'],
   coveredPowerIds: ReadonlySet<string>,
+  coveredTechniqueIds: ReadonlySet<string>,
 ): number {
   const powerTp = powers.reduce((sum, power) => {
     if (coveredPowerIds.has(String(power.id))) return sum;
-    if (Array.isArray(power.parts) && power.parts.length > 0) return sum;
     return sum + (typeof power.tp === 'number' && Number.isFinite(power.tp) ? power.tp : 0);
   }, 0);
   const techniqueTp = techniques.reduce((sum, technique) => {
-    const parts = (technique as { parts?: unknown[] }).parts;
-    if (Array.isArray(parts) && parts.length > 0) return sum;
+    if (coveredTechniqueIds.has(String(technique.id))) return sum;
     return (
       sum + (typeof technique.tp === 'number' && Number.isFinite(technique.tp) ? technique.tp : 0)
     );
@@ -161,9 +209,15 @@ export function computeCreatureTrainingSpent(
   const powerPartsDb = (ctx.powerPartsDb ?? []) as PowerPart[];
   const powers = active.powers.map((power) => creaturePowerForProficiency(power, powerPartsDb));
   const coveredPowerIds = new Set(
-    powers
-      .filter((power) => Array.isArray(power.parts) && power.parts.length > 0)
+    active.powers
+      .filter((power) => powerUsesLivePartPricing(power, powerPartsDb))
       .map((power) => String(power.id)),
+  );
+  const techniquePartsDb = ctx.techniquePartsDb ?? [];
+  const coveredTechniqueIds = new Set(
+    active.techniques
+      .filter((technique) => techniqueUsesLivePartPricing(technique, techniquePartsDb))
+      .map((technique) => String(technique.id)),
   );
   const deduped = sumRequiredProficiencyTrainingPoints({
     powers,
@@ -178,7 +232,7 @@ export function computeCreatureTrainingSpent(
 
   return (
     deduped +
-    storedTpWithoutParts(active.powers, active.techniques, coveredPowerIds) +
+    storedTpWithoutParts(active.powers, active.techniques, coveredPowerIds, coveredTechniqueIds) +
     sumStoredArmamentTp(buckets.equipment) +
     storedTpWithoutResolvableParts([...buckets.weapons, ...buckets.armor, ...buckets.shields])
   );
