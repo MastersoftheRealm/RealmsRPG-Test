@@ -252,6 +252,7 @@ describe('computeCreatureTrainingSpent (86e3krpzp)', () => {
           energy: 1,
           action: 'Action',
           duration: '-',
+          range: '-',
           area: '-',
           damage: '-',
           tp: 7,
@@ -259,7 +260,7 @@ describe('computeCreatureTrainingSpent (86e3krpzp)', () => {
           durationValue: { type: 'minutes', value: 1 },
           parts: [{ id: 999999, name: 'Missing', op_1_lvl: 0 }],
           composition: {
-            structure: 'choice',
+            structure: 'choice' as const,
             variants: [{ id: 'a', label: 'A' }],
           },
         },
@@ -272,7 +273,7 @@ describe('computeCreatureTrainingSpent (86e3krpzp)', () => {
 
   it('uses stored tp for technique when one listed part is missing (1dfe8wf3xet)', () => {
     const zeroTpPart = {
-      id: 'z1',
+      id: 888001,
       name: 'Zero TP',
       base_tp: 0,
       op_1_tp: 0,
@@ -291,7 +292,7 @@ describe('computeCreatureTrainingSpent (86e3krpzp)', () => {
           damage: '1',
           parts: [
             { id: 999999, name: 'Missing', op_1_lvl: 0 },
-            { id: 'z1', name: 'Zero TP', op_1_lvl: 0 },
+            { id: 888001, name: 'Zero TP', op_1_lvl: 0 },
           ],
         },
       ],
