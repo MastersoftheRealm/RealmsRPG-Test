@@ -7,12 +7,38 @@ export const STYLEGUIDE_THEME_TOGGLE = /^Toggle theme \((light|dark)\)$/;
 export const HIDE_SCREENSHOT_CHROME_CSS = `
   [aria-label="Notifications"] {
     display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
   }
   vercel-live-feedback,
   iframe[src*="vercel"] {
     display: none !important;
   }
 `;
+
+const SCREENSHOT_CHROME_HIDE_STYLE_ID = 'playwright-screenshot-chrome-hide';
+
+/**
+ * Init script: hide fixed portals before React mounts so they never extend
+ * mobile full-page scrollHeight (intermittent +42px; see PR #543).
+ */
+export function screenshotChromeHideInitScript(): void {
+  const install = () => {
+    if (document.getElementById(SCREENSHOT_CHROME_HIDE_STYLE_ID)) return;
+    const style = document.createElement('style');
+    style.id = SCREENSHOT_CHROME_HIDE_STYLE_ID;
+    style.textContent = HIDE_SCREENSHOT_CHROME_CSS;
+    document.documentElement.appendChild(style);
+  };
+
+  install();
+  document.addEventListener('DOMContentLoaded', install);
+}
 
 /**
  * Returns true when the last \`requiredStable\` height samples are identical.
@@ -31,22 +57,39 @@ export async function readDocumentScrollHeight(page: Page): Promise<number> {
 
 export async function waitForStableDocumentHeight(
   page: Page,
-  options?: { requiredStable?: number; intervalMs?: number; timeoutMs?: number },
+  options?: {
+    requiredStable?: number;
+    intervalMs?: number;
+    timeoutMs?: number;
+    /** Extra time with no height change after the last identical samples. */
+    quietMs?: number;
+  },
 ): Promise<number> {
   const requiredStable = options?.requiredStable ?? 3;
   const intervalMs = options?.intervalMs ?? 100;
   const timeoutMs = options?.timeoutMs ?? 8_000;
+  const quietMs = options?.quietMs ?? 400;
   const samples: number[] = [];
   const deadline = Date.now() + timeoutMs;
+  let stableSince: number | null = null;
+  let previousHeight: number | undefined;
 
   while (Date.now() < deadline) {
-    samples.push(await readDocumentScrollHeight(page));
+    const height = await readDocumentScrollHeight(page);
+    samples.push(height);
+
+    if (previousHeight !== undefined && height !== previousHeight) {
+      stableSince = null;
+    }
+    previousHeight = height;
+
     if (isDocumentHeightSettled(samples, requiredStable)) {
-      const settled = samples[samples.length - 1];
-      if (settled === undefined) {
-        throw new Error('No height samples collected');
+      stableSince ??= Date.now();
+      if (Date.now() - stableSince >= quietMs) {
+        return height;
       }
-      return settled;
+    } else {
+      stableSince = null;
     }
     await page.waitForTimeout(intervalMs);
   }
@@ -78,12 +121,8 @@ export async function prepareDeterministicScreenshotPage(
       .waitFor({ state: 'visible', timeout: 15_000 });
 
     if (viewportName === 'mobile') {
-      await page
-        .locator('[aria-label="Notifications"]')
-        .waitFor({ state: 'attached', timeout: 5_000 })
-        .catch(() => {});
       await page.addStyleTag({ content: HIDE_SCREENSHOT_CHROME_CSS });
-      await waitForStableDocumentHeight(page);
+      await waitForStableDocumentHeight(page, { quietMs: 500 });
       return;
     }
 

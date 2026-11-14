@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { VIEWPORTS, THEMES, SCREENSHOT_PAGES, themeInit } from './targets';
 import {
   prepareDeterministicScreenshotPage,
+  screenshotChromeHideInitScript,
   styleguideMobileScreenshotMasks,
 } from './screenshot-settle';
 
@@ -17,6 +18,9 @@ for (const vp of VIEWPORTS) {
       for (const pageDef of SCREENSHOT_PAGES) {
         test(pageDef.name, async ({ page, context }) => {
           await context.addInitScript(themeInit(theme), theme);
+          if (pageDef.name === 'styleguide' && vp.name === 'mobile') {
+            await context.addInitScript(screenshotChromeHideInitScript);
+          }
           await page.goto(pageDef.path, { waitUntil: 'load' });
           await prepareDeterministicScreenshotPage(page, pageDef, vp.name);
 

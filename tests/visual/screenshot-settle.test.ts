@@ -21,5 +21,6 @@ describe('HIDE_SCREENSHOT_CHROME_CSS', () => {
   it('suppresses the toast portal that can extend mobile full-page height', () => {
     expect(HIDE_SCREENSHOT_CHROME_CSS).toContain('[aria-label="Notifications"]');
     expect(HIDE_SCREENSHOT_CHROME_CSS).toContain('display: none');
+    expect(HIDE_SCREENSHOT_CHROME_CSS).toContain('height: 0');
   });
 });
