@@ -14,6 +14,34 @@ export const HIDE_SCREENSHOT_CHROME_CSS = `
   }
 `;
 
+/** Mobile full-page styleguide height when the Category chip row matches the Linux baseline PNG. */
+export const STYLEGUIDE_MOBILE_BASELINE_SCROLL_HEIGHT = 10_763;
+
+/** Extra page height when Category loses Duration on the first line (one chip row + gap-3). */
+export const STYLEGUIDE_CATEGORY_WRAP_EXTRA_HEIGHT_PX = 42;
+
+/**
+ * Returns true when Duration shares the first Category line with Action (committed baseline).
+ */
+export function isStyleguideCategoryRowBaselineLayout(
+  durationTop: number,
+  actionTop: number,
+  sameLineEpsilonPx = 8,
+): boolean {
+  return Math.abs(durationTop - actionTop) <= sameLineEpsilonPx;
+}
+
+/**
+ * Returns true when the Category row wrapped (Duration dropped to its own line).
+ */
+export function isStyleguideCategoryRowWrappedLayout(
+  durationTop: number,
+  actionTop: number,
+  wrappedLineEpsilonPx = 20,
+): boolean {
+  return durationTop - actionTop >= wrappedLineEpsilonPx;
+}
+
 /**
  * Returns true when the last \`requiredStable\` height samples are identical.
  * Used to end polling before full-page screenshots (styleguide mobile flake).
@@ -62,6 +90,34 @@ export function styleguideMobileScreenshotMasks(page: Page): Locator[] {
 }
 
 /**
+ * Chips › Category row must match the committed mobile baseline (Duration on line 1).
+ */
+export async function assertStyleguideCategoryRowBaseline(page: Page): Promise<void> {
+  const chipsSection = page.locator('section', {
+    has: page.getByRole('heading', { name: 'Chips', exact: true }),
+  });
+  const categoryRow = chipsSection
+    .locator('.flex.flex-col.gap-2')
+    .filter({ has: page.getByText('Category', { exact: true }) });
+  const firstCategoryLine = categoryRow.locator(':scope > div > div').first();
+  const action = firstCategoryLine.getByText('Action', { exact: true });
+  const duration = firstCategoryLine.getByText('Duration', { exact: true });
+
+  const [actionBox, durationBox] = await Promise.all([
+    action.boundingBox(),
+    duration.boundingBox(),
+  ]);
+  if (!actionBox || !durationBox) {
+    throw new Error('Styleguide Category row chips missing bounding box');
+  }
+  if (!isStyleguideCategoryRowBaselineLayout(durationBox.y, actionBox.y)) {
+    throw new Error(
+      `Category row wrapped: Duration top ${durationBox.y} vs Action top ${actionBox.y} (expected same line)`,
+    );
+  }
+}
+
+/**
  * Settle layout after navigation: webfonts, styleguide theme hydration, and a stable
  * document height. Mobile styleguide skips the short fixed settle for other routes.
  */
@@ -84,6 +140,7 @@ export async function prepareDeterministicScreenshotPage(
         .catch(() => {});
       await page.addStyleTag({ content: HIDE_SCREENSHOT_CHROME_CSS });
       await waitForStableDocumentHeight(page);
+      await assertStyleguideCategoryRowBaseline(page);
       return;
     }
 
