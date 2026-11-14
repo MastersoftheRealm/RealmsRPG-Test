@@ -413,13 +413,17 @@ export default function StyleguidePage() {
             <Chip onRemove={() => {}}>Removable</Chip>
           </Row>
           <Row label="Category">
-            <Chip variant="action">Action</Chip>
-            <Chip variant="activation">Activation</Chip>
-            <Chip variant="area">Area</Chip>
-            <Chip variant="duration">Duration</Chip>
-            <Chip variant="target">Target</Chip>
-            <Chip variant="special">Special</Chip>
-            <Chip variant="restriction">Restriction</Chip>
+            <div className="flex w-full flex-wrap items-center gap-3">
+              <Chip variant="action">Action</Chip>
+              <Chip variant="activation">Activation</Chip>
+              <Chip variant="area">Area</Chip>
+              <Chip variant="duration">Duration</Chip>
+            </div>
+            <div className="flex w-full flex-wrap items-center gap-3">
+              <Chip variant="target">Target</Chip>
+              <Chip variant="special">Special</Chip>
+              <Chip variant="restriction">Restriction</Chip>
+            </div>
           </Row>
           <Row label="Status">
             <Chip variant="success">Success</Chip>

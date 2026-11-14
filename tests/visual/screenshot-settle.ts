@@ -7,13 +7,6 @@ export const STYLEGUIDE_THEME_TOGGLE = /^Toggle theme \((light|dark)\)$/;
 export const HIDE_SCREENSHOT_CHROME_CSS = `
   [aria-label="Notifications"] {
     display: none !important;
-    visibility: hidden !important;
-    height: 0 !important;
-    min-height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    pointer-events: none !important;
   }
   vercel-live-feedback,
   iframe[src*="vercel"] {
@@ -21,23 +14,32 @@ export const HIDE_SCREENSHOT_CHROME_CSS = `
   }
 `;
 
-const SCREENSHOT_CHROME_HIDE_STYLE_ID = 'playwright-screenshot-chrome-hide';
+/** Mobile full-page styleguide height when the Category chip row matches the Linux baseline PNG. */
+export const STYLEGUIDE_MOBILE_BASELINE_SCROLL_HEIGHT = 10_763;
+
+/** Extra page height when Category loses Duration on the first line (one chip row + gap-3). */
+export const STYLEGUIDE_CATEGORY_WRAP_EXTRA_HEIGHT_PX = 42;
 
 /**
- * Init script: hide fixed portals before React mounts so they never extend
- * mobile full-page scrollHeight (intermittent +42px; see PR #543).
+ * Returns true when Duration shares the first Category line with Action (committed baseline).
  */
-export function screenshotChromeHideInitScript(): void {
-  const install = () => {
-    if (document.getElementById(SCREENSHOT_CHROME_HIDE_STYLE_ID)) return;
-    const style = document.createElement('style');
-    style.id = SCREENSHOT_CHROME_HIDE_STYLE_ID;
-    style.textContent = HIDE_SCREENSHOT_CHROME_CSS;
-    document.documentElement.appendChild(style);
-  };
+export function isStyleguideCategoryRowBaselineLayout(
+  durationTop: number,
+  actionTop: number,
+  sameLineEpsilonPx = 8,
+): boolean {
+  return Math.abs(durationTop - actionTop) <= sameLineEpsilonPx;
+}
 
-  install();
-  document.addEventListener('DOMContentLoaded', install);
+/**
+ * Returns true when the Category row wrapped (Duration dropped to its own line).
+ */
+export function isStyleguideCategoryRowWrappedLayout(
+  durationTop: number,
+  actionTop: number,
+  wrappedLineEpsilonPx = 20,
+): boolean {
+  return durationTop - actionTop >= wrappedLineEpsilonPx;
 }
 
 /**
@@ -57,39 +59,22 @@ export async function readDocumentScrollHeight(page: Page): Promise<number> {
 
 export async function waitForStableDocumentHeight(
   page: Page,
-  options?: {
-    requiredStable?: number;
-    intervalMs?: number;
-    timeoutMs?: number;
-    /** Extra time with no height change after the last identical samples. */
-    quietMs?: number;
-  },
+  options?: { requiredStable?: number; intervalMs?: number; timeoutMs?: number },
 ): Promise<number> {
   const requiredStable = options?.requiredStable ?? 3;
   const intervalMs = options?.intervalMs ?? 100;
   const timeoutMs = options?.timeoutMs ?? 8_000;
-  const quietMs = options?.quietMs ?? 400;
   const samples: number[] = [];
   const deadline = Date.now() + timeoutMs;
-  let stableSince: number | null = null;
-  let previousHeight: number | undefined;
 
   while (Date.now() < deadline) {
-    const height = await readDocumentScrollHeight(page);
-    samples.push(height);
-
-    if (previousHeight !== undefined && height !== previousHeight) {
-      stableSince = null;
-    }
-    previousHeight = height;
-
+    samples.push(await readDocumentScrollHeight(page));
     if (isDocumentHeightSettled(samples, requiredStable)) {
-      stableSince ??= Date.now();
-      if (Date.now() - stableSince >= quietMs) {
-        return height;
+      const settled = samples[samples.length - 1];
+      if (settled === undefined) {
+        throw new Error('No height samples collected');
       }
-    } else {
-      stableSince = null;
+      return settled;
     }
     await page.waitForTimeout(intervalMs);
   }
@@ -102,6 +87,34 @@ export async function waitForStableDocumentHeight(
 /** Masks fixed portals that can extend mobile full-page capture height. */
 export function styleguideMobileScreenshotMasks(page: Page): Locator[] {
   return [page.locator('[aria-label="Notifications"]')];
+}
+
+/**
+ * Chips › Category row must match the committed mobile baseline (Duration on line 1).
+ */
+export async function assertStyleguideCategoryRowBaseline(page: Page): Promise<void> {
+  const chipsSection = page.locator('section', {
+    has: page.getByRole('heading', { name: 'Chips', exact: true }),
+  });
+  const categoryRow = chipsSection
+    .locator('.flex.flex-col.gap-2')
+    .filter({ has: page.getByText('Category', { exact: true }) });
+  const firstCategoryLine = categoryRow.locator(':scope > div > div').first();
+  const action = firstCategoryLine.getByText('Action', { exact: true });
+  const duration = firstCategoryLine.getByText('Duration', { exact: true });
+
+  const [actionBox, durationBox] = await Promise.all([
+    action.boundingBox(),
+    duration.boundingBox(),
+  ]);
+  if (!actionBox || !durationBox) {
+    throw new Error('Styleguide Category row chips missing bounding box');
+  }
+  if (!isStyleguideCategoryRowBaselineLayout(durationBox.y, actionBox.y)) {
+    throw new Error(
+      `Category row wrapped: Duration top ${durationBox.y} vs Action top ${actionBox.y} (expected same line)`,
+    );
+  }
 }
 
 /**
@@ -121,8 +134,13 @@ export async function prepareDeterministicScreenshotPage(
       .waitFor({ state: 'visible', timeout: 15_000 });
 
     if (viewportName === 'mobile') {
+      await page
+        .locator('[aria-label="Notifications"]')
+        .waitFor({ state: 'attached', timeout: 5_000 })
+        .catch(() => {});
       await page.addStyleTag({ content: HIDE_SCREENSHOT_CHROME_CSS });
-      await waitForStableDocumentHeight(page, { quietMs: 500 });
+      await waitForStableDocumentHeight(page);
+      await assertStyleguideCategoryRowBaseline(page);
       return;
     }
 
