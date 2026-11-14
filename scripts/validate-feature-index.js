@@ -307,7 +307,7 @@ const SKILL_MATH_BUG_IDS = ['feat-skill-req-first-ability-vs-sheet-highest'];
 
 const CHARACTER_PATH_MATH_BUG_IDS = ['legality-skill-spent-floor-vs-allocation-spent'];
 
-const CREATURE_BUDGET_MATH_BUG_IDS = ['creature-training-stored-tp-without-parts'];
+const CREATURE_BUDGET_MATH_BUG_IDS = [];
 
 const PROFICIENCY_TRAINING_MATH_BUG_IDS = [];
 
