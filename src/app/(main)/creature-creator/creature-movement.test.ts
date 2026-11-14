@@ -13,7 +13,6 @@ import {
   movementSectionPointTotal,
   movementToggleLines,
   movementTravelLines,
-  nextSpeedType,
   readSwimLevel,
   readWalkLevel,
   swimLevelCap,
@@ -105,14 +104,11 @@ describe('creature movement section helpers', () => {
     expect(stepped.feats.map((f) => f.id)).toContain(String(CREATURE_FEAT_IDS.SPEEDY_II));
   });
 
-  it('offers fly before swim for new speed types', () => {
-    expect(nextSpeedType([])).toBe('fly');
+  it('binds fly and swim tiers from movementTypes without a sequential add helper', () => {
     const withFly = movementAfterFlyLevel(initialState, 1, catalog);
-    expect(nextSpeedType(withFly.movementTypes)).toBe('swim');
     const withSwim = movementAfterSwimLevel(withFly, 1, catalog);
     expect(withSwim.movementTypes).toContain('Swim Half');
     expect(withSwim.feats.map((f) => f.id)).toContain(String(CREATURE_FEAT_IDS.SWIMMING));
-    expect(nextSpeedType(withSwim.movementTypes)).toBeNull();
   });
 
   it('counts implied control feat costs from movementTypes for legacy creatures', () => {

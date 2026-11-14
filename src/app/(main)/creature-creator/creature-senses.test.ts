@@ -4,7 +4,6 @@ import { initialState } from './creature-creator-constants';
 import {
   isCreatureSensesControlFeatId,
   migrateLegacySenseNames,
-  nextBuiltInSenseType,
   readLifesenseLevel,
   senseControlDisplayValue,
   senseFamilyCap,
@@ -62,19 +61,14 @@ describe('creature senses section helpers', () => {
     expect(sensesToggleFeats(catalog).map((f) => f.id)).toEqual(['99']);
   });
 
-  it('offers darkvision before blindsense', () => {
-    expect(nextBuiltInSenseType([])).toBe('darkvision');
+  it('steps darkvision through catalog tiers', () => {
     const withDark = sensesAfterDarkvisionLevel(initialState, 2, catalog);
-    expect(nextBuiltInSenseType(withDark.senses)).toBe('blindsense');
     expect(withDark.senses).toContain('Darkvision II');
     expect(withDark.feats.map((f) => f.id)).toContain(String(CREATURE_FEAT_IDS.DARKVISION_II));
   });
 
   it('migrates legacy sense name chips into Senses toggles', () => {
-    const migrated = migrateLegacySenseNames(
-      { ...initialState, senses: ['Keen Smell'] },
-      catalog,
-    );
+    const migrated = migrateLegacySenseNames({ ...initialState, senses: ['Keen Smell'] }, catalog);
     expect(migrated.senses).toEqual([]);
     expect(migrated.feats.map((f) => f.name)).toContain('Keen Smell');
   });
@@ -94,7 +88,7 @@ describe('creature senses section helpers', () => {
     ).toBe(1);
   });
 
-  it('offers lifesense after darkvision and blindsense are active', () => {
+  it('binds lifesense after darkvision and blindsense are active', () => {
     const extended = [
       ...catalog,
       {
@@ -128,8 +122,12 @@ describe('creature senses section helpers', () => {
       },
     ];
     const withDark = sensesAfterDarkvisionLevel(initialState, 1, extended);
-    const withBlind = { ...withDark, ...sensesAfterBuiltInLevel(withDark, 'blindsense', 1, extended) };
-    expect(nextBuiltInSenseType(withBlind.senses)).toBe('lifesense');
+    const withBlind = {
+      ...withDark,
+      ...sensesAfterBuiltInLevel(withDark, 'blindsense', 1, extended),
+    };
+    const withLife = sensesAfterLifesenseLevel(withBlind, 1, extended);
+    expect(withLife.feats.map((f) => f.id)).toContain(String(CREATURE_FEAT_IDS.LIFESENSE));
   });
 });
 

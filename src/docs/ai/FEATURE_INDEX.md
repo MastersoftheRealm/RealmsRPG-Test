@@ -3210,8 +3210,8 @@ No production file imports these names. A test import does not count. The file t
 - `src/app/(main)/admin/sources/actions.ts`: `addAdminCodexSourceMembership`
 - `src/app/(main)/admin/users/admin-users-directory-state.ts`: `tryApplyContinuationResult`
 - `src/app/(main)/creature-creator/creature-creator-library-selectables.ts`: `codexEquipmentAsLibraryItem`
-- `src/app/(main)/creature-creator/creature-movement.ts`: `isCreatureMovementControlFeatId`, `isCreatureMovementEffectFeat`
-- `src/app/(main)/creature-creator/creature-senses.ts`: `isCreatureSensesControlFeatId`, `readDarkvisionLevel`, `readLifesenseLevel`, `sensesAfterDarkvisionLevel`, `sensesAfterLifesenseLevel`
+- `src/app/(main)/creature-creator/creature-movement.ts`: `isCreatureMovementControlFeatId`, `isCreatureMovementEffectFeat`, `movementAfterBurrowLevel`, `movementAfterFlyLevel`, `movementAfterSwimLevel`, `movementDropdownFeats`, `readSwimLevel`, `swimLevelCap`
+- `src/app/(main)/creature-creator/creature-senses.ts`: `isCreatureSensesControlFeatId`, `readDarkvisionLevel`, `readLifesenseLevel`, `sensesAfterBuiltInLevel`, `sensesAfterDarkvisionLevel`, `sensesAfterLifesenseLevel`
 - `src/app/(main)/creature-creator/creature-creator-remove-section-confirm-placeholder.ts`: `REMOVE_SECTION_CONFIRM_CONFIRM_LABEL`, `REMOVE_SECTION_CONFIRM_DESCRIPTION`
 - `src/app/(main)/creature-creator/map-creature-inventory-rows.ts`: `creatureArmamentToSheetItem`
 - `src/app/(main)/creature-creator/transformers.ts`: `customEquipmentItemToCreatureArmament`

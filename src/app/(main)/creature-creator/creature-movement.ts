@@ -1,9 +1,9 @@
 /**
  * Creature Movement controls.
- * Speed, fly, and burrow are bound to feat families. Other on/off controls are toggles.
- * Category is not decided here. A Speedy, Slow, Flying, or Burrow family row is this
- * section's control, even when its mechanic flag is false. Other mechanic-false
- * Movement rows stay normal picks.
+ * Speed, fly, swim, and burrow are bound to feat families. Other Movement rows with
+ * `category === 'Movement'` and `mechanic !== true` that are not speed or mode
+ * controls are section toggles (`isMovementSectionToggleRow`). A Speedy, Slow, Flying,
+ * or Burrow family row is this section's control, even when its mechanic flag is false.
  * Saved Speedy and Slow names still load an old speed. A family level those names
  * cannot spell is stored as walk:+N or walk:-N, one space per level.
  */
@@ -197,11 +197,11 @@ function modeFamilyIdSet(
   return ids;
 }
 
-export function readFlyLevel(movementTypes: readonly string[]): number {
+function readFlyLevel(movementTypes: readonly string[]): number {
   return readModeLevel(movementTypes, FLY_NAMES, FLY_TOKEN);
 }
 
-export function readBurrowLevel(movementTypes: readonly string[]): number {
+function readBurrowLevel(movementTypes: readonly string[]): number {
   return readModeLevel(movementTypes, BURROW_NAMES, BURROW_TOKEN);
 }
 
@@ -213,11 +213,11 @@ export function swimLevelCap(catalog: readonly CodexCreatureFeat[]): number {
   return familyCap(catalog, CREATURE_FEAT_IDS.SWIMMING, SWIM_IDS);
 }
 
-export function flyLevelCap(catalog: readonly CodexCreatureFeat[]): number {
+function flyLevelCap(catalog: readonly CodexCreatureFeat[]): number {
   return familyCap(catalog, CREATURE_FEAT_IDS.FLYING, FLY_IDS);
 }
 
-export function burrowLevelCap(catalog: readonly CodexCreatureFeat[]): number {
+function burrowLevelCap(catalog: readonly CodexCreatureFeat[]): number {
   return familyCap(catalog, CREATURE_FEAT_IDS.BURROW, BURROW_IDS);
 }
 
@@ -374,13 +374,7 @@ export function movementAfterSwimLevel(
   );
 }
 
-export function nextSpeedType(movementTypes: readonly string[]): 'fly' | 'swim' | null {
-  if (readFlyLevel(movementTypes) === 0) return 'fly';
-  if (readSwimLevel(movementTypes) === 0) return 'swim';
-  return null;
-}
-
-export type BuiltInMovementKind = 'fly' | 'swim' | 'burrow';
+type BuiltInMovementKind = 'fly' | 'swim' | 'burrow';
 
 type BuiltInMovementModeConfig = {
   kind: BuiltInMovementKind;
@@ -413,8 +407,6 @@ const BUILTIN_MOVEMENT_MODES: readonly BuiltInMovementModeConfig[] = [
     knownIds: BURROW_IDS,
   },
 ] as const;
-
-export const builtInMovementModes = BUILTIN_MOVEMENT_MODES;
 
 function catalogHasMovementFamily(catalog: readonly CodexCreatureFeat[], baseId: number): boolean {
   const base = String(baseId);
