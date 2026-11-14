@@ -1,35 +1,28 @@
 'use client';
 
-import { Button, Card, Checkbox } from '@/components/ui';
+import { Card, Checkbox } from '@/components/ui';
 import { DecrementButton, IncrementButton, InfoTippy } from '@/components/patterns';
 import { LargeStatBlock } from '@/components/character-sheet/sheet-large-stat-block';
 import type { CreatureFeat as CodexCreatureFeat } from '@/hooks';
-import { AddItemDropdown } from './CreatureCreatorHelpers';
 import {
   formatMovementPointCost,
   formatMovementSpeed,
-  movementAfterBurrowLevel,
-  movementAfterFlyLevel,
-  movementAfterSwimLevel,
+  movementAfterBuiltInMode,
   movementAfterWalkLevel,
-  movementDropdownFeats,
+  movementModeCap,
   movementModeStepperLabel,
+  movementModesInCatalog,
   movementSectionPointTotal,
   movementToggleFeats,
   movementTravelSpeed,
-  burrowLevelCap,
-  flyLevelCap,
-  nextSpeedType,
-  readBurrowLevel,
-  readFlyLevel,
-  readSwimLevel,
+  readBuiltInMovementLevel,
   readWalkLevel,
-  swimLevelCap,
   toggleMovementFeat,
   walkLevelCap,
 } from './creature-movement';
-import { CREATURE_FEAT_IDS } from '@/lib/id-constants';
 import type { CreatureState } from './creature-creator-types';
+
+const ACTIVE_MODE_STEPPER_MIN = 1;
 
 function LevelStepper({
   label,
@@ -91,10 +84,10 @@ function SpeedTypeBox({
         <LevelStepper
           label={label}
           value={level}
-          min={0}
+          min={ACTIVE_MODE_STEPPER_MIN}
           max={max}
           text={stepperText}
-          onChange={(next) => onChange(Math.max(0, Math.min(max, next)))}
+          onChange={(next) => onChange(Math.max(ACTIVE_MODE_STEPPER_MIN, Math.min(max, next)))}
         />
       }
     />
@@ -106,25 +99,17 @@ export function CreatureCreatorMovementSection({
   walkSpeed,
   catalog,
   updateCreature,
-  onAddMovementFeat,
 }: {
   creature: CreatureState;
   walkSpeed: number;
   catalog: readonly CodexCreatureFeat[];
   updateCreature: (updates: Partial<CreatureState>) => void;
-  onAddMovementFeat: (featId: string) => void;
 }) {
   const walk = readWalkLevel(creature.movementTypes);
-  const fly = readFlyLevel(creature.movementTypes);
-  const swim = readSwimLevel(creature.movementTypes);
-  const burrow = readBurrowLevel(creature.movementTypes);
   const caps = walkLevelCap(catalog);
   const pointTotal = movementSectionPointTotal(creature, catalog);
+  const movementModes = movementModesInCatalog(catalog);
   const toggles = movementToggleFeats(catalog);
-  const dropdown = movementDropdownFeats(catalog);
-  const selectedDropdown = new Set(creature.feats.map((feat) => String(feat.id)));
-  const addable = dropdown.filter((feat) => !selectedDropdown.has(String(feat.id)));
-  const nextType = nextSpeedType(creature.movementTypes);
 
   return (
     <Card className="p-6 shadow-md">
@@ -150,86 +135,47 @@ export function CreatureCreatorMovementSection({
             />
           }
         />
-        {fly > 0 && (
-          <SpeedTypeBox
-            label="Flying Speed"
-            walkSpeed={walkSpeed}
-            level={fly}
-            max={flyLevelCap(catalog)}
-            stepperText={movementModeStepperLabel(
-              catalog,
-              CREATURE_FEAT_IDS.FLYING,
-              fly,
-              [CREATURE_FEAT_IDS.FLYING, CREATURE_FEAT_IDS.FLYING_II],
-            )}
-            onChange={(next) => updateCreature(movementAfterFlyLevel(creature, next, catalog))}
-          />
-        )}
-        {swim > 0 && (
-          <SpeedTypeBox
-            label="Swimming Speed"
-            walkSpeed={walkSpeed}
-            level={swim}
-            max={swimLevelCap(catalog)}
-            stepperText={movementModeStepperLabel(
-              catalog,
-              CREATURE_FEAT_IDS.SWIMMING,
-              swim,
-              [CREATURE_FEAT_IDS.SWIMMING, CREATURE_FEAT_IDS.SWIMMING_II],
-            )}
-            onChange={(next) => updateCreature(movementAfterSwimLevel(creature, next, catalog))}
-          />
-        )}
-        {burrow > 0 && (
-          <SpeedTypeBox
-            label="Burrow Speed"
-            walkSpeed={walkSpeed}
-            level={burrow}
-            max={burrowLevelCap(catalog)}
-            stepperText={movementModeStepperLabel(
-              catalog,
-              CREATURE_FEAT_IDS.BURROW,
-              burrow,
-              [CREATURE_FEAT_IDS.BURROW, CREATURE_FEAT_IDS.BURROW_II],
-            )}
-            onChange={(next) => updateCreature(movementAfterBurrowLevel(creature, next, catalog))}
-          />
-        )}
-        {nextType && (
-          <Button
-            size="sm"
-            variant="secondary"
-            className="self-center"
-            onClick={() =>
-              updateCreature(
-                nextType === 'fly'
-                  ? movementAfterFlyLevel(creature, 1, catalog)
-                  : movementAfterSwimLevel(creature, 1, catalog),
-              )
-            }
-            title={nextType === 'fly' ? 'Add flying speed' : 'Add swimming speed'}
-            aria-label={nextType === 'fly' ? 'Add flying speed' : 'Add swimming speed'}
-          >
-            +
-          </Button>
-        )}
+        {movementModes.map((mode) => {
+          const level = readBuiltInMovementLevel(creature.movementTypes, mode.kind);
+          const max = movementModeCap(catalog, mode.kind);
+          return (
+            <SpeedTypeBox
+              key={mode.kind}
+              label={mode.speedLabel}
+              walkSpeed={walkSpeed}
+              level={level}
+              max={max}
+              stepperText={movementModeStepperLabel(catalog, mode.baseId, level, mode.knownIds)}
+              onChange={(next) =>
+                updateCreature(movementAfterBuiltInMode(creature, mode.kind, next, catalog))
+              }
+            />
+          );
+        })}
       </div>
-      {addable.length > 0 && (
-        <div className="mt-4 max-w-sm">
-          <AddItemDropdown
-            options={addable.map((feat) => ({
-              value: String(feat.id),
-              label: feat.name,
-              description: feat.description,
-            }))}
-            selectedItems={[]}
-            onAdd={(id) => onAddMovementFeat(id)}
-            placeholder="Add movement feat..."
-          />
-        </div>
-      )}
-      {toggles.length > 0 && (
-        <div className="mt-4 flex flex-col gap-2">
+      {(movementModes.length > 0 || toggles.length > 0) && (
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+          {movementModes.map((mode) => {
+            const level = readBuiltInMovementLevel(creature.movementTypes, mode.kind);
+            return (
+              <div key={mode.kind} className="flex items-center gap-2">
+                <Checkbox
+                  checked={level > 0}
+                  label={mode.label}
+                  onChange={(event) =>
+                    updateCreature(
+                      movementAfterBuiltInMode(
+                        creature,
+                        mode.kind,
+                        event.target.checked ? 1 : 0,
+                        catalog,
+                      ),
+                    )
+                  }
+                />
+              </div>
+            );
+          })}
           {toggles.map((feat) => {
             const on = creature.feats.some((row) => String(row.id) === String(feat.id));
             return (

@@ -61,7 +61,7 @@ import {
 } from '@/lib/library/use-creator-edit-draft';
 import { normalizeCreatureInventoryType } from '@/lib/game/creature-inventory';
 import { mergeLibraryBySource } from '@/lib/library/source-scope';
-import { codexCreatureFeatToCreatureFeat, mergeCreatureFeatsOnAdd } from './creature-feat-utils';
+import { mergeCreatureFeatsOnAdd } from './creature-feat-utils';
 import { isCreatureCreatorHiddenFeat } from './creature-movement';
 import { canAddDamageModifier } from './creature-damage-modifiers';
 import {
@@ -393,18 +393,6 @@ export function useCreatureCreatorWorkspace() {
     [codexCreatureFeatsById, featsWithTypeLabel, sortFeatItems],
   );
 
-  const addMovementDropdownFeat = useCallback(
-    (featId: string) => {
-      const row = codexCreatureFeatsById.get(featId);
-      if (!row) return;
-      setCreature((prev) => ({
-        ...prev,
-        feats: mergeCreatureFeatsOnAddBound(prev.feats, [codexCreatureFeatToCreatureFeat(row)]),
-      }));
-    },
-    [codexCreatureFeatsById, mergeCreatureFeatsOnAddBound],
-  );
-
   const armamentsWithSortKeys = useMemo(() => enrichArmamentsWithSortKeys(creature), [creature]);
 
   const sortedArmaments = useMemo(
@@ -614,7 +602,6 @@ export function useCreatureCreatorWorkspace() {
     displayItemToCreatureArmament,
     mergeCreatureFeatsOnAdd: mergeCreatureFeatsOnAddBound,
     creatureFeatsCatalog: creatureFeatsData as CodexCreatureFeatRow[],
-    addMovementDropdownFeat,
     initialState,
     clearSessionDraftCache,
   };

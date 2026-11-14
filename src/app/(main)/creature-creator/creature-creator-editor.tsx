@@ -115,7 +115,6 @@ export type CreatureCreatorEditorProps = {
   onOpenTechniqueModal: () => void;
   onOpenArmamentModal: (tab?: CreatureInventoryTab) => void;
   creatureFeatsCatalog: CodexCreatureFeat[];
-  onAddMovementFeat: (featId: string) => void;
 };
 
 export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {
@@ -274,7 +273,6 @@ export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {
         walkSpeed={stats.speed}
         catalog={props.creatureFeatsCatalog}
         updateCreature={props.updateCreature}
-        onAddMovementFeat={props.onAddMovementFeat}
       />
       <CreatureCreatorSensesSection
         creature={creature}
