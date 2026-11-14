@@ -117,7 +117,7 @@ export function CreatureStatBlockExpandedContent({
   creatureFeatsById,
 }: CreatureStatBlockExpandedContentProps) {
   const travelLines = movementTravelLines(creature.movementTypes ?? [], speed);
-  const toggleLines = movementToggleLines(creature.feats ?? []);
+  const toggleLines = movementToggleLines(creature.feats ?? [], creatureFeatsById);
   return (
     <div className="space-y-4">
       {/* Header (character-sheet style, simplified) */}

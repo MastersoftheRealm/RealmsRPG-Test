@@ -1,33 +1,34 @@
 'use client';
 
-import { Button, Card, Checkbox } from '@/components/ui';
+import { Card, Checkbox } from '@/components/ui';
 import { DecrementButton, IncrementButton, InfoTippy } from '@/components/patterns';
 import { LargeStatBlock } from '@/components/character-sheet/sheet-large-stat-block';
 import type { CreatureFeat as CodexCreatureFeat } from '@/hooks';
 import type { CreatureState } from './creature-creator-types';
 import {
-  type BuiltInSenseKind,
   builtInSenseFamilies,
   formatSensesPointCost,
-  nextBuiltInSenseType,
   readBuiltInSenseLevel,
   senseFamilyCap,
   senseControlDisplayValue,
   sensesAfterBuiltInHandler,
-  sensesAfterBuiltInLevel,
   sensesSectionPointTotal,
   sensesToggleFeats,
   toggleSenseFeat,
 } from './creature-senses';
 
+const ACTIVE_SENSE_STEPPER_MIN = 1;
+
 function TierStepper({
   label,
   value,
+  min,
   max,
   onChange,
 }: {
   label: string;
   value: number;
+  min: number;
   max: number;
   onChange: (next: number) => void;
 }) {
@@ -35,7 +36,7 @@ function TierStepper({
     <div className="mt-2 flex items-center gap-1">
       <DecrementButton
         size="sm"
-        disabled={value <= 0}
+        disabled={value <= min}
         onClick={() => onChange(value - 1)}
         title={`Decrease ${label}`}
       />
@@ -62,7 +63,7 @@ function SenseControlBox({
   onChange,
 }: {
   label: string;
-  kind: BuiltInSenseKind;
+  kind: (typeof builtInSenseFamilies)[number]['kind'];
   level: number;
   max: number;
   creature: CreatureState;
@@ -74,8 +75,23 @@ function SenseControlBox({
     <LargeStatBlock
       label={label}
       value={senseControlDisplayValue(creature.senses, kind, catalog)}
-      footer={<TierStepper label={label} value={level} max={max} onChange={onChange} />}
+      footer={
+        <TierStepper
+          label={label}
+          value={level}
+          min={ACTIVE_SENSE_STEPPER_MIN}
+          max={max}
+          onChange={(next) => onChange(Math.max(ACTIVE_SENSE_STEPPER_MIN, Math.min(max, next)))}
+        />
+      }
     />
+  );
+}
+
+function catalogHasSenseFamily(catalog: readonly CodexCreatureFeat[], baseId: number): boolean {
+  const base = String(baseId);
+  return catalog.some(
+    (feat) => String(feat.id) === base || String(feat.base_feat_id ?? '') === base,
   );
 }
 
@@ -90,7 +106,9 @@ export function CreatureCreatorSensesSection({
 }) {
   const pointTotal = sensesSectionPointTotal(creature, catalog);
   const toggles = sensesToggleFeats(catalog);
-  const nextType = nextBuiltInSenseType(creature.senses);
+  const senseFamilies = builtInSenseFamilies.filter((family) =>
+    catalogHasSenseFamily(catalog, family.baseId),
+  );
 
   return (
     <Card className="p-6 shadow-md">
@@ -102,7 +120,7 @@ export function CreatureCreatorSensesSection({
         </p>
       )}
       <div className="flex flex-wrap items-stretch gap-3">
-        {builtInSenseFamilies.map((family) => {
+        {senseFamilies.map((family) => {
           const level = readBuiltInSenseLevel(creature.senses, family.kind);
           const max = senseFamilyCap(catalog, family.kind);
           const after = sensesAfterBuiltInHandler(family.kind);
@@ -119,23 +137,24 @@ export function CreatureCreatorSensesSection({
             />
           );
         })}
-        {nextType && (
-          <Button
-            size="sm"
-            variant="secondary"
-            className="self-center"
-            onClick={() =>
-              updateCreature(sensesAfterBuiltInLevel(creature, nextType, 1, catalog))
-            }
-            title={`Add ${SENSE_FAMILY_BY_KIND_LABEL(nextType)}`}
-            aria-label={`Add ${SENSE_FAMILY_BY_KIND_LABEL(nextType)}`}
-          >
-            +
-          </Button>
-        )}
       </div>
-      {toggles.length > 0 && (
-        <div className="mt-4 flex flex-col gap-2">
+      {(senseFamilies.length > 0 || toggles.length > 0) && (
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+          {senseFamilies.map((family) => {
+            const level = readBuiltInSenseLevel(creature.senses, family.kind);
+            const after = sensesAfterBuiltInHandler(family.kind);
+            return (
+              <div key={family.kind} className="flex items-center gap-2">
+                <Checkbox
+                  checked={level > 0}
+                  label={family.label}
+                  onChange={(event) =>
+                    updateCreature(after(creature, event.target.checked ? 1 : 0, catalog))
+                  }
+                />
+              </div>
+            );
+          })}
           {toggles.map((feat) => {
             const on = creature.feats.some((row) => String(row.id) === String(feat.id));
             return (
@@ -159,8 +178,4 @@ export function CreatureCreatorSensesSection({
       )}
     </Card>
   );
-}
-
-function SENSE_FAMILY_BY_KIND_LABEL(kind: BuiltInSenseKind): string {
-  return builtInSenseFamilies.find((family) => family.kind === kind)?.label ?? kind;
 }

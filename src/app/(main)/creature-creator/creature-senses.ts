@@ -13,7 +13,12 @@ import type { CreatureFeat } from './transformers';
 import { formatMovementPointCost } from './creature-movement';
 
 const DARKVISION_NAMES = ['Darkvision', 'Darkvision II', 'Darkvision III'] as const;
-const BLINDSENSE_NAMES = ['Blindsense', 'Blindsense II', 'Blindsense III', 'Blindsense IV'] as const;
+const BLINDSENSE_NAMES = [
+  'Blindsense',
+  'Blindsense II',
+  'Blindsense III',
+  'Blindsense IV',
+] as const;
 
 const DARKVISION_IDS = [
   CREATURE_FEAT_IDS.DARKVISION,
@@ -51,12 +56,7 @@ const LIFESENSE_TOKEN = /^lifesense:(\d+)$/;
 const EARTHSENSE_TOKEN = /^earthsense:(\d+)$/;
 const LIQUIDSENSE_TOKEN = /^liquidsense:(\d+)$/;
 
-export type BuiltInSenseKind =
-  | 'darkvision'
-  | 'blindsense'
-  | 'lifesense'
-  | 'earthsense'
-  | 'liquidsense';
+type BuiltInSenseKind = 'darkvision' | 'blindsense' | 'lifesense' | 'earthsense' | 'liquidsense';
 
 type SenseFamilyConfig = {
   kind: BuiltInSenseKind;
@@ -131,9 +131,7 @@ const SENSE_FAMILY_ROOTS = new Set<string>(
 const LEGACY_SENSE_NAMES = new Set<string>([
   ...DARKVISION_NAMES,
   ...BLINDSENSE_NAMES,
-  ...BUILTIN_SENSE_FAMILIES.flatMap((family) =>
-    family.useLegacyNames ? family.legacyNames : [],
-  ),
+  ...BUILTIN_SENSE_FAMILIES.flatMap((family) => (family.useLegacyNames ? family.legacyNames : [])),
 ]);
 
 function idString(id: number): string {
@@ -238,10 +236,7 @@ function readFamilyLevel(
   return level;
 }
 
-function senseStorageToken(
-  family: SenseFamilyConfig,
-  level: number,
-): string | null {
+function senseStorageToken(family: SenseFamilyConfig, level: number): string | null {
   if (level <= 0) return null;
   if (family.useLegacyNames) {
     return family.legacyNames[level - 1] ?? `${family.tokenPrefix}:${level}`;
@@ -284,10 +279,7 @@ function withFeat(
   return [...feats, { ...codexCreatureFeatToCreatureFeat(row), boundControl: true }];
 }
 
-export function readBuiltInSenseLevel(
-  senses: readonly string[],
-  kind: BuiltInSenseKind,
-): number {
+export function readBuiltInSenseLevel(senses: readonly string[], kind: BuiltInSenseKind): number {
   const family = SENSE_FAMILY_BY_KIND.get(kind);
   if (!family) return 0;
   return readFamilyLevel(senses, family.legacyNames, family.token);
@@ -340,13 +332,6 @@ export function sensesAfterLifesenseLevel(
   catalog: readonly CodexCreatureFeat[],
 ): Pick<CreatureState, 'senses' | 'feats'> {
   return sensesAfterBuiltInLevel(creature, 'lifesense', level, catalog);
-}
-
-export function nextBuiltInSenseType(senses: readonly string[]): BuiltInSenseKind | null {
-  for (const family of BUILTIN_SENSE_FAMILIES) {
-    if (readBuiltInSenseLevel(senses, family.kind) === 0) return family.kind;
-  }
-  return null;
 }
 
 export function sensesToggleFeats(catalog: readonly CodexCreatureFeat[]): CodexCreatureFeat[] {
@@ -437,7 +422,8 @@ export function builtInSenseSummaryLines(
   const lines: string[] = [];
   for (const family of BUILTIN_SENSE_FAMILIES) {
     if (readBuiltInSenseLevel(creature.senses, family.kind) <= 0) continue;
-    const label = activeSenseControlFeat(creature.senses, family.kind, catalog)?.name ?? family.label;
+    const label =
+      activeSenseControlFeat(creature.senses, family.kind, catalog)?.name ?? family.label;
     lines.push(`${label}: ${senseControlDisplayValue(creature.senses, family.kind, catalog)}`);
   }
   return lines;

@@ -13,7 +13,6 @@ import {
   movementSectionPointTotal,
   movementToggleLines,
   movementTravelLines,
-  nextSpeedType,
   readSwimLevel,
   readWalkLevel,
   swimLevelCap,
@@ -105,14 +104,11 @@ describe('creature movement section helpers', () => {
     expect(stepped.feats.map((f) => f.id)).toContain(String(CREATURE_FEAT_IDS.SPEEDY_II));
   });
 
-  it('offers fly before swim for new speed types', () => {
-    expect(nextSpeedType([])).toBe('fly');
+  it('binds fly and swim tiers from movementTypes without a sequential add helper', () => {
     const withFly = movementAfterFlyLevel(initialState, 1, catalog);
-    expect(nextSpeedType(withFly.movementTypes)).toBe('swim');
     const withSwim = movementAfterSwimLevel(withFly, 1, catalog);
     expect(withSwim.movementTypes).toContain('Swim Half');
     expect(withSwim.feats.map((f) => f.id)).toContain(String(CREATURE_FEAT_IDS.SWIMMING));
-    expect(nextSpeedType(withSwim.movementTypes)).toBeNull();
   });
 
   it('counts implied control feat costs from movementTypes for legacy creatures', () => {
@@ -175,9 +171,9 @@ describe('creature movement section helpers', () => {
     const slowIv = withFourthSlow.find((feat) => feat.id === '167');
     expect(isCreatureMovementEffectFeat(capped.feats[0]!, slowIv)).toBe(true);
     expect(movementControlFeatIdsFromNames(['walk:-4'], withFourthSlow)).toEqual(['167']);
-    expect(movementAfterWalkLevel(initialState, -5, withFourthSlow).feats.map((feat) => feat.id)).toEqual(
-      ['167'],
-    );
+    expect(
+      movementAfterWalkLevel(initialState, -5, withFourthSlow).feats.map((feat) => feat.id),
+    ).toEqual(['167']);
   });
 
   it('clamps the walk stepper at the highest Speedy level in the catalog', () => {
@@ -197,12 +193,10 @@ describe('creature movement section helpers', () => {
     expect(walkLevelCap(withFourth).up).toBe(4);
     const capped = movementAfterWalkLevel(initialState, 99, withFourth);
     expect(readWalkLevel(capped.movementTypes)).toBe(4);
-    expect(movementAfterWalkLevel(initialState, 5, withFourth).feats.map((feat) => feat.id)).toEqual([
-      '166',
-    ]);
     expect(
-      movementControlFeatIdsFromNames(['walk:+4'], withFourth),
+      movementAfterWalkLevel(initialState, 5, withFourth).feats.map((feat) => feat.id),
     ).toEqual(['166']);
+    expect(movementControlFeatIdsFromNames(['walk:+4'], withFourth)).toEqual(['166']);
   });
 
   it('uses a further Speedy family level as the speed step, not a listed feat', () => {
@@ -258,7 +252,9 @@ describe('creature movement section helpers', () => {
   });
 
   it('does not bind a swim level above the last catalog row', () => {
-    const oneTier = catalog.filter((feat) => String(feat.id) !== String(CREATURE_FEAT_IDS.SWIMMING_II));
+    const oneTier = catalog.filter(
+      (feat) => String(feat.id) !== String(CREATURE_FEAT_IDS.SWIMMING_II),
+    );
     expect(swimLevelCap(oneTier)).toBe(1);
     const atCap = movementAfterSwimLevel(initialState, 2, oneTier);
     expect(readSwimLevel(atCap.movementTypes)).toBe(1);
@@ -274,11 +270,35 @@ describe('creature movement section helpers', () => {
       { label: 'Swimming Speed', value: '5' },
       { label: 'Burrow Speed', value: '10' },
     ]);
+    const toggleCatalog = new Map<string, (typeof catalog)[number]>([
+      [
+        String(CREATURE_FEAT_IDS.HOVER),
+        {
+          id: String(CREATURE_FEAT_IDS.HOVER),
+          name: 'Hover',
+          description: 'Stays aloft.',
+          points: 1,
+          feat_lvl: 1,
+          mechanic: false,
+          category: 'Movement',
+        },
+      ],
+      [
+        String(CREATURE_FEAT_IDS.BOUNDING),
+        catalog.find((f) => f.id === String(CREATURE_FEAT_IDS.BOUNDING))!,
+      ],
+    ]);
     expect(
-      movementToggleLines([
-        { id: CREATURE_FEAT_IDS.HOVER, name: 'Hover', description: 'Stays aloft.' },
-        { id: CREATURE_FEAT_IDS.BOUNDING, name: 'Bounding' },
-      ]),
-    ).toEqual([{ id: String(CREATURE_FEAT_IDS.HOVER), name: 'Hover', description: 'Stays aloft.' }]);
+      movementToggleLines(
+        [
+          { id: CREATURE_FEAT_IDS.HOVER, name: 'Hover', description: 'Stays aloft.' },
+          { id: CREATURE_FEAT_IDS.BOUNDING, name: 'Bounding' },
+        ],
+        toggleCatalog,
+      ),
+    ).toEqual([
+      { id: String(CREATURE_FEAT_IDS.HOVER), name: 'Hover', description: 'Stays aloft.' },
+      { id: String(CREATURE_FEAT_IDS.BOUNDING), name: 'Bounding' },
+    ]);
   });
 });

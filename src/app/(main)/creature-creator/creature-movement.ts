@@ -1,9 +1,9 @@
 /**
  * Creature Movement controls.
- * Speed, fly, and burrow are bound to feat families. Other on/off controls are toggles.
- * Category is not decided here. A Speedy, Slow, Flying, or Burrow family row is this
- * section's control, even when its mechanic flag is false. Other mechanic-false
- * Movement rows stay normal picks.
+ * Speed, fly, swim, and burrow are bound to feat families. Other Movement rows with
+ * `category === 'Movement'` and `mechanic !== true` that are not speed or mode
+ * controls are section toggles (`isMovementSectionToggleRow`). A Speedy, Slow, Flying,
+ * or Burrow family row is this section's control, even when its mechanic flag is false.
  * Saved Speedy and Slow names still load an old speed. A family level those names
  * cannot spell is stored as walk:+N or walk:-N, one space per level.
  */
@@ -43,15 +43,6 @@ const FLY_TOKEN = /^fly:(\d+)$/;
 const SWIM_TOKEN = /^swim:(\d+)$/;
 const BURROW_TOKEN = /^burrow:(\d+)$/;
 
-/** On/off controls. Terrain Bound is the named example; it has no Movement category yet. */
-const TOGGLE_IDS = [
-  CREATURE_FEAT_IDS.ALL_SURFACE_CLIMBER,
-  CREATURE_FEAT_IDS.WATER_MOVEMENT,
-  CREATURE_FEAT_IDS.UNRESTRAINED_MOVEMENT,
-  CREATURE_FEAT_IDS.HOVER,
-  98,
-] as const;
-
 const WALK_FAMILY_ROOTS = new Set<string>([
   String(CREATURE_FEAT_IDS.SPEEDY),
   String(CREATURE_FEAT_IDS.SLOW),
@@ -74,7 +65,6 @@ const CONTROL_IDS = new Set<string>([
   ...FLY_IDS.map(idString),
   ...SWIM_IDS.map(idString),
   ...BURROW_IDS.map(idString),
-  ...TOGGLE_IDS.map(idString),
 ]);
 
 export function isCreatureMovementControlFeatId(id: string | number): boolean {
@@ -186,11 +176,7 @@ function readModeLevel(
   return level;
 }
 
-function modeMovementToken(
-  prefix: string,
-  level: number,
-  names: readonly string[],
-): string | null {
+function modeMovementToken(prefix: string, level: number, names: readonly string[]): string | null {
   if (level <= 0) return null;
   return names[level - 1] ?? `${prefix}:${level}`;
 }
@@ -211,11 +197,11 @@ function modeFamilyIdSet(
   return ids;
 }
 
-export function readFlyLevel(movementTypes: readonly string[]): number {
+function readFlyLevel(movementTypes: readonly string[]): number {
   return readModeLevel(movementTypes, FLY_NAMES, FLY_TOKEN);
 }
 
-export function readBurrowLevel(movementTypes: readonly string[]): number {
+function readBurrowLevel(movementTypes: readonly string[]): number {
   return readModeLevel(movementTypes, BURROW_NAMES, BURROW_TOKEN);
 }
 
@@ -227,11 +213,11 @@ export function swimLevelCap(catalog: readonly CodexCreatureFeat[]): number {
   return familyCap(catalog, CREATURE_FEAT_IDS.SWIMMING, SWIM_IDS);
 }
 
-export function flyLevelCap(catalog: readonly CodexCreatureFeat[]): number {
+function flyLevelCap(catalog: readonly CodexCreatureFeat[]): number {
   return familyCap(catalog, CREATURE_FEAT_IDS.FLYING, FLY_IDS);
 }
 
-export function burrowLevelCap(catalog: readonly CodexCreatureFeat[]): number {
+function burrowLevelCap(catalog: readonly CodexCreatureFeat[]): number {
   return familyCap(catalog, CREATURE_FEAT_IDS.BURROW, BURROW_IDS);
 }
 
@@ -388,27 +374,120 @@ export function movementAfterSwimLevel(
   );
 }
 
-export function nextSpeedType(movementTypes: readonly string[]): 'fly' | 'swim' | null {
-  if (readFlyLevel(movementTypes) === 0) return 'fly';
-  if (readSwimLevel(movementTypes) === 0) return 'swim';
-  return null;
+type BuiltInMovementKind = 'fly' | 'swim' | 'burrow';
+
+type BuiltInMovementModeConfig = {
+  kind: BuiltInMovementKind;
+  label: string;
+  speedLabel: string;
+  baseId: number;
+  knownIds: readonly number[];
+};
+
+const BUILTIN_MOVEMENT_MODES: readonly BuiltInMovementModeConfig[] = [
+  {
+    kind: 'fly',
+    label: 'Flying',
+    speedLabel: 'Flying Speed',
+    baseId: CREATURE_FEAT_IDS.FLYING,
+    knownIds: FLY_IDS,
+  },
+  {
+    kind: 'swim',
+    label: 'Swimming',
+    speedLabel: 'Swimming Speed',
+    baseId: CREATURE_FEAT_IDS.SWIMMING,
+    knownIds: SWIM_IDS,
+  },
+  {
+    kind: 'burrow',
+    label: 'Burrow',
+    speedLabel: 'Burrow Speed',
+    baseId: CREATURE_FEAT_IDS.BURROW,
+    knownIds: BURROW_IDS,
+  },
+] as const;
+
+function catalogHasMovementFamily(catalog: readonly CodexCreatureFeat[], baseId: number): boolean {
+  const base = String(baseId);
+  return catalog.some(
+    (feat) => String(feat.id) === base || String(feat.base_feat_id ?? '') === base,
+  );
+}
+
+export function movementModesInCatalog(
+  catalog: readonly CodexCreatureFeat[],
+): readonly BuiltInMovementModeConfig[] {
+  return BUILTIN_MOVEMENT_MODES.filter((mode) => catalogHasMovementFamily(catalog, mode.baseId));
+}
+
+export function readBuiltInMovementLevel(
+  movementTypes: readonly string[],
+  kind: BuiltInMovementKind,
+): number {
+  switch (kind) {
+    case 'fly':
+      return readFlyLevel(movementTypes);
+    case 'swim':
+      return readSwimLevel(movementTypes);
+    case 'burrow':
+      return readBurrowLevel(movementTypes);
+    default:
+      return 0;
+  }
+}
+
+export function movementAfterBuiltInMode(
+  creature: Pick<CreatureState, 'movementTypes' | 'feats'>,
+  kind: BuiltInMovementKind,
+  level: number,
+  catalog: readonly CodexCreatureFeat[],
+): Pick<CreatureState, 'movementTypes' | 'feats'> {
+  switch (kind) {
+    case 'fly':
+      return movementAfterFlyLevel(creature, level, catalog);
+    case 'swim':
+      return movementAfterSwimLevel(creature, level, catalog);
+    case 'burrow':
+      return movementAfterBurrowLevel(creature, level, catalog);
+    default:
+      return creature;
+  }
+}
+
+export function movementModeCap(
+  catalog: readonly CodexCreatureFeat[],
+  kind: BuiltInMovementKind,
+): number {
+  switch (kind) {
+    case 'fly':
+      return flyLevelCap(catalog);
+    case 'swim':
+      return swimLevelCap(catalog);
+    case 'burrow':
+      return burrowLevelCap(catalog);
+    default:
+      return 0;
+  }
+}
+
+function isMovementSectionToggleRow(
+  row: Pick<CodexCreatureFeat, 'id' | 'base_feat_id' | 'category' | 'mechanic'>,
+): boolean {
+  return (
+    row.category === 'Movement' &&
+    row.mechanic !== true &&
+    !isCreatureMovementControlFeatId(row.id) &&
+    !isMovementBoundFamilyFeat(row)
+  );
 }
 
 export function movementToggleFeats(catalog: readonly CodexCreatureFeat[]): CodexCreatureFeat[] {
-  const byId = new Map(catalog.map((feat) => [String(feat.id), feat]));
-  return TOGGLE_IDS.map((id) => byId.get(String(id))).filter((feat): feat is CodexCreatureFeat =>
-    Boolean(feat),
-  );
+  return catalog.filter((feat) => isMovementSectionToggleRow(feat));
 }
 
 export function movementDropdownFeats(catalog: readonly CodexCreatureFeat[]): CodexCreatureFeat[] {
-  return catalog.filter(
-    (feat) =>
-      feat.category === 'Movement' &&
-      feat.mechanic !== true &&
-      !isCreatureMovementControlFeatId(feat.id) &&
-      !isMovementBoundFamilyFeat(feat),
-  );
+  return movementToggleFeats(catalog);
 }
 
 export function movementControlFeatIdsFromNames(
@@ -507,17 +586,15 @@ export { builtInSenseSummaryLines } from './creature-senses';
 
 export function isCreatureCreatorHiddenFeat(
   feat: Parameters<typeof isCreatureMovementEffectFeat>[0],
-  catalogRow?: Pick<CodexCreatureFeat, 'id' | 'base_feat_id'> | null,
+  catalogRow?: Pick<CodexCreatureFeat, 'id' | 'base_feat_id' | 'category' | 'mechanic'> | null,
 ): boolean {
-  return (
-    isCreatureMovementEffectFeat(feat, catalogRow) ||
-    isCreatureSensesEffectFeat(feat, catalogRow ?? null)
-  );
+  if (isCreatureMovementEffectFeat(feat, catalogRow)) return true;
+  if (isCreatureSensesEffectFeat(feat, catalogRow ?? null)) return true;
+  if (catalogRow && isMovementSectionToggleRow(catalogRow)) return true;
+  return false;
 }
 
 export type MovementToggleLine = { id: string; name: string; description?: string };
-
-const TOGGLE_ID_SET = new Set<string>(TOGGLE_IDS.map(idString));
 
 /** Toggle controls stay off the feat list and show here by their saved name and description. */
 export function movementToggleLines(
@@ -526,10 +603,16 @@ export function movementToggleLines(
     name?: string | undefined;
     description?: string | undefined;
   }[],
+  catalogById?: ReadonlyMap<
+    string,
+    Pick<CodexCreatureFeat, 'id' | 'base_feat_id' | 'category' | 'mechanic'>
+  >,
 ): MovementToggleLine[] {
   const lines: MovementToggleLine[] = [];
   for (const feat of feats) {
-    if (feat.id == null || !TOGGLE_ID_SET.has(String(feat.id))) continue;
+    if (feat.id == null) continue;
+    const row = catalogById?.get(String(feat.id));
+    if (!row || !isMovementSectionToggleRow(row)) continue;
     const name = feat.name?.trim();
     if (!name) continue;
     const line: MovementToggleLine = { id: String(feat.id), name };
