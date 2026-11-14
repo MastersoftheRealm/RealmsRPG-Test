@@ -42,11 +42,6 @@ import { applyStarterEquippedFlags } from '@/lib/game/equipment-equipped';
 import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import { findByNormalizedId, normalizeId } from '@/lib/utils';
 import { dedupeEntityRefs } from '@/lib/game/dedupe-saved-parts';
-import {
-  combineGuidedTpBudgets,
-  sumGuidedListedCombatTrainingPoints,
-} from '@/lib/guided-creator/loadout-tp';
-
 interface CodexPartLike {
   id?: string | number | undefined;
   name?: string | undefined;
@@ -261,8 +256,7 @@ export function computeGuidedRequiredTrainingSpent(
 
 /**
  * Guided Training Points pool counter (warn-only UI).
- * Save math stays on `computeGuidedRequiredTrainingSpent`; the bar uses the higher of
- * deduped proficiency spend and loadout equipment plus listed combat pick costs.
+ * Uses the same deduped proficiency walk as save and the character sheet.
  */
 export function computeGuidedTrainingPointsBudgetSpent(
   draft: GuidedDraft,
@@ -270,20 +264,9 @@ export function computeGuidedTrainingPointsBudgetSpent(
   loadoutEquipmentTpSpent: number,
   tpCostOf: (id: string) => number,
 ): number {
-  const deduped = computeGuidedRequiredTrainingSpent(draft, ctx);
-  const listedCombat = sumGuidedListedCombatTrainingPoints(
-    {
-      powerIds: draft.powerIds ?? [],
-      techniqueIds: draft.techniqueIds ?? [],
-      innatePowerIds: draft.innatePowerIds ?? [],
-    },
-    tpCostOf,
-  );
-  const listedTotal = combineGuidedTpBudgets(
-    { spent: loadoutEquipmentTpSpent, limit: 0, remaining: 0 },
-    listedCombat,
-  ).spent;
-  return Math.max(deduped, listedTotal);
+  void loadoutEquipmentTpSpent;
+  void tpCostOf;
+  return computeGuidedRequiredTrainingSpent(draft, ctx);
 }
 
 export function buildGuidedCharacterPayload(

@@ -49,6 +49,37 @@ describe('calculateGuidedSkillPointBudget', () => {
     expect(budget.remainingPoints).toBe(2);
   });
 
+  it('uses live PROGRESSION_PLAYER skillPointsPerLevel for total budget', () => {
+    const budget = calculateGuidedSkillPointBudget({
+      allocations: {},
+      defenseVals: DEFAULT_DEFENSE_SKILLS,
+      selectedSpeciesSkillIds: [],
+      speciesContext: emptySpecies,
+      catalog: [athletics],
+      rules: {
+        PROGRESSION_PLAYER: {
+          baseAbilityPoints: 0,
+          abilityPointsEveryNLevels: 0,
+          abilityPointsPerIncrease: 0,
+          skillPointsPerLevel: 5,
+          baseHitEnergyPool: 0,
+          hitEnergyPerLevel: 0,
+          baseProficiency: 0,
+          proficiencyEveryNLevels: 0,
+          proficiencyPerIncrease: 0,
+          baseTrainingPoints: 0,
+          tpPerLevelMultiplier: 0,
+          baseHealth: 0,
+          xpToLevelFormula: '',
+          startingCurrency: 0,
+          characterFeatsPerLevel: 0,
+        },
+      },
+    });
+    expect(budget.totalPoints).toBe(5);
+    expect(budget.remainingPoints).toBe(5);
+  });
+
   it('adds a species extra Skill point for grant id 0', () => {
     const speciesGrant: GuidedSpeciesContext = {
       ...emptySpecies,

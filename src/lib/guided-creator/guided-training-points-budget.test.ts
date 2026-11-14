@@ -57,7 +57,7 @@ function minimalDraft(overrides: Partial<GuidedDraft> = {}): GuidedDraft {
 }
 
 describe('computeGuidedTrainingPointsBudgetSpent', () => {
-  it('uses listed combat TP for pool display when picks sum above deduped proficiency spend', () => {
+  it('matches deduped proficiency spend when catalog chip TP sums higher', () => {
     const range = snapshotParts([PART_IDS.POWER_RANGE])[0]!;
     const draft = minimalDraft({
       powerIds: ['elemental-burst', 'mend-beast'],
@@ -88,14 +88,24 @@ describe('computeGuidedTrainingPointsBudgetSpent', () => {
     };
     const tpCostOf = (id: string) => listedTpById[id] ?? 0;
 
+    const listedChipTotal = sumGuidedListedCombatTrainingPoints(
+      {
+        powerIds: draft.powerIds,
+        techniqueIds: draft.techniqueIds,
+        innatePowerIds: draft.innatePowerIds,
+      },
+      tpCostOf,
+    );
+    expect(listedChipTotal).toBe(27);
+
     const deduped = computeGuidedRequiredTrainingSpent(draft, ctx);
-    expect(deduped).toBeLessThan(27);
+    expect(deduped).toBeLessThan(listedChipTotal);
 
     const poolSpent = computeGuidedTrainingPointsBudgetSpent(draft, ctx, 0, tpCostOf);
-    expect(poolSpent).toBe(27);
+    expect(poolSpent).toBe(deduped);
 
     const warning = guidedLoadoutTrainingPointsOverspendMessage(poolSpent, 25);
-    expect(warning).toBe('You are 2 Training Points over budget. You can still continue.');
+    expect(warning).toBeNull();
   });
 
   it('does not double-count budget display when the same id is on power and innate lists', () => {
@@ -127,8 +137,9 @@ describe('computeGuidedTrainingPointsBudgetSpent', () => {
       ),
     ).toBe(14);
 
+    const deduped = computeGuidedRequiredTrainingSpent(draft, ctx);
     const poolSpent = computeGuidedTrainingPointsBudgetSpent(draft, ctx, 0, tpCostOf);
-    expect(poolSpent).toBe(14);
-    expect(computeGuidedRequiredTrainingSpent(draft, ctx)).toBeLessThanOrEqual(25);
+    expect(poolSpent).toBe(deduped);
+    expect(poolSpent).toBeLessThanOrEqual(25);
   });
 });
