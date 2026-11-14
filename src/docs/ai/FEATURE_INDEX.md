@@ -2345,7 +2345,7 @@ Power/technique “can target” defense lists and weapon attack ability / bonus
 ### Read to the end
 
 - `normalizeTargetedDefenses`, `parseDefensesFromDescription`, `defensesFromPart`, `suggestTargetedDefenses`, `buildTargetedDefenseSelectOptions`, and format helpers in `src/lib/game/targeted-defenses.ts`. No point budgets. DB `defense` field wins; else description substring match (longest defense names first). Damage types map through `getPowerDamagePartInfo` then codex part `defenseFromPart`. Weapon/unarmed attack mode suggests **Evasion** only.
-- `deriveAbilityRequirementFromProperties`, `meetsAbilityRequirement`, property detectors, `defaultWeaponAbilityUtilized`, `deriveWeaponAbilityUtilized`, `getWeaponAttackAbility`, `getWeaponAttackBonusFromProperties`, and related exports in `src/lib/game/weapon-attack-ability.ts`. Requirement level is `1 + op_1_lvl` on named `* Requirement` properties. `meetsAbilityRequirement` compares that level to `abilities[key]`. Attack ability: `getWeaponAttackAbility` checks Finesse, Thrown, Reach, Heavy, then `resolveWeaponRangeDisplay` (non-Melee → Acuity, else Strength). `deriveWeaponAbilityUtilized` checks Finesse, Heavy only when `rangeType === 'ranged'`, else range-type default. Weapon attack bonus is `abilities[attackAbility] + martialProficiency` via `getWeaponAttackAbility`.
+- `deriveAbilityRequirementFromProperties`, `meetsAbilityRequirement`, property detectors, `defaultWeaponAbilityUtilized`, `deriveWeaponAbilityUtilized`, `getWeaponAttackAbility`, `getWeaponAttackBonusFromProperties`, and related exports in `src/lib/game/weapon-attack-ability.ts`. Requirement level is `1 + op_1_lvl` on named `* Requirement` properties. `meetsAbilityRequirement` compares that level to `abilities[key]`. Attack ability: `getWeaponAttackAbility` checks Finesse, Thrown, Reach, Heavy, then `resolveWeaponRangeDisplay` (non-Melee → Acuity, else Strength); when Thrown, Reach, and Range rows are all missing it uses `resolveWeaponRangeDisplay(rangeOverride, [])` so a range display string still applies alongside other rows (e.g. Weapon Damage), otherwise it passes the full property list. `deriveWeaponAbilityUtilized` calls `getWeaponAttackAbility` and supplies that range display from creator `rangeType` when those three rows are missing. Weapon attack bonus is `abilities[attackAbility] + martialProficiency` via `getWeaponAttackAbility`.
 - `getPowerDamagePartInfo` in `src/lib/calculators/mechanic-builder.ts` (damage-type → codex damage part name/id); already used in cost builds; read here only for targeted-defense damage routing.
 
 ### Still not read line by line (defense / weapon scope)
@@ -2354,7 +2354,7 @@ Power/technique “can target” defense lists and weapon attack ability / bonus
 
 ### Disagreements
 
-- math-disagree-bug:weapon-derive-utilized-vs-get-attack-ability: **Bug in item creator (Kadin rules vs code).** Stated rules: Thrown → Strength; ranged default → Acuity; Heavy overrides range → Strength even at range; Finesse → Agility (overrides Acuity on ranged or Strength elsewhere). `getWeaponAttackAbility` on the sheet matches that order (Finesse, Thrown, Reach, Heavy, then non-Melee → Acuity). `deriveWeaponAbilityUtilized` in the item creator omits Thrown and Reach and only applies Heavy when `rangeType === 'ranged'`, so the creator default can disagree while the sheet matches the rules.
+- None in this slice (weapon creator ability vs sheet fixed — ClickUp `1dfe8wf3xev`).
 
 ### Same math, separate copies
 

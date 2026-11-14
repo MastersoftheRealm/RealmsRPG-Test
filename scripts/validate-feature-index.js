@@ -311,7 +311,7 @@ const CREATURE_BUDGET_MATH_BUG_IDS = ['creature-training-stored-tp-without-parts
 
 const PROFICIENCY_TRAINING_MATH_BUG_IDS = [];
 
-const DEFENSE_WEAPON_MATH_BUG_IDS = ['weapon-derive-utilized-vs-get-attack-ability'];
+const DEFENSE_WEAPON_MATH_BUG_IDS = [];
 
 const CRAFTING_COST_MATH_BUG_IDS = [];
 
