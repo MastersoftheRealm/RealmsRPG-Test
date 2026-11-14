@@ -1450,6 +1450,7 @@ Every path below is a non-test source file. The checker fails if one is missing 
 - `src/lib/codex/codex-tables.ts`
 - `src/lib/codex/collection-to-payload-key.ts`
 - `src/lib/codex/collections.ts`
+- `src/lib/codex/equipment-armament-merge.ts`
 - `src/lib/codex/equipment-list.ts`
 - `src/lib/codex/fake-supabase.ts`
 - `src/lib/codex/feat-ability.ts`
@@ -2369,8 +2370,8 @@ General, enhanced, consumable-enhanced, and upgrade crafting requirements; succe
 ### Read to the end
 
 - `findGeneralRow`, `getCraftingRequirements`, `getCraftingSessionLabels`, `getSuccessesTableEffect`, `calculateCraftingOutcome`, enhanced row lookup, `getMultipleUseAdjustedEnergy`, `getEnhancedCraftingRequirements`, `getConsumableEnhancedRequirements`, `getEnhancedMarketPrice`, `getUpgradeRequirements`, and all four optional modifiers in `src/lib/game/crafting-utils.ts`. General material cost is market price × `craftingCostMultiplier`; consumable time uses `Math.max(1, Math.ceil(time × consumableTimeMultiplier))`. Outcome applies successes-table percents to material retained, final cost, item worth, and extra items when delta > 7. Enhanced material cost is effective energy × table `currencyPerEnergy` or consumable `costPerEnergy`. Upgrade uses 75% of price delta, DS from the upgraded row, successes as row difference, and time delta in days (`8` hours = 1 day via `craftingDayHours`).
-- `getCodexEquipmentMarketPrice`, `getLibraryItemMarketPrice`, and helpers in `src/components/crafting/get-crafting-market-price.ts`. Codex rows use `equipmentCurrency` (`currency` / `gold_cost` only). Library and public items use `resolveItemMarketPricing` from `item-calc` (same path as Library and equipment-step).
-- `equipmentCurrency` and `persistEquipmentCost` in `src/lib/codex/equipment-list.ts` (read for crafting currency inputs only).
+- `getCodexEquipmentMarketPrice`, `getLibraryItemMarketPrice`, and helpers in `src/components/crafting/get-crafting-market-price.ts`. Crafting codex rows still use `equipmentCurrency` (deferred). Non-crafting codex **armaments**: `GET /api/codex` merges `official_items` type/properties onto `codex_equipment` via `equipment-armament-merge.ts` before `mapCodexEquipment` (official items loaded with `queryOfficialColumnarRowsUncached` inside the codex payload loader to avoid nested Data Cache); browse/guided then use `codexEquipmentDisplayCurrency` (`resolveItemMarketPricing` only when properties resolve; gear keeps stored catalog).
+- `equipmentCurrency`, `persistEquipmentCost`, and `codexEquipmentDisplayCurrency` in `src/lib/codex/equipment-list.ts`.
 - `computeCraftingRequirements`, `computeRequirementsBreakdown`, optional-modifier max-step helpers, multiple-use index/energy wrappers, and `getEffectiveCraftingEnergy` in `src/app/(main)/crafting/[id]/_components/crafting-tool-helpers.ts`. This file applies bulk quantity multipliers, stacks optional modifiers, and merges base-item + enhancement requirements when `craftBaseItemAlso` (combined time in hours/days, summed successes and material, `Math.max` DS).
 - `buildRequirementsSyncPatch`, `computeLiveCraftingOutcome`, `computeBaseOutcomeForDisplay`, session tallies, and roll DS routing in `src/app/(main)/crafting/[id]/_components/crafting-tool-derived.ts` (calls `computeSkillRollResult` from encounter-utils for roll parsing only).
 - `handleComplete` in `use-crafting-tool-page.ts` was read only for whether it duplicates outcome math (it calls the same `calculateCraftingOutcome` path as `computeLiveCraftingOutcome`).
@@ -2386,8 +2387,7 @@ General, enhanced, consumable-enhanced, and upgrade crafting requirements; succe
 
 ### Disagreements
 
-- math-disagree-bug:official-armament-codex-stored-currency-vs-item-calc: **Bug (Kadin).** Official armaments site-wide should use calculated currency from properties (`resolveItemMarketPricing` / `calculateItemCosts`), not a stored catalog `currency` / `gold_cost` column. `getCodexEquipmentMarketPrice` and `equipmentCurrency` still read stored values for codex equipment rows. Library and creator paths already use item-calc. Not intentional.
-- math-disagree-deferred:crafting-codex-stored-currency-vs-library-resolve-market: **Deferred (Kadin).** Crafting still needs stored currency for now; crafter work is deferred. The picker still pairs `getCodexEquipmentMarketPrice` (stored) with `getLibraryItemMarketPrice` (calculated). Do not treat this crafting path as the immediate official-armament fix (see bug above).
+- math-disagree-deferred:crafting-codex-stored-currency-vs-library-resolve-market: **Deferred (Kadin).** Crafting still needs stored currency for now; crafter work is deferred. The picker still pairs `getCodexEquipmentMarketPrice` (stored) with `getLibraryItemMarketPrice` (calculated). Non-crafting codex armaments use calculated market currency after the official merge path above; crafting is unchanged.
 - math-disagree-deferred:crafting-codex-currency-vs-persist-equipment-cost: **Deferred (Kadin).** Same crafter deferral: crafting codex rows use `equipmentCurrency` only while `persistEquipmentCost` can read a `cost` fallback elsewhere. Not scheduled for this fix pass.
 - math-disagree-deferred:crafting-hub-currency-column-vs-requirements-market-price: **Deferred (Kadin).** The crafting hub list can show **0** when `materialCost` is defaulted while requirements use `item.marketPrice`. Fix with crafter work, not now.
 
@@ -3579,6 +3579,7 @@ No production file imports these names. A test import does not count. The file t
 - `src/lib/chip/part-chips-from-display.ts`: `DisplayPartChip` (type)
 - `src/lib/codex-changelog.ts`: `CodexChangeOperation` (type)
 - `src/lib/codex/admin-source-list.ts`: `AdminSourceRowDetail` (type)
+- `src/lib/codex/equipment-armament-merge.ts`: `OfficialArmamentCodexMergeItem` (type)
 - `src/lib/codex/fake-supabase.ts`: `FakeRpcCall` (type), `FakeSupabaseOptions` (type)
 - `src/lib/codex/feat-list.ts`: `FEAT_SELECTABLE_HEADER_COLUMNS`, `FeatFilterOptions` (type), `FeatSelectableColumnOptions` (type), `FilterFeatsOptions` (type)
 - `src/lib/codex/feat-restriction-notice.ts`: `FeatRestrictionNoticeOpts` (type), `LimitedUseEntity` (type)

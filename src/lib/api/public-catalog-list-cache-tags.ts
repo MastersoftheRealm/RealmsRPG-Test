@@ -11,6 +11,7 @@ import {
   codexPublicCollectionCdnCacheTag,
   codexPublicFullCdnCacheTag,
   officialLibraryCacheTag,
+  officialLibraryWriteCacheTags,
   officialPublicRouteCdnCacheTag,
 } from '@/lib/codex/cache-tags';
 import type { CodexDataTable } from '@/lib/codex/codex-tables';
@@ -41,6 +42,12 @@ export function codexPayloadCacheTags(keys: ReadonlySet<CodexPayloadKey>): strin
     }
     if (key === 'coreRules') {
       tags.add(CORE_RULES_CACHE_TAG);
+    }
+  }
+  // Codex equipment rows merge listed official_items armaments — invalidate together.
+  if (keys.has('equipment')) {
+    for (const tag of officialLibraryWriteCacheTags('official_items')) {
+      tags.add(tag);
     }
   }
   return [...tags];

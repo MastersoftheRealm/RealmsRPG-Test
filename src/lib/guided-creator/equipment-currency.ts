@@ -11,6 +11,9 @@ import {
   type ItemPropertyTpRow,
 } from '@/lib/calculators/item-calc';
 import { CHARACTER_STARTING_CURRENCY } from '@/lib/game/constants';
+import { codexEquipmentDisplayCurrency } from '@/lib/codex/equipment-list';
+import { normalizeArmamentKind } from '@/lib/library/official-item-list';
+import type { WeaponPropertyRef } from '@/lib/game/weapon-attack-ability';
 
 /** Max unit cost for Equipment items in guided Layer 2 shop. */
 export const GUIDED_GEAR_L2_MAX_UNIT_COST = 50;
@@ -39,13 +42,25 @@ export interface CurrencyLineItem {
 export type CatalogRowCostFields = Pick<
   CurrencyLineItem,
   'gold_cost' | 'currency' | 'cost' | 'costs'
->;
+> & {
+  type?: string | undefined;
+  properties?: readonly WeaponPropertyRef[] | undefined;
+};
 
 export type RefCostLookupItem = { id?: string | number | undefined } & CatalogRowCostFields;
 
-export function resolveCatalogRowUnitCost(row: CatalogRowCostFields | null | undefined): number {
+export function resolveCatalogRowUnitCost(
+  row: CatalogRowCostFields | null | undefined,
+  itemProperties: ItemPropertyTpRow[] = [],
+): number {
   if (!row) return 0;
-  return resolveItemUnitCost(row);
+  if (normalizeArmamentKind(row.type) && itemProperties.length > 0) {
+    return codexEquipmentDisplayCurrency(row, itemProperties);
+  }
+  return resolveItemUnitCost(
+    { ...row, properties: row.properties as ItemPropertyPayload[] | undefined },
+    itemProperties,
+  );
 }
 
 /** Starting currency by level (matches equipment-step). */
@@ -59,9 +74,13 @@ export function computeStartingCurrency(level = 1): number {
  * Prefer already-derived display fields; otherwise convert property C+IP like Library GLR.
  */
 export function resolveItemUnitCost(
-  item: CurrencyLineItem,
+  item: CurrencyLineItem & { type?: string | undefined },
   itemProperties: ItemPropertyTpRow[] = [],
 ): number {
+  if (normalizeArmamentKind(item.type) && itemProperties.length > 0) {
+    const calculated = codexEquipmentDisplayCurrency(item, itemProperties);
+    if (calculated > 0) return calculated;
+  }
   const explicit = item.gold_cost ?? item.currency ?? item.cost;
   if (explicit != null && Number.isFinite(Number(explicit))) {
     return Number(explicit) || 0;
@@ -88,15 +107,19 @@ export function computeRemainingCurrency(starting: number, spent: number): numbe
 /** Resolve unit cost for a path item ref from official + codex libraries. */
 export function resolveRefUnitCost(
   ref: { id: string },
-  officialItems: Array<RefCostLookupItem & Pick<CurrencyLineItem, 'properties'>>,
+  officialItems: RefCostLookupItem[],
   codexEquipment: RefCostLookupItem[],
   itemProperties: ItemPropertyTpRow[] = [],
 ): number {
   const key = String(ref.id).trim().toLowerCase();
   const official = officialItems.find((i) => String(i.id).trim().toLowerCase() === key);
-  if (official) return resolveItemUnitCost(official, itemProperties);
+  if (official)
+    return resolveItemUnitCost(
+      { ...official, properties: official.properties as ItemPropertyPayload[] | undefined },
+      itemProperties,
+    );
   const codex = codexEquipment.find((i) => String(i.id).trim().toLowerCase() === key);
-  if (codex) return resolveCatalogRowUnitCost(codex);
+  if (codex) return resolveCatalogRowUnitCost(codex, itemProperties);
   return 0;
 }
 

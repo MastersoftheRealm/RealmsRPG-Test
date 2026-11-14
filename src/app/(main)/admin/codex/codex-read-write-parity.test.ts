@@ -37,7 +37,16 @@ function recordingRow(table: string): Record<string, unknown> {
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(async () => ({
     from: (table: string) => ({
-      select: async () => ({ data: [recordingRow(table)], error: null }),
+      select: () => {
+        const result = { data: [recordingRow(table)], error: null as null };
+        return {
+          eq: async () => result,
+          then: (
+            onFulfilled?: (value: typeof result) => unknown,
+            onRejected?: (reason: unknown) => unknown,
+          ) => Promise.resolve(result).then(onFulfilled, onRejected),
+        };
+      },
     }),
   })),
   createServiceRoleClient: vi.fn(),

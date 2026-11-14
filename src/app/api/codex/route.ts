@@ -37,6 +37,11 @@ import {
   toStrArray,
 } from '@/lib/codex/row-map';
 import { parseCatalogListing } from '@/lib/library/catalog-listing';
+import {
+  indexOfficialArmamentsForCodexEquipmentMerge,
+  mergeOfficialArmamentIntoCodexEquipmentRow,
+} from '@/lib/codex/equipment-armament-merge';
+import { queryOfficialColumnarRowsUncached } from '@/lib/official-library-server';
 import { CODEX_PAYLOAD_KEYS, type CodexPayload, type CodexPayloadKey } from '@/types/codex';
 import { CODEX_DATA_TABLES, type CodexDataTable } from '@/lib/codex/codex-tables';
 import { CODEX_API_TABLE_SELECT, omitCodexSourcesColumn } from '@/lib/codex/public-table-select';
@@ -248,7 +253,14 @@ async function buildCodexPayloadUncached(
   const traitRows = ((isCodexTableMissing(eTraits) ? [] : traits) ?? []) as Row[];
   const partRows = ((isCodexTableMissing(eParts) ? [] : parts) ?? []) as Row[];
   const propRows = ((isCodexTableMissing(eProps) ? [] : properties) ?? []) as Row[];
-  const equipRows = equipRowsRaw;
+  const officialArmamentById = needed.has('codex_equipment')
+    ? indexOfficialArmamentsForCodexEquipmentMerge(
+        await queryOfficialColumnarRowsUncached(supabase, 'items', includeUnlisted),
+      )
+    : new Map();
+  const equipRows = equipRowsRaw.map((row) =>
+    mergeOfficialArmamentIntoCodexEquipmentRow(row, officialArmamentById),
+  );
   const archRows = ((isCodexTableMissing(eArch) ? [] : archetypes) ?? []) as Row[];
   const archLevelRows = ((isCodexTableMissing(eArchLevels) ? [] : archetypeLevels) ?? []) as Row[];
   const creatureRows = ((isCodexTableMissing(eCreature) ? [] : creatureFeats) ?? []) as Row[];

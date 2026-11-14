@@ -11,8 +11,10 @@ import {
   CORE_RULES_CACHE_TAG,
   codexApiTableCacheTag,
   codexPublicCollectionCdnCacheTag,
+  officialLibraryWriteCacheTags,
   officialPublicRouteCdnCacheTag,
 } from '@/lib/codex/cache-tags';
+import { codexPayloadCacheTags } from '@/lib/api/public-catalog-list-cache-tags';
 import {
   codexListedGetCacheTags,
   codexWritePurgeCacheTags,
@@ -76,6 +78,15 @@ describe('public-catalog-cache-invalidation', () => {
     }
     expect(listedTags).toContain(CORE_RULES_CACHE_TAG);
     expect(listedTags).toContain(codexPublicCollectionCdnCacheTag('coreRules'));
+  });
+
+  it('codex equipment payload data-cache tags are a subset of official_items write purge tags', () => {
+    const payloadTags = codexPayloadCacheTags(new Set(['equipment']));
+    const writeTags = officialWritePurgeCacheTags('official_items');
+    for (const tag of officialLibraryWriteCacheTags('official_items')) {
+      expect(payloadTags).toContain(tag);
+      expect(writeTags).toContain(tag);
+    }
   });
 
   it('source rename expires every listed collection CDN tag from server actions', () => {

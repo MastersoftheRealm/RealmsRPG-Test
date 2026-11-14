@@ -312,7 +312,7 @@ const PROFICIENCY_TRAINING_MATH_BUG_IDS = ['guided-tp-bar-max-of-dedupe-vs-liste
 
 const DEFENSE_WEAPON_MATH_BUG_IDS = ['weapon-derive-utilized-vs-get-attack-ability'];
 
-const CRAFTING_COST_MATH_BUG_IDS = ['official-armament-codex-stored-currency-vs-item-calc'];
+const CRAFTING_COST_MATH_BUG_IDS = [];
 
 const CRAFTING_COST_MATH_DEFERRED_IDS = [
   'crafting-codex-stored-currency-vs-library-resolve-market',

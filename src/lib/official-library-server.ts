@@ -26,6 +26,20 @@ const OFFICIAL_TABLE_BY_TYPE = {
 
 type OfficialLibraryTable = (typeof OFFICIAL_TABLE_BY_TYPE)[ColumnarLibraryType];
 
+/** Direct Supabase read (no Data Cache). Use inside other cached loaders to avoid nested `unstable_cache`. */
+export async function queryOfficialColumnarRowsUncached(
+  supabase: TypedSupabaseClient,
+  type: ColumnarLibraryType,
+  includeUnlisted: boolean,
+): Promise<Record<string, unknown>[]> {
+  const table: OfficialLibraryTable = OFFICIAL_TABLE_BY_TYPE[type];
+  const columns = columnarViewSelect(type);
+  const base = supabase.from(table).select(columns);
+  const { data, error } = includeUnlisted ? await base : await base.eq('catalog_listing', 'listed');
+  if (error) throw error;
+  return (data ?? []) as unknown as Record<string, unknown>[];
+}
+
 export async function fetchOfficialColumnarRows(
   supabase: TypedSupabaseClient,
   type: ColumnarLibraryType,
@@ -39,14 +53,7 @@ export async function fetchOfficialColumnarRows(
     ['official-library', table, columns, `listedOnly=${listedOnly}`],
     [tag, 'official-library'],
     CODEX_PUBLIC_ISR_SECONDS,
-    async () => {
-      const base = supabase.from(table).select(columns);
-      const { data, error } = includeUnlisted
-        ? await base
-        : await base.eq('catalog_listing', 'listed');
-      if (error) throw error;
-      return (data ?? []) as unknown as Record<string, unknown>[];
-    },
+    () => queryOfficialColumnarRowsUncached(supabase, type, includeUnlisted),
     (rows) => rows.length > 0,
   );
 }

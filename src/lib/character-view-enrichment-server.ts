@@ -19,6 +19,10 @@ import {
 } from '@/lib/character-view-enrichment';
 import { selectPowerParts, selectTechniqueParts } from '@/lib/codex/part-type';
 import {
+  indexOfficialArmamentsForCodexEquipmentMerge,
+  mergeOfficialArmamentIntoCodexEquipmentRow,
+} from '@/lib/codex/equipment-armament-merge';
+import {
   mapCodexEquipment,
   mapCodexFeat,
   mapCodexPart,
@@ -183,6 +187,7 @@ export async function getCharacterViewEnrichment(
     ]);
 
   const allParts = partRows.map(mapCodexPart);
+  const officialArmamentById = indexOfficialArmamentsForCodexEquipmentMerge(officialItemRows);
 
   return {
     ...empty,
@@ -191,7 +196,9 @@ export async function getCharacterViewEnrichment(
     species,
     traits: traitRows.map(mapCodexTrait),
     archetypes,
-    equipment: equipmentRows.map(mapCodexEquipment),
+    equipment: equipmentRows.map((row) =>
+      mapCodexEquipment(mergeOfficialArmamentIntoCodexEquipmentRow(row, officialArmamentById)),
+    ),
     powerParts: selectPowerParts(allParts),
     techniqueParts: selectTechniqueParts(allParts),
     itemProperties: propertyRows.map(mapCodexProperty),

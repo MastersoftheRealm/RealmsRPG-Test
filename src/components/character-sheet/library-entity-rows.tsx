@@ -90,7 +90,12 @@ import {
   type ItemPropertyTpRow,
   type ItemStoredCostSums,
 } from '@/lib/calculators/item-calc';
-import { buildEquipmentCatalogFactColumns, equipmentCurrency } from '@/lib/codex/equipment-list';
+import {
+  buildEquipmentCatalogFactColumns,
+  codexEquipmentDisplayCurrency,
+  equipmentCurrency,
+} from '@/lib/codex/equipment-list';
+import { normalizeArmamentKind } from '@/lib/library/official-item-list';
 import type { GlrSurfaceId } from '@/lib/glr';
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import {
@@ -184,12 +189,30 @@ function sheetItemCostFacts(
   const storedCost = item.cost != null && item.cost > 0 ? item.cost : undefined;
 
   if (kind === 'equipment') {
-    const catalogCurrency = equipmentCurrency(
-      item as Item & { currency?: number | undefined; gold_cost?: number | undefined },
-    );
+    const typed = item as Item & {
+      type?: string | undefined;
+      currency?: number | undefined;
+      gold_cost?: number | undefined;
+      properties?: ItemPropertyPayload[] | undefined;
+    };
+    const currency = normalizeArmamentKind(typed.type)
+      ? codexEquipmentDisplayCurrency(
+          {
+            type: typed.type,
+            currency: typed.currency,
+            gold_cost: typed.gold_cost,
+            properties: typed.properties,
+            costs: storedSums,
+          },
+          ctx.itemPropertiesDb as ItemPropertyTpRow[],
+        )
+      : (() => {
+          const catalogCurrency = equipmentCurrency(typed);
+          return catalogCurrency > 0 ? catalogCurrency : storedCost;
+        })();
     return {
       rarity: item.rarity,
-      currency: catalogCurrency > 0 ? catalogCurrency : storedCost,
+      currency: currency ?? 0,
       trainingPoints,
     };
   }

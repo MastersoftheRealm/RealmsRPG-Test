@@ -174,14 +174,27 @@ describe('mapCodexTrait / mapCodexPart / mapCodexProperty / mapCodexEquipment', 
     expect(item.type).toBe('equipment');
   });
 
-  it('does not expose armament properties on official equipment', () => {
+  it('gear rows without merged armament fields stay type equipment', () => {
     const item = mapCodexEquipment({
       id: 'eq-rope',
       name: 'Rope',
       currency: 12,
       description: 'Hemp rope.',
     });
-    expect(item).not.toHaveProperty('properties');
+    expect(item.type).toBe('equipment');
+    expect(item.properties).toBeUndefined();
+  });
+
+  it('maps armament type and property payloads when present on the row', () => {
+    const item = mapCodexEquipment({
+      id: 'eq-blade',
+      name: 'Blade',
+      type: 'weapon',
+      currency: 5,
+      properties: [{ name: 'Sharp', op_1_lvl: 1 }],
+    });
+    expect(item.type).toBe('weapon');
+    expect(item.properties).toEqual([{ name: 'Sharp', op_1_lvl: 1 }]);
   });
 });
 
