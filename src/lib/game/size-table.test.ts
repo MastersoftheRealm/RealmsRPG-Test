@@ -154,8 +154,10 @@ describe('calculateCarryingCapacityKg', () => {
     });
   });
 
-  it('does not use hardcoded Medium 100 when the category list is empty', () => {
+  it('does not use hardcoded Medium 100 when the category list is missing or empty', () => {
     expect(calculateCarryingCapacityKg('medium', 0, [])).toBeNull();
+    expect(calculateCarryingCapacityKg('medium', 0, undefined)).toBeNull();
+    expect(calculateCarryingCapacityKg('medium', 0)).toBeNull();
   });
 });
 

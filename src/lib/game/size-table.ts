@@ -173,13 +173,24 @@ export type CarryingCapacityResult = {
   minCarryKg: number;
 };
 
+function findRowInSizeCategories(
+  sizeKey: string,
+  categories: readonly SizeCarryLookupRow[],
+): SizeCarryLookupRow | undefined {
+  const key = normalizeSizeLookupKey(sizeKey);
+  return categories.find(
+    (row) => normalizeSizeLookupKey(row.value) === key || normalizeSizeLookupKey(row.label) === key,
+  );
+}
+
 /** base + perStr × Strength, floored at the size minimum (applies with negative Strength). */
 export function calculateCarryingCapacityKg(
   sizeKey: string,
   strength: number,
-  sizeCategories: readonly SizeCarryLookupRow[],
+  sizeCategories?: readonly SizeCarryLookupRow[] | undefined,
 ): CarryingCapacityResult | null {
-  const row = findCarryLookupRow(sizeKey, sizeCategories);
+  if (sizeCategories == null || sizeCategories.length === 0) return null;
+  const row = findRowInSizeCategories(sizeKey, sizeCategories);
   if (!row) return null;
   const raw = row.baseCarry + row.perStrCarry * strength;
   return {
