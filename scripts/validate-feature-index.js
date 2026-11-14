@@ -321,7 +321,8 @@ const CRAFTING_COST_MATH_DEFERRED_IDS = [
   'crafting-hub-currency-column-vs-requirements-market-price',
 ];
 
-const SIZE_PATH_MATH_BUG_IDS = ['size-hardcoded-carry-vs-core-rules-sizes'];
+/** size-hardcoded-carry-vs-core-rules-sizes fixed — notes tab uses live SIZES. */
+const SIZE_PATH_MATH_BUG_IDS = [];
 
 /** Guards `math-disagree-unclassified` documentation in FEATURE_INDEX (intro + math sections). */
 const MATH_DISAGREE_UNCLASSIFIED_DOCUMENTATION_MENTIONS = 3;

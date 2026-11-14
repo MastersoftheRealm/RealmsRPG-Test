@@ -43,6 +43,7 @@ import {
   CARRYING_CAPACITY_HALF_LOAD_RULE,
   calculateCarryingCapacityKg,
 } from '@/lib/game/size-table';
+import { useGameRules } from '@/hooks';
 import { NotesTabEditControls } from './notes-tab-edit-controls';
 
 export interface CharacterNote {
@@ -388,8 +389,11 @@ export function NotesTab({
   const climbSpeed = upMin1(strength / 2);
   const swimSpeed = upMin1(Math.max(strength, vitality) / 2);
 
+  const { rules } = useGameRules();
   const carrying =
-    characterSize != null ? calculateCarryingCapacityKg(characterSize, strength) : null;
+    characterSize != null
+      ? calculateCarryingCapacityKg(characterSize, strength, rules.SIZES.categories)
+      : null;
   const sizeOptions = characterSizeOptions;
   const showSizePicker = isEditMode && onCharacterSizeChange && sizeOptions.length > 1;
 

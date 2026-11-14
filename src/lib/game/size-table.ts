@@ -137,13 +137,31 @@ function normalizeSizeLookupKey(input: string): string {
   return input.trim().toLowerCase().replace(/\s+/g, '');
 }
 
+/** Carry fields from live `SIZES.categories` (Core Rules) or the static table. */
+export type SizeCarryLookupRow = {
+  value: string;
+  label: string;
+  baseCarry: number;
+  perStrCarry: number;
+  minCarry: number;
+};
+
+function findCarryLookupRow(
+  sizeKey: string,
+  categories?: readonly SizeCarryLookupRow[] | undefined,
+): SizeCarryLookupRow | undefined {
+  const key = normalizeSizeLookupKey(sizeKey);
+  const table = categories === undefined ? CREATURE_SIZES : categories;
+  if (table.length === 0) return undefined;
+  return table.find(
+    (row) => normalizeSizeLookupKey(row.value) === key || normalizeSizeLookupKey(row.label) === key,
+  );
+}
+
 /** Match a stored or codex size string to a size-table row (value or label). */
 export function findSizeTableRow(sizeKey: string | null | undefined): SizeTableRow | undefined {
   if (!sizeKey?.trim()) return undefined;
-  const key = normalizeSizeLookupKey(sizeKey);
-  return CREATURE_SIZES.find(
-    (row) => normalizeSizeLookupKey(row.value) === key || normalizeSizeLookupKey(row.label) === key,
-  );
+  return findCarryLookupRow(sizeKey) as SizeTableRow | undefined;
 }
 
 export function sizeLabelForKey(sizeKey: string | null | undefined): string | undefined {
@@ -155,12 +173,24 @@ export type CarryingCapacityResult = {
   minCarryKg: number;
 };
 
+function findRowInSizeCategories(
+  sizeKey: string,
+  categories: readonly SizeCarryLookupRow[],
+): SizeCarryLookupRow | undefined {
+  const key = normalizeSizeLookupKey(sizeKey);
+  return categories.find(
+    (row) => normalizeSizeLookupKey(row.value) === key || normalizeSizeLookupKey(row.label) === key,
+  );
+}
+
 /** base + perStr × Strength, floored at the size minimum (applies with negative Strength). */
 export function calculateCarryingCapacityKg(
   sizeKey: string,
   strength: number,
+  sizeCategories?: readonly SizeCarryLookupRow[] | undefined,
 ): CarryingCapacityResult | null {
-  const row = findSizeTableRow(sizeKey);
+  if (sizeCategories == null || sizeCategories.length === 0) return null;
+  const row = findRowInSizeCategories(sizeKey, sizeCategories);
   if (!row) return null;
   const raw = row.baseCarry + row.perStrCarry * strength;
   return {
