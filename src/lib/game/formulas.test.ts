@@ -13,10 +13,12 @@ import {
   calculateSkillBonusWithProficiency,
   calculateSkillPointsForEntity,
   calculateSubSkillBonusWithProficiency,
+  getSkillBonusForFeatRequirement,
   pickHighestEnergyCost,
   resolveArchetypeProficiencyStart,
   unproficientBonus,
 } from '@/lib/game/formulas';
+import { checkFeatRequirements } from '@/lib/game/feat-requirements';
 import type { Abilities } from '@/types';
 
 const abilities: Abilities = {
@@ -252,5 +254,49 @@ describe('calculateSubSkillBonusWithProficiency (M13)', () => {
     expect(calculateSubSkillBonusWithProficiency('strength', 2, 0, false, abilities, false)).toBe(
       unproficientBonus(-2) + 0,
     );
+  });
+});
+
+describe('getSkillBonusForFeatRequirement (1dfe8wf3xeq)', () => {
+  const athleticsCodex = [{ id: '10', name: 'Athletics', ability: 'strength, agility' }];
+
+  it('matches sheet bonus: highest linked ability plus proficient ranks', () => {
+    const sheetBonus = calculateSkillBonusWithProficiency('strength, agility', 2, abilities, true);
+    expect(sheetBonus).toBe(5);
+
+    const { bonus, proficient } = getSkillBonusForFeatRequirement(
+      '10',
+      abilities,
+      { '10': { prof: true, val: 2 } },
+      athleticsCodex,
+    );
+    expect(proficient).toBe(true);
+    expect(bonus).toBe(sheetBonus);
+  });
+
+  it('honors a chosen linked ability persisted on the skill row', () => {
+    const chosenStrength = getSkillBonusForFeatRequirement(
+      '10',
+      abilities,
+      { '10': { prof: true, val: 2, ability: 'strength' } },
+      athleticsCodex,
+    );
+    expect(chosenStrength.bonus).toBe(0);
+    expect(
+      checkFeatRequirements(
+        { id: 'gated', skill_req: ['10'], skill_req_val: [5] },
+        { level: 3, abilities, skills: { '10': { prof: true, val: 2, ability: 'strength' } } },
+        athleticsCodex,
+        [],
+      ).met,
+    ).toBe(false);
+    expect(
+      checkFeatRequirements(
+        { id: 'gated', skill_req: ['10'], skill_req_val: [5] },
+        { level: 3, abilities, skills: { '10': { prof: true, val: 2 } } },
+        athleticsCodex,
+        [],
+      ).met,
+    ).toBe(true);
   });
 });

@@ -303,9 +303,9 @@ const MATH_DISAGREEMENT_INTENTIONAL_IDS = [
 
 const MATH_DISAGREEMENT_BUG_IDS = ['innate-remaining-uses-stored-cost'];
 
-const SKILL_MATH_BUG_IDS = ['feat-skill-req-first-ability-vs-sheet-highest'];
+const SKILL_MATH_BUG_IDS = [];
 
-const CHARACTER_PATH_MATH_BUG_IDS = ['legality-skill-spent-floor-vs-allocation-spent'];
+const CHARACTER_PATH_MATH_BUG_IDS = [];
 
 const CREATURE_BUDGET_MATH_BUG_IDS = [];
 

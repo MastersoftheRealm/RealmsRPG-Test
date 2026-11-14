@@ -791,7 +791,10 @@ export interface CodexSkillForFeat {
 export function getSkillBonusForFeatRequirement(
   skillId: string,
   abilities: Partial<Abilities> | Abilities,
-  skills: Record<string, number | { prof?: boolean | undefined; val?: number | undefined }>,
+  skills: Record<
+    string,
+    number | { prof?: boolean | undefined; val?: number | undefined; ability?: string | undefined }
+  >,
   codexSkills: CodexSkillForFeat[],
 ): { bonus: number; proficient: boolean } {
   // Look up by ID first, then fall back to name match (feat data may use either)
@@ -834,9 +837,23 @@ export function getSkillBonusForFeatRequirement(
     readProficiency(String(skillId), featTargetsSubSkill) ||
     (codexSkill.name ? readProficiency(String(codexSkill.name), featTargetsSubSkill) : false);
 
-  const abilityKey = (codexSkill.ability?.split(',')[0]?.trim()?.toLowerCase() ||
-    'strength') as keyof Abilities;
-  const abilityMod = abilities[abilityKey] ?? 0;
+  const readChosenAbility = (...keys: string[]): string | undefined => {
+    for (const key of keys) {
+      if (!key) continue;
+      const s = skills[key];
+      if (s && typeof s === 'object' && typeof s.ability === 'string' && s.ability.trim()) {
+        return s.ability.trim().toLowerCase();
+      }
+    }
+    return undefined;
+  };
+  const chosenAbilityKey = readChosenAbility(
+    skillKey,
+    String(skillId),
+    codexSkill.name ? String(codexSkill.name) : '',
+  );
+
+  const fullAbilities = abilities as Abilities;
 
   if (baseSkillId) {
     // Sub-skill: need base skill value and proficiency
@@ -856,16 +873,26 @@ export function getSkillBonusForFeatRequirement(
       readProficiency(baseKey, false) ||
       readProficiency(baseSkillId, false) ||
       (baseCodex?.name ? readProficiency(String(baseCodex.name), false) : false);
-    if (!baseProficient) {
-      return { bonus: unproficientBonus(abilityMod) + baseValue, proficient: false };
-    }
-    const bonus = abilityMod + baseValue + value;
+    const subAbility = subSkillAllocationAbility(codexSkill.ability);
+    const bonusAbilityKey = subAbility.bonusAbilityKey ?? chosenAbilityKey;
+    const bonus = calculateSubSkillBonusWithProficiency(
+      codexSkill.ability,
+      value,
+      baseValue,
+      baseProficient,
+      fullAbilities,
+      proficient,
+      bonusAbilityKey,
+    );
     return { bonus, proficient: proficient && value >= 1 };
   }
 
-  // Base skill
-  if (!proficient) {
-    return { bonus: unproficientBonus(abilityMod), proficient: false };
-  }
-  return { bonus: abilityMod + value, proficient: true };
+  const bonus = calculateSkillBonusWithProficiency(
+    codexSkill.ability,
+    value,
+    fullAbilities,
+    proficient,
+    chosenAbilityKey,
+  );
+  return { bonus, proficient };
 }

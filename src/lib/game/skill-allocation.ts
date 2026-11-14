@@ -321,18 +321,38 @@ type CharacterSheetSkillRow = {
 /**
  * Map character sheet skill rows to creator-style allocations for spent calculation.
  */
-function characterSkillsToAllocations(skills: CharacterSheetSkillRow[]): {
+type SkillRowCodexRef = {
+  id: string | number;
+  base_skill_id?: number | string | undefined;
+};
+
+function isSubSkillRow(
+  skill: CharacterSheetSkillRow,
+  codexById: Map<string, SkillRowCodexRef>,
+): boolean {
+  if (Boolean(skill.baseSkill) || skill.baseSkillId != null || skill.selectedBaseSkillId != null) {
+    return true;
+  }
+  const codex = codexById.get(String(skill.id ?? ''));
+  const baseId = codex?.base_skill_id;
+  return baseId !== undefined && baseId !== null && Number(baseId) !== 0;
+}
+
+function characterSkillsToAllocations(
+  skills: CharacterSheetSkillRow[],
+  codexSkills?: SkillRowCodexRef[],
+): {
   allocations: Record<string, number>;
   skillMeta: Map<string, { isSubSkill: boolean }>;
 } {
   const allocations: Record<string, number> = {};
   const skillMeta = new Map<string, { isSubSkill: boolean }>();
+  const codexById = new Map((codexSkills ?? []).map((row) => [String(row.id), row] as const));
 
   for (const skill of skills) {
     const id = String(skill.id ?? '');
     if (!id) continue;
-    const isSubSkill =
-      Boolean(skill.baseSkill) || skill.baseSkillId != null || skill.selectedBaseSkillId != null;
+    const isSubSkill = isSubSkillRow(skill, codexById);
     skillMeta.set(id, { isSubSkill });
     if (!skill.prof) continue;
     const val = skill.skill_val ?? 0;
@@ -351,9 +371,10 @@ export function calculateCharacterSkillPointsSpent(
   speciesSkillIds: Set<string>,
   defenseSkills?: DefenseSkills,
   rules?: Partial<CoreRulesMap>,
+  codexSkills?: SkillRowCodexRef[],
 ): number {
   const skillRules = resolveSkillAllocationRules(rules);
-  const { allocations, skillMeta } = characterSkillsToAllocations(skills);
+  const { allocations, skillMeta } = characterSkillsToAllocations(skills, codexSkills);
   return calculateSimpleSkillPointsSpent(
     allocations,
     speciesSkillIds,

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_ABILITIES } from '@/types';
+import { checkFeatRequirements } from '@/lib/game/feat-requirements';
+import type { GuidedDraft } from '@/stores/guided-creator-store';
 import {
   applyCappedIdSelection,
+  guidedDraftToFeatRequirementCharacter,
   selectableCuratedFeatIds,
   trimArchetypeFeatIdsToCap,
 } from './feat-selection';
@@ -38,6 +42,25 @@ describe('trimArchetypeFeatIdsToCap', () => {
 
   it('clears picks at zero cap', () => {
     expect(trimArchetypeFeatIdsToCap(['a'], 0)).toEqual([]);
+  });
+});
+
+describe('guidedDraftToFeatRequirementCharacter (1dfe8wf3xeq)', () => {
+  const athleticsCodex = [{ id: '10', name: 'Athletics', ability: 'strength, agility' }];
+
+  it('honors skillAbilities when Strength is chosen below Agility', () => {
+    const draft = {
+      abilities: { ...DEFAULT_ABILITIES, strength: -2, agility: 3 },
+      skills: { '10': 2 },
+      skillAbilities: { '10': 'strength' },
+      archetypeFeatIds: [],
+      characterFeatIds: [],
+    } as unknown as GuidedDraft;
+    const character = guidedDraftToFeatRequirementCharacter(draft);
+    const feat = { id: 'gated', skill_req: ['10'], skill_req_val: [5] };
+    const result = checkFeatRequirements(feat, character, athleticsCodex, []);
+    expect(result.met).toBe(false);
+    expect(result.reason).toMatch(/bonus 5/i);
   });
 });
 

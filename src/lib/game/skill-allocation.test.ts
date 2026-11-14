@@ -3,6 +3,7 @@ import { calculateSubSkillBonusWithProficiency, subSkillAllocationAbility } from
 import {
   applySkillAllocationDecrease,
   BASE_SKILL_PAST_CAP_COST,
+  calculateCharacterSkillPointsSpent,
   calculateSimpleSkillPointsSpent,
   canIncreaseDefense,
   DEFAULT_SKILL_ALLOCATION_RULES,
@@ -43,6 +44,29 @@ const meta = new Map<string, { isSubSkill: boolean }>([
 function spent(allocations: Record<string, number>, rules?: SkillAllocationRules): number {
   return calculateSimpleSkillPointsSpent(allocations, new Set(), meta, undefined, rules);
 }
+
+describe('calculateCharacterSkillPointsSpent codex sub-skills', () => {
+  it('prices a proficient sub at value 1 from codex base_skill_id, not as a base skill', () => {
+    const subCodex = [{ id: '21', base_skill_id: 20 }];
+    expect(
+      calculateCharacterSkillPointsSpent(
+        [{ id: '21', skill_val: 1, prof: true }],
+        new Set(),
+        undefined,
+        undefined,
+        subCodex,
+      ),
+    ).toBe(1);
+    expect(
+      calculateCharacterSkillPointsSpent(
+        [{ id: '21', skill_val: 1, prof: true }],
+        new Set(),
+        undefined,
+        undefined,
+      ),
+    ).toBe(2);
+  });
+});
 
 function decrease(
   allocations: Record<string, number>,

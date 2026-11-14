@@ -7,6 +7,7 @@ import type { GuidedDraft } from '@/stores/guided-creator-store';
 import {
   checkFeatRequirements,
   type CharacterForFeatRequirement,
+  type FeatRequirementSkillAllocation,
   type FeatForRequirement,
 } from '@/lib/game/feat-requirements';
 import type { CodexSkillForFeat } from '@/lib/game/formulas';
@@ -66,6 +67,23 @@ export function selectableCuratedFeatIds(args: {
   });
 }
 
+function guidedDraftSkillsForFeatGate(draft: GuidedDraft): CharacterForFeatRequirement['skills'] {
+  const record: Record<string, number | FeatRequirementSkillAllocation> = {};
+  for (const [id, val] of Object.entries(draft.skills ?? {})) {
+    const ability = draft.skillAbilities?.[id]?.trim().toLowerCase();
+    if (ability) {
+      record[id] = {
+        val,
+        prof: val >= 0,
+        ability,
+      };
+    } else {
+      record[id] = val;
+    }
+  }
+  return record;
+}
+
 /** Build the minimal character shape for `checkFeatRequirements` from a guided draft. */
 export function guidedDraftToFeatRequirementCharacter(
   draft: GuidedDraft,
@@ -77,7 +95,7 @@ export function guidedDraftToFeatRequirementCharacter(
   return {
     level: 1,
     abilities: draft.abilities,
-    skills: draft.skills,
+    skills: guidedDraftSkillsForFeatGate(draft),
     mart_abil: draft.mart_abil ?? undefined,
     feats: owned,
     archetypeFeats: draft.archetypeFeatIds.map((id) => ({ id })),
