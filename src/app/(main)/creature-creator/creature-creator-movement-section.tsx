@@ -9,12 +9,14 @@ import {
   formatMovementSpeed,
   movementAfterBuiltInMode,
   movementAfterWalkLevel,
+  movementCheckboxFeats,
   movementModeCap,
+  movementModeDescription,
   movementModeStepperLabel,
   movementModesInCatalog,
+  movementPlainToggleFeats,
   movementSectionPointTotal,
-  movementToggleFeats,
-  movementTravelSpeed,
+  movementTravelSpeedCreatorDisplay,
   readBuiltInMovementLevel,
   readWalkLevel,
   toggleMovementFeat,
@@ -60,26 +62,37 @@ function LevelStepper({
   );
 }
 
-function SpeedTypeBox({
+function ModeControlBox({
   label,
   walkSpeed,
   level,
   max,
+  kind,
   stepperText,
+  tooltip,
   onChange,
 }: {
   label: string;
   walkSpeed: number;
   level: number;
   max: number;
+  kind: 'fly' | 'swim' | 'burrow' | 'jump';
   stepperText: string;
+  tooltip: string;
   onChange: (next: number) => void;
 }) {
   if (level === 0) return null;
+  const displayValue =
+    kind === 'jump'
+      ? String(level)
+      : formatMovementSpeed(movementTravelSpeedCreatorDisplay(walkSpeed, level));
   return (
     <LargeStatBlock
       label={label}
-      value={formatMovementSpeed(movementTravelSpeed(walkSpeed, level))}
+      labelAccessory={
+        tooltip ? <InfoTippy content={tooltip} label={`${label} description`} /> : null
+      }
+      value={displayValue}
       footer={
         <LevelStepper
           label={label}
@@ -91,6 +104,28 @@ function SpeedTypeBox({
         />
       }
     />
+  );
+}
+
+function MovementSectionToggle({
+  feat,
+  checked,
+  onChange,
+}: {
+  feat: CodexCreatureFeat;
+  checked: boolean;
+  onChange: (on: boolean) => void;
+}) {
+  const description = feat.description?.trim();
+  return (
+    <div className="flex max-w-full min-w-0 items-center gap-2">
+      <Checkbox
+        checked={checked}
+        label={feat.name}
+        onChange={(event) => onChange(event.target.checked)}
+      />
+      {description ? <InfoTippy content={description} label={`${feat.name} description`} /> : null}
+    </div>
   );
 }
 
@@ -109,7 +144,8 @@ export function CreatureCreatorMovementSection({
   const caps = walkLevelCap(catalog);
   const pointTotal = movementSectionPointTotal(creature, catalog);
   const movementModes = movementModesInCatalog(catalog);
-  const toggles = movementToggleFeats(catalog);
+  const plainToggles = movementPlainToggleFeats(catalog);
+  const checkboxToggles = movementCheckboxFeats(catalog);
 
   return (
     <Card className="p-6 shadow-md">
@@ -138,14 +174,17 @@ export function CreatureCreatorMovementSection({
         {movementModes.map((mode) => {
           const level = readBuiltInMovementLevel(creature.movementTypes, mode.kind);
           const max = movementModeCap(catalog, mode.kind);
+          const tooltip = movementModeDescription(catalog, mode.baseId, level, mode.knownIds);
           return (
-            <SpeedTypeBox
+            <ModeControlBox
               key={mode.kind}
               label={mode.speedLabel}
+              kind={mode.kind}
               walkSpeed={walkSpeed}
               level={level}
               max={max}
-              stepperText={movementModeStepperLabel(catalog, mode.baseId, level, mode.knownIds)}
+              stepperText={movementModeStepperLabel(catalog, mode.baseId, level)}
+              tooltip={tooltip}
               onChange={(next) =>
                 updateCreature(movementAfterBuiltInMode(creature, mode.kind, next, catalog))
               }
@@ -153,12 +192,12 @@ export function CreatureCreatorMovementSection({
           );
         })}
       </div>
-      {(movementModes.length > 0 || toggles.length > 0) && (
+      {(movementModes.length > 0 || plainToggles.length > 0 || checkboxToggles.length > 0) && (
         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
           {movementModes.map((mode) => {
             const level = readBuiltInMovementLevel(creature.movementTypes, mode.kind);
             return (
-              <div key={mode.kind} className="flex items-center gap-2">
+              <div key={mode.kind} className="flex min-w-0 items-center gap-2">
                 <Checkbox
                   checked={level > 0}
                   label={mode.label}
@@ -176,23 +215,34 @@ export function CreatureCreatorMovementSection({
               </div>
             );
           })}
-          {toggles.map((feat) => {
+          {plainToggles.map((feat) => {
             const on = creature.feats.some((row) => String(row.id) === String(feat.id));
             return (
-              <div key={feat.id} className="flex items-center gap-2">
-                <Checkbox
-                  checked={on}
-                  label={feat.name}
-                  onChange={(event) =>
-                    updateCreature({
-                      feats: toggleMovementFeat(creature, feat, event.target.checked),
-                    })
-                  }
-                />
-                {feat.description ? (
-                  <InfoTippy content={feat.description} label={`${feat.name} description`} />
-                ) : null}
-              </div>
+              <MovementSectionToggle
+                key={feat.id}
+                feat={feat}
+                checked={on}
+                onChange={(next) =>
+                  updateCreature({
+                    feats: toggleMovementFeat(creature, feat, next),
+                  })
+                }
+              />
+            );
+          })}
+          {checkboxToggles.map((feat) => {
+            const on = creature.feats.some((row) => String(row.id) === String(feat.id));
+            return (
+              <MovementSectionToggle
+                key={feat.id}
+                feat={feat}
+                checked={on}
+                onChange={(next) =>
+                  updateCreature({
+                    feats: toggleMovementFeat(creature, feat, next),
+                  })
+                }
+              />
             );
           })}
         </div>

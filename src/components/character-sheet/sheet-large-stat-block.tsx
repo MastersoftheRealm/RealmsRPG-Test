@@ -15,6 +15,7 @@ import { TempModifierStepperRow, useTempModifierActive } from './sheet-temp-modi
  */
 export function LargeStatBlock({
   label,
+  labelAccessory,
   value,
   valueSuffix,
   valueAriaLabel,
@@ -26,6 +27,8 @@ export function LargeStatBlock({
   footer,
 }: {
   label: string;
+  /** Optional help trigger beside the label (e.g. creature creator feat description). */
+  labelAccessory?: ReactNode | undefined;
   value: number | string;
   valueSuffix?: string | undefined;
   /** Optional accessible name for the value (e.g. read-only DR / Critical Range). */
@@ -55,6 +58,7 @@ export function LargeStatBlock({
         <span className="min-w-0 text-center text-xs leading-tight font-semibold tracking-normal break-normal text-text-secondary uppercase">
           {label}
         </span>
+        {labelAccessory}
         {canTemp && (
           <TempModifierToggle
             isActive={tempActive}

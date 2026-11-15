@@ -270,6 +270,9 @@ describe('creature movement section helpers', () => {
       { label: 'Swimming Speed', value: '5' },
       { label: 'Burrow Speed', value: '10' },
     ]);
+    expect(
+      movementTravelLines(movementAfterSwimLevel(initialState, 1, catalog).movementTypes, 7),
+    ).toEqual([{ label: 'Swimming Speed', value: '4' }]);
     const toggleCatalog = new Map<string, (typeof catalog)[number]>([
       [
         String(CREATURE_FEAT_IDS.HOVER),
@@ -277,9 +280,9 @@ describe('creature movement section helpers', () => {
           id: String(CREATURE_FEAT_IDS.HOVER),
           name: 'Hover',
           description: 'Stays aloft.',
-          points: 1,
+          points: -1,
           feat_lvl: 1,
-          mechanic: false,
+          mechanic: true,
           category: 'Movement',
         },
       ],
@@ -296,9 +299,6 @@ describe('creature movement section helpers', () => {
         ],
         toggleCatalog,
       ),
-    ).toEqual([
-      { id: String(CREATURE_FEAT_IDS.HOVER), name: 'Hover', description: 'Stays aloft.' },
-      { id: String(CREATURE_FEAT_IDS.BOUNDING), name: 'Bounding' },
-    ]);
+    ).toEqual([{ id: String(CREATURE_FEAT_IDS.BOUNDING), name: 'Bounding' }]);
   });
 });

@@ -1,11 +1,10 @@
 /**
  * Creature Movement controls.
- * Speed, fly, swim, and burrow are bound to feat families. Other Movement rows with
- * `category === 'Movement'` and `mechanic !== true` that are not speed or mode
- * controls are section toggles (`isMovementSectionToggleRow`). A Speedy, Slow, Flying,
- * or Burrow family row is this section's control, even when its mechanic flag is false.
- * Saved Speedy and Slow names still load an old speed. A family level those names
- * cannot spell is stored as walk:+N or walk:-N, one space per level.
+ * Speed, fly, swim, burrow, and jump are embedded families on the Movement card.
+ * Plain on/off rows use the named ids in `MOVEMENT_PLAIN_TOGGLE_IDS` (Kadin's movement
+ * feat control list). Movement rows with `category === 'Movement'` and `mechanic !== true`
+ * that are not controls stay checkbox toggles. Speedy/Slow families include level 166
+ * without changing its stored mechanic flag.
  */
 
 import { CREATURE_FEAT_IDS } from '@/lib/id-constants';
@@ -24,6 +23,7 @@ import { isCreatureSensesEffectFeat } from './creature-senses';
 const FLY_NAMES = ['Fly Half', 'Fly'] as const;
 const SWIM_NAMES = ['Swim Half', 'Swim'] as const;
 const BURROW_NAMES = ['Burrow', 'Burrow II'] as const;
+const JUMP_NAMES = ['Jump', 'Jump II', 'Jump III'] as const;
 
 const SPEEDY_IDS = [
   CREATURE_FEAT_IDS.SPEEDY,
@@ -38,10 +38,25 @@ const SLOW_IDS = [
 const FLY_IDS = [CREATURE_FEAT_IDS.FLYING, CREATURE_FEAT_IDS.FLYING_II] as const;
 const SWIM_IDS = [CREATURE_FEAT_IDS.SWIMMING, CREATURE_FEAT_IDS.SWIMMING_II] as const;
 const BURROW_IDS = [CREATURE_FEAT_IDS.BURROW, CREATURE_FEAT_IDS.BURROW_II] as const;
+const JUMP_IDS = [
+  CREATURE_FEAT_IDS.JUMP,
+  CREATURE_FEAT_IDS.JUMP_II,
+  CREATURE_FEAT_IDS.JUMP_III,
+] as const;
+
+const MOVEMENT_PLAIN_TOGGLE_IDS = new Set<string>([
+  String(CREATURE_FEAT_IDS.SLOW_WALKER),
+  String(CREATURE_FEAT_IDS.ALL_SURFACE_CLIMBER),
+  String(CREATURE_FEAT_IDS.WATER_MOVEMENT),
+  String(CREATURE_FEAT_IDS.UNRESTRAINED_MOVEMENT),
+  String(CREATURE_FEAT_IDS.HOVER),
+  String(CREATURE_FEAT_IDS.TERRAIN_BOUND),
+]);
 
 const FLY_TOKEN = /^fly:(\d+)$/;
 const SWIM_TOKEN = /^swim:(\d+)$/;
 const BURROW_TOKEN = /^burrow:(\d+)$/;
+const JUMP_TOKEN = /^jump:(\d+)$/;
 
 const WALK_FAMILY_ROOTS = new Set<string>([
   String(CREATURE_FEAT_IDS.SPEEDY),
@@ -49,6 +64,7 @@ const WALK_FAMILY_ROOTS = new Set<string>([
   String(CREATURE_FEAT_IDS.FLYING),
   String(CREATURE_FEAT_IDS.SWIMMING),
   String(CREATURE_FEAT_IDS.BURROW),
+  String(CREATURE_FEAT_IDS.JUMP),
 ]);
 const SPEED_ROOTS = new Set<string>([
   String(CREATURE_FEAT_IDS.SPEEDY),
@@ -65,10 +81,15 @@ const CONTROL_IDS = new Set<string>([
   ...FLY_IDS.map(idString),
   ...SWIM_IDS.map(idString),
   ...BURROW_IDS.map(idString),
+  ...JUMP_IDS.map(idString),
 ]);
 
 export function isCreatureMovementControlFeatId(id: string | number): boolean {
   return CONTROL_IDS.has(String(id));
+}
+
+export function isCreatureMovementPlainToggleFeatId(id: string | number): boolean {
+  return MOVEMENT_PLAIN_TOGGLE_IDS.has(String(id));
 }
 
 /** A family row the Movement steppers own, including a mechanic-false child such as a further Speedy level. */
@@ -94,6 +115,7 @@ export function isCreatureMovementEffectFeat(
   if (feat.boundControl) return true;
   if (feat.id == null) return false;
   if (isCreatureMovementControlFeatId(feat.id)) return true;
+  if (isCreatureMovementPlainToggleFeatId(feat.id)) return true;
   if (catalogRow && isMovementBoundFamilyFeat(catalogRow)) return true;
   if (
     feat.base_feat_id != null &&
@@ -117,6 +139,13 @@ export function formatMovementSpeed(speed: number): string {
 /** Half at tier 1, full at tier 2+ of a movement mode family tied to walk speed. */
 export function movementTravelSpeed(walkSpeed: number, level: number): number {
   return level <= 1 ? walkSpeed / 2 : walkSpeed;
+}
+
+/** Creator and published speed lines round half-speed up (`calculations.ts` is unchanged). */
+export function movementTravelSpeedCreatorDisplay(walkSpeed: number, level: number): number {
+  if (level <= 0) return 0;
+  if (level <= 1) return Math.ceil(walkSpeed / 2);
+  return walkSpeed;
 }
 
 type FamilyIds = readonly number[];
@@ -205,6 +234,10 @@ function readBurrowLevel(movementTypes: readonly string[]): number {
   return readModeLevel(movementTypes, BURROW_NAMES, BURROW_TOKEN);
 }
 
+function readJumpLevel(movementTypes: readonly string[]): number {
+  return readModeLevel(movementTypes, JUMP_NAMES, JUMP_TOKEN);
+}
+
 export function readSwimLevel(movementTypes: readonly string[]): number {
   return readModeLevel(movementTypes, SWIM_NAMES, SWIM_TOKEN);
 }
@@ -222,6 +255,15 @@ function burrowLevelCap(catalog: readonly CodexCreatureFeat[]): number {
 }
 
 export function movementModeStepperLabel(
+  _catalog: readonly CodexCreatureFeat[],
+  _baseId: number,
+  level: number,
+): string {
+  if (level <= 0) return '';
+  return String(level);
+}
+
+export function movementModeDescription(
   catalog: readonly CodexCreatureFeat[],
   baseId: number,
   level: number,
@@ -229,9 +271,7 @@ export function movementModeStepperLabel(
 ): string {
   if (level <= 0) return '';
   const id = featIdForLevel(catalog, baseId, level, knownIds);
-  const description = catalog.find((feat) => String(feat.id) === id)?.description?.trim();
-  if (description) return description;
-  return level === 1 ? '1/2' : 'Full';
+  return catalog.find((feat) => String(feat.id) === id)?.description?.trim() ?? '';
 }
 
 function stripNames(movementTypes: readonly string[], names: Set<string>): string[] {
@@ -374,7 +414,25 @@ export function movementAfterSwimLevel(
   );
 }
 
-type BuiltInMovementKind = 'fly' | 'swim' | 'burrow';
+export function movementAfterJumpLevel(
+  creature: Pick<CreatureState, 'movementTypes' | 'feats'>,
+  level: number,
+  catalog: readonly CodexCreatureFeat[],
+): Pick<CreatureState, 'movementTypes' | 'feats'> {
+  return movementAfterMode(
+    creature,
+    level,
+    JUMP_NAMES,
+    new Set(JUMP_NAMES),
+    JUMP_TOKEN,
+    'jump',
+    CREATURE_FEAT_IDS.JUMP,
+    JUMP_IDS,
+    catalog,
+  );
+}
+
+type BuiltInMovementKind = 'fly' | 'swim' | 'burrow' | 'jump';
 
 type BuiltInMovementModeConfig = {
   kind: BuiltInMovementKind;
@@ -406,6 +464,13 @@ const BUILTIN_MOVEMENT_MODES: readonly BuiltInMovementModeConfig[] = [
     baseId: CREATURE_FEAT_IDS.BURROW,
     knownIds: BURROW_IDS,
   },
+  {
+    kind: 'jump',
+    label: 'Jump',
+    speedLabel: 'Jump',
+    baseId: CREATURE_FEAT_IDS.JUMP,
+    knownIds: JUMP_IDS,
+  },
 ] as const;
 
 function catalogHasMovementFamily(catalog: readonly CodexCreatureFeat[], baseId: number): boolean {
@@ -432,6 +497,8 @@ export function readBuiltInMovementLevel(
       return readSwimLevel(movementTypes);
     case 'burrow':
       return readBurrowLevel(movementTypes);
+    case 'jump':
+      return readJumpLevel(movementTypes);
     default:
       return 0;
   }
@@ -450,6 +517,8 @@ export function movementAfterBuiltInMode(
       return movementAfterSwimLevel(creature, level, catalog);
     case 'burrow':
       return movementAfterBurrowLevel(creature, level, catalog);
+    case 'jump':
+      return movementAfterJumpLevel(creature, level, catalog);
     default:
       return creature;
   }
@@ -466,6 +535,8 @@ export function movementModeCap(
       return swimLevelCap(catalog);
     case 'burrow':
       return burrowLevelCap(catalog);
+    case 'jump':
+      return familyCap(catalog, CREATURE_FEAT_IDS.JUMP, JUMP_IDS);
     default:
       return 0;
   }
@@ -482,8 +553,18 @@ function isMovementSectionToggleRow(
   );
 }
 
-export function movementToggleFeats(catalog: readonly CodexCreatureFeat[]): CodexCreatureFeat[] {
+export function movementCheckboxFeats(catalog: readonly CodexCreatureFeat[]): CodexCreatureFeat[] {
   return catalog.filter((feat) => isMovementSectionToggleRow(feat));
+}
+
+export function movementPlainToggleFeats(
+  catalog: readonly CodexCreatureFeat[],
+): CodexCreatureFeat[] {
+  return catalog.filter((feat) => isCreatureMovementPlainToggleFeatId(feat.id));
+}
+
+export function movementToggleFeats(catalog: readonly CodexCreatureFeat[]): CodexCreatureFeat[] {
+  return [...movementPlainToggleFeats(catalog), ...movementCheckboxFeats(catalog)];
 }
 
 export function movementDropdownFeats(catalog: readonly CodexCreatureFeat[]): CodexCreatureFeat[] {
@@ -514,6 +595,10 @@ export function movementControlFeatIdsFromNames(
   if (burrow > 0) {
     ids.push(featIdForLevel(catalog, CREATURE_FEAT_IDS.BURROW, burrow, BURROW_IDS));
   }
+  const jump = readJumpLevel(movementTypes);
+  if (jump > 0) {
+    ids.push(featIdForLevel(catalog, CREATURE_FEAT_IDS.JUMP, jump, JUMP_IDS));
+  }
   return ids;
 }
 
@@ -521,13 +606,13 @@ export function movementSectionPointTotal(
   creature: Pick<CreatureState, 'feats' | 'movementTypes'>,
   catalog: readonly CodexCreatureFeat[],
 ): number {
-  const dropdownIds = new Set(movementDropdownFeats(catalog).map((feat) => String(feat.id)));
+  const sectionToggleIds = new Set(movementToggleFeats(catalog).map((feat) => String(feat.id)));
   const byId = new Map(catalog.map((feat) => [String(feat.id), feat]));
   const onCreature = new Set(creature.feats.map((feat) => String(feat.id)));
   let sum = 0;
   for (const feat of creature.feats) {
     const id = String(feat.id);
-    if (!isCreatureMovementEffectFeat(feat) && !dropdownIds.has(id)) continue;
+    if (!isCreatureMovementEffectFeat(feat) && !sectionToggleIds.has(id)) continue;
     const points = feat.points ?? byId.get(id)?.points ?? 0;
     if (Number.isFinite(points)) sum += points;
   }
@@ -562,21 +647,21 @@ export function movementTravelLines(
   if (fly > 0) {
     lines.push({
       label: 'Flying Speed',
-      value: formatMovementSpeed(movementTravelSpeed(walkSpeed, fly)),
+      value: formatMovementSpeed(movementTravelSpeedCreatorDisplay(walkSpeed, fly)),
     });
   }
   const swim = readSwimLevel(movementTypes);
   if (swim > 0) {
     lines.push({
       label: 'Swimming Speed',
-      value: formatMovementSpeed(movementTravelSpeed(walkSpeed, swim)),
+      value: formatMovementSpeed(movementTravelSpeedCreatorDisplay(walkSpeed, swim)),
     });
   }
   const burrow = readBurrowLevel(movementTypes);
   if (burrow > 0) {
     lines.push({
       label: 'Burrow Speed',
-      value: formatMovementSpeed(movementTravelSpeed(walkSpeed, burrow)),
+      value: formatMovementSpeed(movementTravelSpeedCreatorDisplay(walkSpeed, burrow)),
     });
   }
   return lines;
@@ -591,6 +676,7 @@ export function isCreatureCreatorHiddenFeat(
   if (isCreatureMovementEffectFeat(feat, catalogRow)) return true;
   if (isCreatureSensesEffectFeat(feat, catalogRow ?? null)) return true;
   if (catalogRow && isMovementSectionToggleRow(catalogRow)) return true;
+  if (catalogRow && isCreatureMovementPlainToggleFeatId(catalogRow.id)) return true;
   return false;
 }
 

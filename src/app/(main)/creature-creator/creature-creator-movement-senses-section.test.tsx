@@ -73,6 +73,21 @@ const senseCatalog: CodexCreatureFeat[] = [
 ];
 
 describe('CreatureCreatorMovementSection UI', () => {
+  it('shows rounded travel speed and numeric stepper text when flying is on', () => {
+    const withFly = movementAfterBuiltInMode(initialState, 'fly', 1, movementCatalog);
+    render(
+      <CreatureCreatorMovementSection
+        creature={{ ...initialState, ...withFly }}
+        walkSpeed={7}
+        catalog={movementCatalog}
+        updateCreature={vi.fn()}
+      />,
+    );
+    expect(screen.getByText('4')).toBeTruthy();
+    expect(screen.getByText('1')).toBeTruthy();
+    expect(screen.queryByText('1/2')).toBeNull();
+  });
+
   it('does not render add-plus or movement feat dropdown controls', () => {
     render(
       <CreatureCreatorMovementSection
@@ -126,6 +141,19 @@ describe('CreatureCreatorMovementSection UI', () => {
 });
 
 describe('CreatureCreatorSensesSection UI', () => {
+  it('shows darkvision level in the active row, not the stored description', () => {
+    const stepped = sensesAfterBuiltInLevel(initialState, 'darkvision', 1, senseCatalog);
+    render(
+      <CreatureCreatorSensesSection
+        creature={{ ...initialState, ...stepped }}
+        catalog={senseCatalog}
+        updateCreature={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'Darkvision description' })).toBeTruthy();
+    expect(screen.getAllByText('1').length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText('Sees in darkness out to 6 spaces.')).toBeNull();
+  });
   it('does not render a sequential add-plus control', () => {
     render(
       <CreatureCreatorSensesSection

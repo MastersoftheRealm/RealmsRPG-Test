@@ -2,15 +2,15 @@
 
 import { Card, Checkbox } from '@/components/ui';
 import { DecrementButton, IncrementButton, InfoTippy } from '@/components/patterns';
-import { LargeStatBlock } from '@/components/character-sheet/sheet-large-stat-block';
 import type { CreatureFeat as CodexCreatureFeat } from '@/hooks';
 import type { CreatureState } from './creature-creator-types';
 import {
   builtInSenseFamilies,
   formatSensesPointCost,
   readBuiltInSenseLevel,
+  senseControlCreatorValue,
+  senseControlDescription,
   senseFamilyCap,
-  senseControlDisplayValue,
   sensesAfterBuiltInHandler,
   sensesSectionPointTotal,
   sensesToggleFeats,
@@ -33,7 +33,7 @@ function TierStepper({
   onChange: (next: number) => void;
 }) {
   return (
-    <div className="mt-2 flex items-center gap-1">
+    <div className="flex items-center gap-1">
       <DecrementButton
         size="sm"
         disabled={value <= min}
@@ -41,7 +41,7 @@ function TierStepper({
         title={`Decrease ${label}`}
       />
       <span className="min-w-[2.5rem] text-center text-xs font-medium text-text-muted tabular-nums">
-        {value > 0 ? String(value) : '0'}
+        {String(value)}
       </span>
       <IncrementButton
         size="sm"
@@ -53,38 +53,35 @@ function TierStepper({
   );
 }
 
-function SenseControlBox({
+function SenseActiveRow({
   label,
-  kind,
   level,
   max,
-  creature,
-  catalog,
+  value,
+  tooltip,
   onChange,
 }: {
   label: string;
-  kind: (typeof builtInSenseFamilies)[number]['kind'];
   level: number;
   max: number;
-  creature: CreatureState;
-  catalog: readonly CodexCreatureFeat[];
+  value: string;
+  tooltip: string;
   onChange: (next: number) => void;
 }) {
   if (level === 0) return null;
   return (
-    <LargeStatBlock
-      label={label}
-      value={senseControlDisplayValue(creature.senses, kind, catalog)}
-      footer={
-        <TierStepper
-          label={label}
-          value={level}
-          min={ACTIVE_SENSE_STEPPER_MIN}
-          max={max}
-          onChange={(next) => onChange(Math.max(ACTIVE_SENSE_STEPPER_MIN, Math.min(max, next)))}
-        />
-      }
-    />
+    <div className="flex min-w-0 flex-wrap items-center gap-2 rounded-lg bg-surface-alt px-3 py-2">
+      <span className="text-sm font-semibold text-text-secondary">{label}</span>
+      {tooltip ? <InfoTippy content={tooltip} label={`${label} description`} /> : null}
+      <span className="text-2xl font-bold text-text-primary tabular-nums">{value}</span>
+      <TierStepper
+        label={label}
+        value={level}
+        min={ACTIVE_SENSE_STEPPER_MIN}
+        max={max}
+        onChange={(next) => onChange(Math.max(ACTIVE_SENSE_STEPPER_MIN, Math.min(max, next)))}
+      />
+    </div>
   );
 }
 
@@ -119,20 +116,20 @@ export function CreatureCreatorSensesSection({
           {formatSensesPointCost(pointTotal)}
         </p>
       )}
-      <div className="flex flex-wrap items-stretch gap-3">
+      <div className="flex flex-col gap-2">
         {senseFamilies.map((family) => {
           const level = readBuiltInSenseLevel(creature.senses, family.kind);
           const max = senseFamilyCap(catalog, family.kind);
           const after = sensesAfterBuiltInHandler(family.kind);
+          const tooltip = senseControlDescription(creature.senses, family.kind, catalog);
           return (
-            <SenseControlBox
+            <SenseActiveRow
               key={family.kind}
               label={family.label}
-              kind={family.kind}
               level={level}
               max={max}
-              creature={creature}
-              catalog={catalog}
+              value={senseControlCreatorValue(creature.senses, family.kind)}
+              tooltip={tooltip}
               onChange={(next) => updateCreature(after(creature, next, catalog))}
             />
           );
@@ -144,7 +141,7 @@ export function CreatureCreatorSensesSection({
             const level = readBuiltInSenseLevel(creature.senses, family.kind);
             const after = sensesAfterBuiltInHandler(family.kind);
             return (
-              <div key={family.kind} className="flex items-center gap-2">
+              <div key={family.kind} className="flex min-w-0 items-center gap-2">
                 <Checkbox
                   checked={level > 0}
                   label={family.label}
@@ -157,8 +154,9 @@ export function CreatureCreatorSensesSection({
           })}
           {toggles.map((feat) => {
             const on = creature.feats.some((row) => String(row.id) === String(feat.id));
+            const description = feat.description?.trim();
             return (
-              <div key={feat.id} className="flex items-center gap-2">
+              <div key={feat.id} className="flex min-w-0 items-center gap-2">
                 <Checkbox
                   checked={on}
                   label={feat.name}
@@ -168,8 +166,8 @@ export function CreatureCreatorSensesSection({
                     })
                   }
                 />
-                {feat.description ? (
-                  <InfoTippy content={feat.description} label={`${feat.name} description`} />
+                {description ? (
+                  <InfoTippy content={description} label={`${feat.name} description`} />
                 ) : null}
               </div>
             );
