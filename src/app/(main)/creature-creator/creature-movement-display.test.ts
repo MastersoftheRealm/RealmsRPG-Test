@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { CreatureFeat as CodexCreatureFeat } from '@/hooks';
 import { CREATURE_FEAT_IDS } from '@/lib/id-constants';
 import { initialState } from './creature-creator-constants';
 import {
@@ -17,7 +18,7 @@ import {
 } from './creature-movement';
 import { senseControlCreatorValue, sensesAfterBuiltInLevel } from './creature-senses';
 
-const embeddedCatalog = [
+const embeddedCatalog: CodexCreatureFeat[] = [
   {
     id: String(CREATURE_FEAT_IDS.JUMP),
     name: 'Jump',
@@ -70,9 +71,7 @@ const embeddedCatalog = [
     name: 'Terrain Bound',
     description: 'Terrain bound text.',
     points: -2,
-    feat_lvl: null,
     mechanic: false,
-    category: null,
   },
   {
     id: String(CREATURE_FEAT_IDS.BOUNDING),
