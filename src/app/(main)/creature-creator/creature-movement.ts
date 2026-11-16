@@ -699,7 +699,10 @@ export function movementToggleLines(
   }[],
   catalogById?: ReadonlyMap<
     string,
-    Pick<CodexCreatureFeat, 'id' | 'base_feat_id' | 'category' | 'mechanic'>
+    Pick<
+      CodexCreatureFeat,
+      'id' | 'base_feat_id' | 'category' | 'mechanic' | 'name' | 'description'
+    >
   >,
 ): MovementToggleLine[] {
   const lines: MovementToggleLine[] = [];
