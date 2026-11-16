@@ -3410,6 +3410,8 @@ No production file imports these names. A test import does not count. The file t
 - `src/app/(main)/creature-creator/creature-creator-remove-section-confirm-placeholder.ts`: `CreatureCreatorOptionalSectionDisplayName` (type)
 - `src/app/(main)/creature-creator/creature-damage-modifiers.ts`: `DamageModifierLists` (type)
 - `src/app/(main)/creature-creator/creature-over-budget-notification.ts`: `CreatureOverBudgetNotification` (type)
+- `src/app/(main)/creature-creator/creature-feat-utils.ts`: `CatalogOwnedFeatIds` (type), `CreatureCodexFeatId` (type), `PlayerCodexFeatId` (type), `SpeciesTraitId` (type)
+- `src/app/(main)/creature-creator/transformers.ts`: `FeatCatalogKind` (type)
 - `src/app/(main)/empowered-technique-creator/empowered-technique-bootstrap.ts`: `EmpoweredLibraryRecord` (type)
 - `src/app/(main)/empowered-technique-creator/empowered-technique-cost-derivation.ts`: `EmpoweredSectionCostSlice` (type)
 - `src/app/(main)/empowered-technique-creator/empowered-technique-creator-editor.tsx`: `EmpoweredTechniqueCreatorEditorProps` (type)
