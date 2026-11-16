@@ -116,7 +116,11 @@ export function CreatureStatBlockExpandedContent({
   techniquesForDisplay,
   creatureFeatsById,
 }: CreatureStatBlockExpandedContentProps) {
-  const travelLines = movementTravelLines(creature.movementTypes ?? [], speed);
+  const travelLines = movementTravelLines(
+    creature.movementTypes ?? [],
+    speed,
+    Array.from(creatureFeatsById.values()),
+  );
   const toggleLines = movementToggleLines(creature.feats ?? [], creatureFeatsById);
   return (
     <div className="space-y-4">

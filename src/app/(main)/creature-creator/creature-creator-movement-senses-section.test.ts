@@ -91,7 +91,9 @@ describe('creature creator movement toggle behavior', () => {
         [{ id: CREATURE_FEAT_IDS.HOVER, name: 'Hover', description: 'Stays aloft.' }],
         catalogById,
       ),
-    ).toEqual([]);
+    ).toEqual([
+      { id: String(CREATURE_FEAT_IDS.HOVER), name: 'Hover', description: 'Stays aloft.' },
+    ]);
   });
 });
 

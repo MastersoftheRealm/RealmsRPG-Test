@@ -637,10 +637,11 @@ export function toggleMovementFeat(
 
 export type MovementSpeedLine = { label: string; value: string };
 
-/** Flying, swimming, and burrow speeds for the published block. Labels match the creator. */
+/** Flying, swimming, burrow, and jump for the published block. Labels match the creator. */
 export function movementTravelLines(
   movementTypes: readonly string[],
   walkSpeed: number,
+  catalog?: readonly CodexCreatureFeat[],
 ): MovementSpeedLine[] {
   const lines: MovementSpeedLine[] = [];
   const fly = readFlyLevel(movementTypes);
@@ -664,6 +665,13 @@ export function movementTravelLines(
       value: formatMovementSpeed(movementTravelSpeedCreatorDisplay(walkSpeed, burrow)),
     });
   }
+  const jump = readJumpLevel(movementTypes);
+  if (jump > 0 && catalog) {
+    const description = movementModeDescription(catalog, CREATURE_FEAT_IDS.JUMP, jump, JUMP_IDS);
+    if (description) {
+      lines.push({ label: 'Jump', value: description });
+    }
+  }
   return lines;
 }
 
@@ -682,7 +690,7 @@ export function isCreatureCreatorHiddenFeat(
 
 export type MovementToggleLine = { id: string; name: string; description?: string };
 
-/** Toggle controls stay off the feat list and show here by their saved name and description. */
+/** Movement checkboxes and plain toggles stay off the feat list and show here by saved name and description. */
 export function movementToggleLines(
   feats: readonly {
     id?: string | number | undefined;
@@ -697,12 +705,16 @@ export function movementToggleLines(
   const lines: MovementToggleLine[] = [];
   for (const feat of feats) {
     if (feat.id == null) continue;
-    const row = catalogById?.get(String(feat.id));
-    if (!row || !isMovementSectionToggleRow(row)) continue;
-    const name = feat.name?.trim();
+    const id = String(feat.id);
+    const row = catalogById?.get(id);
+    const plainToggle = isCreatureMovementPlainToggleFeatId(id);
+    const checkboxToggle = row ? isMovementSectionToggleRow(row) : false;
+    if (!plainToggle && !checkboxToggle) continue;
+    const name = feat.name?.trim() || row?.name?.trim();
     if (!name) continue;
-    const line: MovementToggleLine = { id: String(feat.id), name };
-    if (feat.description) line.description = feat.description;
+    const line: MovementToggleLine = { id, name };
+    const description = feat.description?.trim() || row?.description?.trim();
+    if (description) line.description = description;
     lines.push(line);
   }
   return lines;
