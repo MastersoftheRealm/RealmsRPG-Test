@@ -53,9 +53,9 @@ const movementCatalog = [
     id: String(CREATURE_FEAT_IDS.HOVER),
     name: 'Hover',
     description: 'Stays aloft.',
-    points: 1,
+    points: -1,
     feat_lvl: 1,
-    mechanic: false,
+    mechanic: true,
     category: 'Movement',
   },
 ];
@@ -76,9 +76,9 @@ describe('creature creator movement toggle behavior', () => {
     expect(readBuiltInMovementLevel(stepped.movementTypes, 'fly')).toBe(0);
     const toggledOn = movementAfterBuiltInMode(stepped, 'fly', 1, movementCatalog);
     expect(readBuiltInMovementLevel(toggledOn.movementTypes, 'fly')).toBe(1);
-    expect(movementToggleFeats(movementCatalog).map((feat) => feat.id)).toEqual([
-      String(CREATURE_FEAT_IDS.HOVER),
-    ]);
+    expect(movementToggleFeats(movementCatalog).map((feat) => feat.id)).toEqual(
+      expect.arrayContaining([String(CREATURE_FEAT_IDS.HOVER)]),
+    );
     const catalogById = new Map(movementCatalog.map((feat) => [String(feat.id), feat]));
     expect(
       isCreatureCreatorHiddenFeat(

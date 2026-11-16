@@ -371,6 +371,24 @@ function activeSenseControlFeat(
   return catalog.find((feat) => String(feat.id) === id);
 }
 
+export function senseControlCreatorValue(
+  senses: readonly string[],
+  kind: BuiltInSenseKind,
+): string {
+  const level = readBuiltInSenseLevel(senses, kind);
+  if (level <= 0) return '—';
+  return String(level);
+}
+
+export function senseControlDescription(
+  senses: readonly string[],
+  kind: BuiltInSenseKind,
+  catalog: readonly CodexCreatureFeat[],
+): string {
+  return activeSenseControlFeat(senses, kind, catalog)?.description?.trim() ?? '';
+}
+
+/** Published stat block lines use stored feat description, not the creator level. */
 export function senseControlDisplayValue(
   senses: readonly string[],
   kind: BuiltInSenseKind,

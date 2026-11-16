@@ -7,6 +7,7 @@ import {
   movementAfterBurrowLevel,
   movementAfterFlyLevel,
   movementAfterWalkLevel,
+  movementAfterJumpLevel,
   movementAfterSwimLevel,
   movementDropdownFeats,
   movementControlFeatIdsFromNames,
@@ -270,6 +271,9 @@ describe('creature movement section helpers', () => {
       { label: 'Swimming Speed', value: '5' },
       { label: 'Burrow Speed', value: '10' },
     ]);
+    expect(
+      movementTravelLines(movementAfterSwimLevel(initialState, 1, catalog).movementTypes, 7),
+    ).toEqual([{ label: 'Swimming Speed', value: '4' }]);
     const toggleCatalog = new Map<string, (typeof catalog)[number]>([
       [
         String(CREATURE_FEAT_IDS.HOVER),
@@ -277,9 +281,9 @@ describe('creature movement section helpers', () => {
           id: String(CREATURE_FEAT_IDS.HOVER),
           name: 'Hover',
           description: 'Stays aloft.',
-          points: 1,
+          points: -1,
           feat_lvl: 1,
-          mechanic: false,
+          mechanic: true,
           category: 'Movement',
         },
       ],
@@ -299,6 +303,35 @@ describe('creature movement section helpers', () => {
     ).toEqual([
       { id: String(CREATURE_FEAT_IDS.HOVER), name: 'Hover', description: 'Stays aloft.' },
       { id: String(CREATURE_FEAT_IDS.BOUNDING), name: 'Bounding' },
+    ]);
+  });
+
+  it('publishes jump with the stored description for the active level', () => {
+    const jumpCatalog = [
+      ...catalog,
+      {
+        id: String(CREATURE_FEAT_IDS.JUMP),
+        name: 'Jump',
+        description: 'This creature can long jump 3 spaces and high jump 2.',
+        points: 1,
+        feat_lvl: 1,
+        mechanic: true,
+        category: 'Movement',
+      },
+      {
+        id: String(CREATURE_FEAT_IDS.JUMP_II),
+        name: 'Jump II',
+        description: 'This creature can long jump 4 spaces and high jump 3.',
+        points: 2,
+        feat_lvl: 2,
+        base_feat_id: String(CREATURE_FEAT_IDS.JUMP),
+        mechanic: true,
+        category: 'Movement',
+      },
+    ];
+    const withJump = movementAfterJumpLevel(initialState, 1, jumpCatalog);
+    expect(movementTravelLines(withJump.movementTypes, 10, jumpCatalog)).toEqual([
+      { label: 'Jump', value: 'This creature can long jump 3 spaces and high jump 2.' },
     ]);
   });
 });
