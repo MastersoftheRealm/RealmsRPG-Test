@@ -253,7 +253,7 @@ export type MergeFeatsInFamilyOnAddArgs<T extends MergeFeatRow> = {
   characterDefsById: Map<string, LeveledFeatLike>;
 };
 
-/** Replace lower ranks in the same catalog family when adding leveled feats (creature vs character maps stay separate). */
+/** One row per family in a catalog. A higher rank replaces lower ones; a lower or equal add does not add a second row. Creature and character maps stay separate. */
 export function mergeFeatsInFamilyOnAdd<T extends MergeFeatRow>({
   existing,
   added,
@@ -273,18 +273,36 @@ export function mergeFeatsInFamilyOnAdd<T extends MergeFeatRow>({
         return [...acc, nextFeat];
       }
 
-      const filtered = acc.filter((existingRow) => {
+      const rest: T[] = [];
+      const sameFamily: T[] = [];
+      for (const existingRow of acc) {
         const existingCatalog = resolveRowCatalog(existingRow, creatureDefsById, characterDefsById);
-        if (existingCatalog !== addedCatalog) return true;
-
+        if (existingCatalog !== addedCatalog) {
+          rest.push(existingRow);
+          continue;
+        }
         const existingDefs = defsForCatalog(existingCatalog, creatureDefsById, characterDefsById);
         const existingMeta = getFamilyAndLevel(String(existingRow.id), existingDefs);
-        if (!existingMeta || existingMeta.familyId !== nextMeta.familyId) return true;
+        if (!existingMeta || existingMeta.familyId !== nextMeta.familyId) {
+          rest.push(existingRow);
+          continue;
+        }
+        sameFamily.push(existingRow);
+      }
 
-        return existingMeta.level >= nextMeta.level;
-      });
+      if (sameFamily.length === 0) return [...rest, nextFeat];
 
-      return [...filtered, nextFeat];
+      let best = sameFamily[0]!;
+      let bestLevel = getFamilyAndLevel(String(best.id), addedDefs)?.level ?? 0;
+      for (const row of sameFamily.slice(1)) {
+        const level = getFamilyAndLevel(String(row.id), addedDefs)?.level ?? 0;
+        if (level > bestLevel) {
+          best = row;
+          bestLevel = level;
+        }
+      }
+      if (nextMeta.level > bestLevel) return [...rest, nextFeat];
+      return [...rest, best];
     },
     [...existing],
   );

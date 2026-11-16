@@ -38,9 +38,11 @@ import {
   type Trait,
 } from '@/hooks';
 import {
+  buildFeatSourceLookup,
   displayItemToCreaturePower,
   displayItemToCreatureTechnique,
   displayItemToCreatureArmament,
+  inferCreatureFeatSource,
 } from './transformers';
 import { useSort } from '@/hooks/use-sort';
 import { useDiscardableCreatorDraft } from '@/hooks/use-creator-unsaved-guard';
@@ -110,23 +112,12 @@ export function useCreatureCreatorWorkspace() {
   const { data: skillsData = [], isLoading: skillsLoading } = useCodexSkills();
 
   const creatureFeatSourceLookup = useMemo(
-    () => ({
-      creatureFeatIds: new Set(
-        (creatureFeatsData as CodexCreatureFeatRow[]).map((cf) => String(cf.id)),
+    () =>
+      buildFeatSourceLookup(
+        creatureFeatsData as CodexCreatureFeatRow[],
+        codexFeatsData as Feat[],
+        codexTraitsData as Trait[],
       ),
-      codexFeatById: new Map<string, { char_feat?: boolean | undefined }>(
-        (codexFeatsData as Feat[]).map((f) => [String(f.id), { char_feat: f.char_feat }]),
-      ),
-      traitById: new Map<
-        string,
-        { flaw?: boolean | undefined; characteristic?: boolean | undefined }
-      >(
-        (codexTraitsData as Trait[]).map((t) => [
-          String(t.id),
-          { flaw: t.flaw, characteristic: t.characteristic },
-        ]),
-      ),
-    }),
     [creatureFeatsData, codexFeatsData, codexTraitsData],
   );
 
@@ -355,11 +346,14 @@ export function useCreatureCreatorWorkspace() {
   );
 
   const handleCreatureFeatLevelChange = useCallback(
-    (featId: string, targetLevel: number) => {
+    (
+      feat: Pick<CreatureState['feats'][number], 'id' | 'name' | 'featSourceType'>,
+      targetLevel: number,
+    ) => {
       setCreature((prev) =>
         applyCreatureFeatLevelChange(
           prev,
-          featId,
+          feat,
           targetLevel,
           creatureFeatSourceLookup,
           codexFeatsById,
@@ -386,11 +380,17 @@ export function useCreatureCreatorWorkspace() {
     () =>
       sortFeatItems(
         featsWithTypeLabel.filter((feat) => {
-          const row = codexCreatureFeatsById.get(String(feat.id));
-          return !isCreatureCreatorHiddenFeat(feat, row ?? null);
+          const src =
+            feat.featSourceType ?? inferCreatureFeatSource(feat, creatureFeatSourceLookup);
+          const row =
+            !src || src === 'creature' ? codexCreatureFeatsById.get(String(feat.id)) : null;
+          return !isCreatureCreatorHiddenFeat(
+            src ? { ...feat, featSourceType: src } : feat,
+            row ?? null,
+          );
         }),
       ),
-    [codexCreatureFeatsById, featsWithTypeLabel, sortFeatItems],
+    [codexCreatureFeatsById, creatureFeatSourceLookup, featsWithTypeLabel, sortFeatItems],
   );
 
   const armamentsWithSortKeys = useMemo(() => enrichArmamentsWithSortKeys(creature), [creature]);

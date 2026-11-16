@@ -17,20 +17,18 @@ import {
   codexCreatureFeatToCreatureFeat,
   codexFeatToCreatureFeat,
   creatureToFeatRequirementCharacter,
+  sameStoredFeatRow,
 } from './creature-feat-utils';
 import {
   inferCreatureFeatSource,
   labelCreatureFeatSource,
   type CreatureArmament,
   type CreatureFeat,
+  type FeatSourceLookup,
 } from './transformers';
 import type { CreatureState } from './creature-creator-types';
 
-export type CreatureFeatSourceLookup = {
-  creatureFeatIds: Set<string>;
-  codexFeatById: Map<string, { char_feat?: boolean | undefined }>;
-  traitById: Map<string, { flaw?: boolean | undefined; characteristic?: boolean | undefined }>;
-};
+export type CreatureFeatSourceLookup = FeatSourceLookup;
 
 export type CreatureFeatRow = CreatureFeat & {
   typeLabel: string;
@@ -111,7 +109,7 @@ export function buildFeatsWithTypeLabel(
           currentLevel: getFeatLevel(codexFeat),
           minLevel: getFeatLevel(family[0]),
           maxQualified: getMaxQualifiedFeatLevel(
-            creatureToFeatRequirementCharacter(creature),
+            creatureToFeatRequirementCharacter(creature, creatureFeatSourceLookup),
             family,
             skillsData,
             codexFeatsData,
@@ -139,7 +137,7 @@ export function buildFeatsWithTypeLabel(
 
 export function applyCreatureFeatLevelChange(
   prev: CreatureState,
-  featId: string,
+  feat: Pick<CreatureFeat, 'id' | 'name' | 'featSourceType'>,
   targetLevel: number,
   creatureFeatSourceLookup: CreatureFeatSourceLookup,
   codexFeatsById: Map<string, Feat>,
@@ -149,15 +147,16 @@ export function applyCreatureFeatLevelChange(
   skillsData: Skill[],
   codexFeatsData: Feat[],
 ): CreatureState {
-  const idx = prev.feats.findIndex((f) => f.id === featId);
+  const idx = prev.feats.findIndex((row) => sameStoredFeatRow(row, feat));
   if (idx === -1) return prev;
 
   const current = prev.feats[idx];
   if (!current) return prev;
+  const featId = String(current.id);
   const src = current.featSourceType ?? inferCreatureFeatSource(current, creatureFeatSourceLookup);
 
   if (src === 'creature') {
-    const creatureDef = codexCreatureFeatsById.get(String(featId));
+    const creatureDef = codexCreatureFeatsById.get(featId);
     if (!creatureDef) return prev;
     const family = creatureFeatLevelsByFamily.get(getFeatFamilyId(creatureDef));
     if (!family || family.length <= 1) return prev;
@@ -182,7 +181,7 @@ export function applyCreatureFeatLevelChange(
   const targetCodex = family.find((f) => getFeatLevel(f) === targetLevel);
   if (!targetCodex || String(targetCodex.id) === String(featId)) return prev;
 
-  const requirementCharacter = creatureToFeatRequirementCharacter(prev);
+  const requirementCharacter = creatureToFeatRequirementCharacter(prev, creatureFeatSourceLookup);
   const { met } = checkFeatRequirements(
     targetCodex,
     requirementCharacter,

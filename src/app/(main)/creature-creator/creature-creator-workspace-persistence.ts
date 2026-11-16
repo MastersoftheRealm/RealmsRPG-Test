@@ -22,6 +22,7 @@ import type { CreatureState } from './creature-creator-types';
 import { initialState as creatureCreatorInitialState } from './creature-creator-constants';
 import { rawRecordToCreatureState } from './creature-skill-utils';
 import type { CreatureArmament } from './transformers';
+import { sameStoredFeatRow } from './creature-feat-utils';
 import {
   commitCreatorEditClearAfterSave,
   scheduleCreatorEditClear,
@@ -153,10 +154,10 @@ export function useCreatureCreatorWorkspacePersistence({
   );
 
   const onRemoveFeat = useCallback(
-    (featId: string) => {
+    (feat: Pick<CreatureState['feats'][number], 'id' | 'name' | 'featSourceType'>) => {
       setCreature((prev) => ({
         ...prev,
-        feats: prev.feats.filter((f) => f.id !== featId),
+        feats: prev.feats.filter((row) => !sameStoredFeatRow(row, feat)),
       }));
     },
     [setCreature],
