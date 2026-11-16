@@ -1,8 +1,8 @@
 /**
- * Fast debounced PATCH for HP / EN / AP so encounter realtime stays in sync.
- * Fires when those fields change — notes/`updatedAt` must not stamp a new
- * lock and 409 the sheet autosave (TASK-786). When the sheet passes its saved
- * snapshot, a changed Health/Energy allocation is included in that same PATCH.
+ * Fast debounced PATCH for current HP / EN / AP so encounter realtime stays
+ * in sync. Pool allocation stays on the locked sheet autosave: this sync
+ * omits `updatedAt` (`skipLock`), so it must not send `healthPoints` or
+ * `energyPoints`.
  */
 
 'use client';
@@ -10,7 +10,7 @@
 import { useEffect, useRef } from 'react';
 import type { Character } from '@/types';
 import {
-  buildSheetResourceSyncPatch,
+  buildResourcePatchFromCharacter,
   nextResourceSyncCursor,
   scheduleCharacterResourceSync,
   type ResourceSyncCursor,
@@ -19,7 +19,6 @@ import {
 export function useCharacterResourceSync(
   character: Character | null | undefined,
   enabled: boolean,
-  savedBaseline?: { readonly current: Record<string, unknown> | null },
 ): void {
   const cursorRef = useRef<ResourceSyncCursor | null>(null);
 
@@ -29,10 +28,10 @@ export function useCharacterResourceSync(
       return;
     }
 
-    const patch = buildSheetResourceSyncPatch(character, savedBaseline?.current);
+    const patch = buildResourcePatchFromCharacter(character);
     const { schedule, next } = nextResourceSyncCursor(cursorRef.current, character.id, patch);
     cursorRef.current = next;
     if (!schedule || !patch) return;
     scheduleCharacterResourceSync(character.id, patch);
-  }, [enabled, character, savedBaseline]);
+  }, [enabled, character]);
 }

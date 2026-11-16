@@ -3,8 +3,6 @@
  * Leaf module: no UI, store, or API imports.
  */
 
-import { matchesSheetEquipmentItem } from '@/lib/character/sheet-equipment-match';
-
 export function characterLockToken(value: string | Date | null | undefined): string | undefined {
   if (value == null) return undefined;
   if (typeof value === 'string' && value.trim()) return value;
@@ -129,27 +127,84 @@ const EQUIPMENT_ITEM_BUCKETS = [
   'inventory',
 ] as const;
 
-type SheetEquipmentRow = { id?: string | number | undefined; name?: string | undefined };
+type EquipmentRow = Record<string, unknown>;
 
-function sheetEquipmentRowAnchorId(row: Record<string, unknown>, index: number): string | number {
-  const { id, name } = row;
+/**
+ * Merge identity for a gear row. Not the sheet click matcher: that one also
+ * accepts the first same name and the list index, which pairs the wrong row.
+ */
+function equipmentRowId(row: EquipmentRow): string | number | undefined {
+  const { id } = row;
   if (typeof id === 'string' || typeof id === 'number') return id;
-  if (typeof name === 'string' && name.length > 0) return name;
-  return index;
+  return undefined;
 }
 
-function findSheetEquipmentRow(
-  rows: Record<string, unknown>[] | undefined,
-  anchor: Record<string, unknown>,
-  anchorIndex: number,
-): Record<string, unknown> | undefined {
-  if (!rows?.length) return undefined;
-  const itemId = sheetEquipmentRowAnchorId(anchor, anchorIndex);
-  for (let idx = 0; idx < rows.length; idx++) {
-    const row = rows[idx];
-    if (row && matchesSheetEquipmentItem(row as SheetEquipmentRow, itemId, idx)) return row;
+function equipmentRowNameKey(row: EquipmentRow): string | undefined {
+  const { name } = row;
+  if (typeof name !== 'string' || name.length === 0) return undefined;
+  return name.toLowerCase();
+}
+
+function equipmentListIsAmbiguous(rows: EquipmentRow[]): boolean {
+  const idCounts = new Map<string, number>();
+  const nameCounts = new Map<string, number>();
+  for (const row of rows) {
+    const id = equipmentRowId(row);
+    if (id !== undefined) {
+      const key = String(id);
+      idCounts.set(key, (idCounts.get(key) ?? 0) + 1);
+      continue;
+    }
+    const nameKey = equipmentRowNameKey(row);
+    if (!nameKey) return true;
+    nameCounts.set(nameKey, (nameCounts.get(nameKey) ?? 0) + 1);
   }
-  return undefined;
+  for (const count of idCounts.values()) if (count > 1) return true;
+  for (const count of nameCounts.values()) if (count > 1) return true;
+  return false;
+}
+
+function equipmentBucketsAmbiguous(
+  remote: EquipmentRow[],
+  local: EquipmentRow[],
+  baseline: EquipmentRow[],
+): boolean {
+  return (
+    equipmentListIsAmbiguous(remote) ||
+    equipmentListIsAmbiguous(local) ||
+    equipmentListIsAmbiguous(baseline)
+  );
+}
+
+function findIdentifiableEquipmentIndex(
+  rows: EquipmentRow[],
+  anchor: EquipmentRow,
+  used?: Set<number>,
+): number {
+  const id = equipmentRowId(anchor);
+  const hits: number[] = [];
+  if (id !== undefined) {
+    const idStr = String(id);
+    for (let idx = 0; idx < rows.length; idx++) {
+      if (used?.has(idx)) continue;
+      const rowId = equipmentRowId(rows[idx]!);
+      if (rowId === id || (rowId !== undefined && String(rowId) === idStr)) hits.push(idx);
+    }
+  } else {
+    const nameKey = equipmentRowNameKey(anchor);
+    if (!nameKey) return -1;
+    for (let idx = 0; idx < rows.length; idx++) {
+      if (used?.has(idx)) continue;
+      const row = rows[idx]!;
+      if (equipmentRowId(row) !== undefined) continue;
+      if (equipmentRowNameKey(row) === nameKey) hits.push(idx);
+    }
+  }
+  return hits.length === 1 ? hits[0]! : -1;
+}
+
+function sameEquipmentIdentity(a: EquipmentRow, b: EquipmentRow): boolean {
+  return findIdentifiableEquipmentIndex([b], a) === 0;
 }
 
 function mergeEquipmentScalarBucket(
@@ -177,24 +232,19 @@ function mergeEquipmentItemBucket(
   if (!remoteIsArray || !localIsArray || !baselineIsArray) {
     return mergeEquipmentScalarBucket(remoteList, localList, baselineList);
   }
-  const remote = remoteList as Record<string, unknown>[];
-  const local = localList as Record<string, unknown>[];
-  const baseline = baselineList ? (baselineList as Record<string, unknown>[]) : [];
-  const merged: Record<string, unknown>[] = [];
+  const remote = remoteList as EquipmentRow[];
+  const local = localList as EquipmentRow[];
+  const baseline = baselineList ? (baselineList as EquipmentRow[]) : [];
+  if (equipmentBucketsAmbiguous(remote, local, baseline)) {
+    return mergeEquipmentScalarBucket(remoteList, localList, baselineList);
+  }
+  const merged: EquipmentRow[] = [];
   const usedLocal = new Set<number>();
 
-  for (let rIdx = 0; rIdx < remote.length; rIdx++) {
-    const remoteRow = remote[rIdx]!;
-    const baselineRow = findSheetEquipmentRow(baseline, remoteRow, rIdx);
-    const localIdx = local.findIndex(
-      (row, idx) =>
-        !usedLocal.has(idx) &&
-        matchesSheetEquipmentItem(
-          row as SheetEquipmentRow,
-          sheetEquipmentRowAnchorId(remoteRow, rIdx),
-          rIdx,
-        ),
-    );
+  for (const remoteRow of remote) {
+    const baselineIdx = findIdentifiableEquipmentIndex(baseline, remoteRow);
+    const baselineRow = baselineIdx >= 0 ? baseline[baselineIdx] : undefined;
+    const localIdx = findIdentifiableEquipmentIndex(local, remoteRow, usedLocal);
     const localRow = localIdx >= 0 ? local[localIdx] : undefined;
     if (localIdx >= 0) usedLocal.add(localIdx);
 
@@ -214,15 +264,10 @@ function mergeEquipmentItemBucket(
   for (let lIdx = 0; lIdx < local.length; lIdx++) {
     if (usedLocal.has(lIdx)) continue;
     const localRow = local[lIdx]!;
-    const onRemote = remote.some((row, rIdx) =>
-      matchesSheetEquipmentItem(
-        row as SheetEquipmentRow,
-        sheetEquipmentRowAnchorId(localRow, lIdx),
-        rIdx,
-      ),
-    );
+    const onRemote = remote.some((row) => sameEquipmentIdentity(row, localRow));
     if (onRemote) continue;
-    const baselineRow = findSheetEquipmentRow(baseline, localRow, lIdx);
+    const baselineIdx = findIdentifiableEquipmentIndex(baseline, localRow);
+    const baselineRow = baselineIdx >= 0 ? baseline[baselineIdx] : undefined;
     if (!baselineRow || !stableEqual(localRow, baselineRow)) merged.push(localRow);
   }
 
@@ -290,10 +335,17 @@ function mergeEquipmentBucketAutosaveBaseline(
   if (!nextIsArray || !savedIsArray || !localIsArray) {
     return mergeEquipmentScalarBucket(nextList, localList, savedList);
   }
-  const next = nextList as Record<string, unknown>[];
-  const saved = savedList ? (savedList as Record<string, unknown>[]) : [];
-  const local = localList as Record<string, unknown>[];
-  const merged: Record<string, unknown>[] = [];
+  const next = nextList as EquipmentRow[];
+  const saved = savedList ? (savedList as EquipmentRow[]) : [];
+  const local = localList as EquipmentRow[];
+  if (equipmentBucketsAmbiguous(next, saved, local)) {
+    const localDirty = Array.isArray(savedList)
+      ? !stableEqual(localList, savedList)
+      : Array.isArray(localList) && !stableEqual(localList, nextList);
+    if (localDirty) return Array.isArray(savedList) ? savedList : undefined;
+    return nextList;
+  }
+  const merged: EquipmentRow[] = [];
 
   const emitAnchor = (
     savedRow: Record<string, unknown> | undefined,
@@ -319,24 +371,21 @@ function mergeEquipmentBucketAutosaveBaseline(
     else if (savedRow) merged.push(savedRow);
   };
 
-  for (let nIdx = 0; nIdx < next.length; nIdx++) {
-    const nextRow = next[nIdx]!;
-    const savedRow = findSheetEquipmentRow(saved, nextRow, nIdx);
-    const localRow = findSheetEquipmentRow(local, nextRow, nIdx);
-    emitAnchor(savedRow, localRow, nextRow);
+  for (const nextRow of next) {
+    const savedIdx = findIdentifiableEquipmentIndex(saved, nextRow);
+    const localIdx = findIdentifiableEquipmentIndex(local, nextRow);
+    emitAnchor(
+      savedIdx >= 0 ? saved[savedIdx] : undefined,
+      localIdx >= 0 ? local[localIdx] : undefined,
+      nextRow,
+    );
   }
 
-  for (let sIdx = 0; sIdx < saved.length; sIdx++) {
-    const savedRow = saved[sIdx]!;
-    const inNext = next.some((row, nIdx) =>
-      matchesSheetEquipmentItem(
-        row as SheetEquipmentRow,
-        sheetEquipmentRowAnchorId(savedRow, sIdx),
-        nIdx,
-      ),
-    );
+  for (const savedRow of saved) {
+    const inNext = next.some((row) => sameEquipmentIdentity(row, savedRow));
     if (inNext) continue;
-    const localRow = findSheetEquipmentRow(local, savedRow, sIdx);
+    const localIdx = findIdentifiableEquipmentIndex(local, savedRow);
+    const localRow = localIdx >= 0 ? local[localIdx] : undefined;
     if (equipmentBucketLocallyTouched(savedRow, localRow)) {
       if (savedRow && !localRow) merged.push(savedRow);
       continue;

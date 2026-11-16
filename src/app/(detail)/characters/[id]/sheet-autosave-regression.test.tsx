@@ -155,9 +155,17 @@ describe('QA HP/EN allocation PATCH', () => {
       expect(characterMocks.saveCharacter).toHaveBeenCalled();
     });
 
+    const fastBodies = (
+      characterMocks.saveCharacter.mock.calls as unknown as Array<[string, Record<string, unknown>]>
+    ).map((call) => call[1]);
+    expect(fastBodies.length).toBeGreaterThan(0);
+    for (const body of fastBodies) {
+      expect(body).not.toHaveProperty('healthPoints');
+      expect(body).not.toHaveProperty('energyPoints');
+    }
     expect(characterMocks.saveCharacter).toHaveBeenCalledWith(
       'c-qa',
-      expect.objectContaining({ healthPoints: 3, energyPoints: 8 }),
+      expect.not.objectContaining({ healthPoints: expect.anything() }),
       expect.objectContaining({ skipLock: true }),
     );
 
