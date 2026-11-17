@@ -26,6 +26,7 @@ import type { CreatureCreatorEditorProps } from './creature-creator-editor';
 import { CreatureCreatorEditorInventorySection } from './creature-creator-editor-inventory-section';
 import { creaturePowerRowKey } from '@/lib/game/creature-power-instances';
 import { creatureFeatRowsShowLevel } from './creature-trait-labels';
+import { storedFeatRowKey } from './creature-feat-utils';
 import { creatureCreatorOptionalSectionRemoveConfirm } from './creature-creator-remove-section-confirm-placeholder';
 
 const CREATURE_FEAT_LIST_GRID = '1.15fr 0.58fr 0.52fr 0.4fr';
@@ -146,8 +147,8 @@ export function CreatureCreatorEditorLoadoutSections({
                     : [];
                 return (
                   <GridListRow
-                    key={feat.id}
-                    id={feat.id}
+                    key={storedFeatRowKey(feat)}
+                    id={storedFeatRowKey(feat)}
                     name={feat.name}
                     description={feat.description}
                     gridColumns={featListGrid}
@@ -169,7 +170,7 @@ export function CreatureCreatorEditorLoadoutSections({
                               value: feat.levelMeta ? (
                                 <ValueStepper
                                   value={feat.levelMeta.currentLevel}
-                                  onChange={(level) => onCreatureFeatLevelChange(feat.id, level)}
+                                  onChange={(level) => onCreatureFeatLevelChange(feat, level)}
                                   min={feat.levelMeta.minLevel}
                                   max={feat.levelMeta.maxQualified}
                                   size="sm"
@@ -194,7 +195,7 @@ export function CreatureCreatorEditorLoadoutSections({
                       <IconButton
                         variant="danger"
                         size="sm"
-                        onClick={() => onRemoveFeat(feat.id)}
+                        onClick={() => onRemoveFeat(feat)}
                         label="Remove feat"
                       >
                         <X className="h-4 w-4" />

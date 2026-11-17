@@ -101,29 +101,117 @@ export function labelCreatureFeatSource(source: CreatureFeatSourceType | undefin
   return CREATURE_FEAT_SOURCE_LABELS[source];
 }
 
-/** Resolve source when older saves omit `featSourceType` (best-effort from codex ids). */
+export type FeatCatalogKind = 'creature' | 'player' | 'trait';
+
+/** Codex tables use separate id sequences. The same number can exist in more than one. */
+export type FeatSourceLookup = {
+  creatureFeatIds: Set<string>;
+  creatureFeatNames?: Map<string, string> | undefined;
+  codexFeatById: Map<string, { char_feat?: boolean | undefined; name?: string | undefined }>;
+  traitById: Map<
+    string,
+    {
+      flaw?: boolean | undefined;
+      characteristic?: boolean | undefined;
+      name?: string | undefined;
+    }
+  >;
+};
+
+function catalogName(name: string | null | undefined): string {
+  return name?.trim().toLowerCase() ?? '';
+}
+
+/**
+ * Which catalog a stored creature-builder feat belongs to.
+ * A saved source wins. Without one, an id that exists in a single catalog uses that catalog.
+ * An id in more than one catalog matches the saved name, or stays unset.
+ */
+export function classifyStoredFeatCatalog(
+  feat: Pick<CreatureFeat, 'id' | 'name' | 'featSourceType'>,
+  lookup: FeatSourceLookup,
+): FeatCatalogKind | undefined {
+  const source = feat.featSourceType;
+  if (source === 'creature') return 'creature';
+  if (source === 'character' || source === 'archetype') return 'player';
+  if (source === 'trait' || source === 'flaw' || source === 'characteristic') return 'trait';
+  if (source) return undefined;
+
+  const id = String(feat.id);
+  const hits: FeatCatalogKind[] = [];
+  if (lookup.creatureFeatIds.has(id)) hits.push('creature');
+  if (lookup.codexFeatById.has(id)) hits.push('player');
+  if (lookup.traitById.has(id)) hits.push('trait');
+  if (hits.length === 1) return hits[0];
+  if (hits.length === 0) return undefined;
+
+  const stored = catalogName(feat.name);
+  const named = hits.filter((hit) => {
+    if (!stored) return false;
+    if (hit === 'creature') return catalogName(lookup.creatureFeatNames?.get(id)) === stored;
+    if (hit === 'player') return catalogName(lookup.codexFeatById.get(id)?.name) === stored;
+    return catalogName(lookup.traitById.get(id)?.name) === stored;
+  });
+  return named.length === 1 ? named[0] : undefined;
+}
+
+export function buildFeatSourceLookup(
+  creatureFeats: readonly { id: string | number; name?: string | null | undefined }[],
+  codexFeats: readonly {
+    id: string | number;
+    name?: string | null | undefined;
+    char_feat?: boolean | null | undefined;
+  }[],
+  traits: readonly {
+    id: string | number;
+    name?: string | null | undefined;
+    flaw?: boolean | null | undefined;
+    characteristic?: boolean | null | undefined;
+  }[],
+): FeatSourceLookup {
+  return {
+    creatureFeatIds: new Set(creatureFeats.map((feat) => String(feat.id))),
+    creatureFeatNames: new Map(creatureFeats.map((feat) => [String(feat.id), feat.name ?? ''])),
+    codexFeatById: new Map(
+      codexFeats.map((feat) => [
+        String(feat.id),
+        {
+          ...(feat.char_feat != null ? { char_feat: feat.char_feat } : {}),
+          ...(feat.name != null ? { name: feat.name } : {}),
+        },
+      ]),
+    ),
+    traitById: new Map(
+      traits.map((trait) => [
+        String(trait.id),
+        {
+          ...(trait.flaw != null ? { flaw: trait.flaw } : {}),
+          ...(trait.characteristic != null ? { characteristic: trait.characteristic } : {}),
+          ...(trait.name != null ? { name: trait.name } : {}),
+        },
+      ]),
+    ),
+  };
+}
+
+/** Resolve source when older saves omit `featSourceType`. */
 export function inferCreatureFeatSource(
-  feat: Pick<CreatureFeat, 'id' | 'featSourceType'>,
-  lookup: {
-    creatureFeatIds: Set<string>;
-    codexFeatById: Map<string, { char_feat?: boolean | undefined }>;
-    traitById: Map<string, { flaw?: boolean | undefined; characteristic?: boolean | undefined }>;
-  },
+  feat: Pick<CreatureFeat, 'id' | 'name' | 'featSourceType'>,
+  lookup: FeatSourceLookup,
 ): CreatureFeatSourceType | undefined {
   if (feat.featSourceType) return feat.featSourceType;
-  const id = String(feat.id);
-  // Codex tables often use independent serial IDs; the same numeric id can exist on creature feats,
-  // character/archetype feats, and species traits. Prefer trait → general feat → creature-feat so UI
-  // does not label library traits or character feats as "Creature".
-  const tr = lookup.traitById.get(id);
-  if (tr) {
-    if (tr.flaw) return 'flaw';
-    if (tr.characteristic) return 'characteristic';
+  const catalog = classifyStoredFeatCatalog(feat, lookup);
+  if (catalog === 'creature') return 'creature';
+  if (catalog === 'player') {
+    const row = lookup.codexFeatById.get(String(feat.id));
+    return row?.char_feat ? 'character' : 'archetype';
+  }
+  if (catalog === 'trait') {
+    const trait = lookup.traitById.get(String(feat.id));
+    if (trait?.flaw) return 'flaw';
+    if (trait?.characteristic) return 'characteristic';
     return 'trait';
   }
-  const cf = lookup.codexFeatById.get(id);
-  if (cf) return cf.char_feat ? 'character' : 'archetype';
-  if (lookup.creatureFeatIds.has(id)) return 'creature';
   return undefined;
 }
 
@@ -133,7 +221,7 @@ export interface CreatureFeat {
   description?: string | undefined;
   points?: number | undefined;
   featSourceType?: CreatureFeatSourceType | undefined;
-  /** Set when the Movement section owns this row, so it is not also listed as a feat. */
+  /** Set when a Movement or Senses card owns this row, so it is not also listed as a feat. */
   boundControl?: boolean | undefined;
 }
 

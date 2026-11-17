@@ -26,8 +26,13 @@ import { formatAbilityList, formatListCellLabel } from '@/lib/utils';
 import { formatCreatureLevelLabel } from '@/lib/game';
 import { getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
 import {
-  creatureToFeatRequirementCharacter,
+  creatureCodexFeatId,
   creaturePointsForPlayerFeat,
+  creatureToFeatRequirementCharacter,
+  ownedFamilyLevelCaps,
+  ownedFeatIdsByCatalog,
+  playerCodexFeatId,
+  speciesTraitId,
 } from './creature-feat-utils';
 import { Alert } from '@/components/ui';
 import { SegmentedControl } from '@/components/patterns';
@@ -36,6 +41,7 @@ import {
   type SelectableItem,
 } from '@/components/patterns/select/unified-selection-modal';
 import {
+  buildFeatSourceLookup,
   displayItemToCreatureFeat,
   transformCreatureFeatToDisplayItem,
   type CreatureFeat,
@@ -149,10 +155,6 @@ export function AddCreatureFeatModal({
   // Filter state seeds defaults; parent remounts while showFeatModal is true.
 
   const creatureLevel = Number(creature.level) || 1;
-  const existingFeatIdSet = useMemo(
-    () => new Set(creature.feats.map((f) => String(f.id)).filter((id) => id.length > 0)),
-    [creature.feats],
-  );
 
   const skillIdToName = useMemo(() => buildSkillIdToName(codexSkills), [codexSkills]);
 
@@ -166,9 +168,36 @@ export function AddCreatureFeatModal({
     }));
   }, [codexFeats]);
 
+  const sourceLookup = useMemo(
+    () =>
+      buildFeatSourceLookup(
+        creatureFeatsData as CodexCreatureFeatRow[],
+        feats,
+        codexTraits as Trait[],
+      ),
+    [creatureFeatsData, feats, codexTraits],
+  );
+  const ownedIds = useMemo(
+    () => ownedFeatIdsByCatalog(creature.feats, sourceLookup),
+    [creature.feats, sourceLookup],
+  );
+  const creatureOwnedLevels = useMemo(
+    () =>
+      ownedFamilyLevelCaps(
+        creatureFeatsData as CodexCreatureFeatRow[],
+        ownedIds.creature,
+        creatureCodexFeatId,
+      ),
+    [creatureFeatsData, ownedIds.creature],
+  );
+  const playerOwnedLevels = useMemo(
+    () => ownedFamilyLevelCaps(feats, ownedIds.player, playerCodexFeatId),
+    [feats, ownedIds.player],
+  );
+
   const featRequirementCharacter = useMemo(
-    () => creatureToFeatRequirementCharacter(creature),
-    [creature],
+    () => creatureToFeatRequirementCharacter(creature, sourceLookup),
+    [creature, sourceLookup],
   );
 
   const checkPlayerFeatRequirements = useCallback(
@@ -202,29 +231,27 @@ export function AddCreatureFeatModal({
   }, [feats]);
 
   const creatureTabItems = useMemo((): SelectableItem[] => {
-    const baseFiltered = (creatureFeatsData as CodexCreatureFeatRow[]).filter((feat) => {
-      if (existingFeatIdSet.has(String(feat.id))) return false;
-      if (feat.mechanic === true) return false;
-      return true;
-    });
+    const baseFiltered = (creatureFeatsData as CodexCreatureFeatRow[]).filter(
+      (feat) => feat.mechanic !== true,
+    );
     const families = groupFeatFamilies(baseFiltered);
-    return families.flatMap(({ levels }): SelectableItem[] => {
-      const selectableLevels = levels
-        .filter((levelFeat) => !existingFeatIdSet.has(String(levelFeat.id)))
-        .filter((levelFeat) => {
-          const lr = levelFeat.lvl_req;
-          return !(lr != null && lr > 0 && creatureLevel < lr);
-        })
+    return families.flatMap(({ familyId, levels }): SelectableItem[] => {
+      const ownedMax = creatureOwnedLevels.get(familyId) ?? 0;
+      const aboveOwned = levels.filter((levelFeat) => getFeatLevel(levelFeat) > ownedMax);
+      if (aboveOwned.length === 0) return [];
+      const meetsCreatureLevel = (levelFeat: CodexCreatureFeatRow) => {
+        const lr = levelFeat.lvl_req;
+        return !(lr != null && lr > 0 && creatureLevel < lr);
+      };
+      const selectableLevels = aboveOwned
+        .filter(meetsCreatureLevel)
         .slice()
         .sort((a, b) => getFeatLevel(b) - getFeatLevel(a));
       if (selectableLevels.length === 0) {
         if (!showBlocked) return [];
-        const blocked = levels
-          .filter((levelFeat) => !existingFeatIdSet.has(String(levelFeat.id)))
-          .slice()
-          .sort((a, b) => getFeatLevel(b) - getFeatLevel(a))[0];
+        const blocked = aboveOwned.slice().sort((a, b) => getFeatLevel(b) - getFeatLevel(a))[0];
         if (!blocked) return [];
-        const di = transformCreatureFeatToDisplayItem(blocked, existingFeatIdSet);
+        const di = transformCreatureFeatToDisplayItem(blocked);
         if (!di) return [];
         const lr = blocked.lvl_req;
         const base = displayItemToSelectableItem(di);
@@ -241,7 +268,7 @@ export function AddCreatureFeatModal({
       }
       const displayFeat = selectableLevels[0];
       if (!displayFeat) return [];
-      const di = transformCreatureFeatToDisplayItem(displayFeat, existingFeatIdSet);
+      const di = transformCreatureFeatToDisplayItem(displayFeat);
       if (!di) return [];
       const base = displayItemToSelectableItem(di);
       return [
@@ -253,11 +280,10 @@ export function AddCreatureFeatModal({
         },
       ];
     });
-  }, [creatureFeatsData, existingFeatIdSet, creatureLevel, showBlocked]);
+  }, [creatureFeatsData, creatureOwnedLevels, creatureLevel, showBlocked]);
 
   const libraryTabItems = useMemo((): SelectableItem[] => {
     const baseFiltered = feats.filter((feat) => {
-      if (existingFeatIdSet.has(String(feat.id))) return false;
       if (!showStateFeats && feat.state_feat) return false;
       const { meets } = checkPlayerFeatRequirements(feat);
       if (!meets && !showBlocked) return false;
@@ -271,9 +297,10 @@ export function AddCreatureFeatModal({
     const families = groupFeatFamilies(baseFiltered);
 
     return families
-      .map(({ levels }) => {
+      .map(({ familyId, levels }) => {
+        const ownedMax = playerOwnedLevels.get(familyId) ?? 0;
         const selectableLevels = levels
-          .filter((levelFeat) => !existingFeatIdSet.has(String(levelFeat.id)))
+          .filter((levelFeat) => getFeatLevel(levelFeat) > ownedMax)
           .slice()
           .sort((a, b) => getFeatLevel(b) - getFeatLevel(a));
         if (selectableLevels.length === 0) return null;
@@ -293,7 +320,7 @@ export function AddCreatureFeatModal({
       .filter((item): item is SelectableItem => item !== null);
   }, [
     feats,
-    existingFeatIdSet,
+    playerOwnedLevels,
     showStateFeats,
     showBlocked,
     selectedCategory,
@@ -306,7 +333,7 @@ export function AddCreatureFeatModal({
     const items: SelectableItem[] = [];
     (codexTraits as Trait[]).forEach((trait) => {
       const id = String(trait.id);
-      if (existingFeatIdSet.has(id)) return;
+      if (ownedIds.trait.has(speciesTraitId(id))) return;
       const optIds = trait.option_trait_ids;
       if (optIds && optIds.length > 0) return;
 
@@ -350,7 +377,7 @@ export function AddCreatureFeatModal({
       });
     });
     return items;
-  }, [codexTraits, existingFeatIdSet]);
+  }, [codexTraits, ownedIds.trait]);
 
   const allItems = useMemo(
     () => [...creatureTabItems, ...libraryTabItems, ...speciesTabItems],
