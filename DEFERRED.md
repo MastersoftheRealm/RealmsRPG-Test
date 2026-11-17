@@ -12,7 +12,7 @@ These trees are out of scope as **pattern sources** for new work elsewhere in th
 
 ## Encounter tracker (legacy helpers)
 
-Play pages under `src/app/(main)/encounters/[id]/` are active pattern targets after the shared shell work; do not copy from these legacy trees. The one-line `DEFERRED.md` files that used to sit inside these folders were removed with the encounter shell work. This list is the marker. Character-sheet pool allocation is the locked autosave in `src/lib/character/`, not a helper under `src/lib/encounter/`.
+Play pages under `src/app/(main)/encounters/[id]/` are active pattern targets after the shared shell work; do not copy from these legacy trees:
 
 - `src/components/encounters/`
 - `src/lib/encounter/`
