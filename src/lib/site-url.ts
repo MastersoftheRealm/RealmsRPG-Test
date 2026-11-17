@@ -43,11 +43,8 @@ function parseForwardedHost(value: string | null | undefined): string | null {
   return trimmed.split(',')[0]?.trim() || null;
 }
 
-/**
- * Hosts a server-side API preflight may target from an incoming request. Preview allows
- * only this deployment's Vercel hosts plus local canonical; production is fixed separately.
- */
-export function collectInternalApiRequestHosts(): Set<string> {
+/** Hosts a server-side API preflight may target from an incoming request. */
+function collectInternalApiRequestHosts(): Set<string> {
   const hosts = new Set<string>();
   const vercelEnv = process.env.VERCEL_ENV;
   if (vercelEnv === 'production') {
@@ -82,8 +79,8 @@ export function resolveInternalApiOrigin(headerList: { get(name: string): string
     parseForwardedHost(headerList.get('host')),
   ]) {
     if (candidate && allowed.has(candidate)) {
-      const proto =
-        headerList.get('x-forwarded-proto')?.split(',')[0]?.trim().toLowerCase() || 'https';
+      const protoRaw = headerList.get('x-forwarded-proto')?.split(',')[0]?.trim().toLowerCase();
+      const proto = protoRaw === 'http' || protoRaw === 'https' ? protoRaw : 'https';
       return `${proto}://${candidate}`;
     }
   }

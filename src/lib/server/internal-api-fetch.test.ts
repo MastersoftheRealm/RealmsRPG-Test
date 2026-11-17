@@ -53,6 +53,22 @@ describe('resolveInternalApiOrigin', () => {
     ).toBe('https://realms-rpg-test-git-fix-branch.vercel.app');
   });
 
+  it('ignores a malicious x-forwarded-proto and keeps the allowlisted host', () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://realmsrpg.com';
+    process.env.VERCEL_ENV = 'preview';
+    process.env.VERCEL_URL = 'realms-rpg-test-preview.vercel.app';
+    process.env.VERCEL_BRANCH_URL = 'realms-rpg-test-git-fix-branch.vercel.app';
+
+    expect(
+      resolveInternalApiOrigin(
+        mockHeaders({
+          host: 'realms-rpg-test-git-fix-branch.vercel.app',
+          'x-forwarded-proto': 'https://evil.example',
+        }),
+      ),
+    ).toBe('https://realms-rpg-test-git-fix-branch.vercel.app');
+  });
+
   it('falls back to VERCEL_URL when request host is not allowlisted', () => {
     process.env.NEXT_PUBLIC_SITE_URL = 'https://realmsrpg.com';
     process.env.VERCEL_ENV = 'preview';
