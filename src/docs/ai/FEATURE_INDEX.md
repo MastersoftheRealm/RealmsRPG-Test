@@ -1823,7 +1823,7 @@ Every path below is a non-test source file. The checker fails if one is missing 
 - Chip variants. `gridListChipVariant` maps `warning` to `listWarning` and `success` to `listSuccess`. `descriptorChipVariantForGridList` maps those same categories to `warning` and `success`. `gridListChipStyleVariant` calls one or the other. `partChipVariant` and `rarityChipVariant` are separate maps.
 - Supabase clients. `src/lib/supabase/client.ts`, `src/lib/supabase/server.ts`, and `createPublicClient` each build a client. They do not call each other. The browser and server factories use the publishable key and cookies. The public factory uses the publishable key and no cookies. `createServiceRoleClient` uses the service-role key.
 - Session user. `sessionUserFromClaims` reads `sub`. `sessionUserFromAuthUser` reads `user.id`. `requireAuth` calls `getSession`. `requireLiveUser` calls `auth.getUser` and does not call `getSession`.
-- Page access. `assertCharacterSheetHttpAccess` and `assertCampaignDetailHttpAccess` each call `fetchInternalApi` and then `denyResourcePage`. The character check returns early for a guest id. They do not call each other.
+- Page access. `assertCharacterSheetHttpAccess` and `assertCampaignDetailHttpAccess` each call `fetchInternalApi` (preview uses `VERCEL_URL` via `getInternalApiOrigin`, production uses canonical) and then `denyResourcePage`. The character check returns early for a guest id. They do not call each other.
 
 ### Calls a shared component
 
