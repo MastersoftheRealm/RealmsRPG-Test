@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { headers } from 'next/headers';
 import { fetchInternalApi } from '@/lib/server/internal-api-fetch';
-import { getInternalApiOrigin } from '@/lib/site-url';
+import { resolveInternalApiOrigin } from '@/lib/site-url';
 
 vi.mock('next/headers', () => ({
   headers: vi.fn(async () => ({
@@ -12,10 +12,19 @@ vi.mock('next/headers', () => ({
   })),
 }));
 
-describe('getInternalApiOrigin', () => {
+function mockHeaders(values: Record<string, string>) {
+  return {
+    get(name: string) {
+      return values[name.toLowerCase()] ?? null;
+    },
+  };
+}
+
+describe('resolveInternalApiOrigin', () => {
   const originalSite = process.env.NEXT_PUBLIC_SITE_URL;
   const originalVercelEnv = process.env.VERCEL_ENV;
   const originalVercelUrl = process.env.VERCEL_URL;
+  const originalBranchUrl = process.env.VERCEL_BRANCH_URL;
 
   afterEach(() => {
     if (originalSite === undefined) delete process.env.NEXT_PUBLIC_SITE_URL;
@@ -24,20 +33,53 @@ describe('getInternalApiOrigin', () => {
     else process.env.VERCEL_ENV = originalVercelEnv;
     if (originalVercelUrl === undefined) delete process.env.VERCEL_URL;
     else process.env.VERCEL_URL = originalVercelUrl;
+    if (originalBranchUrl === undefined) delete process.env.VERCEL_BRANCH_URL;
+    else process.env.VERCEL_BRANCH_URL = originalBranchUrl;
   });
 
-  it('uses VERCEL_URL on preview even when NEXT_PUBLIC_SITE_URL is production', () => {
+  it('uses the branch URL when the viewer opened that host on preview', () => {
     process.env.NEXT_PUBLIC_SITE_URL = 'https://realmsrpg.com';
     process.env.VERCEL_ENV = 'preview';
-    process.env.VERCEL_URL = 'realms-rpg-test-git-fix-abc.vercel.app';
-    expect(getInternalApiOrigin()).toBe('https://realms-rpg-test-git-fix-abc.vercel.app');
+    process.env.VERCEL_URL = 'realms-rpg-test-abc123.vercel.app';
+    process.env.VERCEL_BRANCH_URL = 'realms-rpg-test-git-fix-branch.vercel.app';
+
+    expect(
+      resolveInternalApiOrigin(
+        mockHeaders({
+          host: 'realms-rpg-test-git-fix-branch.vercel.app',
+          'x-forwarded-proto': 'https',
+        }),
+      ),
+    ).toBe('https://realms-rpg-test-git-fix-branch.vercel.app');
   });
 
-  it('uses the canonical site URL on production', () => {
+  it('falls back to VERCEL_URL when request host is not allowlisted', () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://realmsrpg.com';
+    process.env.VERCEL_ENV = 'preview';
+    process.env.VERCEL_URL = 'realms-rpg-test-preview.vercel.app';
+    process.env.VERCEL_BRANCH_URL = 'realms-rpg-test-git-fix-branch.vercel.app';
+
+    expect(
+      resolveInternalApiOrigin(
+        mockHeaders({
+          host: 'realmsrpg.com',
+        }),
+      ),
+    ).toBe('https://realms-rpg-test-preview.vercel.app');
+  });
+
+  it('uses the canonical site URL on production regardless of headers', () => {
     process.env.NEXT_PUBLIC_SITE_URL = 'https://realmsrpg.com';
     process.env.VERCEL_ENV = 'production';
     process.env.VERCEL_URL = 'realms-rpg-test-abc.vercel.app';
-    expect(getInternalApiOrigin()).toBe('https://realmsrpg.com');
+
+    expect(
+      resolveInternalApiOrigin(
+        mockHeaders({
+          host: 'evil.example',
+        }),
+      ),
+    ).toBe('https://realmsrpg.com');
   });
 });
 
@@ -45,6 +87,7 @@ describe('fetchInternalApi', () => {
   const originalSite = process.env.NEXT_PUBLIC_SITE_URL;
   const originalVercelEnv = process.env.VERCEL_ENV;
   const originalVercelUrl = process.env.VERCEL_URL;
+  const originalBranchUrl = process.env.VERCEL_BRANCH_URL;
   const originalBypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
 
   beforeEach(() => {
@@ -58,14 +101,25 @@ describe('fetchInternalApi', () => {
     else process.env.VERCEL_ENV = originalVercelEnv;
     if (originalVercelUrl === undefined) delete process.env.VERCEL_URL;
     else process.env.VERCEL_URL = originalVercelUrl;
+    if (originalBranchUrl === undefined) delete process.env.VERCEL_BRANCH_URL;
+    else process.env.VERCEL_BRANCH_URL = originalBranchUrl;
     if (originalBypass === undefined) delete process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
     else process.env.VERCEL_AUTOMATION_BYPASS_SECRET = originalBypass;
   });
 
-  it('preflights against the preview deployment host, not canonical production', async () => {
+  it('preflights against the branch host the viewer used', async () => {
     process.env.NEXT_PUBLIC_SITE_URL = 'https://realmsrpg.com';
     process.env.VERCEL_ENV = 'preview';
     process.env.VERCEL_URL = 'realms-rpg-test-preview.vercel.app';
+    process.env.VERCEL_BRANCH_URL = 'realms-rpg-test-git-fix-branch.vercel.app';
+
+    vi.mocked(headers).mockResolvedValueOnce(
+      mockHeaders({
+        host: 'realms-rpg-test-git-fix-branch.vercel.app',
+        cookie: 'session=abc',
+        'x-forwarded-proto': 'https',
+      }) as Awaited<ReturnType<typeof headers>>,
+    );
 
     const fetchMock = vi.fn(async () => new Response('ok', { status: 200 }));
     vi.stubGlobal('fetch', fetchMock);
@@ -73,7 +127,7 @@ describe('fetchInternalApi', () => {
     await fetchInternalApi('/api/characters/sheet-id');
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'https://realms-rpg-test-preview.vercel.app/api/characters/sheet-id',
+      'https://realms-rpg-test-git-fix-branch.vercel.app/api/characters/sheet-id',
       expect.objectContaining({
         headers: expect.objectContaining({ cookie: 'session=abc' }),
       }),

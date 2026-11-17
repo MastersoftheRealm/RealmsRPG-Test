@@ -1,13 +1,13 @@
 import { headers } from 'next/headers';
-import { getInternalApiOrigin } from '@/lib/site-url';
+import { resolveInternalApiOrigin } from '@/lib/site-url';
 
 /**
  * Same-deployment API fetch from a Server Component, forwarding session cookies to an
- * allowlisted origin only (canonical on production, VERCEL_URL on preview, never headers).
+ * allowlisted origin only (viewer host on preview, canonical on production).
  */
 export async function fetchInternalApi(path: string): Promise<Response> {
   const headerList = await headers();
-  const origin = getInternalApiOrigin();
+  const origin = resolveInternalApiOrigin(headerList);
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   const url = `${origin}${normalizedPath}`;
   const cookie = headerList.get('cookie') ?? '';
