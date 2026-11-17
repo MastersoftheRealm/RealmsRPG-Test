@@ -167,6 +167,104 @@ describe('applyCharacterDirtyPatch / mergeRemotePreservingDirty', () => {
     });
   });
 
+  it('does not pair two id-less rows that share a name when one tab reorders', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          { name: 'Potion', mark: 'red', quantity: 1 },
+          { name: 'Potion', mark: 'blue', quantity: 1 },
+        ],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [
+          { name: 'Potion', mark: 'blue', quantity: 9 },
+          { name: 'Potion', mark: 'red', quantity: 1 },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [
+          { name: 'Potion', mark: 'red', quantity: 1 },
+          { name: 'Potion', mark: 'blue', quantity: 1 },
+        ],
+      },
+    };
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    const items = (merged.equipment as { items: Array<{ mark: string; quantity: number }> }).items;
+    expect(items.map((row) => row.mark)).toEqual(['blue', 'red']);
+    expect(items.find((row) => row.mark === 'blue')?.quantity).toBe(9);
+    expect(items.find((row) => row.mark === 'red')?.quantity).toBe(1);
+  });
+
+  it('keeps a same-name id-less edit on its own row instead of the other row', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          { name: 'Potion', mark: 'red', quantity: 1 },
+          { name: 'Potion', mark: 'blue', quantity: 1 },
+        ],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [
+          { name: 'Potion', mark: 'red', quantity: 1 },
+          { name: 'Potion', mark: 'blue', quantity: 9 },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [
+          { name: 'Potion', mark: 'red', quantity: 5 },
+          { name: 'Potion', mark: 'blue', quantity: 1 },
+        ],
+      },
+    };
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    const items = (merged.equipment as { items: Array<{ mark: string; quantity: number }> }).items;
+    expect(items).toEqual([
+      { name: 'Potion', mark: 'red', quantity: 5 },
+      { name: 'Potion', mark: 'blue', quantity: 1 },
+    ]);
+    expect(items.find((row) => row.mark === 'red')?.quantity).not.toBe(9);
+  });
+
+  it('keeps a unique-name reorder together with the other tab quantity', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          { name: 'Bed Roll', quantity: 1 },
+          { name: 'Grapple Rope', quantity: 1 },
+        ],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [
+          { name: 'Grapple Rope', quantity: 1 },
+          { name: 'Bed Roll', quantity: 1 },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [
+          { name: 'Bed Roll', quantity: 1 },
+          { name: 'Grapple Rope', quantity: 4 },
+        ],
+      },
+    };
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    expect((merged.equipment as { items: unknown[] }).items).toEqual([
+      { name: 'Grapple Rope', quantity: 4 },
+      { name: 'Bed Roll', quantity: 1 },
+    ]);
+  });
+
   it('does not clear a single armor object while merging item quantity conflicts', () => {
     const leather = { id: 'leather', name: 'Leather', type: 'armor', properties: [] };
     const baseline = {
