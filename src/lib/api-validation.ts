@@ -90,9 +90,10 @@ function allowedRequestHosts(): Set<string> {
   const configured = hostOf(getCanonicalSiteUrl());
   if (configured) hosts.add(configured);
 
-  const vercelRaw = process.env.VERCEL_URL?.trim();
-  if (vercelRaw) {
-    const vercelHost = hostOf(vercelRaw.includes('://') ? vercelRaw : `https://${vercelRaw}`);
+  for (const vercelRaw of [process.env.VERCEL_URL, process.env.VERCEL_BRANCH_URL]) {
+    const trimmed = vercelRaw?.trim();
+    if (!trimmed) continue;
+    const vercelHost = hostOf(trimmed.includes('://') ? trimmed : `https://${trimmed}`);
     if (vercelHost) hosts.add(vercelHost);
   }
 
