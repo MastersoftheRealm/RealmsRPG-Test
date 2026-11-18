@@ -47,16 +47,42 @@ type RosterEntry = {
   characterName: string;
 };
 
+type RelationalRollRow = {
+  id: string;
+  character_id: string;
+  character_name: string;
+  user_id: string;
+  type: string;
+  title: string;
+  rolled_at: string;
+  rolled_by_realm_master: boolean;
+  modifier: number;
+  modifier_label: string | null;
+  total: number;
+  is_crit: boolean | null;
+  is_crit_fail: boolean | null;
+  crit_message: string | null;
+  campaign_roll_dice: Array<{
+    position: number;
+    die_type: string;
+    value: number;
+    is_max: boolean;
+    is_min: boolean;
+  }>;
+};
+
 function createRollsSupabase(opts: {
   campaign: { id: string; owner_id: string; characters?: RosterEntry[] } | null;
   memberUserIds?: string[] | undefined;
-  rolls?: Array<{ id: string; data: Record<string, unknown>; created_at: string }> | undefined;
+  rolls?: RelationalRollRow[] | undefined;
 }) {
   const memberUserIds = opts.memberUserIds ?? [];
-  const insert = vi.fn().mockResolvedValue({ error: null });
+  const rpc = vi.fn().mockResolvedValue({ data: null, error: null });
+  const rollsSelect = vi.fn();
 
   return {
-    insert,
+    rpc,
+    rollsSelect,
     from: vi.fn((table: string) => {
       if (table === 'campaigns') {
         return {
@@ -89,7 +115,7 @@ function createRollsSupabase(opts: {
         listChain.order = vi.fn().mockReturnValue(listChain);
         listChain.limit = vi.fn().mockResolvedValue({ data: opts.rolls ?? [], error: null });
         return {
-          select: vi.fn(
+          select: rollsSelect.mockImplementation(
             (
               _cols?: string,
               countOpts?: { count?: string | undefined; head?: boolean | undefined },
@@ -102,7 +128,6 @@ function createRollsSupabase(opts: {
               return listChain;
             },
           ),
-          insert,
         };
       }
       throw new Error(`Unexpected table: ${table}`);
@@ -246,7 +271,7 @@ describe('POST /api/campaigns/[id]/rolls', () => {
     await expect(readJson(response)).resolves.toEqual({
       error: 'You can only roll for your own character in this campaign.',
     });
-    expect(supabase.insert).not.toHaveBeenCalled();
+    expect(supabase.rpc).not.toHaveBeenCalled();
   });
 
   it('returns 400 when Randomize roll title exceeds the API limit', async () => {
@@ -274,7 +299,7 @@ describe('POST /api/campaigns/[id]/rolls', () => {
     );
 
     expect(response.status).toBe(400);
-    expect(supabase.insert).not.toHaveBeenCalled();
+    expect(supabase.rpc).not.toHaveBeenCalled();
   });
 
   it('saves a Randomize roll whose title was clamped for an oversize variant label', async () => {
@@ -306,10 +331,12 @@ describe('POST /api/campaigns/[id]/rolls', () => {
     );
 
     expect(response.status).toBe(200);
-    expect(supabase.insert).toHaveBeenCalled();
-    const saved = supabase.insert.mock.calls[0]?.[0] as { data: { title: string } };
-    expect(saved.data.title).toBe(title);
-    expect(saved.data.title.length).toBeLessThanOrEqual(CAMPAIGN_ROLL_TITLE_MAX_LENGTH);
+    expect(supabase.rpc).toHaveBeenCalledWith(
+      'create_campaign_roll_relational',
+      expect.objectContaining({ p_title: title }),
+    );
+    const saved = supabase.rpc.mock.calls[0]?.[1] as { p_title: string };
+    expect(saved.p_title.length).toBeLessThanOrEqual(CAMPAIGN_ROLL_TITLE_MAX_LENGTH);
   });
 
   it('saves a roll attributed to the member own roster character', async () => {
@@ -327,9 +354,9 @@ describe('POST /api/campaigns/[id]/rolls', () => {
 
     expect(response.status).toBe(200);
     await expect(readJson(response)).resolves.toEqual({ success: true });
-    expect(supabase.insert).toHaveBeenCalled();
-    const saved = supabase.insert.mock.calls[0]?.[0] as { data: { rolledByRealmMaster?: boolean } };
-    expect(saved.data.rolledByRealmMaster).toBe(false);
+    expect(supabase.rpc).toHaveBeenCalled();
+    const saved = supabase.rpc.mock.calls[0]?.[1] as { p_rolled_by_realm_master?: boolean };
+    expect(saved.p_rolled_by_realm_master).toBe(false);
   });
 
   it('records that the Realm Master rolled a player character', async () => {
@@ -346,12 +373,14 @@ describe('POST /api/campaigns/[id]/rolls', () => {
     );
 
     expect(response.status).toBe(200);
-    const saved = supabase.insert.mock.calls[0]?.[0] as {
-      data: { characterName: string; userId: string; rolledByRealmMaster: boolean };
+    const saved = supabase.rpc.mock.calls[0]?.[1] as {
+      p_character_name: string;
+      p_user_id: string;
+      p_rolled_by_realm_master: boolean;
     };
-    expect(saved.data.characterName).toBe('Member Hero');
-    expect(saved.data.userId).toBe(OWNER.uid);
-    expect(saved.data.rolledByRealmMaster).toBe(true);
+    expect(saved.p_character_name).toBe('Member Hero');
+    expect(saved.p_user_id).toBe(OWNER.uid);
+    expect(saved.p_rolled_by_realm_master).toBe(true);
   });
 
   it('recomputes total and crit flags from dice, ignoring client-supplied values (API-012)', async () => {
@@ -380,13 +409,16 @@ describe('POST /api/campaigns/[id]/rolls', () => {
     );
 
     expect(response.status).toBe(200);
-    const saved = supabase.insert.mock.calls[0]?.[0] as {
-      data: { total: number; isCrit: boolean; isCritFail: boolean; critMessage: string | null };
+    const saved = supabase.rpc.mock.calls[0]?.[1] as {
+      p_total: number;
+      p_is_crit: boolean;
+      p_is_crit_fail: boolean;
+      p_crit_message: string | null;
     };
-    expect(saved.data.total).toBe(27);
-    expect(saved.data.isCrit).toBe(true);
-    expect(saved.data.isCritFail).toBe(false);
-    expect(saved.data.critMessage).toBe('Natural 20! +2 to the total!');
+    expect(saved.p_total).toBe(27);
+    expect(saved.p_is_crit).toBe(true);
+    expect(saved.p_is_crit_fail).toBe(false);
+    expect(saved.p_crit_message).toBe('Natural 20! +2 to the total!');
   });
 
   it('stores Randomize d20 faces without crit adjustment (API-012)', async () => {
@@ -401,7 +433,7 @@ describe('POST /api/campaigns/[id]/rolls', () => {
       [20, true, false],
       [1, false, true],
     ] as const) {
-      supabase.insert.mockClear();
+      supabase.rpc.mockClear();
       const response = await POST(
         makePostRequest('camp-1', {
           characterId: 'char-member',
@@ -418,23 +450,18 @@ describe('POST /api/campaigns/[id]/rolls', () => {
         params('camp-1'),
       );
       expect(response.status).toBe(200);
-      const saved = supabase.insert.mock.calls[0]?.[0] as {
-        data: {
-          total: number;
-          isCrit: boolean;
-          isCritFail: boolean;
-          dice: Array<{ isMax: boolean; isMin: boolean }>;
-        };
+      const saved = supabase.rpc.mock.calls[0]?.[1] as {
+        p_total: number;
+        p_is_crit: boolean;
+        p_is_crit_fail: boolean;
+        p_die_is_max: boolean[];
+        p_die_is_min: boolean[];
       };
-      expect(saved.data.total).toBe(face);
-      expect(saved.data.isCrit).toBe(false);
-      expect(saved.data.isCritFail).toBe(false);
-      expect(saved.data.dice[0]).toEqual({
-        type: 'd20',
-        value: face,
-        isMax: face === 20,
-        isMin: face === 1,
-      });
+      expect(saved.p_total).toBe(face);
+      expect(saved.p_is_crit).toBe(false);
+      expect(saved.p_is_crit_fail).toBe(false);
+      expect(saved.p_die_is_max).toEqual([face === 20]);
+      expect(saved.p_die_is_min).toEqual([face === 1]);
     }
   });
 
@@ -461,11 +488,12 @@ describe('POST /api/campaigns/[id]/rolls', () => {
       params('camp-1'),
     );
     expect(response.status).toBe(200);
-    const saved = supabase.insert.mock.calls[0]?.[0] as {
-      data: { total: number; isCrit: boolean };
+    const saved = supabase.rpc.mock.calls[0]?.[1] as {
+      p_total: number;
+      p_is_crit: boolean;
     };
-    expect(saved.data.total).toBe(22);
-    expect(saved.data.isCrit).toBe(true);
+    expect(saved.p_total).toBe(22);
+    expect(saved.p_is_crit).toBe(true);
   });
 
   it('does not mark the Realm Master rolling their own character', async () => {
@@ -481,8 +509,8 @@ describe('POST /api/campaigns/[id]/rolls', () => {
     );
 
     expect(response.status).toBe(200);
-    const saved = supabase.insert.mock.calls[0]?.[0] as { data: { rolledByRealmMaster: boolean } };
-    expect(saved.data.rolledByRealmMaster).toBe(false);
+    const saved = supabase.rpc.mock.calls[0]?.[1] as { p_rolled_by_realm_master: boolean };
+    expect(saved.p_rolled_by_realm_master).toBe(false);
   });
 });
 
@@ -491,41 +519,72 @@ describe('GET /api/campaigns/[id]/rolls attribution', () => {
     vi.clearAllMocks();
   });
 
-  it('marks an older RM roll that was stored only under the character name', async () => {
+  it('assembles ordered relational dice and infers attribution for an older RM roll', async () => {
     mockGetSession.mockResolvedValue({ user: MEMBER, error: null });
-    mockCreateClient.mockResolvedValue(
-      createRollsSupabase({
-        campaign: { id: 'camp-1', owner_id: OWNER.uid, characters: MEMBER_ROSTER },
-        memberUserIds: [MEMBER.uid],
-        rolls: [
-          {
-            id: 'roll-1',
-            created_at: '2026-10-04T00:00:00.000Z',
-            data: {
-              characterId: 'char-member',
-              characterName: 'Member Hero',
-              userId: OWNER.uid,
-              type: 'ability',
-              title: 'Strength',
-              dice: [],
-              modifier: 0,
-              total: 12,
-              timestamp: '2026-10-04T00:00:00.000Z',
+    const supabase = createRollsSupabase({
+      campaign: { id: 'camp-1', owner_id: OWNER.uid, characters: MEMBER_ROSTER },
+      memberUserIds: [MEMBER.uid],
+      rolls: [
+        {
+          id: 'roll-1',
+          character_id: 'char-member',
+          character_name: 'Member Hero',
+          user_id: OWNER.uid,
+          type: 'ability',
+          title: 'Strength',
+          rolled_at: '2026-10-04T00:00:00.000Z',
+          rolled_by_realm_master: false,
+          modifier: 0,
+          modifier_label: null,
+          total: 12,
+          is_crit: false,
+          is_crit_fail: false,
+          crit_message: null,
+          campaign_roll_dice: [
+            {
+              position: 2,
+              die_type: 'd6',
+              value: 3,
+              is_max: false,
+              is_min: false,
             },
-          },
-        ],
-      }) as never,
-    );
+            {
+              position: 1,
+              die_type: 'd20',
+              value: 9,
+              is_max: false,
+              is_min: false,
+            },
+          ],
+        },
+      ],
+    });
+    mockCreateClient.mockResolvedValue(supabase as never);
 
     const response = await GET(makeGetRequest('camp-1'), params('camp-1'));
     expect(response.status).toBe(200);
-    const body =
-      await readJson<Array<{ characterName: string; rolledByRealmMaster?: boolean }>>(response);
+    const body = await readJson<
+      Array<{
+        characterName: string;
+        rolledByRealmMaster?: boolean;
+        dice: Array<{ type: string; value: number }>;
+      }>
+    >(response);
     expect(body).toEqual([
       expect.objectContaining({
         characterName: 'Member Hero',
         rolledByRealmMaster: true,
+        dice: [
+          expect.objectContaining({ type: 'd20', value: 9 }),
+          expect.objectContaining({ type: 'd6', value: 3 }),
+        ],
       }),
     ]);
+
+    const selectedColumns = supabase.rollsSelect.mock.calls.find(
+      (call) => typeof call[0] === 'string' && call[0].includes('campaign_roll_dice'),
+    )?.[0] as string | undefined;
+    expect(selectedColumns).toBeDefined();
+    expect(selectedColumns).not.toContain('data');
   });
 });

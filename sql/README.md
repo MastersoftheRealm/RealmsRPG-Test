@@ -12,7 +12,7 @@
 | [`characters-relational-*.sql`](characters-relational-audit.sql) | ADR-0031 relational character expansion, compatibility and contract migrations, RPCs, verification, and rollback-safe smoke tests. The compatibility stage was applied to production on 2026-11-08; the contract/drop stage remains pending and requires a fresh backup. |
 | [`characters-direct-write-deny.sql`](characters-direct-write-deny.sql) | Removes owner INSERT/UPDATE RLS on `public.characters` so saves must use the relational RPCs. Keep SELECT and DELETE. **Rollback:** commented block at the bottom of that file (not a second migration). **Lock:** policy DDL only — no `ACCESS EXCLUSIVE` table lock (unlike the contract stage). After apply, update [`src/docs/SUPABASE_SCHEMA.md`](../src/docs/SUPABASE_SCHEMA.md) character RLS prose and refresh types/baseline when credentials are available. Smoke test: [`characters-direct-write-deny-test.sql`](characters-direct-write-deny-test.sql). |
 | [`vtt-v1-tabletop.sql`](vtt-v1-tabletop.sql) | Virtual tabletop schema for branch-local development. Verify target state and obtain approval before applying outside the branch's local database. |
-| [`campaign-rolls-relational-expand.sql`](campaign-rolls-relational-expand.sql) | Pending additive campaign-roll expansion: validates and copies `data` into scalar columns plus ordered dice rows, while compatibility triggers retain the JSON write contract. Not applied; the later app cutover/drop is separate. |
+| [`campaign-rolls-relational-*.sql`](campaign-rolls-relational-expand.sql) | Pending campaign-roll expansion and final contract: validates and copies legacy `data`, verifies exact parity, switches reads/writes to scalar columns plus ordered dice rows, and atomically drops the JSONB column. Not applied. |
 | [`codex-rename-source.sql`](codex-rename-source.sql) | Admin utility: replaces `public.rename_codex_source` only. Safe to re-run on non-prod when Kadin approves; first real rename is a live data change and needs a backup. |
 | [`codex-category-offense-to-offensive.sql`](codex-category-offense-to-offensive.sql) | One-time data fix: `codex_feats` / `codex_parts` category `Offense` → `Offensive`. **Apply before** deploying app code that drops the feat category rewrite. Not applied from CI. |
 | [`role-quota-atomic.sql`](role-quota-atomic.sql) | `user_profiles` row lock + `assert_account_create_quota`, quota-aware `create_character_relational` and `insert_user_library_row_with_quota`. Apply after explicit OK and backup. |
@@ -65,6 +65,23 @@ create, idempotent replay, patch, provision, and relational reads without that
 column. No application code deployment is required between contract and drop;
 the drop is part of the contract transaction. Recovery after it requires the
 fresh pre-contract backup.
+
+**Relational campaign rolls:** Apply
+[`campaign-rolls-relational-expand.sql`](campaign-rolls-relational-expand.sql)
+to a backed-up target first. It backfills scalar roll columns and ordered
+`campaign_roll_dice` rows, then exposes the typed transactional RPC while
+maintaining a temporary rollback mirror. Deploy and QA the relational-only
+application against that compatibility phase. When parity checks pass, apply:
+
+1. [`campaign-rolls-relational-expand-test.sql`](campaign-rolls-relational-expand-test.sql)
+2. [`campaign-rolls-relational-contract.sql`](campaign-rolls-relational-contract.sql)
+3. [`campaign-rolls-relational-contract-test.sql`](campaign-rolls-relational-contract-test.sql)
+
+The contract migration repeats scalar and dice parity under an exclusive lock,
+removes the compatibility path, drops `campaign_rolls.data`, and adds one
+transactional RPC for parent and dice inserts. The smoke test rolls back its
+fixtures and verifies the column removal, ordered-dice round trip, RLS-backed
+authenticated insert, and rejection of partial/mismatched dice arrays.
 
 **`supabase_migrations.schema_migrations`:** After a reset around **2026-09-26**, the live table has **11 rows** through `20261029140801_drop_empty_content_schema`. The checkout intentionally retains only the two baseline migration files, so use the live migration table—not this folder or older docs—as the applied-history catalog.
 

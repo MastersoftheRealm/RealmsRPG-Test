@@ -21,44 +21,59 @@ import {
   normalizeCampaignRollDice,
   resolveRollOutcomeKind,
 } from '@/lib/rolls/die';
+import type { DieType } from '@/lib/rolls/die';
 import type { CampaignRollEntry } from '@/types/campaign-roll';
+
+type RollDieRow = {
+  position: number;
+  die_type: string;
+  value: number;
+  is_max: boolean | null;
+  is_min: boolean | null;
+};
 
 type RollRow = {
   id: string;
-  data: unknown;
-  created_at: string | null;
-  character_id?: string | null | undefined;
-  user_id?: string | null | undefined;
-  type?: string | null | undefined;
-  title?: string | null | undefined;
+  character_id: string;
+  character_name: string;
+  user_id: string;
+  type: string;
+  title: string;
+  rolled_at: string;
+  rolled_by_realm_master: boolean;
+  modifier: number;
+  modifier_label: string | null;
+  total: number;
+  is_crit: boolean | null;
+  is_crit_fail: boolean | null;
+  crit_message: string | null;
+  campaign_roll_dice: RollDieRow[];
 };
 
 function toEntry(row: RollRow): CampaignRollEntry {
-  const d = (row.data as Record<string, unknown>) ?? {};
-  const ts = d.timestamp;
   return {
     id: row.id,
-    characterId: (row.character_id ?? d.characterId) as string,
-    characterName: d.characterName as string,
-    userId: (row.user_id ?? d.userId) as string,
-    type: (row.type ?? d.type) as CampaignRollEntry['type'],
-    title: (row.title ?? d.title) as string,
-    dice: (d.dice as CampaignRollEntry['dice']) || [],
-    modifier: (d.modifier as number) ?? 0,
-    modifierLabel: typeof d.modifierLabel === 'string' ? d.modifierLabel : undefined,
-    total: (d.total as number) ?? 0,
-    isCrit: d.isCrit as boolean | undefined,
-    isCritFail: d.isCritFail as boolean | undefined,
-    critMessage: d.critMessage as string | undefined,
-    rolledByRealmMaster: d.rolledByRealmMaster === true,
-    timestamp:
-      ts instanceof Date
-        ? ts
-        : typeof ts === 'string'
-          ? new Date(ts)
-          : (ts as { seconds?: number | undefined })?.seconds
-            ? new Date((ts as { seconds: number }).seconds * 1000)
-            : new Date(),
+    characterId: row.character_id,
+    characterName: row.character_name,
+    userId: row.user_id,
+    type: row.type as CampaignRollEntry['type'],
+    title: row.title,
+    dice: [...row.campaign_roll_dice]
+      .sort((a, b) => a.position - b.position)
+      .map((die) => ({
+        type: die.die_type as DieType,
+        value: die.value,
+        isMax: die.is_max === true,
+        isMin: die.is_min === true,
+      })),
+    modifier: row.modifier,
+    modifierLabel: row.modifier_label ?? undefined,
+    total: row.total,
+    isCrit: row.is_crit ?? undefined,
+    isCritFail: row.is_crit_fail ?? undefined,
+    critMessage: row.crit_message ?? undefined,
+    rolledByRealmMaster: row.rolled_by_realm_master,
+    timestamp: new Date(row.rolled_at),
   };
 }
 
@@ -106,15 +121,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Not a campaign member' }, { status: 403 });
     }
 
-    // Only id + data + created_at: works on DBs that have not run campaign_rolls list-column migration;
-    // toEntry() already reads characterId, type, etc. from JSONB `data` when list columns are absent.
-    // Order: newest first. Rows with NULL created_at (legacy inserts) sort last so LIMIT 50 still returns
-    // recent rolls once POST sets created_at; id breaks ties.
+    // Order: newest first; id breaks timestamp ties. Dice are fetched through
+    // the campaign_roll_dice FK and restored to their stored position in toEntry.
     const { data: rows, error: rollsError } = await supabase
       .from('campaign_rolls')
-      .select('id, data, created_at')
+      .select(
+        'id, character_id, character_name, user_id, type, title, rolled_at, rolled_by_realm_master, modifier, modifier_label, total, is_crit, is_crit_fail, crit_message, campaign_roll_dice(position, die_type, value, is_max, is_min)',
+      )
       .eq('campaign_id', campaignId)
-      .order('created_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
       .order('id', { ascending: false })
       .limit(MAX_CAMPAIGN_ROLLS);
 
@@ -256,34 +271,28 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const outcomeKind = resolveRollOutcomeKind(roll.type, roll.outcomeKind);
     const outcome = computeRollOutcome(dice, modifier, outcomeKind);
 
-    const rollData = {
-      characterId,
-      characterName: resolvedCharacterName,
-      userId: user.uid,
-      rolledByRealmMaster,
-      type: roll.type,
-      title: roll.title,
-      dice,
-      modifier,
-      modifierLabel: roll.modifierLabel,
-      total: outcome.total,
-      isCrit: outcome.isCrit,
-      isCritFail: outcome.isCritFail,
-      critMessage: outcome.critMessage,
-      timestamp: new Date().toISOString(),
-    };
-
     const rollId = crypto.randomUUID();
-    const createdAt = new Date().toISOString();
-    const { error: insertError } = await supabase.from('campaign_rolls').insert({
-      id: rollId,
-      campaign_id: campaignId,
-      data: rollData,
-      created_at: createdAt,
-      character_id: characterId,
-      user_id: user.uid,
-      type: roll.type,
-      title: roll.title ?? '',
+    const rolledAt = new Date().toISOString();
+    const { error: insertError } = await supabase.rpc('create_campaign_roll_relational', {
+      p_id: rollId,
+      p_campaign_id: campaignId,
+      p_character_id: characterId,
+      p_character_name: resolvedCharacterName,
+      p_user_id: user.uid,
+      p_rolled_at: rolledAt,
+      p_rolled_by_realm_master: rolledByRealmMaster,
+      p_type: roll.type,
+      p_title: roll.title,
+      p_modifier: modifier,
+      p_modifier_label: roll.modifierLabel ?? null,
+      p_total: outcome.total,
+      p_is_crit: outcome.isCrit,
+      p_is_crit_fail: outcome.isCritFail,
+      p_crit_message: outcome.critMessage,
+      p_die_types: dice.map((die) => die.type),
+      p_die_values: dice.map((die) => die.value),
+      p_die_is_max: dice.map((die) => die.isMax),
+      p_die_is_min: dice.map((die) => die.isMin),
     });
 
     if (insertError) {

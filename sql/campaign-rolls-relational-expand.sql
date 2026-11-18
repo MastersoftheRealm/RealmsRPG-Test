@@ -92,9 +92,36 @@ DECLARE
   v_die jsonb;
   v_die_type text;
   v_die_value numeric;
+  v_unknown_key text;
 BEGIN
   IF jsonb_typeof(p_data) <> 'object' THEN
     RETURN 'data must be an object';
+  END IF;
+
+  SELECT key
+  INTO v_unknown_key
+  FROM jsonb_object_keys(p_data) AS key
+  WHERE key NOT IN (
+    'characterId',
+    'characterName',
+    'userId',
+    'type',
+    'title',
+    'dice',
+    'modifier',
+    'modifierLabel',
+    'total',
+    'isCrit',
+    'isCritFail',
+    'critMessage',
+    'rolledByRealmMaster',
+    'timestamp'
+  )
+  ORDER BY key
+  LIMIT 1;
+
+  IF v_unknown_key IS NOT NULL THEN
+    RETURN format('unmapped campaign roll key: %s', v_unknown_key);
   END IF;
 
   IF jsonb_typeof(p_data->'characterName') <> 'string'
@@ -191,6 +218,17 @@ BEGIN
   LOOP
     IF jsonb_typeof(v_die) <> 'object' THEN
       RETURN 'every die must be an object';
+    END IF;
+
+    SELECT key
+    INTO v_unknown_key
+    FROM jsonb_object_keys(v_die) AS key
+    WHERE key NOT IN ('type', 'value', 'isMax', 'isMin')
+    ORDER BY key
+    LIMIT 1;
+
+    IF v_unknown_key IS NOT NULL THEN
+      RETURN format('unmapped campaign roll die key: %s', v_unknown_key);
     END IF;
 
     IF jsonb_typeof(v_die->'type') <> 'string' THEN
@@ -344,78 +382,19 @@ CREATE POLICY campaign_roll_dice_select_participants
     )
   );
 
-DROP POLICY IF EXISTS campaign_roll_dice_insert_author
-  ON public.campaign_roll_dice;
-CREATE POLICY campaign_roll_dice_insert_author
-  ON public.campaign_roll_dice
-  FOR INSERT TO authenticated
-  WITH CHECK (
-    EXISTS (
-      SELECT 1
-      FROM public.campaign_rolls roll
-      WHERE roll.id = campaign_roll_id
-        AND roll.user_id = ((SELECT auth.uid()))::text
-        AND private.auth_is_campaign_participant(roll.campaign_id)
-    )
-  );
+DROP POLICY IF EXISTS campaign_roll_dice_insert_author ON public.campaign_roll_dice;
+DROP POLICY IF EXISTS campaign_roll_dice_update_owner_or_author ON public.campaign_roll_dice;
+DROP POLICY IF EXISTS campaign_roll_dice_delete_owner_or_author ON public.campaign_roll_dice;
 
-DROP POLICY IF EXISTS campaign_roll_dice_update_owner_or_author
-  ON public.campaign_roll_dice;
-CREATE POLICY campaign_roll_dice_update_owner_or_author
-  ON public.campaign_roll_dice
-  FOR UPDATE TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1
-      FROM public.campaign_rolls roll
-      WHERE roll.id = campaign_roll_id
-        AND (
-          private.auth_is_campaign_owner(roll.campaign_id)
-          OR (
-            roll.user_id = ((SELECT auth.uid()))::text
-            AND private.auth_is_campaign_participant(roll.campaign_id)
-          )
-        )
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1
-      FROM public.campaign_rolls roll
-      WHERE roll.id = campaign_roll_id
-        AND (
-          private.auth_is_campaign_owner(roll.campaign_id)
-          OR (
-            roll.user_id = ((SELECT auth.uid()))::text
-            AND private.auth_is_campaign_participant(roll.campaign_id)
-          )
-        )
-    )
-  );
-
-DROP POLICY IF EXISTS campaign_roll_dice_delete_owner_or_author
-  ON public.campaign_roll_dice;
-CREATE POLICY campaign_roll_dice_delete_owner_or_author
-  ON public.campaign_roll_dice
-  FOR DELETE TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1
-      FROM public.campaign_rolls roll
-      WHERE roll.id = campaign_roll_id
-        AND (
-          private.auth_is_campaign_owner(roll.campaign_id)
-          OR (
-            roll.user_id = ((SELECT auth.uid()))::text
-            AND private.auth_is_campaign_participant(roll.campaign_id)
-          )
-        )
-    )
-  );
-
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.campaign_roll_dice TO authenticated;
+-- Data API clients read child rows through the parent relationship. All writes
+-- go through create_campaign_roll_relational so parent + dice remain atomic.
+GRANT SELECT ON public.campaign_roll_dice TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.campaign_roll_dice TO service_role;
 REVOKE ALL ON public.campaign_roll_dice FROM anon;
+
+GRANT SELECT ON public.campaign_rolls TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.campaign_rolls TO service_role;
+REVOKE ALL ON public.campaign_rolls FROM anon;
 
 -- Match the current GET behavior for old rows whose stored RM flag predates the
 -- flag itself: a campaign owner rolling another roster user's character is RM.
@@ -724,5 +703,179 @@ BEGIN
   END IF;
 END;
 $parity$;
+
+-- Let the relational-only application deploy before the final contract drop.
+-- During this temporary phase the RPC builds the rollback mirror expected by
+-- the compatibility triggers; the contract migration replaces this function
+-- with a scalar/array-only insert after dropping campaign_rolls.data.
+CREATE OR REPLACE FUNCTION public.create_campaign_roll_relational(
+  p_id text,
+  p_campaign_id text,
+  p_character_id text,
+  p_character_name text,
+  p_user_id text,
+  p_rolled_at timestamp with time zone,
+  p_rolled_by_realm_master boolean,
+  p_type text,
+  p_title text,
+  p_modifier double precision,
+  p_modifier_label text,
+  p_total double precision,
+  p_is_crit boolean,
+  p_is_crit_fail boolean,
+  p_crit_message text,
+  p_die_types text[],
+  p_die_values integer[],
+  p_die_is_max boolean[],
+  p_die_is_min boolean[]
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+DECLARE
+  v_actor_id text := (SELECT auth.uid())::text;
+  v_campaign_owner_id text;
+  v_dice jsonb;
+  v_dice_count integer;
+  v_payload jsonb;
+  v_roster_character_name text;
+  v_roster_user_id text;
+BEGIN
+  IF nullif(p_id, '') IS NULL
+     OR nullif(p_campaign_id, '') IS NULL
+     OR nullif(p_character_id, '') IS NULL
+     OR nullif(p_character_name, '') IS NULL
+     OR nullif(p_user_id, '') IS NULL
+     OR nullif(p_title, '') IS NULL
+     OR p_rolled_at IS NULL THEN
+    RAISE EXCEPTION 'campaign roll requires all identity, title, and timestamp values'
+      USING ERRCODE = 'invalid_parameter_value';
+  END IF;
+
+  IF p_type NOT IN ('attack', 'damage', 'skill', 'ability', 'defense', 'custom') THEN
+    RAISE EXCEPTION 'campaign roll type is not recognized'
+      USING ERRCODE = 'check_violation';
+  END IF;
+
+  IF v_actor_id IS NULL OR p_user_id IS DISTINCT FROM v_actor_id THEN
+    RAISE EXCEPTION 'campaign roll author must match the authenticated user'
+      USING ERRCODE = 'insufficient_privilege';
+  END IF;
+
+  SELECT
+    campaign.owner_id,
+    nullif(roster.entry->>'characterName', ''),
+    nullif(roster.entry->>'userId', '')
+  INTO v_campaign_owner_id, v_roster_character_name, v_roster_user_id
+  FROM public.campaigns campaign
+  CROSS JOIN LATERAL jsonb_array_elements(
+    CASE
+      WHEN jsonb_typeof(campaign.characters) = 'array' THEN campaign.characters
+      ELSE '[]'::jsonb
+    END
+  ) roster(entry)
+  WHERE campaign.id = p_campaign_id
+    AND roster.entry->>'characterId' = p_character_id
+    AND (
+      campaign.owner_id = v_actor_id
+      OR roster.entry->>'userId' = v_actor_id
+    )
+  LIMIT 1;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'authenticated user cannot roll for this campaign character'
+      USING ERRCODE = 'insufficient_privilege';
+  END IF;
+
+  p_character_name := coalesce(v_roster_character_name, p_character_name);
+  p_rolled_by_realm_master := (
+    v_campaign_owner_id = v_actor_id
+    AND v_roster_user_id IS NOT NULL
+    AND v_roster_user_id <> v_campaign_owner_id
+  );
+
+  IF p_die_types IS NULL
+     OR p_die_values IS NULL
+     OR p_die_is_max IS NULL
+     OR p_die_is_min IS NULL THEN
+    RAISE EXCEPTION 'campaign roll dice arrays cannot be null'
+      USING ERRCODE = 'null_value_not_allowed';
+  END IF;
+
+  v_dice_count := cardinality(p_die_types);
+  IF cardinality(p_die_values) <> v_dice_count
+     OR cardinality(p_die_is_max) <> v_dice_count
+     OR cardinality(p_die_is_min) <> v_dice_count THEN
+    RAISE EXCEPTION 'campaign roll dice arrays must have equal lengths'
+      USING ERRCODE = 'array_subscript_error';
+  END IF;
+
+  SELECT coalesce(
+    jsonb_agg(
+      jsonb_build_object(
+        'type', die.die_type,
+        'value', die.value,
+        'isMax', die.is_max,
+        'isMin', die.is_min
+      ) ORDER BY die.position
+    ),
+    '[]'::jsonb
+  )
+  INTO v_dice
+  FROM unnest(p_die_types, p_die_values, p_die_is_max, p_die_is_min)
+    WITH ORDINALITY AS die(die_type, value, is_max, is_min, position);
+
+  v_payload := jsonb_build_object(
+    'characterId', p_character_id,
+    'characterName', p_character_name,
+    'userId', p_user_id,
+    'rolledByRealmMaster', p_rolled_by_realm_master,
+    'type', p_type,
+    'title', p_title,
+    'dice', v_dice,
+    'modifier', p_modifier,
+    'modifierLabel', p_modifier_label,
+    'total', p_total,
+    'isCrit', p_is_crit,
+    'isCritFail', p_is_crit_fail,
+    'critMessage', p_crit_message,
+    'timestamp', to_jsonb(p_rolled_at)
+  );
+
+  INSERT INTO public.campaign_rolls (
+    id,
+    campaign_id,
+    data,
+    created_at,
+    character_id,
+    user_id,
+    type,
+    title
+  ) VALUES (
+    p_id,
+    p_campaign_id,
+    v_payload,
+    (p_rolled_at AT TIME ZONE 'UTC')::timestamp(3) without time zone,
+    p_character_id,
+    p_user_id,
+    p_type,
+    p_title
+  );
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.create_campaign_roll_relational(
+  text, text, text, text, text, timestamp with time zone, boolean, text, text,
+  double precision, text, double precision, boolean, boolean, text,
+  text[], integer[], boolean[], boolean[]
+) FROM PUBLIC, anon, authenticated, service_role;
+
+GRANT EXECUTE ON FUNCTION public.create_campaign_roll_relational(
+  text, text, text, text, text, timestamp with time zone, boolean, text, text,
+  double precision, text, double precision, boolean, boolean, text,
+  text[], integer[], boolean[], boolean[]
+) TO authenticated;
 
 COMMIT;

@@ -18,13 +18,12 @@
 
 ### 1.1 JSONB column inventory
 
-The `public` schema has 41 application tables. Of those, 24 tables use 50 `JSONB` columns. There are no plain `JSON` columns in `public`. Supabase-managed tables in the `auth`, `realtime`, and `storage` schemas are outside this inventory.
+The target `public` schema has 42 application tables. Of those, 23 tables use 49 `JSONB` columns. There are no plain `JSON` columns in `public`. Supabase-managed tables in the `auth`, `realtime`, and `storage` schemas are outside this inventory. The pending campaign-roll relational migration adds `campaign_roll_dice` and removes `campaign_rolls.data`.
 
 This list reflects the live-generated `src/types/database.types.ts` checked against `sql/schema/0000_baseline_2026-08-13.sql`.
 
 | Table | JSONB columns |
 |-------|---------------|
-| `campaign_rolls` | `data` |
 | `campaigns` | `characters` |
 | `characters` | `data` |
 | `codex_archetypes` | `level1_guidance_groups`, `level1_loadouts`, `level1_recommended_abilities`, `path_data` |
@@ -238,11 +237,12 @@ including null; the contract parity guard then prevents a drifted drop.
 |-------|--------|-------------|
 | `campaigns` | Scalar + JSONB | id (PK), owner_id, name, description, invite_code, characters (JSONB), owner_username, created_at, updated_at |
 | `campaign_members` | Columnar | campaign_id (PK), user_id (PK); FK campaign_id → campaigns(id) |
-| `campaign_rolls` | Hybrid | id (PK, required on insert unless DB default), campaign_id (FK), data (JSONB), **created_at** (app POST sets ISO `now`; optional DB `DEFAULT now()`); list columns: character_id, user_id, type, title |
+| `campaign_rolls` | Columnar | id (PK), campaign_id (FK), character_id, character_name, user_id, type, title, rolled_at, rolled_by_realm_master, modifier, modifier_label, total, is_crit, is_crit_fail, crit_message, created_at |
+| `campaign_roll_dice` | Columnar | campaign_roll_id + position (PK), die_type, value, is_max, is_min; FK campaign_roll_id → campaign_rolls(id) ON DELETE CASCADE |
 
 Membership source of truth: `campaign_members`. Realtime: `public.campaign_rolls`.
 
-**Known pending database change (not applied) — `campaign_rolls.created_at` backfill (ClickUp [1dfe8wf2hu6](https://app.clickup.com/t/1dfe8wf2hu6)):** On live Test, some `public.campaign_rolls` rows still have NULL `created_at` (the backfill in (was `sql/supabase-campaign-rolls-created-at-backfill.sql`, deleted 2026-10-29) was **never applied**). Owner-approved data fix only; requires backup first. Not part of this repo cleanup PR.
+**Pending campaign-roll relational contract (not applied):** Apply `sql/campaign-rolls-relational-expand.sql` first; it validates every legacy payload, backfills the scalar columns and ordered dice rows, refuses incompatible data, and installs the typed transactional RPC with a temporary rollback mirror. After relational-only application QA, `sql/campaign-rolls-relational-contract.sql` rechecks exact parity, removes the compatibility triggers/functions, drops `campaign_rolls.data`, and replaces the RPC with its JSON-free implementation. Both phases require explicit approval and a fresh backup outside local testing. The expansion also resolves legacy NULL `created_at` values from the stored roll timestamp before enforcing NOT NULL.
 
 **RLS (`campaigns`):** One permissive SELECT policy per role — `campaigns_select_participants` (`owner_id = auth.uid()` **or** `private.auth_is_campaign_participant(id)`). The `owner_id` short-circuit is required so `INSERT … RETURNING` can see the in-flight owner row (STABLE helper lookup cannot; TASK-802). Owner write policies: `campaigns_owner_insert`, `campaigns_owner_update`, `campaigns_owner_delete`. Do not restore a second `campaigns_owner_select` policy (TASK-650 / `multiple_permissive_policies`). Historical replay script (was `sql/task-802-campaigns-select-owner-short-circuit.sql`, deleted 2026-10-29) in git history (already applied on RealmsRPG-Test; verify policies in the live database rather than re-pasting).
 
@@ -510,7 +510,7 @@ TASK-649 Phase 2 is applied on RealmsRPG-Test (anon least-privilege table grants
 | GET /api/user/library/counts | same user_* tables + user_enhanced_items (auth; armament split via `normalizeArmamentKind`) |
 | GET /api/user/library/counts | same user_* tables + user_enhanced_items (auth; armament split via `normalizeArmamentKind`) |
 | Characters CRUD | characters |
-| Campaigns | campaigns, campaign_members, campaign_rolls |
+| Campaigns | campaigns, campaign_members, campaign_rolls, campaign_roll_dice |
 | Encounters | encounters |
 | GET/PATCH /api/admin/role-policies | role_policies, user_profiles.role (admin check) |
 | PATCH /api/admin/users/update-role | user_profiles, admin_role_audit |
