@@ -50,7 +50,7 @@ jobs:
         run: npm test
 
       - name: Dependency audit — production deps (high+, blocking)
-        run: npm audit --audit-level=high --omit=dev
+        run: npm run audit:production
 
       - name: Dependency audit — full tree incl. dev (report-only)
         if: always()
