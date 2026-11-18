@@ -30,6 +30,7 @@ import {
   getRelationalCharacterDocument,
   patchRelationalCharacter,
 } from '@/lib/character-persistence-server';
+import { attachRelationalInventoryPatchToDirty } from '@/lib/character/inventory-patch';
 import {
   appendCharacterLegalityToResponse,
   evaluateCharacterLegalityForSave,
@@ -184,12 +185,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     const cleanedData = prepareCharacterForSave(data, { storedDocument: currentDocument });
-    if ('equipment' in cleanedData) {
-      return NextResponse.json(
-        { error: 'Equipment must be sent as inventoryPatch' },
-        { status: 400 },
-      );
-    }
+    attachRelationalInventoryPatchToDirty(cleanedData, currentDocument);
 
     const mergedData = applyCharacterDirtyPatch(currentDocument, cleanedData, {
       documentUpdatedAt: new Date().toISOString(),

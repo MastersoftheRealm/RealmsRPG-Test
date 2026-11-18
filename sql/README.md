@@ -15,6 +15,7 @@
 | [`codex-rename-source.sql`](codex-rename-source.sql) | Admin utility: replaces `public.rename_codex_source` only. Safe to re-run on non-prod when Kadin approves; first real rename is a live data change and needs a backup. |
 | [`codex-category-offense-to-offensive.sql`](codex-category-offense-to-offensive.sql) | One-time data fix: `codex_feats` / `codex_parts` category `Offense` → `Offensive`. **Apply before** deploying app code that drops the feat category rewrite. Not applied from CI. |
 | [`role-quota-atomic.sql`](role-quota-atomic.sql) | `user_profiles` row lock + `assert_account_create_quota`, quota-aware `create_character_relational` and `insert_user_library_row_with_quota`. Apply after explicit OK and backup. |
+| [`characters-inventory-cas-patch-86e3juw0a.sql`](characters-inventory-cas-patch-86e3juw0a.sql) | Item-level inventory CAS helpers (86e3juw0a). After backup, apply this file then re-apply **`characters-relational-expand.sql`** and **`characters-relational-write-rpc.sql`** from the **same git commit** (canonical bodies). Deploy the matching app in the same window. Smoke: [`characters-inventory-cas-patch-test.sql`](characters-inventory-cas-patch-test.sql). |
 | [`schema/0000_baseline_2026-08-13.sql`](schema/0000_baseline_2026-08-13.sql) | Committed `pg_dump --schema-only` snapshot (**stale** vs live — regenerate before relying on it). |
 
 **Relational characters (ADR-0031):** Run

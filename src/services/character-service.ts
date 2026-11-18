@@ -9,6 +9,7 @@ import type { UserCreature, UserItem, UserPower, UserTechnique } from '@/hooks/u
 import type { CharacterViewEnrichment } from '@/lib/character-view-enrichment';
 import { apiFetch, apiFetchOrNull, isConflictError } from '@/lib/api-client';
 import { characterLockToken } from '@/lib/character/dirty-patch';
+import { attachRelationalInventoryPatchToDirty } from '@/lib/character/inventory-patch';
 import {
   enqueueCharacterSave,
   rememberCharacterLockToken,
@@ -98,6 +99,8 @@ export async function saveCharacter(
     updatedAt?: string | Date | null | undefined;
     skipLock?: boolean | undefined;
     enqueue?: boolean | undefined;
+    /** Autosave baseline for item-level inventory CAS (86e3juw0a). Required when dirty includes equipment. */
+    inventorySaveBaseline?: Record<string, unknown> | null | undefined;
   } = {},
 ): Promise<{ ok: true; updatedAt?: string | undefined }> {
   if (!characterId?.trim()) {
@@ -114,6 +117,9 @@ export async function saveCharacter(
 
   const run = async () => {
     const body: Record<string, unknown> = { ...data };
+    if ('equipment' in body) {
+      attachRelationalInventoryPatchToDirty(body, options.inventorySaveBaseline ?? {});
+    }
     const lock = options.skipLock
       ? undefined
       : resolveCharacterLockToken(id, options.updatedAt ?? data.updatedAt);
@@ -143,9 +149,11 @@ export async function saveCharacterWithConflictRetry(
   dirty: Partial<Character>,
   options: {
     updatedAt?: string | Date | null | undefined;
+    inventorySaveBaseline?: Record<string, unknown> | null | undefined;
     mergeOnConflict: (remote: Character) => {
       dirty: Partial<Character>;
       updatedAt?: string | Date | null | undefined;
+      inventorySaveBaseline?: Record<string, unknown> | null | undefined;
     };
   },
 ): Promise<{ updatedAt?: string | undefined; applied: Partial<Character> }> {
@@ -161,6 +169,7 @@ export async function saveCharacterWithConflictRetry(
       const result = await saveCharacter(id, dirty, {
         updatedAt: options.updatedAt,
         enqueue: false,
+        inventorySaveBaseline: options.inventorySaveBaseline,
       });
       return { updatedAt: result.updatedAt, applied: dirty };
     } catch (err) {
@@ -174,6 +183,8 @@ export async function saveCharacterWithConflictRetry(
       const retried = await saveCharacter(id, next.dirty, {
         updatedAt: next.updatedAt,
         enqueue: false,
+        inventorySaveBaseline:
+          next.inventorySaveBaseline ?? (remote as unknown as Record<string, unknown>),
       });
       return { updatedAt: retried.updatedAt, applied: next.dirty };
     }

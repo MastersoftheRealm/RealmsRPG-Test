@@ -144,23 +144,28 @@ export function useSaveCharacter() {
       id,
       data,
       updatedAt,
+      inventorySaveBaseline,
       mergeOnConflict,
     }: {
       id: string;
       data: Partial<Character>;
       updatedAt?: string | Date | null | undefined;
+      inventorySaveBaseline?: Record<string, unknown> | null | undefined;
       mergeOnConflict?: (remote: Character) => {
         dirty: Partial<Character>;
         updatedAt?: string | Date | null | undefined;
+        inventorySaveBaseline?: Record<string, unknown> | null | undefined;
       };
     }) =>
       saveCharacterWithConflictRetry(id, data, {
         updatedAt: updatedAt ?? data.updatedAt,
+        inventorySaveBaseline,
         mergeOnConflict:
           mergeOnConflict ??
           ((remote) => ({
             dirty: data,
             updatedAt: remote.updatedAt,
+            inventorySaveBaseline: remote as unknown as Record<string, unknown>,
           })),
       }),
     onSuccess: (result, { id }) => {

@@ -898,6 +898,7 @@ DECLARE
   v_trait_position integer;
   v_seen text[];
   v_key text;
+  v_skip_inventory boolean;
 BEGIN
   SELECT user_id INTO v_owner_id FROM public.characters WHERE id = p_character_id;
   IF NOT FOUND THEN
@@ -907,6 +908,8 @@ BEGIN
     RAISE EXCEPTION 'Character data must be an object' USING ERRCODE = '22023';
   END IF;
   PERFORM public.assert_character_document_mapped(p_document);
+
+  v_skip_inventory := current_setting('app.skip_inventory_full_sync', true) = 'on';
 
   FOREACH v_collection IN ARRAY ARRAY[
     'feats','archetypeFeats','skills','powers','techniques','traits',
@@ -940,7 +943,9 @@ BEGIN
   DELETE FROM public.character_traits WHERE character_id = p_character_id;
   DELETE FROM public.character_powers WHERE character_id = p_character_id;
   DELETE FROM public.character_techniques WHERE character_id = p_character_id;
-  DELETE FROM public.character_inventory WHERE character_id = p_character_id;
+  IF NOT v_skip_inventory THEN
+    DELETE FROM public.character_inventory WHERE character_id = p_character_id;
+  END IF;
   DELETE FROM public.character_conditions WHERE character_id = p_character_id;
   DELETE FROM public.character_named_notes WHERE character_id = p_character_id;
   DELETE FROM public.character_library_section_preferences WHERE character_id = p_character_id;
@@ -1254,6 +1259,7 @@ BEGIN
   -- Current saver uses weapons/shields/armor/items/accessories. Legacy
   -- inventory is accepted only if identical to items; otherwise it is unique
   -- information and the migration fails until explicitly mapped.
+  IF NOT v_skip_inventory THEN
   v_equipment := p_document->'equipment';
   IF jsonb_typeof(v_equipment) = 'object' THEN
     IF v_equipment ? 'inventory' AND v_equipment->'inventory' <> 'null'::jsonb
@@ -1299,6 +1305,7 @@ BEGIN
           v_entry.value, v_entry.key);
       END IF;
     END LOOP;
+  END IF;
   END IF;
 
   FOR v_entry IN SELECT value, ordinality FROM jsonb_array_elements(

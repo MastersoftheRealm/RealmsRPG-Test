@@ -18,6 +18,7 @@ import { buildRequiredProficiencies } from '@/lib/proficiencies';
 import type { Character, Item } from '@/types';
 import { useCodexItemProperties, useCodexPowerParts, useCodexTechniqueParts } from './use-codex';
 import { useCharacter, useSaveCharacter } from './use-characters';
+import { attachRelationalInventoryPatchToDirty } from '@/lib/character/inventory-patch';
 import {
   appendLibraryItemToCharacter,
   characterOwnsLibraryItem,
@@ -106,15 +107,28 @@ export function useAddToCharacterFromLibrary(kind: LibraryToCharacterKind, chara
       dbs,
       buildRequiredForCharacter,
     );
+    const baseline = character as unknown as Record<string, unknown>;
+    const dirty = libraryAddDirtyFields(kind, first.character) as Record<string, unknown>;
+    attachRelationalInventoryPatchToDirty(dirty, baseline);
     saveCharacter.mutate(
       {
         id: character.id,
-        data: libraryAddDirtyFields(kind, first.character),
+        data: dirty as Partial<Character>,
         updatedAt: character.updatedAt,
-        mergeOnConflict: (remote) =>
-          mergeLibraryAddOnConflict(remote, kind, pending.raw, (c) =>
+        inventorySaveBaseline: baseline,
+        mergeOnConflict: (remote) => {
+          const next = mergeLibraryAddOnConflict(remote, kind, pending.raw, (c) =>
             applyLibraryAddToCharacter(c, kind, pending.raw, dbs, buildRequiredForCharacter),
-          ),
+          );
+          attachRelationalInventoryPatchToDirty(
+            next.dirty as Record<string, unknown>,
+            remote as unknown as Record<string, unknown>,
+          );
+          return {
+            ...next,
+            inventorySaveBaseline: remote as unknown as Record<string, unknown>,
+          };
+        },
       },
       {
         onSuccess: () => {

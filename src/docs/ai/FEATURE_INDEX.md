@@ -2693,7 +2693,7 @@ Signed-in users see account characters (`useCharacters`), delete, duplicate (`us
 
 **Character sheet page** — `/characters/[id]` → `character-sheet-route.tsx` + `useCharacterSheetPage` (data in `use-character-sheet-page-data`, chrome in `use-character-sheet-page-ui`).
 
-**Load & save:** `useCharacter` hydrates React Query; owner edits `patchCharacterDetailQuery`. **`useAutoSave`** debounces → `cleanForSave` → **dirty-field** patch via `saveCharacterWithConflictRetry` (`/api/characters/[id]`). Guest ids use guest storage branch inside character service. Owners get `CloudSyncOfflineBanner`, conflict merge (`mergeRemotePreservingDirty`), optional **realtime** merge; guests skip `useCharacterResourceSync` (encounter HP sync).
+**Load & save:** `useCharacter` hydrates React Query; owner edits `patchCharacterDetailQuery`. **`useAutoSave`** debounces → `cleanForSave` → **dirty-field** patch via `saveCharacterWithConflictRetry` (`/api/characters/[id]`). Gear saves translate `equipment` dirty keys to **`inventoryPatch`** item ops (quantity CAS) in `src/lib/character/inventory-patch.ts` + `saveCharacter` using the autosave baseline. Guest ids use guest storage branch inside character service. Owners get `CloudSyncOfflineBanner`, conflict merge (`mergeRemotePreservingDirty`), optional **realtime** merge; guests skip `useCharacterResourceSync` (encounter HP sync).
 
 **Owner vs viewer:** `isOwner` = guest sheet **or** `character.userId === user.uid`. Non-owners see “View only”, no `SheetActionToolbar`, handlers stripped with `whenSheetOwner`. `RollProvider` sets `canRoll={isOwner}` and personal roll log id for owners.
 

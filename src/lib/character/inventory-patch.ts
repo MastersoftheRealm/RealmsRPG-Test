@@ -219,11 +219,20 @@ export function buildInventoryPatch(
 /** When equipment is dirty, replace the full blob with an incremental inventory patch. */
 export function replaceEquipmentDirtyWithInventoryPatch(
   cleaned: Record<string, unknown>,
-  storedDocument: Record<string, unknown>,
+  saveBaseline: Record<string, unknown>,
 ): void {
   if (!Object.prototype.hasOwnProperty.call(cleaned, 'equipment')) return;
-  const patch = buildInventoryPatch(storedDocument.equipment, cleaned.equipment);
+  const patch = buildInventoryPatch(saveBaseline.equipment, cleaned.equipment);
   delete cleaned.equipment;
   if (patch.ops.length === 0) return;
   cleaned.inventoryPatch = patch;
+}
+
+/** Prefer existing inventoryPatch; otherwise translate equipment using the save baseline snapshot. */
+export function attachRelationalInventoryPatchToDirty(
+  dirty: Record<string, unknown>,
+  saveBaseline: Record<string, unknown>,
+): void {
+  if (dirty.inventoryPatch !== undefined) return;
+  replaceEquipmentDirtyWithInventoryPatch(dirty, saveBaseline);
 }
