@@ -1,21 +1,26 @@
 import { headers } from 'next/headers';
-import { getCanonicalSiteUrl } from '@/lib/site-url';
+import { resolveInternalApiOrigin } from '@/lib/site-url';
 
 /**
- * Same-origin API fetch from a Server Component, forwarding session cookies only to the
- * configured canonical origin (never header-derived host/proto).
+ * Same-deployment API fetch from a Server Component, forwarding session cookies to an
+ * allowlisted origin only (viewer host on preview, canonical on production).
  */
 export async function fetchInternalApi(path: string): Promise<Response> {
   const headerList = await headers();
-  const canonicalOrigin = getCanonicalSiteUrl();
+  const origin = resolveInternalApiOrigin(headerList);
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  const url = `${canonicalOrigin}${normalizedPath}`;
+  const url = `${origin}${normalizedPath}`;
   const cookie = headerList.get('cookie') ?? '';
+  const requestHeaders: Record<string, string> = {
+    cookie,
+    accept: 'application/json',
+  };
+  const protectionBypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET?.trim();
+  if (protectionBypass) {
+    requestHeaders['x-vercel-protection-bypass'] = protectionBypass;
+  }
   return fetch(url, {
-    headers: {
-      cookie,
-      accept: 'application/json',
-    },
+    headers: requestHeaders,
     cache: 'no-store',
   });
 }
