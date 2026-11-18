@@ -90,6 +90,30 @@ describe('mergeSheetRealtimePayload (TASK-747)', () => {
     expect(next.health?.current).toBe(10);
   });
 
+  it('keeps a never-saved energy allocation dirty after a current-energy echo', () => {
+    const saved = sheetCharacter();
+    const baseline = cleanForSave(saved) as Record<string, unknown>;
+    expect(baseline).not.toHaveProperty('energyPoints');
+    const local = sheetCharacter({ energyPoints: 8, currentEnergy: 16 });
+    const remote = {
+      ...(cleanForSave(saved) as Record<string, unknown>),
+      currentEnergy: 16,
+      updatedAt: 'T1',
+    };
+
+    const { character: next, nextBaseline } = mergeSheetRealtimePayload(local, remote, baseline, {
+      updatedAt: 'T1',
+    });
+    expect(next.energyPoints).toBe(8);
+    expect(nextBaseline).not.toHaveProperty('energyPoints');
+
+    const stillDirty = pickDirtyCharacterFields(
+      cleanForSave(next) as Record<string, unknown>,
+      nextBaseline,
+    );
+    expect(stillDirty.energyPoints).toBe(8);
+  });
+
   it('adopts remote untouched keys into nextBaseline so they are not dirty', () => {
     const saved = sheetCharacter();
     const baseline = cleanForSave(saved) as Record<string, unknown>;

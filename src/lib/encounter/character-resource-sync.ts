@@ -8,13 +8,7 @@ import type { TrackedCombatant } from '@/types/encounter';
 
 export type CharacterResourcePatch = Pick<
   Partial<Character>,
-  | 'currentHealth'
-  | 'currentEnergy'
-  | 'actionPoints'
-  | 'health'
-  | 'energy'
-  | 'healthPoints'
-  | 'energyPoints'
+  'currentHealth' | 'currentEnergy' | 'actionPoints' | 'health' | 'energy'
 >;
 
 const DEBOUNCE_MS = 400;
@@ -239,44 +233,4 @@ export function buildResourcePatchFromCharacter(character: {
         },
       }),
   };
-}
-
-/**
- * Pool allocation the sheet still has to persist. Omitted when there is no
- * saved snapshot, so the first sight of a character does not write these fields.
- */
-export function changedPoolAllocation(
-  character: object,
-  baseline: Record<string, unknown> | null | undefined,
-): Pick<Partial<Character>, 'healthPoints' | 'energyPoints'> {
-  if (!baseline) return {};
-  const record = character as Record<string, unknown>;
-  const allocation: Pick<Partial<Character>, 'healthPoints' | 'energyPoints'> = {};
-  if (
-    typeof record.healthPoints === 'number' &&
-    !Object.is(record.healthPoints, baseline.healthPoints)
-  ) {
-    allocation.healthPoints = record.healthPoints;
-  }
-  if (
-    typeof record.energyPoints === 'number' &&
-    !Object.is(record.energyPoints, baseline.energyPoints)
-  ) {
-    allocation.energyPoints = record.energyPoints;
-  }
-  return allocation;
-}
-
-/** Current HP/EN/AP plus pool allocation that differs from the saved snapshot. */
-export function buildSheetResourceSyncPatch(
-  character: Parameters<typeof buildResourcePatchFromCharacter>[0] & {
-    healthPoints?: unknown;
-    energyPoints?: unknown;
-  },
-  baseline: Record<string, unknown> | null | undefined,
-): CharacterResourcePatch | null {
-  const resources = buildResourcePatchFromCharacter(character);
-  const allocation = changedPoolAllocation(character, baseline);
-  if (!resources && Object.keys(allocation).length === 0) return null;
-  return { ...(resources ?? {}), ...allocation };
 }

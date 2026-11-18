@@ -3586,7 +3586,6 @@ No production file imports these names. A test import does not count. The file t
 - `src/lib/creator/creator-edit-query.ts`: `CreatorEditClear` (type)
 - `src/lib/creator/creator-unsaved-guard.ts`: `CreatorBackLocation` (type)
 - `src/lib/creator/private-library-name-save.ts`: `PrivateLibraryNameSave` (type)
-- `src/lib/encounter/character-resource-sync.ts`: `buildResourcePatchFromCharacter`
 - `src/lib/encounter/unique-campaign-characters.ts`: `DuplicateCampaignCharacterReport` (type)
 - `src/lib/glr/glr-density.ts`: `GlrModeSpec` (type)
 - `src/lib/glr/glr-fact-catalog.ts`: `GlrEntityFactMeta` (type), `GlrFactDef` (type)

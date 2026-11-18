@@ -44,10 +44,15 @@ separate `version int` column.
   instead of silently restoring an old full document.
 - Negative / follow-ups: campaign character actions and relational child writes stamp the parent
   `updated_at`; resource sync still omits `updatedAt` by design (HP LWW)
-  via `saveCharacter(..., { skipLock: true })`. Same-tab races (autosave + resource sync +
+  via `saveCharacter(..., { skipLock: true })`. That unlocked sync sends current Health,
+  Energy, and Action Points only. Pool allocation (`healthPoints`, `energyPoints`) stays
+  on the locked sheet autosave. A realtime echo of that unlocked sync must not copy a
+  never-saved allocation into the autosave baseline: if the key was absent from the
+  saved snapshot, `mergeSheetAutosaveBaseline` leaves it off the baseline so the locked
+  PATCH still sends it. A stale tab cannot write allocation without `updatedAt`.
+  Same-tab races (autosave + resource sync +
   pending resave) are serialized by `lib/character/save-lock.ts` (TASK-786): per-id PATCH
   queue, in-memory newest `updatedAt`, and resource sync when current HP/EN/AP change.
-  The sheet sync also sends `healthPoints` and `energyPoints` when those differ from the saved snapshot.
   Library add-to-character lock/retry is TASK-746 (done). Sheet realtime merge for
   non-resource keys is TASK-747 (done): remote wins for untouched keys; HP/EN/AP still
   use `mergeResourceUpdatesIntoCharacter` and the echo suppress window.

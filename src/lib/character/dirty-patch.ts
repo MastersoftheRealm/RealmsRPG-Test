@@ -420,7 +420,10 @@ export function mergeSheetAutosaveBaseline<T extends Record<string, unknown>>(
       );
       continue;
     }
-    if (!(key in savedBaseline)) continue;
+    if (!(key in savedBaseline)) {
+      delete next[key];
+      continue;
+    }
     if (savedBaseline[key] === null) delete next[key];
     else next[key] = savedBaseline[key];
   }
