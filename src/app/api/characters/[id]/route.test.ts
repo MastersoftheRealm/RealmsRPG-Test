@@ -624,7 +624,7 @@ describe('PATCH /api/characters/[id]', () => {
     expect(body.error).not.toContain('Unmapped character');
   });
 
-  it('PATCH retains an empty weapons array so the last item can be removed', async () => {
+  it('rejects legacy full equipment patches', async () => {
     const row = makeCharacterRow('char-owned', OWNER.uid, {
       equipment: {
         weapons: [{ id: 'w1', name: 'Sword', type: 'weapon', properties: [] }],
@@ -640,12 +640,42 @@ describe('PATCH /api/characters/[id]', () => {
       params: Promise.resolve({ id: 'char-owned' }),
     });
 
+    expect(response.status).toBe(400);
+    expect(supabase.rpcMock).not.toHaveBeenCalledWith(
+      'patch_character_relational',
+      expect.anything(),
+    );
+  });
+
+  it('PATCH accepts inventoryPatch remove ops', async () => {
+    const row = makeCharacterRow('char-owned', OWNER.uid, {
+      equipment: {
+        weapons: [{ id: 'w1', name: 'Sword', type: 'weapon', properties: [] }],
+        armor: [],
+        shields: [],
+      },
+    });
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createMockSupabase(row);
+    mockCreateClient.mockResolvedValue(supabase as never);
+
+    const response = await PATCH(
+      makePatchRequest('char-owned', {
+        inventoryPatch: {
+          ops: [{ op: 'remove', bucket: 'weapons', id: 'w1', expectedQuantity: 1 }],
+        },
+      }),
+      { params: Promise.resolve({ id: 'char-owned' }) },
+    );
+
     expect(response.status).toBe(200);
     expect(supabase.rpcMock).toHaveBeenCalledWith(
       'patch_character_relational',
       expect.objectContaining({
         p_patch: expect.objectContaining({
-          equipment: { weapons: [] },
+          inventoryPatch: {
+            ops: [{ op: 'remove', bucket: 'weapons', id: 'w1', expectedQuantity: 1 }],
+          },
         }),
       }),
     );

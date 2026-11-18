@@ -184,6 +184,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     const cleanedData = prepareCharacterForSave(data, { storedDocument: currentDocument });
+    if ('equipment' in cleanedData) {
+      return NextResponse.json(
+        { error: 'Equipment must be sent as inventoryPatch' },
+        { status: 400 },
+      );
+    }
 
     const mergedData = applyCharacterDirtyPatch(currentDocument, cleanedData, {
       documentUpdatedAt: new Date().toISOString(),

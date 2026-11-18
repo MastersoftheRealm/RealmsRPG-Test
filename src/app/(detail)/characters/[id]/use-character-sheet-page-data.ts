@@ -50,6 +50,7 @@ import {
   pickDirtyCharacterFields,
   withDirtyClears,
 } from '@/lib/character/dirty-patch';
+import { replaceEquipmentDirtyWithInventoryPatch } from '@/lib/character/inventory-patch';
 import { characterAutosaveDocumentsEqual } from '@/lib/character/character-autosave-equal';
 import { rememberCharacterLockToken } from '@/lib/character/save-lock';
 import { mergeSheetRealtimePayload } from '@/lib/character/realtime-merge';
@@ -377,8 +378,10 @@ export function useCharacterSheetPageData(id: string) {
       if (Object.keys(dirty).length === 0) {
         return;
       }
+      const dirtyToSend: Record<string, unknown> = { ...dirty };
+      replaceEquipmentDirtyWithInventoryPatch(dirtyToSend, savedCleanRef.current ?? {});
       const mergedCleanRef: { current: Record<string, unknown> | null } = { current: null };
-      const result = await saveCharacterWithConflictRetry(id, dirty as Partial<Character>, {
+      const result = await saveCharacterWithConflictRetry(id, dirtyToSend as Partial<Character>, {
         updatedAt: characterLockToken(data.updatedAt),
         mergeOnConflict: (remote) => {
           const remoteClean = cleanForSave(remote, rules) as Record<string, unknown>;
@@ -400,8 +403,13 @@ export function useCharacterSheetPageData(id: string) {
               dirty,
             ) as Character;
           });
+          const retryDirty = pickDirtyCharacterFields(mergedClean, remoteClean) as Record<
+            string,
+            unknown
+          >;
+          replaceEquipmentDirtyWithInventoryPatch(retryDirty, remoteClean);
           return {
-            dirty: pickDirtyCharacterFields(mergedClean, remoteClean) as Partial<Character>,
+            dirty: retryDirty as Partial<Character>,
             updatedAt: remote.updatedAt,
           };
         },
