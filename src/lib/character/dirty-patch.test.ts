@@ -167,6 +167,35 @@ describe('applyCharacterDirtyPatch / mergeRemotePreservingDirty', () => {
     });
   });
 
+  it('409 retry does not resend a stale quantity when the baseline has no row', () => {
+    const baseline = { equipment: { items: [] } };
+    const remote = {
+      equipment: {
+        items: [
+          { id: 'health-potion', name: 'Health Potion', quantity: 1 },
+          { id: 'energy-potion', name: 'Energy Potion', quantity: 3 },
+          { id: 'custom-rope-2', name: 'QA Rope', quantity: 2 },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [
+          { id: 'health-potion', name: 'Health Potion', quantity: 2 },
+          { id: 'energy-potion', name: 'Energy Potion', quantity: 2 },
+          { id: 'custom-rope-1', name: 'QA Rope', quantity: 2 },
+          { id: 'custom-rope-2', name: 'QA Rope', quantity: 1 },
+        ],
+      },
+    };
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    const items = (merged.equipment as { items: Array<{ id: string; quantity?: number }> }).items;
+    expect(items.find((row) => row.id === 'energy-potion')?.quantity).toBe(3);
+    expect(items.find((row) => row.id === 'custom-rope-2')?.quantity).toBe(2);
+    expect(items.find((row) => row.id === 'custom-rope-1')?.quantity).toBe(2);
+    expect(items.find((row) => row.id === 'health-potion')?.quantity).toBe(1);
+  });
+
   it('does not pair two id-less rows that share a name when one tab reorders', () => {
     const baseline = {
       equipment: {

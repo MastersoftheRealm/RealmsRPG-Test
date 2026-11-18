@@ -52,7 +52,12 @@ separate `version int` column.
   PATCH still sends it. A stale tab cannot write allocation without `updatedAt`.
   Same-tab races (autosave + resource sync +
   pending resave) are serialized by `lib/character/save-lock.ts` (TASK-786): per-id PATCH
-  queue, in-memory newest `updatedAt`, and resource sync when current HP/EN/AP change.
+  queue, and resource sync when current HP/EN/AP change. A locked PATCH keeps the
+  snapshot `updatedAt` it was built against. A newer in-memory token is not
+  attached to that body: the retry refetches and merges (per inventory row when
+  `equipment` is dirty) instead of resending the stale list. A parent-row
+  realtime echo does not move the sheet lock; the token advances only when the
+  relational document is merged or this tab's own save returns.
   Library add-to-character lock/retry is TASK-746 (done). Sheet realtime merge for
   non-resource keys is TASK-747 (done): remote wins for untouched keys; HP/EN/AP still
   use `mergeResourceUpdatesIntoCharacter` and the echo suppress window.

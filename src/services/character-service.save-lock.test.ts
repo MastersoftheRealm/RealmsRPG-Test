@@ -26,13 +26,13 @@ describe('saveCharacter lock token', () => {
     apiFetch.mockResolvedValue({ ok: true, updatedAt: '2026-08-15T14:00:00.000Z' });
   });
 
-  it('upgrades a stale provided token from memory', async () => {
+  it('keeps the snapshot token when memory has a newer lock', async () => {
     rememberCharacterLockToken('c1', '2026-08-15T13:00:00.000Z');
     await saveCharacter('c1', { notes: 'x' }, { updatedAt: '2026-08-15T12:00:00.000Z' });
     const body = JSON.parse((apiFetch.mock.calls[0]?.[1] as { body: string }).body) as {
       updatedAt?: string | undefined;
     };
-    expect(body.updatedAt).toBe('2026-08-15T13:00:00.000Z');
+    expect(body.updatedAt).toBe('2026-08-15T12:00:00.000Z');
   });
 
   it('omits the lock when skipLock is set', async () => {

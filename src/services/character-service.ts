@@ -8,7 +8,7 @@ import type { Character, CharacterSummary } from '@/types';
 import type { UserCreature, UserItem, UserPower, UserTechnique } from '@/hooks/use-user-library';
 import type { CharacterViewEnrichment } from '@/lib/character-view-enrichment';
 import { apiFetch, apiFetchOrNull, isConflictError } from '@/lib/api-client';
-import { characterLockToken } from '@/lib/character/dirty-patch';
+import { characterLockToken, isNewerCharacterLock } from '@/lib/character/dirty-patch';
 import {
   enqueueCharacterSave,
   rememberCharacterLockToken,
@@ -114,9 +114,11 @@ export async function saveCharacter(
 
   const run = async () => {
     const body: Record<string, unknown> = { ...data };
-    const lock = options.skipLock
-      ? undefined
-      : resolveCharacterLockToken(id, options.updatedAt ?? data.updatedAt);
+    const snapshot = characterLockToken(options.updatedAt ?? data.updatedAt);
+    // A snapshot token is the version that body was built against. Replacing it
+    // with a newer in-memory token (the other tab's echo) makes the server
+    // accept a stale inventory PATCH with 200.
+    const lock = options.skipLock ? undefined : (snapshot ?? resolveCharacterLockToken(id));
     if (lock) body.updatedAt = lock;
     else delete body.updatedAt;
 
@@ -157,26 +159,33 @@ export async function saveCharacterWithConflictRetry(
     return { updatedAt, applied: dirty };
   }
   return enqueueCharacterSave(id, async () => {
-    try {
-      const result = await saveCharacter(id, dirty, {
-        updatedAt: options.updatedAt,
-        enqueue: false,
-      });
-      return { updatedAt: result.updatedAt, applied: dirty };
-    } catch (err) {
-      if (!isConflictError(err)) throw err;
-      const { character: remote } = await getCharacter(id);
-      if (!remote) throw err;
-      const next = options.mergeOnConflict(remote);
-      if (Object.keys(next.dirty).length === 0) {
-        return { updatedAt: characterLockToken(remote.updatedAt), applied: {} };
+    const snapshot = characterLockToken(options.updatedAt);
+    const remembered = resolveCharacterLockToken(id);
+    const lockAlreadyMoved = isNewerCharacterLock(remembered, snapshot);
+    if (!lockAlreadyMoved) {
+      try {
+        const result = await saveCharacter(id, dirty, {
+          updatedAt: options.updatedAt,
+          enqueue: false,
+        });
+        return { updatedAt: result.updatedAt, applied: dirty };
+      } catch (err) {
+        if (!isConflictError(err)) throw err;
       }
-      const retried = await saveCharacter(id, next.dirty, {
-        updatedAt: next.updatedAt,
-        enqueue: false,
-      });
-      return { updatedAt: retried.updatedAt, applied: next.dirty };
     }
+    const { character: remote } = await getCharacter(id);
+    if (!remote) {
+      throw new Error('Character was updated elsewhere');
+    }
+    const next = options.mergeOnConflict(remote);
+    if (Object.keys(next.dirty).length === 0) {
+      return { updatedAt: characterLockToken(remote.updatedAt), applied: {} };
+    }
+    const retried = await saveCharacter(id, next.dirty, {
+      updatedAt: next.updatedAt ?? remote.updatedAt,
+      enqueue: false,
+    });
+    return { updatedAt: retried.updatedAt, applied: next.dirty };
   });
 }
 

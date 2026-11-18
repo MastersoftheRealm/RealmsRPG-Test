@@ -36,8 +36,10 @@ export function rememberCharacterLockToken(
 
 /**
  * Newest of the caller token and the in-memory token.
- * Locked callers pass the result as `updatedAt`. Resource sync omits the lock
- * (`skipLock`) so encounter HP stays last-write-wins against other tabs.
+ * A locked PATCH must send the snapshot token the body was built against, not
+ * this newer value: attaching it makes the server accept a stale inventory
+ * write. Resource sync omits the lock (`skipLock`) so encounter HP stays
+ * last-write-wins against other tabs.
  */
 export function resolveCharacterLockToken(
   characterId: string,
