@@ -52,20 +52,13 @@ function overlayRemoteNonResource(
     if (!dirtySet.has(key) && !stableEqual(prev[key], value)) adopted = true;
   }
 
-  // A parent-row echo has scalars and updated_at, not inventory. Stamping that
-  // token while equipment is still the local blob lets the next locked PATCH
-  // match the version and overwrite the other tab's gear.
-  const blockLock =
-    dirtyKeys.includes('equipment') &&
-    !Object.prototype.hasOwnProperty.call(remoteData, 'equipment');
-  const token = blockLock
-    ? undefined
-    : (characterLockToken(updatedAt) ??
-      characterLockToken(
-        typeof remoteData.updatedAt === 'string' || remoteData.updatedAt instanceof Date
-          ? remoteData.updatedAt
-          : undefined,
-      ));
+  const token =
+    characterLockToken(updatedAt) ??
+    characterLockToken(
+      typeof remoteData.updatedAt === 'string' || remoteData.updatedAt instanceof Date
+        ? remoteData.updatedAt
+        : undefined,
+    );
   const prevToken = characterLockToken(
     typeof prev.updatedAt === 'string' || prev.updatedAt instanceof Date
       ? (prev.updatedAt as string | Date)

@@ -28,17 +28,6 @@ export function characterTimestampsMatch(
   return Number.isFinite(da) && Number.isFinite(db) && da === db;
 }
 
-/** True when `candidate` is a later instant than `baseline`. Equal or unparseable → false. */
-export function isNewerCharacterLock(
-  candidate: string | null | undefined,
-  baseline: string | null | undefined,
-): boolean {
-  if (!candidate || !baseline || characterTimestampsMatch(candidate, baseline)) return false;
-  const next = Date.parse(candidate);
-  const prev = Date.parse(baseline);
-  return Number.isFinite(next) && Number.isFinite(prev) && next > prev;
-}
-
 /**
  * Stale write when the client sent a lock token and the row has one that does not match.
  * Missing client token or null column → not stale (legacy / resource-only callers).
@@ -264,10 +253,10 @@ function mergeEquipmentItemBucket(
       continue;
     }
 
-    // No baseline row → this tab cannot prove it edited the quantity. Keep the
-    // remote row. Treating "differs from remote" as a local edit resends the
-    // stale quantity on a 409 retry.
-    const localDirty = baselineRow !== undefined && !stableEqual(localRow!, baselineRow);
+    const localDirty =
+      baselineRow === undefined
+        ? !stableEqual(localRow, remoteRow)
+        : !stableEqual(localRow!, baselineRow);
 
     merged.push(localDirty ? localRow! : remoteRow);
   }
@@ -506,8 +495,8 @@ export function mergeRemotePreservingDirty<T extends Record<string, unknown>>(
     if (isCharacterPatchMetaKey(key)) continue;
     if (!(key in local)) continue;
     if (local[key] === null) delete next[key];
-    else if (key === 'equipment') {
-      next[key] = mergeCharacterEquipmentConflict(remote[key], local[key], baseline?.[key]);
+    else if (key === 'equipment' && baseline) {
+      next[key] = mergeCharacterEquipmentConflict(remote[key], local[key], baseline[key]);
     } else next[key] = local[key];
   }
   return next as T;

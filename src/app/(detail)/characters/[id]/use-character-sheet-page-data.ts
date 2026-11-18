@@ -257,9 +257,7 @@ export function useCharacterSheetPageData(id: string) {
           };
         }) => {
           const charId = payload.new.id;
-          // Do not adopt updated_at here. This payload has no inventory. Remembering
-          // the token, or stamping it onto the sheet, lets a dirty equipment PATCH
-          // match the other tab's version and overwrite that tab's gear.
+          rememberCharacterLockToken(charId, payload.new.updated_at);
           const suppressResources = shouldSuppressRemoteResourceMerge(charId);
           const scalarResources: Record<string, unknown> = {
             ...(typeof payload.new.current_health === 'number' && {
@@ -278,7 +276,10 @@ export function useCharacterSheetPageData(id: string) {
               prev,
               scalarResources,
               savedCleanRef.current,
-              { suppressResources },
+              {
+                suppressResources,
+                updatedAt: payload.new.updated_at,
+              },
             );
             if (nextBaseline) {
               const baseline = nextBaseline;
@@ -389,6 +390,7 @@ export function useCharacterSheetPageData(id: string) {
             savedCleanRef.current,
           );
           mergedCleanRef.current = mergedClean;
+          savedCleanRef.current = remoteClean;
           setCharacter((prev) => {
             if (!prev || prev.id !== remote.id) return prev;
             return applySheetAutosaveConflictFields(
@@ -404,16 +406,11 @@ export function useCharacterSheetPageData(id: string) {
           };
         },
       });
-      savedCleanRef.current = mergedCleanRef.current
-        ? {
-            ...mergedCleanRef.current,
-            ...(result.updatedAt ? { updatedAt: result.updatedAt } : {}),
-          }
-        : applyCharacterDirtyPatch(
-            savedCleanRef.current ?? {},
-            result.applied as Record<string, unknown>,
-            result.updatedAt ? { documentUpdatedAt: result.updatedAt } : undefined,
-          );
+      savedCleanRef.current = applyCharacterDirtyPatch(
+        savedCleanRef.current ?? {},
+        result.applied as Record<string, unknown>,
+        result.updatedAt ? { documentUpdatedAt: result.updatedAt } : undefined,
+      );
       if (result.updatedAt) {
         setCharacter((prev) => (prev ? { ...prev, updatedAt: result.updatedAt } : prev));
       }

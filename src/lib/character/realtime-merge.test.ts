@@ -329,42 +329,6 @@ describe('mergeSheetRealtimePayload (TASK-747)', () => {
     ).toEqual(['bed-roll']);
   });
 
-  it('does not stamp a parent-row token while inventory is still the local blob', () => {
-    const saved = sheetCharacter({
-      updatedAt: 'T0',
-      equipment: {
-        weapons: [],
-        armor: [],
-        shields: [],
-        items: [{ id: 'energy-potion', name: 'Energy Potion', quantity: 2 }],
-      },
-    });
-    const baseline = cleanForSave(saved) as Record<string, unknown>;
-    const local = sheetCharacter({
-      updatedAt: 'T0',
-      equipment: {
-        weapons: [],
-        armor: [],
-        shields: [],
-        items: [
-          { id: 'energy-potion', name: 'Energy Potion', quantity: 2 },
-          { id: 'health-potion', name: 'Health Potion', quantity: 2 },
-        ],
-      },
-    });
-    const { character } = mergeSheetRealtimePayload(
-      local,
-      { currentEnergy: 16, updatedAt: 'T1' },
-      baseline,
-      { updatedAt: 'T1' },
-    );
-    expect(character.updatedAt).toBe('T0');
-    const energy = (
-      character.equipment?.items as Array<{ id: string; quantity?: number }> | undefined
-    )?.find((row) => row.id === 'energy-potion');
-    expect(energy?.quantity).toBe(2);
-  });
-
   it('returns the same character object when nothing non-resource changed', () => {
     const saved = sheetCharacter();
     const baseline = cleanForSave(saved) as Record<string, unknown>;
