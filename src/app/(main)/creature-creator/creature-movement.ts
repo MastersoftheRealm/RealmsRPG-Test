@@ -17,7 +17,7 @@ import {
 import type { CreatureFeat as CodexCreatureFeat } from '@/hooks';
 import { codexCreatureFeatToCreatureFeat } from './creature-feat-utils';
 import type { CreatureState } from './creature-creator-types';
-import type { CreatureFeat } from './transformers';
+import type { CreatureFeat, CreatureFeatSourceType } from './transformers';
 import { isCreatureSensesEffectFeat } from './creature-senses';
 
 const FLY_NAMES = ['Fly Half', 'Fly'] as const;
@@ -103,16 +103,16 @@ function isMovementBoundFamilyFeat(feat: {
   return WALK_FAMILY_ROOTS.has(id) || WALK_FAMILY_ROOTS.has(base);
 }
 
-/** Hidden from the feat list: a known control id, a bound row, or any speed-family child in the codex. */
+/** A Movement control, plain toggle, or bound family row. `boundControl` is not membership. */
 export function isCreatureMovementEffectFeat(
   feat: {
     id?: string | number | undefined;
     base_feat_id?: string | number | null | undefined;
-    boundControl?: boolean | undefined;
+    featSourceType?: CreatureFeatSourceType | undefined;
   },
   catalogRow?: Pick<CodexCreatureFeat, 'id' | 'base_feat_id'> | null,
 ): boolean {
-  if (feat.boundControl) return true;
+  if (feat.featSourceType && feat.featSourceType !== 'creature') return false;
   if (feat.id == null) return false;
   if (isCreatureMovementControlFeatId(feat.id)) return true;
   if (isCreatureMovementPlainToggleFeatId(feat.id)) return true;
@@ -612,8 +612,10 @@ export function movementSectionPointTotal(
   let sum = 0;
   for (const feat of creature.feats) {
     const id = String(feat.id);
-    if (!isCreatureMovementEffectFeat(feat) && !sectionToggleIds.has(id)) continue;
-    const points = feat.points ?? byId.get(id)?.points ?? 0;
+    if (feat.featSourceType && feat.featSourceType !== 'creature') continue;
+    const row = byId.get(id) ?? null;
+    if (!isCreatureMovementEffectFeat(feat, row) && !sectionToggleIds.has(id)) continue;
+    const points = feat.points ?? row?.points ?? 0;
     if (Number.isFinite(points)) sum += points;
   }
   for (const id of movementControlFeatIdsFromNames(creature.movementTypes, catalog)) {
@@ -678,9 +680,13 @@ export function movementTravelLines(
 export { builtInSenseSummaryLines } from './creature-senses';
 
 export function isCreatureCreatorHiddenFeat(
-  feat: Parameters<typeof isCreatureMovementEffectFeat>[0],
+  feat: Parameters<typeof isCreatureMovementEffectFeat>[0] & {
+    boundControl?: boolean | undefined;
+  },
   catalogRow?: Pick<CodexCreatureFeat, 'id' | 'base_feat_id' | 'category' | 'mechanic'> | null,
 ): boolean {
+  if (feat.featSourceType && feat.featSourceType !== 'creature') return false;
+  if (feat.boundControl) return true;
   if (isCreatureMovementEffectFeat(feat, catalogRow)) return true;
   if (isCreatureSensesEffectFeat(feat, catalogRow ?? null)) return true;
   if (catalogRow && isMovementSectionToggleRow(catalogRow)) return true;

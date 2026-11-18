@@ -221,7 +221,12 @@ describe('creature movement section helpers', () => {
     expect(stepped.movementTypes).not.toContain('Speedy');
     expect(stepped.feats.map((feat) => feat.id)).toEqual(['166']);
     expect(stepped.feats[0]?.boundControl).toBe(true);
-    expect(isCreatureMovementEffectFeat(stepped.feats[0]!)).toBe(true);
+    expect(
+      isCreatureMovementEffectFeat(
+        stepped.feats[0]!,
+        withFourth.find((feat) => feat.id === '166'),
+      ),
+    ).toBe(true);
     expect(movementDropdownFeats(withFourth).map((feat) => feat.id)).toEqual([
       String(CREATURE_FEAT_IDS.BOUNDING),
     ]);

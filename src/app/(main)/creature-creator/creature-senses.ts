@@ -9,7 +9,7 @@ import { getFeatLevel } from '@/lib/leveled-feats';
 import type { CreatureFeat as CodexCreatureFeat } from '@/hooks';
 import { codexCreatureFeatToCreatureFeat } from './creature-feat-utils';
 import type { CreatureState } from './creature-creator-types';
-import type { CreatureFeat } from './transformers';
+import type { CreatureFeat, CreatureFeatSourceType } from './transformers';
 import { formatMovementPointCost } from './creature-movement';
 
 const DARKVISION_NAMES = ['Darkvision', 'Darkvision II', 'Darkvision III'] as const;
@@ -156,16 +156,16 @@ function isSensesBoundFamilyFeat(feat: {
   return SENSE_FAMILY_ROOTS.has(id) || SENSE_FAMILY_ROOTS.has(base);
 }
 
-/** Hidden from the feat list: control ids and bound Senses family rows. */
+/** A Senses control or bound family row. `boundControl` is not membership: Movement sets it too. */
 export function isCreatureSensesEffectFeat(
   feat: {
     id?: string | number | undefined;
     base_feat_id?: string | number | null | undefined;
-    boundControl?: boolean | undefined;
+    featSourceType?: CreatureFeatSourceType | undefined;
   },
   catalogRow?: Pick<CodexCreatureFeat, 'id' | 'base_feat_id'> | null,
 ): boolean {
-  if (feat.boundControl) return true;
+  if (feat.featSourceType && feat.featSourceType !== 'creature') return false;
   if (feat.id == null) return false;
   if (isCreatureSensesControlFeatId(feat.id)) return true;
   if (catalogRow && isSensesBoundFamilyFeat(catalogRow)) return true;
@@ -410,6 +410,7 @@ export function sensesSectionPointTotal(
   let sum = 0;
   for (const feat of creature.feats) {
     const id = String(feat.id);
+    if (feat.featSourceType && feat.featSourceType !== 'creature') continue;
     if (!isCreatureSensesEffectFeat(feat, byId.get(id) ?? null) && !toggleIds.has(id)) continue;
     const points = feat.points ?? byId.get(id)?.points ?? 0;
     if (Number.isFinite(points)) sum += points;

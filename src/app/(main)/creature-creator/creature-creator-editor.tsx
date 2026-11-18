@@ -104,8 +104,11 @@ export type CreatureCreatorEditorProps = {
   removeFromArray: (field: keyof CreatureState, item: string) => void;
   onSkillAllocationsChange: (next: Record<string, number>) => void;
   onDefenseChange: (defense: CreatureState['defenses']) => void;
-  onCreatureFeatLevelChange: (featId: string, level: number) => void;
-  onRemoveFeat: (featId: string) => void;
+  onCreatureFeatLevelChange: (
+    feat: Pick<CreatureFeat, 'id' | 'name' | 'featSourceType'>,
+    level: number,
+  ) => void;
+  onRemoveFeat: (feat: Pick<CreatureFeat, 'id' | 'name' | 'featSourceType'>) => void;
   onTogglePowerInnate: (powerId: string) => void;
   onRemovePower: (powerId: string) => void;
   onRemoveTechnique: (techniqueId: string) => void;

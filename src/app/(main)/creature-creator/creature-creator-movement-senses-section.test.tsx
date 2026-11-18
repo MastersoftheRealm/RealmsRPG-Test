@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 
+import { useState } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { CREATURE_FEAT_IDS } from '@/lib/id-constants';
@@ -9,6 +10,7 @@ import { CreatureCreatorSensesSection } from './creature-creator-senses-section'
 import { movementAfterBuiltInMode } from './creature-movement';
 import { sensesAfterBuiltInLevel } from './creature-senses';
 import type { CreatureFeat as CodexCreatureFeat } from '@/hooks';
+import type { CreatureState } from './creature-creator-types';
 
 const movementCatalog: CodexCreatureFeat[] = [
   {
@@ -182,5 +184,85 @@ describe('CreatureCreatorSensesSection UI', () => {
     expect(decrease).toHaveProperty('disabled', true);
     fireEvent.click(decrease);
     expect(updateCreature).not.toHaveBeenCalled();
+  });
+});
+
+const cardCatalog: CodexCreatureFeat[] = [
+  {
+    id: String(CREATURE_FEAT_IDS.SPEEDY),
+    name: 'Speedy',
+    description: '',
+    points: 0.5,
+    feat_lvl: 1,
+    mechanic: true,
+    category: 'Movement',
+  },
+  {
+    id: String(CREATURE_FEAT_IDS.BURROW),
+    name: 'Burrow',
+    description: '',
+    points: 1,
+    feat_lvl: 1,
+    mechanic: true,
+    category: 'Movement',
+  },
+  {
+    id: String(CREATURE_FEAT_IDS.DARKVISION),
+    name: 'Darkvision',
+    description: 'Sees in darkness out to 6 spaces.',
+    points: 1,
+    feat_lvl: 1,
+    mechanic: true,
+    category: 'Senses',
+  },
+];
+
+function featPointsLine(heading: 'Movement' | 'Senses'): string | null {
+  const card = screen.getByRole('heading', { name: heading }).parentElement;
+  const match = card?.textContent?.match(/Feat points\s*[+-]\s*[0-9.]+/);
+  return match ? match[0].replace(/\s+/g, ' ') : null;
+}
+
+function MovementSensesCards() {
+  const [creature, setCreature] = useState<CreatureState>(initialState);
+  const updateCreature = (updates: Partial<CreatureState>) => {
+    setCreature((prev) => ({ ...prev, ...updates }));
+  };
+  return (
+    <>
+      <CreatureCreatorMovementSection
+        creature={creature}
+        walkSpeed={6}
+        catalog={cardCatalog}
+        updateCreature={updateCreature}
+      />
+      <CreatureCreatorSensesSection
+        creature={creature}
+        catalog={cardCatalog}
+        updateCreature={updateCreature}
+      />
+    </>
+  );
+}
+
+describe('Movement and Senses feat-point subtotals', () => {
+  it('counts only that card after Darkvision, Speed +1, Burrow, and unchecking Darkvision', () => {
+    render(<MovementSensesCards />);
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Darkvision' }));
+    expect(featPointsLine('Movement')).toBeNull();
+    expect(featPointsLine('Senses')).toBe('Feat points +1');
+
+    fireEvent.click(screen.getByTitle('Increase Speed'));
+    expect(featPointsLine('Movement')).toBe('Feat points +0.5');
+    expect(featPointsLine('Senses')).toBe('Feat points +1');
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Burrow' }));
+    expect(featPointsLine('Movement')).toBe('Feat points +1.5');
+    expect(featPointsLine('Senses')).toBe('Feat points +1');
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Darkvision' }));
+    expect(featPointsLine('Movement')).toBe('Feat points +1.5');
+    expect(featPointsLine('Senses')).toBeNull();
   });
 });
