@@ -52,10 +52,14 @@ function makeStreamedRequest(byteLength: number) {
 describe('verifyRequestOrigin', () => {
   const originalSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   const originalVercelUrl = process.env.VERCEL_URL;
+  const originalBranchUrl = process.env.VERCEL_BRANCH_URL;
+  const originalVercelEnv = process.env.VERCEL_ENV;
 
   beforeEach(() => {
     delete process.env.NEXT_PUBLIC_SITE_URL;
     delete process.env.VERCEL_URL;
+    delete process.env.VERCEL_BRANCH_URL;
+    delete process.env.VERCEL_ENV;
   });
 
   afterEach(() => {
@@ -63,6 +67,10 @@ describe('verifyRequestOrigin', () => {
     else process.env.NEXT_PUBLIC_SITE_URL = originalSiteUrl;
     if (originalVercelUrl === undefined) delete process.env.VERCEL_URL;
     else process.env.VERCEL_URL = originalVercelUrl;
+    if (originalBranchUrl === undefined) delete process.env.VERCEL_BRANCH_URL;
+    else process.env.VERCEL_BRANCH_URL = originalBranchUrl;
+    if (originalVercelEnv === undefined) delete process.env.VERCEL_ENV;
+    else process.env.VERCEL_ENV = originalVercelEnv;
   });
 
   it('allows same-origin state-changing requests', () => {
@@ -97,6 +105,27 @@ describe('verifyRequestOrigin', () => {
     expect(
       verifyRequestOrigin(makeRequest({ origin: 'https://realms-rpg-preview.vercel.app' })),
     ).toBeNull();
+  });
+
+  it('allows the VERCEL_BRANCH_URL git-branch preview origin', () => {
+    process.env.VERCEL_BRANCH_URL = 'realms-rpg-test-git-my-branch-mastersotr.vercel.app';
+    expect(
+      verifyRequestOrigin(
+        makeRequest({ origin: 'https://realms-rpg-test-git-my-branch-mastersotr.vercel.app' }),
+      ),
+    ).toBeNull();
+  });
+
+  it('allows only canonical and deployment hosts in production, not arbitrary origins', () => {
+    process.env.VERCEL_ENV = 'production';
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://realmsrpg.com';
+    process.env.VERCEL_URL = 'realms-rpg-test-abc123.vercel.app';
+
+    expect(verifyRequestOrigin(makeRequest({ origin: 'https://realmsrpg.com' }))).toBeNull();
+    expect(
+      verifyRequestOrigin(makeRequest({ origin: 'https://realms-rpg-test-abc123.vercel.app' })),
+    ).toBeNull();
+    expect(verifyRequestOrigin(makeRequest({ origin: 'https://evil.example' }))?.status).toBe(403);
   });
 
   it('rejects a cross-site Sec-Fetch-Site even when Origin is absent', () => {
