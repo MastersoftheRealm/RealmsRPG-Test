@@ -18,7 +18,8 @@
 | [`characters-inventory-row-id.sql`](characters-inventory-row-id.sql) | Adds `inventory_row_id` (uuid) to `character_inventory` with backfill. Apply after backup. |
 | [`characters-inventory-row-id-rollback.sql`](characters-inventory-row-id-rollback.sql) | Rollback for row-id migration (explicit OK + backup only). |
 | [`characters-inventory-cas-patch-86e3juw0a.sql`](characters-inventory-cas-patch-86e3juw0a.sql) | Inventory CAS helper functions only. Apply after row-id migration, then re-apply **`characters-relational-expand.sql`**, **`characters-relational-read-rpc.sql`**, **`characters-relational-write-rpc.sql`** from the **same git commit**. Deploy the matching app in the same window. Automated proof: `npm run test:inventory-cas-pgtap`. |
-| [`characters-inventory-cas-patch-rollback.sql`](characters-inventory-cas-patch-rollback.sql) | Drops CAS helper functions; re-apply prior read/write RPCs from git after rollback. |
+| [`characters-inventory-cas-patch-rollback.sql`](characters-inventory-cas-patch-rollback.sql) | Step 1: drop CAS helper functions. |
+| [`characters-inventory-full-rollback-86e3juw0a.sql`](characters-inventory-full-rollback-86e3juw0a.sql) | **Full undo order** (CAS → master expand/read/write @ `8ae31ecd` → drop `inventory_row_id`). CI: `inventory_cas_pgtap_post_rollback.sql`. |
 | [`schema/0000_baseline_2026-08-13.sql`](schema/0000_baseline_2026-08-13.sql) | Committed `pg_dump --schema-only` snapshot (**stale** vs live — regenerate before relying on it). |
 
 **Relational characters (ADR-0031):** Run

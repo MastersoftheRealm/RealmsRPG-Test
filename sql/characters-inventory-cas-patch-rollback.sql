@@ -1,6 +1,5 @@
--- Rollback CAS helpers from characters-inventory-cas-patch SQL in this repo.
--- Re-apply characters-relational-read-rpc.sql + characters-relational-write-rpc.sql
--- from the previous commit after rollback. Not for agent apply without owner OK + backup.
+-- Step 1 of full rollback — see `sql/characters-inventory-full-rollback-86e3juw0a.sql`.
+-- Do **not** drop `inventory_row_id` until master expand/read/write are re-applied (ref 8ae31ecd).
 BEGIN;
 
 DROP FUNCTION IF EXISTS public.apply_character_inventory_patch(text, text, jsonb);

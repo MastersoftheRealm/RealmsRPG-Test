@@ -3,6 +3,7 @@ import { cleanForSave } from '@/lib/data-enrichment/clean-for-save';
 import {
   buildInventoryPatch,
   inventoryRowCasSnapshot,
+  mergeInventoryCreatedRows,
   replaceEquipmentDirtyWithInventoryPatch,
 } from './inventory-patch';
 
@@ -276,5 +277,31 @@ describe('inventory patch', () => {
     expect(cleaned).not.toHaveProperty('equipment');
     const ops = (cleaned.inventoryPatch as { ops: unknown[] }).ops;
     expect(ops).toHaveLength(2);
+  });
+});
+
+describe('mergeInventoryCreatedRows', () => {
+  const PROVISIONAL = '90000000-0000-4000-8000-000000000099';
+
+  it('stamps row id by client provisional inventoryRowId, not server position', () => {
+    const equipment = {
+      weapons: [
+        { id: 'w-new', name: 'Dagger', inventoryRowId: PROVISIONAL },
+        { id: 'w-old', name: 'Sword' },
+      ],
+      shields: [],
+      armor: [],
+      items: [],
+      accessories: [],
+    };
+    const merged = mergeInventoryCreatedRows(equipment, [
+      {
+        inventoryRowId: PROVISIONAL,
+        bucket: 'weapons',
+        position: 2,
+      },
+    ]) as typeof equipment;
+    expect(merged.weapons[0]?.inventoryRowId).toBe(PROVISIONAL);
+    expect(merged.weapons[1]?.inventoryRowId).toBeUndefined();
   });
 });

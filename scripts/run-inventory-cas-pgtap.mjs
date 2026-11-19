@@ -35,6 +35,14 @@ const MASTER_CANONICAL_SQL = [
 ];
 
 const MASTER_NEGATIVE_TEST = 'sql/tests/inventory_cas_pgtap_master_negative.sql';
+const RELATIONAL_TEST = 'sql/tests/inventory_cas_pgtap_relational.sql';
+const POST_ROLLBACK_TEST = 'sql/tests/inventory_cas_pgtap_post_rollback.sql';
+const ROLLBACK_MASTER_REF = '8ae31ecd';
+const ROLLBACK_RELATIONAL_MASTER = [
+  'sql/characters-relational-expand.sql',
+  'sql/characters-relational-read-rpc.sql',
+  'sql/characters-relational-write-rpc.sql',
+];
 
 function run(cmd, args, opts = {}) {
   const res = spawnSync(cmd, args, {
@@ -107,18 +115,22 @@ function resetDatabase(dbUrl) {
   psqlSql(dbUrl, 'DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;');
 }
 
-function gitShowOriginMaster(rel) {
-  return execFileSync('git', ['show', `origin/master:${rel}`], {
+function gitShowRef(rel, ref) {
+  return execFileSync('git', ['show', `${ref}:${rel}`], {
     cwd: root,
     encoding: 'utf8',
   });
 }
 
-function applySqlList(dbUrl, relPaths, { fromMaster = false } = {}) {
+function gitShowOriginMaster(rel) {
+  return gitShowRef(rel, 'origin/master');
+}
+
+function applySqlList(dbUrl, relPaths, { fromRef = null } = {}) {
   for (const rel of relPaths) {
-    if (fromMaster && rel.startsWith('sql/characters-relational-')) {
+    if (fromRef && rel.startsWith('sql/characters-relational-')) {
       const tmp = path.join(root, `.tmp-pgtap-${path.basename(rel)}`);
-      const sql = gitShowOriginMaster(rel);
+      const sql = gitShowRef(rel, fromRef);
       fs.writeFileSync(tmp, sql);
       psqlFile(dbUrl, tmp);
       fs.unlinkSync(tmp);
@@ -126,6 +138,14 @@ function applySqlList(dbUrl, relPaths, { fromMaster = false } = {}) {
     }
     psqlFile(dbUrl, rel);
   }
+}
+
+function runBranchRollbackLeg(dbUrl) {
+  psqlFile(dbUrl, 'sql/characters-inventory-cas-patch-rollback.sql');
+  applySqlList(dbUrl, ROLLBACK_RELATIONAL_MASTER, { fromRef: ROLLBACK_MASTER_REF });
+  psqlFile(dbUrl, 'sql/characters-inventory-row-id-rollback.sql');
+  const res = pgtap(dbUrl, POST_ROLLBACK_TEST);
+  return res.status ?? 1;
 }
 
 function masterIncludesFullInventoryCasFix() {
@@ -146,7 +166,7 @@ function masterIncludesFullInventoryCasFix() {
 
 function runMasterNegative(dbUrl) {
   resetDatabase(dbUrl);
-  applySqlList(dbUrl, MASTER_CANONICAL_SQL, { fromMaster: true });
+  applySqlList(dbUrl, MASTER_CANONICAL_SQL, { fromRef: 'origin/master' });
   const res = pgtap(dbUrl, MASTER_NEGATIVE_TEST);
   return res.status ?? 1;
 }
@@ -154,8 +174,11 @@ function runMasterNegative(dbUrl) {
 function runBranchPositive(dbUrl) {
   resetDatabase(dbUrl);
   applySqlList(dbUrl, BRANCH_CANONICAL_SQL);
-  const res = pgtap(dbUrl);
-  return res.status ?? 1;
+  let res = pgtap(dbUrl);
+  if ((res.status ?? 1) !== 0) return res.status ?? 1;
+  res = pgtap(dbUrl, RELATIONAL_TEST);
+  if ((res.status ?? 1) !== 0) return res.status ?? 1;
+  return runBranchRollbackLeg(dbUrl);
 }
 
 function main() {
@@ -189,7 +212,7 @@ function main() {
 
   const positive = runBranchPositive(dbUrl);
   if (positive !== 0) process.exit(positive);
-  console.log('inventory-cas-pgtap: branch OK');
+  console.log('inventory-cas-pgtap: branch + relational + post-rollback OK');
 }
 
 main();
