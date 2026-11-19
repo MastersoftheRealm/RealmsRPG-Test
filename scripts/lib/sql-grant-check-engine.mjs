@@ -147,7 +147,14 @@ function readUnicodeQuotedIdentifier(sql, start) {
 
 /**
  * @param {string} sql
- * @returns {{ code: string, topLevelDoBodies: string[] }}
+ * @returns {{
+ *   code: string,
+ *   topLevelDoBodies: string[],
+ *   functionBodies: string[],
+ *   allPlpgsqlDoBodies: string[],
+ *   allPlpgsqlFunctionBodies: string[],
+ *   unterminatedDollarQuote: boolean,
+ * }}
  */
 function sanitizeSql(sql) {
   let out = '';
@@ -159,6 +166,12 @@ function sanitizeSql(sql) {
   const topLevelDoBodies = [];
   /** @type {string[]} */
   const functionBodies = [];
+  /** @type {string[]} */
+  const allPlpgsqlDoBodies = [];
+  /** @type {string[]} */
+  const allPlpgsqlFunctionBodies = [];
+  /** @type {{ kind: 'fn' | 'do', buf: string }[]} */
+  const plpgsqlCaptureStack = [];
   /** @type {string | null} */
   let captureTopLevelDo = null;
   /** @type {string | null} */
@@ -168,6 +181,9 @@ function sanitizeSql(sql) {
     out += text;
     if (captureTopLevelDo !== null) captureTopLevelDo += text;
     if (captureFunctionBody !== null) captureFunctionBody += text;
+    for (let k = plpgsqlCaptureStack.length - 1; k >= 0; k -= 1) {
+      plpgsqlCaptureStack[k].buf += text;
+    }
   };
 
   const blankUntil = (end) => {
@@ -303,6 +319,16 @@ function sanitizeSql(sql) {
         const tag = match[0];
         if (dollarStack.length && dollarStack[dollarStack.length - 1].tag === tag) {
           const closing = dollarStack.pop();
+          if (
+            closing &&
+            (closing.kind === 'do' || closing.kind === 'fn') &&
+            plpgsqlCaptureStack.length > 0 &&
+            plpgsqlCaptureStack[plpgsqlCaptureStack.length - 1].kind === closing.kind
+          ) {
+            const cap = plpgsqlCaptureStack.pop();
+            if (cap?.kind === 'do') allPlpgsqlDoBodies.push(cap.buf);
+            if (cap?.kind === 'fn') allPlpgsqlFunctionBodies.push(cap.buf);
+          }
           if (captureTopLevelDo !== null && closing?.kind === 'do' && dollarStack.length === 0) {
             topLevelDoBodies.push(captureTopLevelDo);
             captureTopLevelDo = null;
@@ -317,6 +343,9 @@ function sanitizeSql(sql) {
           if (/\bdo(\s+language\s+plpgsql)?\s*$/.test(before.slice(-28))) kind = 'do';
           else if (/\bas\s*$/.test(before.slice(-12))) kind = 'fn';
           dollarStack.push({ tag, kind });
+          if (kind === 'do' || kind === 'fn') {
+            plpgsqlCaptureStack.push({ kind, buf: '' });
+          }
           if (kind === 'do' && dollarStack.length === 1 && captureTopLevelDo === null) {
             captureTopLevelDo = '';
           }
@@ -334,7 +363,14 @@ function sanitizeSql(sql) {
     i += 1;
   }
 
-  return { code: out, topLevelDoBodies, functionBodies };
+  return {
+    code: out,
+    topLevelDoBodies,
+    functionBodies,
+    allPlpgsqlDoBodies,
+    allPlpgsqlFunctionBodies,
+    unterminatedDollarQuote: dollarStack.length > 0,
+  };
 }
 
 /** @param {string} sql */
@@ -1762,70 +1798,17 @@ function findAlterViewSecurityInvokerViolations(rawSql) {
 }
 
 /**
- * Every dollar-quoted literal body (including nested), for SELECT INTO tripwire stripping.
- * @param {string} sql
- * @returns {string[]}
+ * @param {string[]} parts
  */
-export function extractAllDollarQuotedBodies(sql) {
+function uniqueNonEmptyStrings(parts) {
+  const seen = new Set();
   /** @type {string[]} */
-  const bodies = [];
-  /** @type {{ tag: string, start: number }[]} */
-  const stack = [];
-  let i = 0;
-  const n = sql.length;
-  while (i < n) {
-    if (sql[i] === '$') {
-      const match = /^\$([A-Za-z_][A-Za-z0-9_]*)?\$/.exec(sql.slice(i));
-      if (!match) {
-        i += 1;
-        continue;
-      }
-      const tag = match[0];
-      if (stack.length && stack[stack.length - 1].tag === tag) {
-        const { start } = stack.pop();
-        bodies.push(sql.slice(start, i));
-        i += tag.length;
-        continue;
-      }
-      stack.push({ tag, start: i + tag.length });
-      i += tag.length;
-      continue;
-    }
-    i += 1;
-  }
-  return bodies;
-}
-
-/**
- * Blank interiors of all dollar-quoted literals so SELECT INTO tripwire ignores embedded PL/pgSQL.
- * @param {string} sql
- */
-export function blankDollarQuotedRegions(sql) {
-  let out = '';
-  /** @type {string[]} */
-  const stack = [];
-  let i = 0;
-  const n = sql.length;
-  while (i < n) {
-    if (sql[i] === '$') {
-      const match = /^\$([A-Za-z_][A-Za-z0-9_]*)?\$/.exec(sql.slice(i));
-      if (match) {
-        const tag = match[0];
-        if (stack.length && stack[stack.length - 1] === tag) {
-          stack.pop();
-          out += tag;
-          i += tag.length;
-          continue;
-        }
-        stack.push(tag);
-        out += tag;
-        i += tag.length;
-        continue;
-      }
-    }
-    const ch = sql[i];
-    out += stack.length ? (ch === '\n' ? '\n' : ' ') : ch;
-    i += 1;
+  const out = [];
+  for (const part of parts) {
+    if (!part) continue;
+    if (seen.has(part)) continue;
+    seen.add(part);
+    out.push(part);
   }
   return out;
 }
@@ -1936,7 +1919,14 @@ function findClientRoleGrantViolations(code) {
 export function buildEffectiveSanitizedCode(sql) {
   const rawDoBodies = extractRawTopLevelDoBodies(sql);
   const rawFunctionBodies = extractRawFunctionBodies(sql);
-  const { code: sanitized, topLevelDoBodies, functionBodies } = sanitizeSql(sql);
+  const {
+    code: sanitized,
+    topLevelDoBodies,
+    functionBodies,
+    allPlpgsqlDoBodies,
+    allPlpgsqlFunctionBodies,
+    unterminatedDollarQuote,
+  } = sanitizeSql(sql);
   const {
     expanded,
     violations: expandViolations,
@@ -1953,6 +1943,9 @@ export function buildEffectiveSanitizedCode(sql) {
       violations: expandViolations,
       functionBodies,
       topLevelDoBodies,
+      allPlpgsqlDoBodies,
+      allPlpgsqlFunctionBodies,
+      unterminatedDollarQuote,
       executeExpandSpans,
       rawRemovedSpansByFunction,
       rawFunctionBodies,
@@ -1969,6 +1962,9 @@ export function buildEffectiveSanitizedCode(sql) {
     violations: [],
     functionBodies,
     topLevelDoBodies,
+    allPlpgsqlDoBodies,
+    allPlpgsqlFunctionBodies,
+    unterminatedDollarQuote,
     expandedStatements: expanded,
     executeExpandSpans,
     rawRemovedSpansByFunction,
@@ -1991,6 +1987,9 @@ export function findSqlFileViolations(sql, options = {}) {
     violations: pre,
     functionBodies = [],
     topLevelDoBodies = [],
+    allPlpgsqlDoBodies = [],
+    allPlpgsqlFunctionBodies = [],
+    unterminatedDollarQuote = false,
     rawRemovedSpansByFunction = [],
     rawFunctionBodies = [],
   } = buildEffectiveSanitizedCode(sql);
@@ -2021,9 +2020,21 @@ export function findSqlFileViolations(sql, options = {}) {
   }
 
   violations.push(...findAlterViewSecurityInvokerViolations(sql));
-  const selectIntoScan = sqlCodeWithoutCommentsAndLiterals(blankDollarQuotedRegions(sql));
+  if (unterminatedDollarQuote) {
+    violations.push({
+      reason: 'unterminated dollar-quoted literal',
+      statement: '(SQL parser)',
+    });
+  }
+  const selectIntoScan = sqlCodeWithoutCommentsAndLiterals(sql);
+  const plpgsqlBodiesToStrip = uniqueNonEmptyStrings([
+    ...functionBodies,
+    ...topLevelDoBodies,
+    ...allPlpgsqlDoBodies,
+    ...allPlpgsqlFunctionBodies,
+  ]);
   violations.push(
-    ...findUnauditedObjectCreationViolations(selectIntoScan, [...functionBodies, ...topLevelDoBodies]),
+    ...findUnauditedObjectCreationViolations(selectIntoScan, plpgsqlBodiesToStrip),
   );
   violations.push(...findRoleToRoleGrantViolations(code));
   violations.push(...findClientRoleAdminViolations(code));

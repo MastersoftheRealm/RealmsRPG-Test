@@ -22,8 +22,6 @@ import {
 import {
   findSqlFileViolations,
   isAllowlistedWritePolicyPredicate,
-  blankDollarQuotedRegions,
-  extractAllDollarQuotedBodies,
 } from './lib/sql-grant-check-engine.mjs';
 
 const scriptPath = fileURLToPath(new URL('./check-sql-table-grants.mjs', import.meta.url));
@@ -1040,10 +1038,48 @@ describe('PR 564 R6 blockers', () => {
       $q$,
       '42501', NULL, 'anon cannot EXECUTE inventory_patch_bucket_category'
     );`;
-    expect(extractAllDollarQuotedBodies(sql).length).toBeGreaterThanOrEqual(2);
-    expect(blankDollarQuotedRegions(sql)).not.toMatch(/select\s+\*\s+into\s+v/i);
     expect(findSqlFileViolations(sql)).toEqual([]);
     expect(findGrantViolations(['sql/tests/inventory_cas_pgtap_role_privileges.sql'])).toEqual([]);
+  });
+
+  it('fail-closed: fake dollar tags in comments/strings do not disable SELECT INTO / VIEW tripwire', () => {
+    const selectIntoLeak = expect.arrayContaining([
+      expect.stringMatching(/unaudited object creation \(SELECT INTO/i),
+    ]);
+    const viewLeak = expect.arrayContaining([
+      expect.stringMatching(/unaudited object creation \(VIEW/i),
+    ]);
+    const unterminated = expect.arrayContaining([
+      expect.stringMatching(/unterminated dollar-quoted literal/i),
+    ]);
+
+    expect(
+      findCreateTableSetupViolations(`-- $body$\nSELECT * INTO public.leak FROM auth.users;`),
+    ).toEqual(selectIntoLeak);
+
+    expect(
+      findCreateTableSetupViolations(`SELECT '$x$';\nSELECT * INTO public.leak FROM auth.users;`),
+    ).toEqual(selectIntoLeak);
+
+    expect(
+      findCreateTableSetupViolations(`-- $q$\nCREATE VIEW public.leak AS SELECT 1;`),
+    ).toEqual(viewLeak);
+
+    expect(
+      findCreateTableSetupViolations(
+        `SELECT lives_ok(
+      $q$
+        CREATE VIEW public.leak AS SELECT 1;
+      $q$,
+      'created'
+    );`,
+      ),
+    ).toEqual(viewLeak);
+
+    const unterminatedSql = `SELECT $foo$\nSELECT * INTO public.leak FROM auth.users;`;
+    const unterminatedViolations = findCreateTableSetupViolations(unterminatedSql);
+    expect(unterminatedViolations).toEqual(unterminated);
+    expect(unterminatedViolations).toEqual(selectIntoLeak);
   });
 
   it('R6-B1: flags quoted and CTE SELECT INTO targets but not TEMP', () => {
