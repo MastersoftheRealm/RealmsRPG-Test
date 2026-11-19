@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 /**
- * CI blocking gate: production deps (`npm audit --omit=dev`) at high+, minus allowlisted GHSAs.
+ * CI blocking gate: production deps (`npm audit --omit=dev`) at high+.
  *
  *   node scripts/check-production-npm-audit.mjs
  */
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { PRODUCTION_AUDIT_GHSA_EXCEPTIONS } from './lib/production-npm-audit-exceptions.mjs';
 
 const AUDIT_LEVEL = 'high';
 
@@ -17,76 +16,77 @@ function ghsaFromAdvisoryEntry(entry) {
   return match ? match[0].toUpperCase() : null;
 }
 
-/** @param {import('./lib/production-npm-audit-exceptions.mjs').PRODUCTION_AUDIT_GHSA_EXCEPTIONS[number]['expires']} expires */
-function assertExceptionsNotExpired(today = new Date()) {
-  const errors = [];
-  for (const row of PRODUCTION_AUDIT_GHSA_EXCEPTIONS) {
-    const end = new Date(`${row.expires}T23:59:59.999Z`);
-    if (Number.isNaN(end.getTime())) {
-      errors.push(`${row.ghsa}: invalid expires date ${row.expires}`);
-      continue;
-    }
-    if (today > end) {
-      errors.push(
-        `${row.ghsa}: temporary allowlist expired on ${row.expires}. Remove the entry from scripts/lib/production-npm-audit-exceptions.mjs and fix the dependency (picomatch >= 4.0.8 on npm).`,
-      );
-    }
-  }
-  return errors;
+/** @param {unknown} entry */
+function advisoryIsHighOrCritical(entry) {
+  return (
+    !!entry &&
+    typeof entry === 'object' &&
+    /** @type {{ severity?: string }} */ ((entry).severity === 'high' ||
+      /** @type {{ severity?: string }} */ (entry).severity === 'critical')
+  );
 }
 
 /**
  * @param {Record<string, { severity?: string, via?: unknown[] }>} vulnerabilities
  * @param {string} pkg
- * @param {Set<string>} activeIgnoredGhsas
  * @param {Set<string>} stack
  */
-function packageBlockedByHigh(vulnerabilities, pkg, activeIgnoredGhsas, stack) {
+function packageBlockedByHigh(vulnerabilities, pkg, stack) {
+  if (stack.has(pkg)) return false;
+
   const vuln = vulnerabilities[pkg];
-  if (!vuln || (vuln.severity !== 'high' && vuln.severity !== 'critical')) {
+  if (!vuln) {
+    return true;
+  }
+  if (vuln.severity !== 'high' && vuln.severity !== 'critical') {
     return false;
   }
-  if (stack.has(pkg)) return false;
+
   stack.add(pkg);
 
-  const directGhsas = new Set();
+  let blockedByDirectAdvisory = false;
   const deps = [];
   for (const via of vuln.via ?? []) {
     if (typeof via === 'string') {
       deps.push(via);
       continue;
     }
+    if (!via || typeof via !== 'object') {
+      blockedByDirectAdvisory = true;
+      continue;
+    }
     const ghsa = ghsaFromAdvisoryEntry(via);
-    if (ghsa) directGhsas.add(ghsa);
+    if (ghsa) {
+      if (advisoryIsHighOrCritical(via)) {
+        blockedByDirectAdvisory = true;
+      }
+      continue;
+    }
+    if (advisoryIsHighOrCritical(via)) {
+      blockedByDirectAdvisory = true;
+    }
   }
 
-  if (directGhsas.size > 0) {
-    const blocked = [...directGhsas].filter((g) => !activeIgnoredGhsas.has(g));
-    stack.delete(pkg);
-    return blocked.length > 0;
-  }
+  const blockedByDeps =
+    deps.length > 0 && deps.some((dep) => packageBlockedByHigh(vulnerabilities, dep, stack));
 
-  if (deps.length === 0) {
-    stack.delete(pkg);
-    return true;
-  }
+  const blocked =
+    blockedByDirectAdvisory ||
+    blockedByDeps ||
+    (deps.length === 0 && (vuln.via ?? []).length === 0);
 
-  const blocked = deps.some((dep) =>
-    packageBlockedByHigh(vulnerabilities, dep, activeIgnoredGhsas, stack),
-  );
   stack.delete(pkg);
   return blocked;
 }
 
 /**
  * @param {Record<string, { severity?: string, via?: unknown[] }>} vulnerabilities
- * @param {Set<string>} activeIgnoredGhsas
  */
-export function findBlockingHighProductionVulnerabilities(vulnerabilities, activeIgnoredGhsas) {
+export function findBlockingHighProductionVulnerabilities(vulnerabilities) {
   const blocked = [];
   for (const [name, vuln] of Object.entries(vulnerabilities)) {
     if (vuln.severity !== 'high' && vuln.severity !== 'critical') continue;
-    if (packageBlockedByHigh(vulnerabilities, name, activeIgnoredGhsas, new Set())) {
+    if (packageBlockedByHigh(vulnerabilities, name, new Set())) {
       blocked.push(name);
     }
   }
@@ -160,46 +160,63 @@ export function runNpmProductionAuditJson() {
   return assertNpmAuditReport(result, parsed);
 }
 
-/** @param {Set<string>} [ignored] */
-export function activeIgnoredGhsas(
-  ignored = new Set(PRODUCTION_AUDIT_GHSA_EXCEPTIONS.map((row) => row.ghsa.toUpperCase())),
-) {
-  return new Set([...ignored].map((g) => g.toUpperCase()));
-}
-
-export function runProductionNpmAuditGate() {
-  const expiryErrors = assertExceptionsNotExpired();
-  if (expiryErrors.length > 0) {
-    return { ok: false, errors: expiryErrors };
-  }
-
-  const ignored = activeIgnoredGhsas();
-  let report;
-  try {
-    report = runNpmProductionAuditJson();
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return { ok: false, errors: [msg] };
-  }
-  const vulnerabilities = report.vulnerabilities;
-  const blocking = findBlockingHighProductionVulnerabilities(vulnerabilities, ignored);
+/**
+ * @param {import('node:child_process').SpawnSyncReturns<string>} auditResult
+ * @param {unknown} parsedReport
+ */
+/**
+ * @param {Record<string, { severity?: string, via?: unknown[] }>} vulnerabilities
+ */
+export function evaluateProductionVulnerabilities(vulnerabilities) {
+  const blocking = findBlockingHighProductionVulnerabilities(vulnerabilities);
 
   if (blocking.length > 0) {
     return {
       ok: false,
       errors: [
-        `Production npm audit: ${blocking.length} high/critical package(s) outside allowlist: ${blocking.join(', ')}`,
+        `Production npm audit: ${blocking.length} high/critical package(s): ${blocking.join(', ')}`,
         'Run: npm audit --audit-level=high --omit=dev',
       ],
     };
   }
 
-  const ignoredList = [...ignored].join(', ');
   return {
     ok: true,
     errors: [],
-    message: `Production npm audit OK (high+, omit=dev). Temporarily allowlisted GHSA(s): ${ignoredList}.`,
+    message: 'Production npm audit OK (high+, omit=dev).',
   };
+}
+
+/**
+ * @param {import('node:child_process').SpawnSyncReturns<string>} auditResult
+ * @param {unknown} parsedReport
+ */
+export function evaluateProductionNpmAuditReport(auditResult, parsedReport) {
+  let report;
+  try {
+    report = assertNpmAuditReport(auditResult, parsedReport);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { ok: false, errors: [msg] };
+  }
+
+  return evaluateProductionVulnerabilities(
+    /** @type {Record<string, { severity?: string, via?: unknown[] }>} */ (report.vulnerabilities),
+  );
+}
+
+export function runProductionNpmAuditGate() {
+  try {
+    const report = runNpmProductionAuditJson();
+    return evaluateProductionVulnerabilities(
+      /** @type {Record<string, { severity?: string, via?: unknown[] }>} */ (
+        report.vulnerabilities
+      ),
+    );
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { ok: false, errors: [msg] };
+  }
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
