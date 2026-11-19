@@ -51,6 +51,7 @@ import {
   withDirtyClears,
 } from '@/lib/character/dirty-patch';
 import { characterAutosaveDocumentsEqual } from '@/lib/character/character-autosave-equal';
+import { mergeInventoryCreatedRows } from '@/lib/character/inventory-patch';
 import { rememberCharacterLockToken } from '@/lib/character/save-lock';
 import { mergeSheetRealtimePayload } from '@/lib/character/realtime-merge';
 import {
@@ -413,6 +414,23 @@ export function useCharacterSheetPageData(id: string) {
         result.applied as Record<string, unknown>,
         result.updatedAt ? { documentUpdatedAt: result.updatedAt } : undefined,
       );
+      const createdRows = result.inventoryPatchResult?.createdRows;
+      if (createdRows?.length) {
+        savedCleanRef.current = {
+          ...savedCleanRef.current,
+          equipment: mergeInventoryCreatedRows(savedCleanRef.current?.equipment, createdRows),
+        };
+        setCharacter((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            equipment: mergeInventoryCreatedRows(
+              prev.equipment,
+              createdRows,
+            ) as Character['equipment'],
+          };
+        });
+      }
       if (result.updatedAt) {
         setCharacter((prev) => (prev ? { ...prev, updatedAt: result.updatedAt } : prev));
       }

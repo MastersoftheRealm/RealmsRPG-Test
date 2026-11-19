@@ -263,7 +263,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     return NextResponse.json(
-      appendCharacterLegalityToResponse({ ok: true, updatedAt: result.updatedAt }, legality),
+      appendCharacterLegalityToResponse(
+        {
+          ok: true,
+          updatedAt: result.updatedAt,
+          ...(result.inventoryPatchResult
+            ? { inventoryPatchResult: result.inventoryPatchResult }
+            : {}),
+        },
+        legality,
+      ),
     );
   } catch (err) {
     console.error('[API Error] PATCH /api/characters/[id]:', err);

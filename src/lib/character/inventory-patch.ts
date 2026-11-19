@@ -246,3 +246,31 @@ export function attachRelationalInventoryPatchToDirty(
   if (dirty.inventoryPatch !== undefined) return;
   replaceEquipmentDirtyWithInventoryPatch(dirty, saveBaseline);
 }
+
+export type InventoryPatchCreatedRow = {
+  inventoryRowId: string;
+  bucket: InventoryPatchBucket;
+  position: number;
+};
+
+/** Stamp server-assigned (or confirmed) row ids onto equipment after a successful inventory patch. */
+export function mergeInventoryCreatedRows(
+  equipment: unknown,
+  createdRows: InventoryPatchCreatedRow[],
+): unknown {
+  if (!equipment || typeof equipment !== 'object' || createdRows.length === 0) return equipment;
+  const equip = { ...(equipment as Record<string, unknown>) };
+  for (const created of createdRows) {
+    const bucket = created.bucket;
+    const rows = readEquipmentBucket(equip, bucket);
+    const index = created.position - 1;
+    if (index < 0 || index >= rows.length) continue;
+    rows[index] = { ...rows[index], inventoryRowId: created.inventoryRowId };
+    if (bucket === 'armor') {
+      equip.armor = rows[0] ?? null;
+    } else {
+      equip[bucket] = rows;
+    }
+  }
+  return equip;
+}

@@ -6,12 +6,21 @@ type SupabaseError = { message: string; code?: string | undefined };
 type RpcResult = PromiseLike<{ data: unknown; error: SupabaseError | null }>;
 type RpcCall = (name: string, args: Record<string, unknown>) => RpcResult;
 
+export type InventoryPatchApplyResult = {
+  createdRows?: Array<{
+    inventoryRowId: string;
+    bucket: string;
+    position: number;
+  }>;
+};
+
 export type CharacterPatchResult =
-  | { status: 'updated'; updatedAt: string }
+  | { status: 'updated'; updatedAt: string; inventoryPatchResult?: InventoryPatchApplyResult }
   | {
       status: 'conflict';
       updatedAt?: string | undefined;
       code?: string | undefined;
+      inventoryPatchResult?: InventoryPatchApplyResult;
     }
   | { status: 'not_found' };
 
@@ -118,12 +127,39 @@ export async function patchRelationalCharacter(
   const result = objectResult(data, 'patch_character_relational');
   if (result.status === 'not_found') return { status: 'not_found' };
   const updatedAt = typeof result.updatedAt === 'string' ? result.updatedAt : undefined;
+  const rawPatchResult = result.inventoryPatchResult;
+  const inventoryPatchResult =
+    rawPatchResult && typeof rawPatchResult === 'object' && !Array.isArray(rawPatchResult)
+      ? parseInventoryPatchResult(rawPatchResult as Record<string, unknown>)
+      : undefined;
+
   if (result.status === 'conflict') {
     const code = typeof result.code === 'string' ? result.code : undefined;
-    return { status: 'conflict', updatedAt, code };
+    return { status: 'conflict', updatedAt, code, inventoryPatchResult };
   }
   if (result.status !== 'updated' || !updatedAt) {
     throw new Error('patch_character_relational returned an invalid outcome');
   }
-  return { status: 'updated', updatedAt };
+  return { status: 'updated', updatedAt, inventoryPatchResult };
+}
+
+function parseInventoryPatchResult(
+  value: Record<string, unknown>,
+): InventoryPatchApplyResult | undefined {
+  const created = value.createdRows;
+  if (!Array.isArray(created) || created.length === 0) return undefined;
+  const rows: InventoryPatchApplyResult['createdRows'] = [];
+  for (const entry of created) {
+    if (!entry || typeof entry !== 'object') continue;
+    const row = entry as Record<string, unknown>;
+    const inventoryRowId = typeof row.inventoryRowId === 'string' ? row.inventoryRowId : '';
+    const bucket = typeof row.bucket === 'string' ? row.bucket : '';
+    const position =
+      typeof row.position === 'number'
+        ? row.position
+        : Number.parseInt(String(row.position ?? ''), 10);
+    if (!inventoryRowId || !bucket || !Number.isFinite(position)) continue;
+    rows.push({ inventoryRowId, bucket, position });
+  }
+  return rows.length > 0 ? { createdRows: rows } : undefined;
 }

@@ -102,7 +102,13 @@ export async function saveCharacter(
     /** Autosave baseline for item-level inventory CAS. Required when dirty includes equipment. */
     inventorySaveBaseline?: Record<string, unknown> | null | undefined;
   } = {},
-): Promise<{ ok: true; updatedAt?: string | undefined }> {
+): Promise<{
+  ok: true;
+  updatedAt?: string | undefined;
+  inventoryPatchResult?: {
+    createdRows?: Array<{ inventoryRowId: string; bucket: string; position: number }>;
+  };
+}> {
   if (!characterId?.trim()) {
     throw new Error('Invalid character ID');
   }
@@ -126,7 +132,13 @@ export async function saveCharacter(
     if (lock) body.updatedAt = lock;
     else delete body.updatedAt;
 
-    const result = await apiFetch<{ ok: true; updatedAt?: string | undefined }>(
+    const result = await apiFetch<{
+      ok: true;
+      updatedAt?: string | undefined;
+      inventoryPatchResult?: {
+        createdRows?: Array<{ inventoryRowId: string; bucket: string; position: number }>;
+      };
+    }>(
       `${API_BASE}/${encodeURIComponent(id)}`,
       {
         method: 'PATCH',
@@ -156,7 +168,13 @@ export async function saveCharacterWithConflictRetry(
       inventorySaveBaseline?: Record<string, unknown> | null | undefined;
     };
   },
-): Promise<{ updatedAt?: string | undefined; applied: Partial<Character> }> {
+): Promise<{
+  updatedAt?: string | undefined;
+  applied: Partial<Character>;
+  inventoryPatchResult?: {
+    createdRows?: Array<{ inventoryRowId: string; bucket: string; position: number }>;
+  };
+}> {
   const id = characterId.trim();
   if (isGuestCharacterId(id)) {
     saveGuestCharacter(id, dirty);
@@ -171,7 +189,11 @@ export async function saveCharacterWithConflictRetry(
         enqueue: false,
         inventorySaveBaseline: options.inventorySaveBaseline,
       });
-      return { updatedAt: result.updatedAt, applied: dirty };
+      return {
+        updatedAt: result.updatedAt,
+        applied: dirty,
+        inventoryPatchResult: result.inventoryPatchResult,
+      };
     } catch (err) {
       if (!isConflictError(err)) throw err;
       const { character: remote } = await getCharacter(id);
@@ -186,7 +208,11 @@ export async function saveCharacterWithConflictRetry(
         inventorySaveBaseline:
           next.inventorySaveBaseline ?? (remote as unknown as Record<string, unknown>),
       });
-      return { updatedAt: retried.updatedAt, applied: next.dirty };
+      return {
+        updatedAt: retried.updatedAt,
+        applied: next.dirty,
+        inventoryPatchResult: retried.inventoryPatchResult,
+      };
     }
   });
 }

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cleanForSave } from '@/lib/data-enrichment/clean-for-save';
 import {
   buildInventoryPatch,
   inventoryRowCasSnapshot,
@@ -216,6 +217,40 @@ describe('inventory patch', () => {
       op: 'update',
       item: { type: null },
     });
+  });
+
+  it('cleanForSave keeps inventoryRowId so CAS updates target the same row', () => {
+    const loaded = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: HEALTH_ROW,
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 1,
+          },
+        ],
+      },
+    };
+    const edited = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: HEALTH_ROW,
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 2,
+          },
+        ],
+      },
+    };
+    const baseline = cleanForSave(loaded as never) as Record<string, unknown>;
+    const dirty = cleanForSave(edited as never) as Record<string, unknown>;
+    replaceEquipmentDirtyWithInventoryPatch(dirty, baseline);
+    const ops = (dirty.inventoryPatch as { ops: unknown[] }).ops;
+    expect(ops).toEqual([
+      expect.objectContaining({ op: 'update', inventoryRowId: HEALTH_ROW }),
+    ]);
   });
 
   it('replaces full equipment dirty payload with inventoryPatch on save', () => {
