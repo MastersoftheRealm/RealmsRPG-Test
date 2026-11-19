@@ -3,6 +3,7 @@
  * Local/CI: supabase start + pgTAP for inventory CAS (branch must pass; pinned baselines fail).
  */
 import { execFileSync, spawnSync } from 'node:child_process';
+import { runSyncWithBoundedRetry } from './lib/bounded-retry.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -113,17 +114,31 @@ function dbUrlFromSupabase() {
   return line.slice('DB_URL='.length).replace(/^"|"$/g, '');
 }
 
+const SUPABASE_START_ARGS = [
+  'start',
+  '-x',
+  'imgproxy',
+  '-x',
+  'logflare',
+  '-x',
+  'vector',
+  '--ignore-health-check',
+];
+
 function startSupabase() {
-  run('supabase', [
-    'start',
-    '-x',
-    'imgproxy',
-    '-x',
-    'logflare',
-    '-x',
-    'vector',
-    '--ignore-health-check',
-  ]);
+  runSyncWithBoundedRetry({
+    maxAttempts: 3,
+    backoffMs: [4000, 8000],
+    label: 'supabase start',
+    log: (msg) => console.error(msg),
+    attempt: () =>
+      spawnSync('supabase', SUPABASE_START_ARGS, {
+        cwd: root,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }),
+    isSuccess: (res) => (res.status ?? 1) === 0,
+  });
 }
 
 function resetDatabase(dbUrl) {
