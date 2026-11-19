@@ -32,6 +32,8 @@ export interface DamageEntry {
 /** Base item interface */
 export interface Item {
   id: number | string;
+  /** Stable relational row id from `character_inventory.inventory_row_id` (server-assigned). */
+  inventoryRowId?: string | undefined;
   name: string;
   description?: string | undefined;
   type?: 'weapon' | 'armor' | 'equipment' | 'shield' | string | undefined;

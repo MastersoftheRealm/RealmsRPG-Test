@@ -20,6 +20,10 @@ import {
 import { useAuthStore } from '@/stores/auth-store';
 import type { Character, CharacterSummary } from '@/types';
 import { getGuestCharactersList, isGuestCharacterId } from '@/lib/guest-character-storage';
+import {
+  coerceInventoryPatchCreatedRows,
+  mergeInventoryCreatedRows,
+} from '@/lib/character/inventory-patch';
 
 /** Viewer segment for `characterKeys` (ADR-0013 / TASK-741). */
 export function characterViewerId(userId?: string | null): string {
@@ -58,6 +62,32 @@ export function mergeCharacterDetailQueryData(
   return {
     ...prev,
     character: { ...prev.character, ...patch },
+  };
+}
+
+/** Merge save `applied` + optional inventory row ids into the detail cache (sheet + library add). */
+export function mergeCharacterSaveResultIntoDetailQuery(
+  prev: GetCharacterResult | undefined,
+  result: {
+    applied: Partial<Character>;
+    updatedAt?: string | undefined;
+    inventoryPatchResult?: {
+      createdRows?: Array<{ inventoryRowId: string; bucket: string; position: number }>;
+    };
+  },
+): GetCharacterResult | undefined {
+  const merged = mergeCharacterDetailQueryData(prev, {
+    ...result.applied,
+    ...(result.updatedAt ? { updatedAt: result.updatedAt } : {}),
+  });
+  const created = coerceInventoryPatchCreatedRows(result.inventoryPatchResult?.createdRows ?? []);
+  if (!merged?.character || created.length === 0) return merged;
+  return {
+    ...merged,
+    character: {
+      ...merged.character,
+      equipment: mergeInventoryCreatedRows(merged.character.equipment, created) as Character['equipment'],
+    },
   };
 }
 
@@ -144,31 +174,33 @@ export function useSaveCharacter() {
       id,
       data,
       updatedAt,
+      inventorySaveBaseline,
       mergeOnConflict,
     }: {
       id: string;
       data: Partial<Character>;
       updatedAt?: string | Date | null | undefined;
+      inventorySaveBaseline?: Record<string, unknown> | null | undefined;
       mergeOnConflict?: (remote: Character) => {
         dirty: Partial<Character>;
         updatedAt?: string | Date | null | undefined;
+        inventorySaveBaseline?: Record<string, unknown> | null | undefined;
       };
     }) =>
       saveCharacterWithConflictRetry(id, data, {
         updatedAt: updatedAt ?? data.updatedAt,
+        inventorySaveBaseline,
         mergeOnConflict:
           mergeOnConflict ??
           ((remote) => ({
             dirty: data,
             updatedAt: remote.updatedAt,
+            inventorySaveBaseline: remote as unknown as Record<string, unknown>,
           })),
       }),
     onSuccess: (result, { id }) => {
       queryClient.setQueryData<GetCharacterResult>(characterKeys.detail(userId, id), (prev) =>
-        mergeCharacterDetailQueryData(prev, {
-          ...result.applied,
-          ...(result.updatedAt ? { updatedAt: result.updatedAt } : {}),
-        }),
+        mergeCharacterSaveResultIntoDetailQuery(prev, result),
       );
       queryClient.invalidateQueries({ queryKey: characterKeys.lists(userId) });
     },

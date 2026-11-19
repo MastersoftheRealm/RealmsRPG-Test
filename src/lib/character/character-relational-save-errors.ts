@@ -82,6 +82,14 @@ function parseFieldFromMessage(message: string): CharacterRelationalValidationPa
     return validationPayload('equipment.inventory');
   }
 
+  if (message === 'Full equipment patches are not supported; send inventoryPatch') {
+    return validationPayload('inventoryPatch');
+  }
+
+  if (message.startsWith('Ambiguous id-less inventory row ')) {
+    return validationPayload('inventoryPatch');
+  }
+
   if (
     message === 'Character document must be an object' ||
     message === 'Character data must be an object'

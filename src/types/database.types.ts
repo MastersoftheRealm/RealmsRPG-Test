@@ -327,6 +327,7 @@ export type Database = {
         Row: {
           category: string;
           character_id: string;
+          inventory_row_id: string;
           codex_equipment_id: string | null;
           cost_snapshot: number | null;
           custom_description: string | null;
@@ -344,6 +345,7 @@ export type Database = {
         Insert: {
           category: string;
           character_id: string;
+          inventory_row_id?: string;
           codex_equipment_id?: string | null;
           cost_snapshot?: number | null;
           custom_description?: string | null;
@@ -361,6 +363,7 @@ export type Database = {
         Update: {
           category?: string;
           character_id?: string;
+          inventory_row_id?: string;
           codex_equipment_id?: string | null;
           cost_snapshot?: number | null;
           custom_description?: string | null;

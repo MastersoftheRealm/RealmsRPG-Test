@@ -15,6 +15,23 @@
 | [`codex-rename-source.sql`](codex-rename-source.sql) | Admin utility: replaces `public.rename_codex_source` only. Safe to re-run on non-prod when Kadin approves; first real rename is a live data change and needs a backup. |
 | [`codex-category-offense-to-offensive.sql`](codex-category-offense-to-offensive.sql) | One-time data fix: `codex_feats` / `codex_parts` category `Offense` → `Offensive`. **Apply before** deploying app code that drops the feat category rewrite. Not applied from CI. |
 | [`role-quota-atomic.sql`](role-quota-atomic.sql) | `user_profiles` row lock + `assert_account_create_quota`, quota-aware `create_character_relational` and `insert_user_library_row_with_quota`. Apply after explicit OK and backup. |
+| [`characters-inventory-row-id.sql`](characters-inventory-row-id.sql) | Adds `inventory_row_id` (uuid) to `character_inventory` with backfill. |
+| [`characters-inventory-row-id-rollback.sql`](characters-inventory-row-id-rollback.sql) | Rollback for row-id migration (explicit OK + backup only). |
+| [`characters-inventory-cas-patch-86e3juw0a.sql`](characters-inventory-cas-patch-86e3juw0a.sql) | Inventory CAS helper functions only. |
+| [`characters-inventory-cas-patch-rollback.sql`](characters-inventory-cas-patch-rollback.sql) | Rollback step 2: drop CAS helper functions. |
+| [`characters-inventory-full-rollback.sql`](characters-inventory-full-rollback.sql) | **Full undo order** (deploy revert → CAS rollback → master expand/cutover/read/write @ `8ae31ecd` → row-id rollback). CI: `inventory_cas_pgtap_post_rollback.sql`. |
+
+**Inventory CAS forward apply** (named backup first; relational compatibility stage already live on production):
+
+1. `characters-inventory-row-id.sql`
+2. `characters-inventory-cas-patch-86e3juw0a.sql`
+3. `characters-relational-expand.sql`
+4. `characters-relational-cutover.sql` *(required immediately after expand — restores RPC-write skip on compat sync trigger)*
+5. `characters-relational-read-rpc.sql`
+6. `characters-relational-write-rpc.sql`
+7. Merge and deploy the matching app build.
+
+Automated proof: `npm run test:inventory-cas-pgtap`.
 | [`schema/0000_baseline_2026-08-13.sql`](schema/0000_baseline_2026-08-13.sql) | Committed `pg_dump --schema-only` snapshot (**stale** vs live — regenerate before relying on it). |
 
 **Relational characters (ADR-0031):** Run

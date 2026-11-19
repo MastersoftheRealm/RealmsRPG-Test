@@ -50,7 +50,13 @@ export const ALLOWED_PRIVATE_AUTH_HELPERS = new Set([
   'private.auth_is_vtt_campaign_participant',
 ]);
 
-const IGNORED_REL = new Set(['sql/_TEMPLATE_new_table.sql', 'sql/_template_new_table.sql']);
+const IGNORED_REL = new Set([
+  'sql/_TEMPLATE_new_table.sql',
+  'sql/_template_new_table.sql',
+  // Local pgTAP only (supabase start); structural stubs — CAS logic lives in canonical sql/.
+  'sql/tests/inventory-cas-pgtap-bootstrap.sql',
+  'sql/tests/pgtap-relational-fk-stubs.sql',
+]);
 
 /** @param {string} relPath posix-style path under repo root */
 export function isIgnoredSqlGrantCheckPath(relPath) {

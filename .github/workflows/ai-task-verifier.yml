@@ -49,6 +49,20 @@ jobs:
       - name: Unit tests (lib/glr contracts)
         run: npm test
 
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 3.2.0
+
+      - name: Fetch default branch for inventory CAS negative test
+        run: git fetch origin master
+
+      - name: Inventory CAS pgTAP (local Supabase; master fail + branch pass)
+        run: npm run test:inventory-cas-pgtap
+
       - name: Dependency audit — production deps (high+, blocking)
         run: npm run audit:production
 

@@ -36,6 +36,10 @@ import {
 } from '@/hooks';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { sheetCatalogFromEnrichment } from '@/lib/character-view-enrichment';
+import {
+  mirrorInventoryRowIdsOntoSheetEquipment,
+  prepareInventoryPatchForAutosave,
+} from '@/lib/character/inventory-patch';
 import { cleanForSave } from '@/lib/data-enrichment';
 import { getErrorMessage } from '@/lib/api-client';
 import {
@@ -51,6 +55,10 @@ import {
   withDirtyClears,
 } from '@/lib/character/dirty-patch';
 import { characterAutosaveDocumentsEqual } from '@/lib/character/character-autosave-equal';
+import {
+  coerceInventoryPatchCreatedRows,
+  mergeInventoryCreatedRows,
+} from '@/lib/character/inventory-patch';
 import { rememberCharacterLockToken } from '@/lib/character/save-lock';
 import { mergeSheetRealtimePayload } from '@/lib/character/realtime-merge';
 import {
@@ -362,6 +370,16 @@ export function useCharacterSheetPageData(id: string) {
     onSave: async (data) => {
       if (!data) return;
       const rawCleaned = cleanForSave(data, rules) as Record<string, unknown>;
+      prepareInventoryPatchForAutosave(savedCleanRef.current, rawCleaned);
+      const mirroredEquipment = mirrorInventoryRowIdsOntoSheetEquipment(
+        data.equipment,
+        rawCleaned.equipment,
+      );
+      if (mirroredEquipment !== data.equipment) {
+        setCharacter((prev) =>
+          prev ? { ...prev, equipment: mirroredEquipment as Character['equipment'] } : prev,
+        );
+      }
       const prepared = characterSaveWithoutOverlongName(rawCleaned, savedCleanRef.current);
       if (prepared.rejected) {
         showToast(CHARACTER_NAME_TOO_LONG_MESSAGE, 'error');
@@ -380,6 +398,7 @@ export function useCharacterSheetPageData(id: string) {
       const mergedCleanRef: { current: Record<string, unknown> | null } = { current: null };
       const result = await saveCharacterWithConflictRetry(id, dirty as Partial<Character>, {
         updatedAt: characterLockToken(data.updatedAt),
+        inventorySaveBaseline: savedCleanRef.current,
         mergeOnConflict: (remote) => {
           const remoteClean = cleanForSave(remote, rules) as Record<string, unknown>;
           const localClean = withDirtyClears(cleaned, dirty);
@@ -403,6 +422,7 @@ export function useCharacterSheetPageData(id: string) {
           return {
             dirty: pickDirtyCharacterFields(mergedClean, remoteClean) as Partial<Character>,
             updatedAt: remote.updatedAt,
+            inventorySaveBaseline: remoteClean,
           };
         },
       });
@@ -411,6 +431,25 @@ export function useCharacterSheetPageData(id: string) {
         result.applied as Record<string, unknown>,
         result.updatedAt ? { documentUpdatedAt: result.updatedAt } : undefined,
       );
+      const createdRows = coerceInventoryPatchCreatedRows(
+        result.inventoryPatchResult?.createdRows ?? [],
+      );
+      if (createdRows.length > 0) {
+        savedCleanRef.current = {
+          ...savedCleanRef.current,
+          equipment: mergeInventoryCreatedRows(savedCleanRef.current?.equipment, createdRows),
+        };
+        setCharacter((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            equipment: mergeInventoryCreatedRows(
+              prev.equipment,
+              createdRows,
+            ) as Character['equipment'],
+          };
+        });
+      }
       if (result.updatedAt) {
         setCharacter((prev) => (prev ? { ...prev, updatedAt: result.updatedAt } : prev));
       }

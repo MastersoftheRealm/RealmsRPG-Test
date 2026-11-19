@@ -106,15 +106,23 @@ export function useAddToCharacterFromLibrary(kind: LibraryToCharacterKind, chara
       dbs,
       buildRequiredForCharacter,
     );
+    const baseline = character as unknown as Record<string, unknown>;
+    const dirty = libraryAddDirtyFields(kind, first.character) as Record<string, unknown>;
     saveCharacter.mutate(
       {
         id: character.id,
-        data: libraryAddDirtyFields(kind, first.character),
+        data: dirty as Partial<Character>,
         updatedAt: character.updatedAt,
-        mergeOnConflict: (remote) =>
-          mergeLibraryAddOnConflict(remote, kind, pending.raw, (c) =>
+        inventorySaveBaseline: baseline,
+        mergeOnConflict: (remote) => {
+          const next = mergeLibraryAddOnConflict(remote, kind, pending.raw, (c) =>
             applyLibraryAddToCharacter(c, kind, pending.raw, dbs, buildRequiredForCharacter),
-          ),
+          );
+          return {
+            ...next,
+            inventorySaveBaseline: remote as unknown as Record<string, unknown>,
+          };
+        },
       },
       {
         onSuccess: () => {

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { Character } from '@/types';
-import { mergeCharacterDetailQueryData, nextCharacterDetailQueryData } from './use-characters';
+import {
+  mergeCharacterDetailQueryData,
+  mergeCharacterSaveResultIntoDetailQuery,
+  nextCharacterDetailQueryData,
+} from './use-characters';
 
 const hero = { id: 'c1', name: 'Hero', notes: 'old' } as Character;
 
@@ -52,5 +56,46 @@ describe('mergeCharacterDetailQueryData', () => {
       character: null,
     });
     expect(mergeCharacterDetailQueryData(undefined, { notes: 'x' })).toBeUndefined();
+  });
+});
+
+describe('mergeCharacterSaveResultIntoDetailQuery (library gear add)', () => {
+  it('keeps equipment from applied dirty and stamps new inventoryRowId from save result', () => {
+    const cached = {
+      ...hero,
+      equipment: {
+        weapons: [{ id: 'w1', name: 'Sword', type: 'weapon', properties: [] }],
+        armor: null,
+        shields: [],
+      },
+    } satisfies Character;
+    const applied = {
+      equipment: {
+        weapons: [
+          { id: 'w1', name: 'Sword' },
+          { id: 'w2', name: 'Mace', inventoryRowId: 'row-new' },
+        ],
+        armor: [],
+        shields: [],
+      },
+      updatedAt: 'T2',
+    };
+    const result = mergeCharacterSaveResultIntoDetailQuery(
+      { character: cached },
+      {
+        applied,
+        updatedAt: 'T2',
+        inventoryPatchResult: {
+          createdRows: [{ inventoryRowId: 'row-new', bucket: 'weapons', position: 2 }],
+        },
+      },
+    );
+    const weapons = result?.character?.equipment?.weapons as Array<{
+      id: string;
+      inventoryRowId?: string;
+    }>;
+    expect(weapons).toHaveLength(2);
+    expect(weapons[1]?.id).toBe('w2');
+    expect(weapons[1]?.inventoryRowId).toBe('row-new');
   });
 });

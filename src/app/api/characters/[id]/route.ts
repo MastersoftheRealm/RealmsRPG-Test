@@ -184,6 +184,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     const cleanedData = prepareCharacterForSave(data, { storedDocument: currentDocument });
+    const hadLegacyEquipment = Object.prototype.hasOwnProperty.call(cleanedData, 'equipment');
+    if (hadLegacyEquipment) {
+      delete cleanedData.equipment;
+    }
 
     const mergedData = applyCharacterDirtyPatch(currentDocument, cleanedData, {
       documentUpdatedAt: new Date().toISOString(),
@@ -213,7 +217,33 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });
     }
     if (result.status === 'conflict') {
-      return NextResponse.json({ error: 'Character was updated elsewhere' }, { status: 409 });
+      if (result.code === 'legacy_equipment_rejected' && result.updatedAt) {
+        return NextResponse.json(
+          {
+            error: 'Gear changes need a sheet reload. Other edits in this save were kept.',
+            legacyEquipmentRejected: true,
+            updatedAt: result.updatedAt,
+          },
+          { status: 409 },
+        );
+      }
+      return NextResponse.json(
+        {
+          error: 'Character was updated elsewhere',
+          ...(result.updatedAt ? { updatedAt: result.updatedAt } : {}),
+        },
+        { status: 409 },
+      );
+    }
+    if (hadLegacyEquipment) {
+      return NextResponse.json(
+        {
+          error: 'Gear changes need a sheet reload. Other edits in this save were kept.',
+          legacyEquipmentRejected: true,
+          updatedAt: result.updatedAt,
+        },
+        { status: 409 },
+      );
     }
     if ('portrait' in cleanedData) {
       const nextPortrait = cleanedData.portrait;
@@ -233,7 +263,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     return NextResponse.json(
-      appendCharacterLegalityToResponse({ ok: true, updatedAt: result.updatedAt }, legality),
+      appendCharacterLegalityToResponse(
+        {
+          ok: true,
+          updatedAt: result.updatedAt,
+          ...(result.inventoryPatchResult
+            ? { inventoryPatchResult: result.inventoryPatchResult }
+            : {}),
+        },
+        legality,
+      ),
     );
   } catch (err) {
     console.error('[API Error] PATCH /api/characters/[id]:', err);

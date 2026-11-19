@@ -9,6 +9,7 @@ import type { UserCreature, UserItem, UserPower, UserTechnique } from '@/hooks/u
 import type { CharacterViewEnrichment } from '@/lib/character-view-enrichment';
 import { apiFetch, apiFetchOrNull, isConflictError } from '@/lib/api-client';
 import { characterLockToken } from '@/lib/character/dirty-patch';
+import { attachRelationalInventoryPatchToDirty } from '@/lib/character/inventory-patch';
 import {
   enqueueCharacterSave,
   rememberCharacterLockToken,
@@ -98,8 +99,16 @@ export async function saveCharacter(
     updatedAt?: string | Date | null | undefined;
     skipLock?: boolean | undefined;
     enqueue?: boolean | undefined;
+    /** Autosave baseline for item-level inventory CAS. Required when dirty includes equipment. */
+    inventorySaveBaseline?: Record<string, unknown> | null | undefined;
   } = {},
-): Promise<{ ok: true; updatedAt?: string | undefined }> {
+): Promise<{
+  ok: true;
+  updatedAt?: string | undefined;
+  inventoryPatchResult?: {
+    createdRows?: Array<{ inventoryRowId: string; bucket: string; position: number }>;
+  };
+}> {
   if (!characterId?.trim()) {
     throw new Error('Invalid character ID');
   }
@@ -114,13 +123,22 @@ export async function saveCharacter(
 
   const run = async () => {
     const body: Record<string, unknown> = { ...data };
+    if ('equipment' in body) {
+      attachRelationalInventoryPatchToDirty(body, options.inventorySaveBaseline ?? {});
+    }
     const lock = options.skipLock
       ? undefined
       : resolveCharacterLockToken(id, options.updatedAt ?? data.updatedAt);
     if (lock) body.updatedAt = lock;
     else delete body.updatedAt;
 
-    const result = await apiFetch<{ ok: true; updatedAt?: string | undefined }>(
+    const result = await apiFetch<{
+      ok: true;
+      updatedAt?: string | undefined;
+      inventoryPatchResult?: {
+        createdRows?: Array<{ inventoryRowId: string; bucket: string; position: number }>;
+      };
+    }>(
       `${API_BASE}/${encodeURIComponent(id)}`,
       {
         method: 'PATCH',
@@ -143,12 +161,20 @@ export async function saveCharacterWithConflictRetry(
   dirty: Partial<Character>,
   options: {
     updatedAt?: string | Date | null | undefined;
+    inventorySaveBaseline?: Record<string, unknown> | null | undefined;
     mergeOnConflict: (remote: Character) => {
       dirty: Partial<Character>;
       updatedAt?: string | Date | null | undefined;
+      inventorySaveBaseline?: Record<string, unknown> | null | undefined;
     };
   },
-): Promise<{ updatedAt?: string | undefined; applied: Partial<Character> }> {
+): Promise<{
+  updatedAt?: string | undefined;
+  applied: Partial<Character>;
+  inventoryPatchResult?: {
+    createdRows?: Array<{ inventoryRowId: string; bucket: string; position: number }>;
+  };
+}> {
   const id = characterId.trim();
   if (isGuestCharacterId(id)) {
     saveGuestCharacter(id, dirty);
@@ -161,8 +187,13 @@ export async function saveCharacterWithConflictRetry(
       const result = await saveCharacter(id, dirty, {
         updatedAt: options.updatedAt,
         enqueue: false,
+        inventorySaveBaseline: options.inventorySaveBaseline,
       });
-      return { updatedAt: result.updatedAt, applied: dirty };
+      return {
+        updatedAt: result.updatedAt,
+        applied: dirty,
+        ...(result.inventoryPatchResult ? { inventoryPatchResult: result.inventoryPatchResult } : {}),
+      };
     } catch (err) {
       if (!isConflictError(err)) throw err;
       const { character: remote } = await getCharacter(id);
@@ -174,8 +205,16 @@ export async function saveCharacterWithConflictRetry(
       const retried = await saveCharacter(id, next.dirty, {
         updatedAt: next.updatedAt,
         enqueue: false,
+        inventorySaveBaseline:
+          next.inventorySaveBaseline ?? (remote as unknown as Record<string, unknown>),
       });
-      return { updatedAt: retried.updatedAt, applied: next.dirty };
+      return {
+        updatedAt: retried.updatedAt,
+        applied: next.dirty,
+        ...(retried.inventoryPatchResult
+          ? { inventoryPatchResult: retried.inventoryPatchResult }
+          : {}),
+      };
     }
   });
 }

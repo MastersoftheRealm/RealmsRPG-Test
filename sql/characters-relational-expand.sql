@@ -199,6 +199,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS character_techniques_source_unique_idx
 
 CREATE TABLE IF NOT EXISTS public.character_inventory (
   character_id text NOT NULL REFERENCES public.characters(id) ON DELETE CASCADE,
+  inventory_row_id uuid NOT NULL DEFAULT gen_random_uuid(),
   category text NOT NULL CHECK (category IN ('weapon','shield','armor','equipment','accessory')),
   position integer NOT NULL CHECK (position > 0),
   source_kind text NOT NULL CHECK (source_kind IN ('official','user','codex','custom','unresolved')),
@@ -214,6 +215,7 @@ CREATE TABLE IF NOT EXISTS public.character_inventory (
   custom_description text,
   cost_snapshot numeric,
   PRIMARY KEY (character_id, category, position),
+  CONSTRAINT character_inventory_inventory_row_id_key UNIQUE (inventory_row_id),
   CHECK (num_nonnulls(official_item_id, user_item_id, codex_equipment_id) <= 1)
 );
 CREATE INDEX IF NOT EXISTS character_inventory_official_idx ON public.character_inventory(official_item_id);
@@ -662,11 +664,12 @@ BEGIN
   END IF;
 
   INSERT INTO public.character_inventory (
-    character_id, category, position, source_kind, source_id, name_snapshot,
+    character_id, inventory_row_id, category, position, source_kind, source_id, name_snapshot,
     slot, official_item_id, user_item_id, codex_equipment_id, quantity,
     equipped, custom_type, custom_description, cost_snapshot
   ) VALUES (
-    p_character_id, p_category, p_position, v_source_kind, v_source_id, v_name,
+    p_character_id, coalesce(nullif(p_item->>'inventoryRowId','')::uuid, gen_random_uuid()),
+    p_category, p_position, v_source_kind, v_source_id, v_name,
     p_slot,
     CASE WHEN v_source_kind = 'official' THEN v_reference_id END,
     CASE WHEN v_source_kind = 'user' THEN v_reference_id END,
@@ -898,6 +901,7 @@ DECLARE
   v_trait_position integer;
   v_seen text[];
   v_key text;
+  v_skip_inventory boolean;
 BEGIN
   SELECT user_id INTO v_owner_id FROM public.characters WHERE id = p_character_id;
   IF NOT FOUND THEN
@@ -907,6 +911,8 @@ BEGIN
     RAISE EXCEPTION 'Character data must be an object' USING ERRCODE = '22023';
   END IF;
   PERFORM public.assert_character_document_mapped(p_document);
+
+  v_skip_inventory := current_setting('app.skip_inventory_full_sync', true) = 'on';
 
   FOREACH v_collection IN ARRAY ARRAY[
     'feats','archetypeFeats','skills','powers','techniques','traits',
@@ -940,7 +946,9 @@ BEGIN
   DELETE FROM public.character_traits WHERE character_id = p_character_id;
   DELETE FROM public.character_powers WHERE character_id = p_character_id;
   DELETE FROM public.character_techniques WHERE character_id = p_character_id;
-  DELETE FROM public.character_inventory WHERE character_id = p_character_id;
+  IF NOT v_skip_inventory THEN
+    DELETE FROM public.character_inventory WHERE character_id = p_character_id;
+  END IF;
   DELETE FROM public.character_conditions WHERE character_id = p_character_id;
   DELETE FROM public.character_named_notes WHERE character_id = p_character_id;
   DELETE FROM public.character_library_section_preferences WHERE character_id = p_character_id;
@@ -1254,6 +1262,7 @@ BEGIN
   -- Current saver uses weapons/shields/armor/items/accessories. Legacy
   -- inventory is accepted only if identical to items; otherwise it is unique
   -- information and the migration fails until explicitly mapped.
+  IF NOT v_skip_inventory THEN
   v_equipment := p_document->'equipment';
   IF jsonb_typeof(v_equipment) = 'object' THEN
     IF v_equipment ? 'inventory' AND v_equipment->'inventory' <> 'null'::jsonb
@@ -1299,6 +1308,7 @@ BEGIN
           v_entry.value, v_entry.key);
       END IF;
     END LOOP;
+  END IF;
   END IF;
 
   FOR v_entry IN SELECT value, ordinality FROM jsonb_array_elements(

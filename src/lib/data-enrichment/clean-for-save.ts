@@ -422,6 +422,9 @@ export function cleanForSave(
         const i = item as Record<string, unknown>;
         const clean: Record<string, unknown> = {};
         if (i.id) clean.id = i.id;
+        if (typeof i.inventoryRowId === 'string' && i.inventoryRowId.trim()) {
+          clean.inventoryRowId = i.inventoryRowId.trim();
+        }
         if (i.name) clean.name = i.name;
         if (i.equipped) clean.equipped = true;
         // Quantity 0 is stored. Quantity 1 stays omitted as the default.
