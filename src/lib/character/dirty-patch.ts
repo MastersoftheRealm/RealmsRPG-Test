@@ -208,6 +208,19 @@ function mergeEquipmentItemBucket(
         ? !stableEqual(localRow, remoteRow)
         : !stableEqual(localRow!, baselineRow);
 
+    if (
+      localDirty &&
+      baselineRow &&
+      typeof remoteRow.quantity === 'number' &&
+      typeof localRow!.quantity === 'number' &&
+      typeof baselineRow.quantity === 'number' &&
+      remoteRow.quantity !== localRow!.quantity
+    ) {
+      const delta = localRow!.quantity - baselineRow.quantity;
+      merged.push({ ...remoteRow, quantity: remoteRow.quantity + delta });
+      continue;
+    }
+
     merged.push(localDirty ? localRow! : remoteRow);
   }
 

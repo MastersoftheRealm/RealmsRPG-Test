@@ -93,19 +93,13 @@ function rowQuantity(row: Record<string, unknown>): number {
   return 1;
 }
 
-function inventoryRowCasType(row: Record<string, unknown>): string {
-  const idStr = row.id != null ? String(row.id) : '';
-  if (!idStr.startsWith('custom-')) return '';
-  return typeof row.type === 'string' ? row.type : '';
-}
-
 export function inventoryRowCasSnapshot(row: Record<string, unknown>): InventoryCasSnapshot {
   const cost = row.cost;
   return {
     quantity: rowQuantity(row),
     equipped: row.equipped === true,
     name: typeof row.name === 'string' ? row.name : '',
-    type: inventoryRowCasType(row),
+    type: typeof row.type === 'string' ? row.type : '',
     description: typeof row.description === 'string' ? row.description : '',
     cost: typeof cost === 'number' && Number.isFinite(cost) ? cost : null,
   };

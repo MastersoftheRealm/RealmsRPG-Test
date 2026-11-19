@@ -15,7 +15,7 @@ import {
 } from '@/components/character-sheet/use-sheet-auto-proficiencies';
 import { getErrorMessage } from '@/lib/api-client';
 import { buildRequiredProficiencies } from '@/lib/proficiencies';
-import { advanceCharacterAutosaveBaseline } from '@/lib/character/autosave-baseline';
+import { useAdvanceCharacterAutosaveBaseline } from '@/lib/character/character-autosave-baseline-context';
 import { prepareInventoryPatchForAutosave } from '@/lib/character/inventory-patch';
 import { cleanForSave } from '@/lib/data-enrichment';
 import type { Character, Item } from '@/types';
@@ -56,6 +56,7 @@ function applyLibraryAddToCharacter(
 export function useAddToCharacterFromLibrary(kind: LibraryToCharacterKind, characterId: string) {
   const { showToast } = useToast();
   const saveCharacter = useSaveCharacter();
+  const advanceSheetAutosaveBaseline = useAdvanceCharacterAutosaveBaseline();
   const { data: characterResult, isLoading: characterLoading } = useCharacter(
     characterId || undefined,
   );
@@ -130,7 +131,7 @@ export function useAddToCharacterFromLibrary(kind: LibraryToCharacterKind, chara
       },
       {
         onSuccess: (result) => {
-          advanceCharacterAutosaveBaseline(character.id, {
+          advanceSheetAutosaveBaseline(character.id, {
             applied: result.applied as Record<string, unknown>,
             updatedAt: result.updatedAt,
             ...(result.inventoryPatchResult
@@ -156,6 +157,7 @@ export function useAddToCharacterFromLibrary(kind: LibraryToCharacterKind, chara
     buildRequiredForCharacter,
     saveCharacter,
     showToast,
+    advanceSheetAutosaveBaseline,
   ]);
 
   const confirmModal = useMemo((): ReactNode => {

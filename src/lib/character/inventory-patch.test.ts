@@ -92,14 +92,14 @@ describe('inventory patch', () => {
     });
   });
 
-  it('CAS snapshot ignores codex weapon type on the sheet row', () => {
+  it('CAS snapshot mirrors relational custom_type on the sheet row', () => {
     expect(
       inventoryRowCasSnapshot({
-        id: 'lib-knife',
-        name: 'Knife',
-        type: 'weapon',
+        id: 'lib-bed-roll',
+        name: 'Bed Roll',
+        type: 'equipment',
       }).type,
-    ).toBe('');
+    ).toBe('equipment');
   });
 
   it('sends full expected snapshot on update', () => {

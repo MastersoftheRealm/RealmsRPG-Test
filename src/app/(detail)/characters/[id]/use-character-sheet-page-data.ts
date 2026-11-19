@@ -36,10 +36,8 @@ import {
 } from '@/hooks';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { sheetCatalogFromEnrichment } from '@/lib/character-view-enrichment';
-import {
-  advanceAutosaveBaselineFromSaveResult,
-  registerCharacterAutosaveBaseline,
-} from '@/lib/character/autosave-baseline';
+import { advanceAutosaveBaselineFromSaveResult } from '@/lib/character/autosave-baseline';
+import { useRegisterCharacterAutosaveBaseline } from '@/lib/character/character-autosave-baseline-context';
 import {
   coerceInventoryPatchCreatedRows,
   mergeInventoryCreatedRows,
@@ -56,6 +54,7 @@ import {
   applySheetAutosaveConflictFields,
   characterLockToken,
   mergeRemotePreservingDirty,
+  mergeSheetAutosaveBaseline,
   pickDirtyCharacterFields,
   withDirtyClears,
 } from '@/lib/character/dirty-patch';
@@ -125,7 +124,7 @@ export function useCharacterSheetPageData(id: string) {
     }
   }, [character, id, rules]);
 
-  useEffect(() => registerCharacterAutosaveBaseline(id, savedCleanRef), [id]);
+  useRegisterCharacterAutosaveBaseline(id, savedCleanRef);
 
   const { data: userPowers = [] } = useUserPowers({ enabled: loadCatalog });
   const { data: userTechniques = [] } = useUserTechniques({ enabled: loadCatalog });
@@ -398,10 +397,11 @@ export function useCharacterSheetPageData(id: string) {
       if (Object.keys(dirty).length === 0) {
         return;
       }
+      const inventoryBaselineAtSave = savedCleanRef.current;
       const mergedCleanRef: { current: Record<string, unknown> | null } = { current: null };
       const result = await saveCharacterWithConflictRetry(id, dirty as Partial<Character>, {
         updatedAt: characterLockToken(data.updatedAt),
-        inventorySaveBaseline: savedCleanRef.current,
+        inventorySaveBaseline: inventoryBaselineAtSave,
         mergeOnConflict: (remote) => {
           const remoteClean = cleanForSave(remote, rules) as Record<string, unknown>;
           const localClean = withDirtyClears(cleaned, dirty);
@@ -409,9 +409,15 @@ export function useCharacterSheetPageData(id: string) {
             remoteClean,
             localClean,
             Object.keys(dirty),
-            savedCleanRef.current,
+            inventoryBaselineAtSave,
           );
           mergedCleanRef.current = mergedClean;
+          savedCleanRef.current = mergeSheetAutosaveBaseline(
+            remoteClean,
+            savedCleanRef.current ?? {},
+            Object.keys(dirty),
+            cleaned,
+          );
           setCharacter((prev) => {
             if (!prev || prev.id !== remote.id) return prev;
             return applySheetAutosaveConflictFields(
@@ -464,12 +470,13 @@ export function useCharacterSheetPageData(id: string) {
           if (remoteCharacter) {
             setCharacter((prev) => {
               if (!prev) return prev;
-              const { character: next } = mergeSheetRealtimePayload(
+              const { character: next, nextBaseline } = mergeSheetRealtimePayload(
                 prev,
                 remoteCharacter as unknown as Record<string, unknown>,
                 savedCleanRef.current,
                 { updatedAt: remoteCharacter.updatedAt },
               );
+              if (nextBaseline) savedCleanRef.current = nextBaseline;
               return next;
             });
           }

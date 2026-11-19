@@ -195,6 +195,98 @@ describe('applyCharacterDirtyPatch / mergeRemotePreservingDirty', () => {
     });
   });
 
+  it('applies quantity delta after cleanForSave without rules', () => {
+    const remote = cleanForSave(
+      sheet({
+        equipment: {
+          items: [
+            {
+              inventoryRowId: '10000000-0000-4000-8000-000000000001',
+              id: 'health-potion',
+              name: 'Health Potion',
+              quantity: 4,
+            },
+          ],
+        },
+      }),
+    ) as Record<string, unknown>;
+    const local = cleanForSave(
+      sheet({
+        equipment: {
+          items: [
+            {
+              inventoryRowId: '10000000-0000-4000-8000-000000000001',
+              id: 'health-potion',
+              name: 'Health Potion',
+              quantity: 2,
+            },
+          ],
+        },
+      }),
+    ) as Record<string, unknown>;
+    const baseline = cleanForSave(
+      sheet({
+        equipment: {
+          items: [
+            {
+              inventoryRowId: '10000000-0000-4000-8000-000000000001',
+              id: 'health-potion',
+              name: 'Health Potion',
+              quantity: 3,
+            },
+          ],
+        },
+      }),
+    ) as Record<string, unknown>;
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    expect((merged.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(
+      3,
+    );
+  });
+
+  it('applies quantity delta from baseline onto remote during conflict merge', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 3,
+          },
+        ],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 4,
+          },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 2,
+          },
+        ],
+      },
+    };
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    expect((merged.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(
+      3,
+    );
+  });
+
   it('does not restore a gear row the local sheet deleted during conflict merge', () => {
     const baseline = {
       equipment: {

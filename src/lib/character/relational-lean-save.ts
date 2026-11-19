@@ -51,6 +51,7 @@ function leanInventoryItemForRelationalSave(item: unknown): Record<string, unkno
   if (i.id) clean.id = i.id;
   if (typeof i.inventoryRowId === 'string' && i.inventoryRowId.trim()) {
     clean.inventoryRowId = i.inventoryRowId.trim();
+    if (typeof i.type === 'string') clean.type = i.type;
   }
   if (i.name) clean.name = i.name;
   if (i.equipped) clean.equipped = true;

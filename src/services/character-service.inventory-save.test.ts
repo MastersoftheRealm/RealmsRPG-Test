@@ -89,6 +89,51 @@ describe('character-service inventory CAS save', () => {
     ]);
   });
 
+  it('successful save applied includes inventoryPatch when equipment is dirty', async () => {
+    vi.mocked(apiFetch).mockResolvedValue({ ok: true, updatedAt: '2026-01-01T00:00:01.000Z' });
+
+    const baseline = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: HEALTH_ROW,
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 3,
+          },
+        ],
+      },
+    };
+    const dirty = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: HEALTH_ROW,
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 2,
+          },
+        ],
+      },
+    };
+
+    const result = await saveCharacterWithConflictRetry('char-1', dirty, {
+      inventorySaveBaseline: baseline,
+      mergeOnConflict: (remote) => ({
+        dirty,
+        updatedAt: remote.updatedAt,
+        inventorySaveBaseline: remote as unknown as Record<string, unknown>,
+      }),
+    });
+
+    expect((result.applied as Record<string, unknown>).inventoryPatch).toBeDefined();
+    expect(
+      ((result.applied as Record<string, unknown>).inventoryPatch as { ops: unknown[] }).ops.some(
+        (op) => (op as { op?: string }).op === 'update',
+      ),
+    ).toBe(true);
+  });
+
   it('409 retry uses remote as inventory baseline after concurrent energy edit', async () => {
     vi.mocked(isConflictError).mockReturnValueOnce(true).mockReturnValueOnce(false);
     vi.mocked(apiFetch)

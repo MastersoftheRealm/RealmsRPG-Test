@@ -3292,7 +3292,8 @@ No production file imports these names. A test import does not count. The file t
 - `src/lib/character/notes-tab-sections.ts`: `DEFAULT_NOTES_SECTION_ORDER`
 - `src/lib/character/prune-trait-sheet-state.ts`: `PruneTraitSheetStateCharacterInput` (type)
 - `src/lib/character/relational-lean-save.ts`: `RELATIONAL_SAVE_ENTRY_ALLOWLIST`
-- `src/lib/character/autosave-baseline.ts`: `peekCharacterAutosaveBaselineForTest`
+- `src/lib/character/autosave-baseline.ts`: `advanceAutosaveBaselineFromSaveResult`
+- `src/lib/character/character-autosave-baseline-context.tsx`: `CharacterAutosaveBaselineProvider`
 - `src/lib/character/inventory-patch.ts`: `buildInventoryPatch`, `inventoryRowCasSnapshot`, `replaceEquipmentDirtyWithInventoryPatch`
 - `src/lib/character/save-lock.ts`: `resetCharacterSaveLockForTests`
 - `src/lib/character/sheet-allocation-reset.ts`: `resetSheetSkillAllocationRows`

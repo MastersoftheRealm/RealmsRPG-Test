@@ -9,11 +9,7 @@ import type { UserCreature, UserItem, UserPower, UserTechnique } from '@/hooks/u
 import type { CharacterViewEnrichment } from '@/lib/character-view-enrichment';
 import { apiFetch, apiFetchOrNull, isConflictError } from '@/lib/api-client';
 import { characterLockToken } from '@/lib/character/dirty-patch';
-import {
-  attachRelationalInventoryPatchToDirty,
-  coerceInventoryPatchCreatedRows,
-  mergeInventoryCreatedRows,
-} from '@/lib/character/inventory-patch';
+import { attachRelationalInventoryPatchToDirty } from '@/lib/character/inventory-patch';
 import {
   enqueueCharacterSave,
   rememberCharacterLockToken,
@@ -127,9 +123,7 @@ export async function saveCharacter(
 
   const run = async () => {
     const body: Record<string, unknown> = { ...data };
-    if ('equipment' in body) {
-      attachRelationalInventoryPatchToDirty(body, options.inventorySaveBaseline ?? {});
-    }
+    attachRelationalInventoryPatchToDirty(body, options.inventorySaveBaseline ?? {});
     const lock = options.skipLock
       ? undefined
       : resolveCharacterLockToken(id, options.updatedAt ?? data.updatedAt);
@@ -185,25 +179,25 @@ export async function saveCharacterWithConflictRetry(
     return { updatedAt, applied: dirty, conflictRetried: false };
   }
   return enqueueCharacterSave(id, async () => {
+    const buildPersistedApplied = (
+      payload: Record<string, unknown>,
+      inventorySaveBaseline?: Record<string, unknown> | null,
+    ): Partial<Character> => {
+      const body: Record<string, unknown> = { ...payload };
+      attachRelationalInventoryPatchToDirty(body, inventorySaveBaseline ?? {});
+      return body as Partial<Character>;
+    };
+
     try {
-      const result = await saveCharacter(id, dirty, {
+      const applied = buildPersistedApplied(
+        dirty as Record<string, unknown>,
+        options.inventorySaveBaseline,
+      );
+      const result = await saveCharacter(id, applied, {
         updatedAt: options.updatedAt,
         enqueue: false,
         inventorySaveBaseline: options.inventorySaveBaseline,
       });
-      let applied: Partial<Character> = dirty;
-      const created = coerceInventoryPatchCreatedRows(
-        result.inventoryPatchResult?.createdRows ?? [],
-      );
-      if (created.length > 0 && applied.equipment) {
-        applied = {
-          ...applied,
-          equipment: mergeInventoryCreatedRows(
-            applied.equipment,
-            created,
-          ) as Character['equipment'],
-        };
-      }
       return {
         updatedAt: result.updatedAt,
         applied,
@@ -220,25 +214,16 @@ export async function saveCharacterWithConflictRetry(
       if (Object.keys(next.dirty).length === 0) {
         return { updatedAt: characterLockToken(remote.updatedAt), applied: {} };
       }
-      const retried = await saveCharacter(id, next.dirty, {
+      const applied = buildPersistedApplied(
+        next.dirty as Record<string, unknown>,
+        next.inventorySaveBaseline ?? (remote as unknown as Record<string, unknown>),
+      );
+      const retried = await saveCharacter(id, applied, {
         updatedAt: next.updatedAt,
         enqueue: false,
         inventorySaveBaseline:
           next.inventorySaveBaseline ?? (remote as unknown as Record<string, unknown>),
       });
-      let applied: Partial<Character> = next.dirty;
-      const created = coerceInventoryPatchCreatedRows(
-        retried.inventoryPatchResult?.createdRows ?? [],
-      );
-      if (created.length > 0 && applied.equipment) {
-        applied = {
-          ...applied,
-          equipment: mergeInventoryCreatedRows(
-            applied.equipment,
-            created,
-          ) as Character['equipment'],
-        };
-      }
       return {
         updatedAt: retried.updatedAt,
         applied,
