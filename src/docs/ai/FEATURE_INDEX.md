@@ -2601,11 +2601,11 @@ A person searches and filters (tabs All / Active / Completed, type chips combat/
 
 **Combat play** — `/encounters/[id]/combat/page.tsx` → `useEncounterPlayPage` + `RollProvider` + `CombatEncounterView` (`showRollLog` default **true**).
 
-**Skill play** — `/encounters/[id]/skill/page.tsx` → `useEncounterPlayPage({ keepaliveOnUnload: true, requireSkillEncounter: true, prepareLoaded: prepareSkillEncounter })` + `SkillEncounterView`.
+**Skill play** — `/encounters/[id]/skill/page.tsx` → `useEncounterPlayPage({ requireSkillEncounter: true, prepareLoaded: prepareSkillEncounter })` + `SkillEncounterView`.
 
 **Mixed play** — `/encounters/[id]/mixed/page.tsx` → same play shell with `prepareMixedEncounter`; `SegmentedControl` switches Combat vs Skill; last tab per encounter id in **`sessionStorage`** (`readMixedEncounterViewTab` / `writeMixedEncounterViewTab`). Both `CombatEncounterView` and `SkillEncounterView` mount (CSS `hidden` on inactive tab) with `showRollLog={false}`; one shared **`RollLog`** at page bottom.
 
-**Shared play shell** — `useEncounterPlayPage` in `encounter-play-page-shell.tsx`: hydrates encounter once per id (`prepareLoaded` optional), local `encounter` state, `useAutoSave` (1.5s debounce) → `encounterAutosaveBody` → `useSaveEncounter` or guest `persistEncounterSave` with **keepalive** only when `keepaliveOnUnload` (skill route). Header: `EncounterPageHeader` (inline name edit). Combat/mixed also expose `OpenTabletopButton` (`saveNow` before open).
+**Shared play shell** — `useEncounterPlayPage` in `encounter-play-page-shell.tsx`: hydrates encounter once per id (`prepareLoaded` optional), local `encounter` state, `useAutoSave` (1.5s debounce) → `encounterAutosaveBody` → debounced `useSaveEncounter` (or guest branch); unload/pagehide flush → `persistEncounterSave(..., { keepalive: true })` on **all** play routes (skill, combat, mixed). Header: `EncounterPageHeader` (inline name edit). Combat/mixed also expose `OpenTabletopButton` (`saveNow` before open).
 
 **What saves:** The whole `Encounter` document (combatants, round/turn fields, `skillEncounter` blob, campaign link, status). Autosave on play pages; list “mark complete” patches status fields only. Signed-in → `/api/encounters/[id]`; guest ids → localStorage merge.
 
@@ -2627,7 +2627,7 @@ A person searches and filters (tabs All / Active / Completed, type chips combat/
 ### Same job, different behavior
 
 - screen-behavior-note:mixed-one-roll-log-vs-view-embedded-log: **Mixed** hides per-view `RollLog` and renders one page-level `RollLog`. **Combat** and **skill** standalone pages pass `showRollLog` so the log sits in the view layout with dock framing.
-- screen-behavior-note:skill-unload-keepalive-autosave: Only the **skill** play route sets `keepaliveOnUnload: true` on `useEncounterPlayPage`, so tab-close/refresh can flush via `persistEncounterSave(..., { keepalive: true })`. Combat and mixed use the mutation path only on autosave.
+- screen-behavior-note:skill-unload-keepalive-autosave: **All** play routes (skill, combat, mixed) use the same unload flush: `persistEncounterSave(..., { keepalive: true })` so tab-close/refresh can finish the PATCH; debounced saves use `useSaveEncounter` without keepalive.
 - screen-behavior-note:add-combatant-modal-combat-vs-skill-mode: Same modal component; **`mode="combat"`** confirms `TrackedCombatant` payloads through `onAdd`. **`mode="skill"`** confirms `SkillParticipant` through `onAddParticipants` (and can still wire `onAdd` for combatant-shaped copies in mixed).
 - screen-behavior-note:combatant-card-vs-skill-participant-card: **Combat** list renders `CombatantCard` (HP/EN/AP, conditions, initiative column). **Skill** list renders `ParticipantCard` (DS roll, successes/failures, helping); conditions UI does not exist on skill cards.
 - screen-behavior-note:duplicate-sort-initiative-in-combat-and-skill-sidebars: **Sort Initiative** appears in `CombatRoundControls` and again in `SkillSidebar` when skill initiative mode is on — separate handlers (`sortInitiative` vs `sortByInitiative`), same user-facing label.

@@ -6,8 +6,13 @@ import { encounterAutosaveBody, persistEncounterSave } from '@/services/encounte
 import type { useAutoSave } from '@/hooks';
 import { useEncounterPlayPage } from './encounter-play-page-shell';
 
+/** fetch `keepalive` request bodies are capped at 64 KiB in Chromium. */
+const FETCH_KEEPALIVE_BODY_LIMIT_BYTES = 64 * 1024;
+
 const mutateAsync = vi.fn().mockResolvedValue(undefined);
 const encounterRow = { ...createDefaultEncounter('skill', 'Autosave'), id: 'e-autosave' };
+const combatRow = { ...createDefaultEncounter('combat', 'Combat unload'), id: 'e-combat' };
+const mixedRow = { ...createDefaultEncounter('mixed', 'Mixed unload'), id: 'e-mixed' };
 
 let autoSaveOptions: Parameters<typeof useAutoSave<unknown>>[0] | null = null;
 
@@ -50,11 +55,10 @@ describe('useEncounterPlayPage autosave', () => {
     autoSaveOptions = null;
   });
 
-  it('uses keepalive persistEncounterSave on unload when keepaliveOnUnload is true', async () => {
+  it('uses keepalive persistEncounterSave on unload for skill play', async () => {
     renderHook(() =>
       useEncounterPlayPage({
         encounterId: 'e-autosave',
-        keepaliveOnUnload: true,
       }),
     );
     await waitFor(() => expect(autoSaveOptions?.enabled).toBe(true));
@@ -69,11 +73,45 @@ describe('useEncounterPlayPage autosave', () => {
     expect(mutateAsync).not.toHaveBeenCalled();
   });
 
+  it('uses keepalive persistEncounterSave on unload for combat play', async () => {
+    renderHook(() =>
+      useEncounterPlayPage({
+        encounterId: 'e-combat',
+      }),
+    );
+    await waitFor(() => expect(autoSaveOptions?.enabled).toBe(true));
+    await act(async () => {
+      await autoSaveOptions!.onSave(combatRow, { unload: true });
+    });
+    expect(persistEncounterSave).toHaveBeenCalledWith(
+      'e-combat',
+      encounterAutosaveBody(combatRow),
+      { signedIn: true, keepalive: true },
+    );
+    expect(mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('uses keepalive persistEncounterSave on unload for mixed play', async () => {
+    renderHook(() =>
+      useEncounterPlayPage({
+        encounterId: 'e-mixed',
+      }),
+    );
+    await waitFor(() => expect(autoSaveOptions?.enabled).toBe(true));
+    await act(async () => {
+      await autoSaveOptions!.onSave(mixedRow, { unload: true });
+    });
+    expect(persistEncounterSave).toHaveBeenCalledWith('e-mixed', encounterAutosaveBody(mixedRow), {
+      signedIn: true,
+      keepalive: true,
+    });
+    expect(mutateAsync).not.toHaveBeenCalled();
+  });
+
   it('uses save mutation without keepalive for debounced saves', async () => {
     renderHook(() =>
       useEncounterPlayPage({
         encounterId: 'e-autosave',
-        keepaliveOnUnload: true,
       }),
     );
     await waitFor(() => expect(autoSaveOptions?.enabled).toBe(true));
@@ -87,21 +125,12 @@ describe('useEncounterPlayPage autosave', () => {
     expect(persistEncounterSave).not.toHaveBeenCalled();
   });
 
-  it('does not use keepalive on unload when keepaliveOnUnload is false', async () => {
-    renderHook(() =>
-      useEncounterPlayPage({
-        encounterId: 'e-autosave',
-        keepaliveOnUnload: false,
-      }),
-    );
-    await waitFor(() => expect(autoSaveOptions?.enabled).toBe(true));
-    await act(async () => {
-      await autoSaveOptions!.onSave(encounterRow, { unload: true });
-    });
-    expect(mutateAsync).toHaveBeenCalledWith({
-      id: 'e-autosave',
-      data: encounterAutosaveBody(encounterRow),
-    });
-    expect(persistEncounterSave).not.toHaveBeenCalled();
+  it('keeps default encounter autosave bodies within fetch keepalive size limit', () => {
+    for (const encounter of [encounterRow, combatRow, mixedRow]) {
+      const bytes = new TextEncoder().encode(
+        JSON.stringify(encounterAutosaveBody(encounter)),
+      ).length;
+      expect(bytes).toBeLessThan(FETCH_KEEPALIVE_BODY_LIMIT_BYTES);
+    }
   });
 });

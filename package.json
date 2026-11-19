@@ -5,7 +5,7 @@
   "engines": {
     "node": "24.x"
   },
-  "//overrides": "Transitive pins for the CI production-deps audit gate (`npm run audit:production`; see scripts/lib/production-npm-audit-exceptions.mjs for the sole temporary GHSA allowlist). postcss 8.5.25 hoists one copy across @tailwindcss/postcss, next and vitest's vite; sharp 0.35.5 (high-severity sharp advisory patch; next 16.4.3 ranges ^0.35.5, pin kept at the patched release); js-yaml 4.3.2 (security patch); fast-uri 3.1.9 (security patch under ajv-formats); source-map-js 1.2.2 (security patch under postcss). Known dev-only exception (full-tree report-only step): eslint-config-next → @next/eslint-plugin-next → fast-glob 3.3.1 → micromatch → braces (all braces versions affected, no upstream fix); drop once @next/eslint-plugin-next stops pinning fast-glob 3.3.1. To retire a pin: delete it, npm install, npm audit — keep only if the advisory returns.",
+  "//overrides": "Transitive pins for the CI production-deps audit gate (`npm run audit:production`). postcss 8.5.25 hoists one copy across @tailwindcss/postcss, next and vitest's vite; sharp 0.35.5 (high-severity sharp advisory patch; next 16.4.3 ranges ^0.35.5, pin kept at the patched release); js-yaml 4.3.2 (security patch); fast-uri 3.1.9 (security patch under ajv-formats); source-map-js 1.2.2 (security patch under postcss). Known dev-only exception (full-tree report-only step): eslint-config-next → @next/eslint-plugin-next → fast-glob 3.3.1 → micromatch → braces (all braces versions affected, no upstream fix); drop once @next/eslint-plugin-next stops pinning fast-glob 3.3.1. To retire a pin: delete it, npm install, npm audit — keep only if the advisory returns.",
   "overrides": {
     "postcss": "8.5.25",
     "sharp": "0.35.5",
@@ -18,6 +18,7 @@
     "build": "next build --webpack",
     "start": "next start",
     "test": "vitest run",
+    "critic:gate": "node scripts/critic-gate-tests.mjs",
     "test:api": "vitest run src/app/api",
     "test:inventory-cas-pgtap": "node scripts/run-inventory-cas-pgtap.mjs",
     "test:inventory-cas-pgtap:master-fail": "node scripts/run-inventory-cas-pgtap.mjs --expect-fail",

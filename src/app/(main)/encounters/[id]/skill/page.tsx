@@ -31,7 +31,6 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
   const { id: encounterId } = use(params);
   const play = useEncounterPlayPage({
     encounterId,
-    keepaliveOnUnload: true,
     requireSkillEncounter: true,
     prepareLoaded: prepareSkillEncounter,
   });

@@ -45,7 +45,7 @@ const saveEncounter = (
 ): Promise<void> => client.save(encounterId, data, options);
 
 /**
- * Same guest-or-API branch as `useSaveEncounter`. The skill-encounter unload flush
+ * Same guest-or-API branch as `useSaveEncounter`. Encounter play unload flush
  * calls this directly so the PATCH starts during pagehide, before the page is discarded.
  */
 export function persistEncounterSave(

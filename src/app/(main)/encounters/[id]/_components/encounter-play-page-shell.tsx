@@ -99,13 +99,10 @@ export function EncounterPlayPageGate({
 
 export function useEncounterPlayPage({
   encounterId,
-  keepaliveOnUnload = false,
   prepareLoaded,
   requireSkillEncounter,
 }: {
   encounterId: string;
-  /** Skill play route: unload flush uses keepalive persist (combat/mixed use mutation only). */
-  keepaliveOnUnload?: boolean;
   prepareLoaded?: (data: Encounter) => Encounter;
   /** Skill play: stay on initializing until `skillEncounter` is hydrated. */
   requireSkillEncounter?: boolean;
@@ -130,13 +127,13 @@ export function useEncounterPlayPage({
     async (data: Encounter | null, flush?: { unload: boolean }) => {
       if (!data || !encounterId) return;
       const body = encounterAutosaveBody(data);
-      if (keepaliveOnUnload && flush?.unload) {
+      if (flush?.unload) {
         await persistEncounterSave(encounterId, body, { signedIn, keepalive: true });
         return;
       }
       await saveMutation.mutateAsync({ id: encounterId, data: body });
     },
-    [encounterId, keepaliveOnUnload, saveMutation, signedIn],
+    [encounterId, saveMutation, signedIn],
   );
 
   const { showToast } = useToast();
