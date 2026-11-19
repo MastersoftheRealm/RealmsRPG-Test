@@ -1,4 +1,4 @@
--- Step 3 of full rollback — see `sql/characters-inventory-full-rollback-86e3juw0a.sql`.
+-- Step 3 of full rollback — see `sql/characters-inventory-full-rollback.sql`.
 -- Apply only **after** CAS rollback + master `characters-relational-{expand,read-rpc,write-rpc}.sql`.
 BEGIN;
 

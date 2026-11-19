@@ -1,4 +1,4 @@
--- Step 1 of full rollback — see `sql/characters-inventory-full-rollback-86e3juw0a.sql`.
+-- Step 1 of full rollback — see `sql/characters-inventory-full-rollback.sql`.
 -- Do **not** drop `inventory_row_id` until master expand/read/write are re-applied (ref 8ae31ecd).
 BEGIN;
 
