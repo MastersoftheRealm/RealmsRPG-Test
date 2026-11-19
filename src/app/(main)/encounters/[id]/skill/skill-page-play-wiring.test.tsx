@@ -53,16 +53,19 @@ describe('SkillEncounterPage play wiring', () => {
     useEncounterPlayPageMock.mockClear();
   });
 
-  it('wires keepalive unload and skill gate into useEncounterPlayPage', async () => {
+  it('wires skill gate and prepareLoaded into useEncounterPlayPage', async () => {
     render(<SkillEncounterPage params={Promise.resolve({ id: 'enc-skill-wiring' })} />);
     await waitFor(() => {
       expect(useEncounterPlayPageMock).toHaveBeenCalledWith(
         expect.objectContaining({
           encounterId: 'enc-skill-wiring',
-          keepaliveOnUnload: true,
           requireSkillEncounter: true,
         }),
       );
     });
+    const callArgs = (
+      useEncounterPlayPageMock.mock.lastCall as [{ keepaliveOnUnload?: boolean }] | undefined
+    )?.[0];
+    expect(callArgs ?? {}).not.toHaveProperty('keepaliveOnUnload');
   });
 });
