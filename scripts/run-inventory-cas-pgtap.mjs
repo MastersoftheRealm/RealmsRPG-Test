@@ -122,9 +122,6 @@ function applySqlList(dbUrl, relPaths, { fromMaster = false } = {}) {
       fs.unlinkSync(tmp);
       continue;
     }
-    if (fromMaster) {
-      continue;
-    }
     psqlFile(dbUrl, rel);
   }
 }
