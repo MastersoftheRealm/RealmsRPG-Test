@@ -714,7 +714,7 @@ describe('library inventory + sheet autosave baseline (hook)', () => {
       }
     ).ops[0];
     expect(retryItem?.expected?.quantity).toBe(4);
-    expect(retryItem?.item?.quantity).toBeLessThan(4);
+    expect(retryItem?.item?.quantity).toBe(3);
 
     await act(async () => {
       result.current.setCharacter({

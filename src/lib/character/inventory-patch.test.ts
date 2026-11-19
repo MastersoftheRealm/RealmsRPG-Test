@@ -230,6 +230,37 @@ describe('inventory patch', () => {
     );
   });
 
+  it('new library weapon row omits UI bucket type from add patch item', () => {
+    const patch = buildInventoryPatch(
+      { weapons: [] },
+      {
+        weapons: [{ id: 'lib-knife', name: 'Knife', type: 'weapon', quantity: 1 }],
+      },
+    );
+    const addOp = patch.ops.find((op) => op.op === 'add');
+    expect(addOp).toBeDefined();
+    expect(addOp).toMatchObject({
+      bucket: 'weapons',
+      item: { id: 'lib-knife', name: 'Knife', quantity: 1, equipped: false },
+    });
+    expect((addOp as { item: Record<string, unknown> }).item).not.toHaveProperty('type');
+  });
+
+  it('codex equipment type is still sent when it differs from weapons bucket label', () => {
+    const patch = buildInventoryPatch(
+      { weapons: [] },
+      {
+        weapons: [
+          { id: 'lib-bed-roll', name: 'Bed Roll', type: 'equipment', quantity: 1 },
+        ],
+      },
+    );
+    const addOp = patch.ops.find((op) => op.op === 'add');
+    expect(addOp).toMatchObject({
+      item: expect.objectContaining({ type: 'equipment' }),
+    });
+  });
+
   it('clearing type sends null in patch item', () => {
     const before = {
       equipment: {

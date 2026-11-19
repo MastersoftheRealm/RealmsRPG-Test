@@ -105,15 +105,35 @@ export function inventoryRowCasSnapshot(row: Record<string, unknown>): Inventory
   };
 }
 
-function leanRowForPatchOp(row: Record<string, unknown>): Record<string, unknown> {
+function isUiBucketTypeOnNewRow(
+  row: Record<string, unknown>,
+  bucket: InventoryPatchBucket,
+): boolean {
+  const type = row.type;
+  if (typeof type !== 'string' || !type) return false;
+  if (bucket === 'weapons') return type === 'weapon';
+  if (bucket === 'armor') return type === 'armor';
+  if (bucket === 'shields') return type === 'shield';
+  return false;
+}
+
+function leanRowForPatchOp(
+  row: Record<string, unknown>,
+  bucket?: InventoryPatchBucket,
+  options?: { treatAsNewRow?: boolean },
+): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   if (row.id !== undefined) out.id = row.id;
   if (row.name !== undefined) out.name = row.name;
   out.equipped = row.equipped === true;
   out.quantity = rowQuantity(row);
   if (Object.prototype.hasOwnProperty.call(row, 'type')) {
-    const type = row.type;
-    out.type = typeof type === 'string' && type.length > 0 ? type : null;
+    if (bucket && options?.treatAsNewRow && isUiBucketTypeOnNewRow(row, bucket)) {
+      // Official codex rows use NULL custom_type; omit UI bucket labels on add.
+    } else {
+      const type = row.type;
+      out.type = typeof type === 'string' && type.length > 0 ? type : null;
+    }
   }
   if (Object.prototype.hasOwnProperty.call(row, 'description')) {
     const description = row.description;
@@ -181,7 +201,7 @@ export function buildInventoryPatch(
             op: 'add',
             bucket,
             inventoryRowId: existingId,
-            item: leanRowForPatchOp(row),
+            item: leanRowForPatchOp(row, bucket, { treatAsNewRow: true }),
             position: i + 1,
           });
         } else if (!rowsEqual(prev, row)) {
@@ -190,7 +210,7 @@ export function buildInventoryPatch(
             bucket,
             inventoryRowId: existingId,
             expected: inventoryRowCasSnapshot(prev),
-            item: leanRowForPatchOp(row),
+            item: leanRowForPatchOp(row, bucket),
           });
         }
         continue;
@@ -203,7 +223,7 @@ export function buildInventoryPatch(
         op: 'add',
         bucket,
         inventoryRowId: provisionalId,
-        item: leanRowForPatchOp(row),
+        item: leanRowForPatchOp(row, bucket, { treatAsNewRow: true }),
         position: i + 1,
       });
     }

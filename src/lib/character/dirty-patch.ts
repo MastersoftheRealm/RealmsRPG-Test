@@ -166,6 +166,57 @@ function mergeEquipmentScalarBucket(
   return localValue;
 }
 
+/**
+ * Three-way merge for one inventory sheet row after a 409.
+ * - Field changed only locally → keep local.
+ * - Field changed only on server → take remote.
+ * - Quantity changed on both → remote qty + (local qty − baseline qty).
+ * - Same non-qty field changed on both → local wins (this tab is retrying its dirty save).
+ */
+function mergeInventoryRowConflict(
+  baseline: Record<string, unknown>,
+  local: Record<string, unknown>,
+  remote: Record<string, unknown>,
+): Record<string, unknown> {
+  const merged: Record<string, unknown> = { ...remote };
+  const keys = new Set([
+    ...Object.keys(baseline),
+    ...Object.keys(local),
+    ...Object.keys(remote),
+  ]);
+  for (const key of keys) {
+    if (key === 'inventoryRowId' || key === 'id') continue;
+    const b = baseline[key];
+    const l = local[key];
+    const r = remote[key];
+    const localChanged = !stableEqual(l, b);
+    const remoteChanged = !stableEqual(r, b);
+    if (!localChanged && !remoteChanged) {
+      if (r !== undefined) merged[key] = r;
+      continue;
+    }
+    if (localChanged && !remoteChanged) {
+      merged[key] = l;
+      continue;
+    }
+    if (!localChanged && remoteChanged) {
+      merged[key] = r;
+      continue;
+    }
+    if (
+      key === 'quantity' &&
+      typeof b === 'number' &&
+      typeof l === 'number' &&
+      typeof r === 'number'
+    ) {
+      merged[key] = r + (l - b);
+      continue;
+    }
+    merged[key] = l;
+  }
+  return merged;
+}
+
 function mergeEquipmentItemBucket(
   remoteList: unknown,
   localList: unknown,
@@ -208,16 +259,8 @@ function mergeEquipmentItemBucket(
         ? !stableEqual(localRow, remoteRow)
         : !stableEqual(localRow!, baselineRow);
 
-    if (
-      localDirty &&
-      baselineRow &&
-      typeof remoteRow.quantity === 'number' &&
-      typeof localRow!.quantity === 'number' &&
-      typeof baselineRow.quantity === 'number' &&
-      remoteRow.quantity !== localRow!.quantity
-    ) {
-      const delta = localRow!.quantity - baselineRow.quantity;
-      merged.push({ ...remoteRow, quantity: remoteRow.quantity + delta });
+    if (localDirty && baselineRow) {
+      merged.push(mergeInventoryRowConflict(baselineRow, localRow!, remoteRow));
       continue;
     }
 
