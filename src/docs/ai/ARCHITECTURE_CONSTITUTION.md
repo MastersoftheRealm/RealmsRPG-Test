@@ -68,7 +68,7 @@ Question for human: (HOLD only, one clear decision for Kadin — product what)
 
 - **APPROVE:** all items pass or n/a, repro **run by critic**, independent session, **Head SHA** matches PR head, not unaccepted PATCH, high-risk label/brief/rollout satisfied when required. High risk alone is **not** HOLD. Post **`Realms Independent Critic`** via **Realms Critic GitHub App** on that SHA.
 - **REQUEST CHANGES:** checklist fail the writer can fix; writer may self-audit in same session but does not post the GitHub check.
-- **HOLD FOR HUMAN:** missing/conflicting rule, product decision, PATCH veto, writer session, stale SHA, missing `high-risk` label or design brief when required, missing rollout matrix.
+- **HOLD FOR HUMAN:** missing/conflicting rule, product decision, PATCH veto, writer session, stale SHA, missing design brief when required, missing rollout matrix. (`high-risk` label ↔ diff mismatch → App check **failure**, not HOLD; `AGENTS.md` §5.)
 - **PATCH veto:** cannot APPROVE; merges only if Kadin accepts PATCH in his own PR comment (`AGENTS.md`, Review).
 
 The critic never merges, pushes, changes GitHub settings, or writes to ClickUp, Drive or the database. Green CI is not proof. The GitHub critic check is not proof without the critic having run the tests locally.
