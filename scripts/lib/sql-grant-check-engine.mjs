@@ -57,6 +57,8 @@ export function isIgnoredSqlGrantCheckPath(relPath) {
   const normalized = relPath.replace(/\\/g, '/');
   if (IGNORED_REL.has(normalized)) return true;
   if (normalized.startsWith('sql/schema/')) return true;
+  // Local pgTAP bootstrap only (supabase start); never applied to production.
+  if (normalized.startsWith('sql/tests/')) return true;
   return false;
 }
 
