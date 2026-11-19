@@ -1,6 +1,6 @@
 BEGIN;
 
-SELECT plan(21);
+SELECT plan(23);
 
 SELECT has_function('public', 'apply_character_inventory_patch', ARRAY['text','text','jsonb']);
 SELECT has_function('public', 'patch_character_relational', ARRAY['text','jsonb','text']);
@@ -265,6 +265,41 @@ SELECT lives_ok(
 SELECT results_eq(
   $$SELECT count(*)::int FROM public.character_inventory WHERE character_id = 'pgtap-char' AND category = 'weapon'$$,
   ARRAY[3], 'reorder dense list keeps three weapons'
+);
+
+SELECT lives_ok(
+  $q$
+    SELECT public.apply_character_inventory_patch(
+      'pgtap-char', '10000000-0000-4000-8000-000000000099',
+      jsonb_build_object('ops', jsonb_build_array(
+        jsonb_build_object(
+          'op', 'reorder', 'bucket', 'weapons', 'inventoryRowId', '70000000-0000-4000-8000-00000000000e',
+          'expected', jsonb_build_object('quantity', 1, 'equipped', false, 'name', 'Beta', 'type', '', 'description', '', 'cost', null),
+          'position', 1
+        ),
+        jsonb_build_object(
+          'op', 'reorder', 'bucket', 'weapons', 'inventoryRowId', '70000000-0000-4000-8000-00000000000f',
+          'expected', jsonb_build_object('quantity', 1, 'equipped', false, 'name', 'Gamma', 'type', '', 'description', '', 'cost', null),
+          'position', 2
+        ),
+        jsonb_build_object(
+          'op', 'reorder', 'bucket', 'weapons', 'inventoryRowId', '70000000-0000-4000-8000-00000000000d',
+          'expected', jsonb_build_object('quantity', 1, 'equipped', false, 'name', 'Alpha', 'type', '', 'description', '', 'cost', null),
+          'position', 3
+        )
+      ))
+    );
+  $q$, 'multi-step reorder alpha to end'
+);
+
+SELECT results_eq(
+  $q$
+    SELECT array_agg(name_snapshot ORDER BY position)
+    FROM public.character_inventory
+    WHERE character_id = 'pgtap-char' AND category = 'weapon';
+  $q$,
+  ARRAY[ARRAY['Beta','Gamma','Alpha']::text[]],
+  'multi-step reorder ends Beta, Gamma, Alpha'
 );
 
 SELECT * FROM finish();

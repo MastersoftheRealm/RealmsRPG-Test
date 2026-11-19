@@ -80,6 +80,7 @@ DECLARE
   v_equipped boolean;
   v_cost numeric;
   v_inv_row record;
+  v_current_pos integer;
 BEGIN
   IF jsonb_typeof(p_patch) IS DISTINCT FROM 'object'
      OR jsonb_typeof(p_patch->'ops') IS DISTINCT FROM 'array' THEN
@@ -262,7 +263,14 @@ BEGIN
       IF v_position IS NULL OR v_position < 1 THEN
         RAISE EXCEPTION 'Reorder position must be >= 1' USING ERRCODE = '22023';
       END IF;
-      IF v_row.position = v_position THEN
+
+      SELECT position INTO v_current_pos
+      FROM public.character_inventory
+      WHERE character_id = p_character_id AND inventory_row_id = v_row_id;
+      IF NOT FOUND THEN
+        RAISE EXCEPTION USING ERRCODE = '40001', MESSAGE = 'inventory_cas_conflict';
+      END IF;
+      IF v_current_pos = v_position THEN
         CONTINUE;
       END IF;
 
@@ -270,7 +278,7 @@ BEGIN
       FROM public.character_inventory
       WHERE character_id = p_character_id AND category = v_row.category
         AND slot IS NOT DISTINCT FROM v_row.slot;
-      IF v_position > v_max + (CASE WHEN v_row.position > v_position THEN 0 ELSE 1 END) THEN
+      IF v_position > v_max + (CASE WHEN v_current_pos > v_position THEN 0 ELSE 1 END) THEN
         RAISE EXCEPTION USING ERRCODE = '40001', MESSAGE = 'inventory_cas_conflict';
       END IF;
 
@@ -278,13 +286,13 @@ BEGIN
       SET position = v_max + 100000
       WHERE character_id = p_character_id AND inventory_row_id = v_row_id;
 
-      IF v_row.position < v_position THEN
+      IF v_current_pos < v_position THEN
         FOR v_inv_row IN
           SELECT inventory_row_id, position
           FROM public.character_inventory
           WHERE character_id = p_character_id AND category = v_row.category
             AND slot IS NOT DISTINCT FROM v_row.slot
-            AND position > v_row.position AND position <= v_position
+            AND position > v_current_pos AND position <= v_position
             AND inventory_row_id IS DISTINCT FROM v_row_id
           ORDER BY position ASC
         LOOP
@@ -292,13 +300,13 @@ BEGIN
           SET position = v_inv_row.position - 1
           WHERE inventory_row_id = v_inv_row.inventory_row_id;
         END LOOP;
-      ELSIF v_row.position > v_position THEN
+      ELSIF v_current_pos > v_position THEN
         FOR v_inv_row IN
           SELECT inventory_row_id, position
           FROM public.character_inventory
           WHERE character_id = p_character_id AND category = v_row.category
             AND slot IS NOT DISTINCT FROM v_row.slot
-            AND position >= v_position AND position < v_row.position
+            AND position >= v_position AND position < v_current_pos
             AND inventory_row_id IS DISTINCT FROM v_row_id
           ORDER BY position DESC
         LOOP
