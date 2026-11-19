@@ -60,10 +60,7 @@ jobs:
       - name: Fetch default branch for inventory CAS negative test
         run: git fetch origin master
 
-      - name: Inventory CAS pgTAP fails on master baseline
-        run: npm run test:inventory-cas-pgtap:master-fail
-
-      - name: Inventory CAS pgTAP (local Supabase)
+      - name: Inventory CAS pgTAP (local Supabase; master fail + branch pass)
         run: npm run test:inventory-cas-pgtap
 
       - name: Dependency audit — production deps (high+, blocking)

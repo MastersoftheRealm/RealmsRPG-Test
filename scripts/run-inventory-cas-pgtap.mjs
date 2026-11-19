@@ -8,7 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const expectFail = process.argv.includes('--expect-fail');
+const onlyFail = process.argv.includes('--expect-fail');
 const inventoryCasHelpersSql = path.join(
   'sql',
   `characters-inventory-cas-patch-${['86e3', 'juw0a'].join('')}.sql`,
@@ -35,6 +35,10 @@ function psqlFile(dbUrl, rel) {
   run('psql', [dbUrl, '-v', 'ON_ERROR_STOP=1', '-f', abs]);
 }
 
+function psqlSql(dbUrl, sql) {
+  run('psql', [dbUrl, '-v', 'ON_ERROR_STOP=1', '-c', sql]);
+}
+
 function pgtap(dbUrl) {
   return spawnSync(
     'pg_prove',
@@ -50,8 +54,25 @@ function dbUrlFromSupabase() {
   return line.slice('DB_URL='.length).replace(/^"|"$/g, '');
 }
 
-function applyInventorySql(dbUrl) {
+function startSupabase() {
+  run('supabase', [
+    'start',
+    '-x',
+    'imgproxy',
+    '-x',
+    'logflare',
+    '-x',
+    'vector',
+    '--ignore-health-check',
+  ]);
+}
+
+function resetDatabase(dbUrl) {
+  psqlSql(dbUrl, 'DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;');
   psqlFile(dbUrl, 'sql/tests/inventory-cas-pgtap-bootstrap.sql');
+}
+
+function applyInventorySql(dbUrl) {
   if (fs.existsSync(path.join(root, 'sql/characters-inventory-row-id.sql'))) {
     psqlFile(dbUrl, 'sql/characters-inventory-row-id.sql');
   }
@@ -70,25 +91,38 @@ function masterHasInventoryCas() {
   }
 }
 
+function runMasterNegative(dbUrl) {
+  resetDatabase(dbUrl);
+  if (masterHasInventoryCas()) {
+    const tmp = path.join(root, '.tmp-master-cas.sql');
+    const sql = execFileSync('git', ['show', `origin/master:${inventoryCasHelpersSql}`], {
+      cwd: root,
+      encoding: 'utf8',
+    });
+    fs.writeFileSync(tmp, sql);
+    run('psql', [dbUrl, '-v', 'ON_ERROR_STOP=1', '-f', tmp]);
+    fs.unlinkSync(tmp);
+  }
+  const res = pgtap(dbUrl);
+  return res.status ?? 1;
+}
+
+function runBranchPositive(dbUrl) {
+  resetDatabase(dbUrl);
+  applyInventorySql(dbUrl);
+  const res = pgtap(dbUrl);
+  if (res.stdout) process.stdout.write(res.stdout);
+  if (res.stderr) process.stderr.write(res.stderr);
+  return res.status ?? 1;
+}
+
 function main() {
-  run('supabase', ['start', '-x', 'imgproxy', 'logflare', 'vector']);
+  startSupabase();
   const dbUrl = dbUrlFromSupabase();
 
-  if (expectFail) {
-    psqlFile(dbUrl, 'sql/tests/inventory-cas-pgtap-bootstrap.sql');
-    if (masterHasInventoryCas()) {
-      const tmp = path.join(root, '.tmp-master-cas.sql');
-      const sql = execFileSync(
-        'git',
-        ['show', `origin/master:${inventoryCasHelpersSql}`],
-        { cwd: root, encoding: 'utf8' },
-      );
-      fs.writeFileSync(tmp, sql);
-      run('psql', [dbUrl, '-v', 'ON_ERROR_STOP=1', '-f', tmp]);
-      fs.unlinkSync(tmp);
-    }
-    const res = pgtap(dbUrl);
-    if (res.status === 0) {
+  if (onlyFail) {
+    const code = runMasterNegative(dbUrl);
+    if (code === 0) {
       console.error('Expected pgTAP to fail on master inventory CAS SQL; it passed.');
       process.exit(2);
     }
@@ -96,12 +130,16 @@ function main() {
     return;
   }
 
-  applyInventorySql(dbUrl);
-  const res = pgtap(dbUrl);
-  if (res.stdout) process.stdout.write(res.stdout);
-  if (res.stderr) process.stderr.write(res.stderr);
-  if (res.status !== 0) process.exit(res.status ?? 2);
-  console.log('inventory-cas-pgtap: OK');
+  const negative = runMasterNegative(dbUrl);
+  if (negative === 0) {
+    console.error('Expected pgTAP to fail on master inventory CAS SQL; it passed.');
+    process.exit(2);
+  }
+  console.log('inventory-cas-pgtap: master baseline failed as expected.');
+
+  const positive = runBranchPositive(dbUrl);
+  if (positive !== 0) process.exit(positive);
+  console.log('inventory-cas-pgtap: branch OK');
 }
 
 main();
