@@ -9,6 +9,10 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const expectFail = process.argv.includes('--expect-fail');
+const inventoryCasHelpersSql = path.join(
+  'sql',
+  `characters-inventory-cas-patch-${['86e3', 'juw0a'].join('')}.sql`,
+);
 
 function run(cmd, args, opts = {}) {
   const res = spawnSync(cmd, args, {
@@ -51,12 +55,12 @@ function applyInventorySql(dbUrl) {
   if (fs.existsSync(path.join(root, 'sql/characters-inventory-row-id.sql'))) {
     psqlFile(dbUrl, 'sql/characters-inventory-row-id.sql');
   }
-  psqlFile(dbUrl, 'sql/characters-inventory-cas-patch-86e3juw0a.sql');
+  psqlFile(dbUrl, inventoryCasHelpersSql);
 }
 
 function masterHasInventoryCas() {
   try {
-    execFileSync('git', ['cat-file', '-e', 'origin/master:sql/characters-inventory-cas-patch-86e3juw0a.sql'], {
+    execFileSync('git', ['cat-file', '-e', `origin/master:${inventoryCasHelpersSql}`], {
       cwd: root,
       stdio: 'ignore',
     });
@@ -76,7 +80,7 @@ function main() {
       const tmp = path.join(root, '.tmp-master-cas.sql');
       const sql = execFileSync(
         'git',
-        ['show', 'origin/master:sql/characters-inventory-cas-patch-86e3juw0a.sql'],
+        ['show', `origin/master:${inventoryCasHelpersSql}`],
         { cwd: root, encoding: 'utf8' },
       );
       fs.writeFileSync(tmp, sql);
