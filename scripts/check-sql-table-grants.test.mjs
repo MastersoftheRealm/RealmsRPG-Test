@@ -22,6 +22,8 @@ import {
 import {
   findSqlFileViolations,
   isAllowlistedWritePolicyPredicate,
+  blankDollarQuotedRegions,
+  extractAllDollarQuotedBodies,
 } from './lib/sql-grant-check-engine.mjs';
 
 const scriptPath = fileURLToPath(new URL('./check-sql-table-grants.mjs', import.meta.url));
@@ -1026,6 +1028,24 @@ $p$;`;
 });
 
 describe('PR 564 R6 blockers', () => {
+  it('does not flag SELECT INTO plpgsql variables inside dollar-quoted DO (pgTAP throws_ok)', () => {
+    const sql = `SELECT throws_ok(
+      $q$
+        DO $do$
+        DECLARE v record;
+        BEGIN
+          SELECT * INTO v FROM public.inventory_patch_bucket_category('weapons');
+        END;
+        $do$;
+      $q$,
+      '42501', NULL, 'anon cannot EXECUTE inventory_patch_bucket_category'
+    );`;
+    expect(extractAllDollarQuotedBodies(sql).length).toBeGreaterThanOrEqual(2);
+    expect(blankDollarQuotedRegions(sql)).not.toMatch(/select\s+\*\s+into\s+v/i);
+    expect(findSqlFileViolations(sql)).toEqual([]);
+    expect(findGrantViolations(['sql/tests/inventory_cas_pgtap_role_privileges.sql'])).toEqual([]);
+  });
+
   it('R6-B1: flags quoted and CTE SELECT INTO targets but not TEMP', () => {
     const cases = [
       `SELECT * INTO "public".cc FROM public.t;`,

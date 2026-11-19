@@ -1761,6 +1761,75 @@ function findAlterViewSecurityInvokerViolations(rawSql) {
   return finalizeSqlGrantViolations(out);
 }
 
+/**
+ * Every dollar-quoted literal body (including nested), for SELECT INTO tripwire stripping.
+ * @param {string} sql
+ * @returns {string[]}
+ */
+export function extractAllDollarQuotedBodies(sql) {
+  /** @type {string[]} */
+  const bodies = [];
+  /** @type {{ tag: string, start: number }[]} */
+  const stack = [];
+  let i = 0;
+  const n = sql.length;
+  while (i < n) {
+    if (sql[i] === '$') {
+      const match = /^\$([A-Za-z_][A-Za-z0-9_]*)?\$/.exec(sql.slice(i));
+      if (!match) {
+        i += 1;
+        continue;
+      }
+      const tag = match[0];
+      if (stack.length && stack[stack.length - 1].tag === tag) {
+        const { start } = stack.pop();
+        bodies.push(sql.slice(start, i));
+        i += tag.length;
+        continue;
+      }
+      stack.push({ tag, start: i + tag.length });
+      i += tag.length;
+      continue;
+    }
+    i += 1;
+  }
+  return bodies;
+}
+
+/**
+ * Blank interiors of all dollar-quoted literals so SELECT INTO tripwire ignores embedded PL/pgSQL.
+ * @param {string} sql
+ */
+export function blankDollarQuotedRegions(sql) {
+  let out = '';
+  /** @type {string[]} */
+  const stack = [];
+  let i = 0;
+  const n = sql.length;
+  while (i < n) {
+    if (sql[i] === '$') {
+      const match = /^\$([A-Za-z_][A-Za-z0-9_]*)?\$/.exec(sql.slice(i));
+      if (match) {
+        const tag = match[0];
+        if (stack.length && stack[stack.length - 1] === tag) {
+          stack.pop();
+          out += tag;
+          i += tag.length;
+          continue;
+        }
+        stack.push(tag);
+        out += tag;
+        i += tag.length;
+        continue;
+      }
+    }
+    const ch = sql[i];
+    out += stack.length ? (ch === '\n' ? '\n' : ' ') : ch;
+    i += 1;
+  }
+  return out;
+}
+
 function findUnauditedObjectCreationViolations(code, bodiesToStrip = []) {
   let scan = code;
   for (const body of bodiesToStrip) {
@@ -1952,8 +2021,9 @@ export function findSqlFileViolations(sql, options = {}) {
   }
 
   violations.push(...findAlterViewSecurityInvokerViolations(sql));
+  const selectIntoScan = sqlCodeWithoutCommentsAndLiterals(blankDollarQuotedRegions(sql));
   violations.push(
-    ...findUnauditedObjectCreationViolations(code, [...functionBodies, ...topLevelDoBodies]),
+    ...findUnauditedObjectCreationViolations(selectIntoScan, [...functionBodies, ...topLevelDoBodies]),
   );
   violations.push(...findRoleToRoleGrantViolations(code));
   violations.push(...findClientRoleAdminViolations(code));

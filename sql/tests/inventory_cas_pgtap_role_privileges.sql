@@ -30,9 +30,10 @@ SELECT throws_ok(
 SELECT throws_ok(
   $q$
     DO $do$
+    DECLARE v record;
     BEGIN
       SET LOCAL ROLE anon;
-      PERFORM public.inventory_patch_bucket_category('weapons');
+      SELECT * INTO v FROM public.inventory_patch_bucket_category('weapons');
     END;
     $do$;
   $q$,
@@ -57,9 +58,10 @@ SELECT throws_ok(
 SELECT throws_ok(
   $q$
     DO $do$
+    DECLARE v record;
     BEGIN
       SET LOCAL ROLE anon;
-      PERFORM public.inventory_patch_field_clear('{}'::jsonb, 'type');
+      SELECT * INTO v FROM public.inventory_patch_field_clear('{}'::jsonb, 'type');
     END;
     $do$;
   $q$,
