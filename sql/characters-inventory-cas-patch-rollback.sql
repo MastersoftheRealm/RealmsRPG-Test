@@ -1,4 +1,4 @@
--- Rollback CAS helpers from characters-inventory-cas-patch-86e3juw0a.sql.
+-- Rollback CAS helpers from characters-inventory-cas-patch SQL in this repo.
 -- Re-apply characters-relational-read-rpc.sql + characters-relational-write-rpc.sql
 -- from the previous commit after rollback. Not for agent apply without owner OK + backup.
 BEGIN;

@@ -23,7 +23,7 @@ SELECT results_eq(
       'pgtap-char',
       '10000000-0000-4000-8000-000000000099',
       jsonb_build_object(
-        'equipment', jsonb_build_object('items', jsonb_build_array(jsonb_build_object('id','rope','name','Rope','quantity',2)))
+        'equipment', jsonb_build_object('items', jsonb_build_array(jsonb_build_object('id','custom-rope','name','Rope','quantity',2)))
       )
     )->>'status');
   $q$,

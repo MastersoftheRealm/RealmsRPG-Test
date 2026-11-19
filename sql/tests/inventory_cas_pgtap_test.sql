@@ -61,7 +61,7 @@ SELECT lives_ok(
       jsonb_build_object('ops', jsonb_build_array(
         jsonb_build_object('op', 'add', 'bucket', 'items', 'position', 3,
           'inventoryRowId', '30000000-0000-4000-8000-000000000003',
-          'item', jsonb_build_object('id', 'grapple-rope', 'name', 'Grapple Rope', 'quantity', 1))
+          'item', jsonb_build_object('id', 'custom-grapple-rope', 'name', 'Grapple Rope', 'quantity', 1))
       ))
     );
   $q$, 'add item with server row id'

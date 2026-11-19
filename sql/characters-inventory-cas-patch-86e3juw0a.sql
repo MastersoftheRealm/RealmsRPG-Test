@@ -254,28 +254,37 @@ BEGIN
         CONTINUE;
       END IF;
 
-      SELECT max(position) INTO v_max
+      SELECT coalesce(max(position), 0) INTO v_max
       FROM public.character_inventory
       WHERE character_id = p_character_id AND category = v_row.category
         AND slot IS NOT DISTINCT FROM v_row.slot;
-      IF v_position > coalesce(v_max, 0) + (CASE WHEN v_row.position > v_position THEN 0 ELSE 1 END) THEN
+      IF v_position > v_max + (CASE WHEN v_row.position > v_position THEN 0 ELSE 1 END) THEN
         RAISE EXCEPTION USING ERRCODE = '40001', MESSAGE = 'inventory_cas_conflict';
       END IF;
 
       UPDATE public.character_inventory
-      SET position = position + 100000
-      WHERE character_id = p_character_id AND category = v_row.category
-        AND slot IS NOT DISTINCT FROM v_row.slot;
-
-      UPDATE public.character_inventory
-      SET position = v_position + 100000
+      SET position = v_max + 100000
       WHERE character_id = p_character_id AND inventory_row_id = v_row_id;
 
+      IF v_row.position < v_position THEN
+        UPDATE public.character_inventory
+        SET position = position - 1
+        WHERE character_id = p_character_id AND category = v_row.category
+          AND slot IS NOT DISTINCT FROM v_row.slot
+          AND position > v_row.position AND position <= v_position
+          AND inventory_row_id IS DISTINCT FROM v_row_id;
+      ELSIF v_row.position > v_position THEN
+        UPDATE public.character_inventory
+        SET position = position + 1
+        WHERE character_id = p_character_id AND category = v_row.category
+          AND slot IS NOT DISTINCT FROM v_row.slot
+          AND position >= v_position AND position < v_row.position
+          AND inventory_row_id IS DISTINCT FROM v_row_id;
+      END IF;
+
       UPDATE public.character_inventory
-      SET position = position - 100000
-      WHERE character_id = p_character_id AND category = v_row.category
-        AND slot IS NOT DISTINCT FROM v_row.slot
-        AND position > 100000;
+      SET position = v_position
+      WHERE character_id = p_character_id AND inventory_row_id = v_row_id;
     END IF;
   END LOOP;
 
