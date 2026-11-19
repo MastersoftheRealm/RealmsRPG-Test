@@ -3,6 +3,8 @@
  * Leaf module — no UI imports.
  */
 
+import { matchesSheetEquipmentItem } from '@/lib/character/sheet-equipment-match';
+
 const INVENTORY_PATCH_BUCKETS = [
   'weapons',
   'shields',
@@ -67,6 +69,12 @@ function readEquipmentBucket(
   }
   if (!Array.isArray(raw)) return [];
   return raw.filter((row): row is Record<string, unknown> => !!row && typeof row === 'object');
+}
+
+function equipmentRowIdentityKey(row: Record<string, unknown>): string {
+  const id = row.id != null ? String(row.id) : '';
+  const name = typeof row.name === 'string' ? row.name : '';
+  return `${id}\0${name}`;
 }
 
 function readInventoryRowId(row: Record<string, unknown>): string | null {
@@ -227,6 +235,75 @@ export function buildInventoryPatch(
   }
 
   return { ops };
+}
+
+/**
+ * `buildInventoryPatch` stamps provisional `inventoryRowId` on cleaned equipment rows only.
+ * Mirror those ids onto live sheet equipment so post-save merge and the next baseline match.
+ */
+export function mirrorInventoryRowIdsOntoSheetEquipment(
+  sheetEquipment: unknown,
+  cleanedEquipment: unknown,
+): unknown {
+  if (!sheetEquipment || typeof sheetEquipment !== 'object') return sheetEquipment;
+  if (!cleanedEquipment || typeof cleanedEquipment !== 'object') return sheetEquipment;
+  const sheet = sheetEquipment as Record<string, unknown>;
+  const cleaned = cleanedEquipment as Record<string, unknown>;
+  let anyChanged = false;
+  const nextSheet: Record<string, unknown> = { ...sheet };
+
+  for (const bucket of INVENTORY_PATCH_BUCKETS) {
+    const cleanedRows = readEquipmentBucket(cleaned, bucket);
+    const sheetRows = readEquipmentBucket(sheet, bucket);
+    if (cleanedRows.length === 0) continue;
+
+    const nextRows = sheetRows.map((row) => ({ ...row }));
+    let bucketChanged = false;
+
+    for (const cleanRow of cleanedRows) {
+      const rowId = readInventoryRowId(cleanRow);
+      if (!rowId) continue;
+
+      let idx = nextRows.findIndex((row) => readInventoryRowId(row) === rowId);
+      if (idx < 0) {
+        const key = equipmentRowIdentityKey(cleanRow);
+        idx = nextRows.findIndex(
+          (row) => !readInventoryRowId(row) && equipmentRowIdentityKey(row) === key,
+        );
+      }
+      if (idx < 0 && cleanRow.id != null) {
+        idx = nextRows.findIndex(
+          (row) =>
+            !readInventoryRowId(row) &&
+            matchesSheetEquipmentItem(row as { id?: string | number; name?: string }, cleanRow.id, -1),
+        );
+      }
+      if (idx < 0) continue;
+
+      const sheetRow = nextRows[idx]!;
+      if (readInventoryRowId(sheetRow) === rowId) continue;
+      nextRows[idx] = { ...sheetRow, inventoryRowId: rowId };
+      bucketChanged = true;
+    }
+
+    if (!bucketChanged) continue;
+    anyChanged = true;
+    if (bucket === 'armor') {
+      nextSheet.armor = nextRows[0] ?? null;
+    } else {
+      nextSheet[bucket] = nextRows;
+    }
+  }
+
+  return anyChanged ? nextSheet : sheetEquipment;
+}
+
+export function prepareInventoryPatchForAutosave(
+  saveBaseline: Record<string, unknown> | null | undefined,
+  cleaned: Record<string, unknown>,
+): void {
+  if (!saveBaseline || !cleaned.equipment) return;
+  buildInventoryPatch(saveBaseline.equipment, cleaned.equipment);
 }
 
 export function replaceEquipmentDirtyWithInventoryPatch(

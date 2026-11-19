@@ -4,6 +4,8 @@ import {
   buildInventoryPatch,
   inventoryRowCasSnapshot,
   mergeInventoryCreatedRows,
+  mirrorInventoryRowIdsOntoSheetEquipment,
+  prepareInventoryPatchForAutosave,
   replaceEquipmentDirtyWithInventoryPatch,
 } from './inventory-patch';
 
@@ -218,6 +220,46 @@ describe('inventory patch', () => {
       op: 'update',
       item: { type: null },
     });
+  });
+
+  it('mirrors provisional inventoryRowId from cleaned save onto sheet equipment', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: HEALTH_ROW,
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 1,
+          },
+        ],
+      },
+    };
+    const sheet = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: HEALTH_ROW,
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 1,
+          },
+          { id: 'custom-rope', name: 'Rope', quantity: 1 },
+        ],
+      },
+    };
+    const cleaned = cleanForSave(sheet as never) as Record<string, unknown>;
+    prepareInventoryPatchForAutosave(baseline, cleaned);
+    const mirrored = mirrorInventoryRowIdsOntoSheetEquipment(
+      sheet.equipment,
+      cleaned.equipment,
+    ) as { items: Array<{ inventoryRowId?: string; name?: string }> };
+    const rope = mirrored.items.find((row) => row.name === 'Rope');
+    const cleanedRope = (cleaned.equipment as { items: Array<{ inventoryRowId?: string }> }).items.find(
+      (row) => row.name === 'Rope',
+    );
+    expect(cleanedRope?.inventoryRowId).toBeTruthy();
+    expect(rope?.inventoryRowId).toBe(cleanedRope?.inventoryRowId);
   });
 
   it('cleanForSave keeps inventoryRowId so CAS updates target the same row', () => {

@@ -36,6 +36,10 @@ import {
 } from '@/hooks';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { sheetCatalogFromEnrichment } from '@/lib/character-view-enrichment';
+import {
+  mirrorInventoryRowIdsOntoSheetEquipment,
+  prepareInventoryPatchForAutosave,
+} from '@/lib/character/inventory-patch';
 import { cleanForSave } from '@/lib/data-enrichment';
 import { getErrorMessage } from '@/lib/api-client';
 import {
@@ -366,6 +370,16 @@ export function useCharacterSheetPageData(id: string) {
     onSave: async (data) => {
       if (!data) return;
       const rawCleaned = cleanForSave(data, rules) as Record<string, unknown>;
+      prepareInventoryPatchForAutosave(savedCleanRef.current, rawCleaned);
+      const mirroredEquipment = mirrorInventoryRowIdsOntoSheetEquipment(
+        data.equipment,
+        rawCleaned.equipment,
+      );
+      if (mirroredEquipment !== data.equipment) {
+        setCharacter((prev) =>
+          prev ? { ...prev, equipment: mirroredEquipment as Character['equipment'] } : prev,
+        );
+      }
       const prepared = characterSaveWithoutOverlongName(rawCleaned, savedCleanRef.current);
       if (prepared.rejected) {
         showToast(CHARACTER_NAME_TOO_LONG_MESSAGE, 'error');

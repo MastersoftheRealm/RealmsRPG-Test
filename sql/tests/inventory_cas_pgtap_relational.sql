@@ -1,6 +1,6 @@
 BEGIN;
 
-SELECT plan(6);
+SELECT plan(13);
 
 CREATE OR REPLACE FUNCTION pgtap_patch_as_owner(
   p_character_id text,
@@ -60,6 +60,13 @@ SELECT results_eq(
   'bed roll persisted via patch_character_relational'
 );
 
+SELECT results_eq(
+  $$SELECT quantity::int FROM public.character_inventory
+    WHERE inventory_row_id = '80000000-0000-4000-8000-000000000002'::uuid$$,
+  ARRAY[2],
+  'energy potion persisted via patch_character_relational'
+);
+
 SELECT lives_ok(
   $q$
     SELECT pgtap_patch_as_owner(
@@ -74,6 +81,26 @@ SELECT lives_ok(
     );
   $q$,
   'patch_character_relational add item'
+);
+
+SELECT results_eq(
+  $$SELECT count(*)::int FROM public.character_inventory WHERE character_id = 'pgtap-rel'$$,
+  ARRAY[3],
+  'add leaves three equipment rows'
+);
+
+SELECT results_eq(
+  $$SELECT name_snapshot FROM public.character_inventory
+    WHERE inventory_row_id = '80000000-0000-4000-8000-000000000003'::uuid$$,
+  ARRAY['Rope'::text],
+  'rope name after add'
+);
+
+SELECT results_eq(
+  $$SELECT position::int FROM public.character_inventory
+    WHERE inventory_row_id = '80000000-0000-4000-8000-000000000003'::uuid$$,
+  ARRAY[3],
+  'rope position after add'
 );
 
 SELECT lives_ok(
@@ -95,6 +122,15 @@ SELECT lives_ok(
     );
   $q$,
   'patch_character_relational reorder item'
+);
+
+SELECT results_eq(
+  $q$
+    SELECT array_agg(name_snapshot ORDER BY position)
+    FROM public.character_inventory WHERE character_id = 'pgtap-rel';
+  $q$,
+  $$SELECT ARRAY['Energy Potion', 'Bed Roll', 'Rope']::text[]$$,
+  'reorder persisted item order'
 );
 
 SELECT results_eq(
@@ -137,6 +173,18 @@ SELECT lives_ok(
     );
   $q$,
   'patch_character_relational remove item'
+);
+
+SELECT results_eq(
+  $$SELECT count(*)::int FROM public.character_inventory WHERE character_id = 'pgtap-rel'$$,
+  ARRAY[2],
+  'remove leaves two equipment rows'
+);
+
+SELECT is_empty(
+  $$SELECT 1 FROM public.character_inventory
+    WHERE inventory_row_id = '80000000-0000-4000-8000-000000000003'::uuid$$,
+  'rope row gone after remove'
 );
 
 SELECT * FROM finish();

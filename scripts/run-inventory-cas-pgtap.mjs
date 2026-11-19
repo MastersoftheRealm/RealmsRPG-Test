@@ -40,6 +40,7 @@ const POST_ROLLBACK_TEST = 'sql/tests/inventory_cas_pgtap_post_rollback.sql';
 const ROLLBACK_MASTER_REF = '8ae31ecd';
 const ROLLBACK_RELATIONAL_MASTER = [
   'sql/characters-relational-expand.sql',
+  'sql/characters-relational-cutover.sql',
   'sql/characters-relational-read-rpc.sql',
   'sql/characters-relational-write-rpc.sql',
 ];

@@ -1,5 +1,5 @@
 -- Inventory CAS helpers (apply after row-id migration + named backup; agents do not run).
--- Then re-apply expand, read-rpc, write-rpc from the same git commit.
+-- Then re-apply expand, cutover, read-rpc, write-rpc from the same git commit (see sql/README.md).
 BEGIN;
 
 CREATE OR REPLACE FUNCTION public.inventory_patch_bucket_category(
