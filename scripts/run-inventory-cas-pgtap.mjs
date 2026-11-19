@@ -40,11 +40,11 @@ function psqlSql(dbUrl, sql) {
 }
 
 function pgtap(dbUrl) {
-  return spawnSync(
-    'pg_prove',
-    ['-d', dbUrl, path.join(root, 'supabase/tests/inventory_cas_test.sql')],
-    { cwd: root, encoding: 'utf8' },
-  );
+  const testFile = path.join(root, 'supabase/tests/inventory_cas_test.sql');
+  return spawnSync('psql', [dbUrl, '-v', 'ON_ERROR_STOP=1', '-f', testFile], {
+    cwd: root,
+    encoding: 'utf8',
+  });
 }
 
 function dbUrlFromSupabase() {

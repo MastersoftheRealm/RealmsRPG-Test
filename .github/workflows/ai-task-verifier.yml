@@ -49,8 +49,8 @@ jobs:
       - name: Unit tests (lib/glr contracts)
         run: npm test
 
-      - name: Install pgTAP runner
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client libtap-parser-sourcehandler-pgtap-perl
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
