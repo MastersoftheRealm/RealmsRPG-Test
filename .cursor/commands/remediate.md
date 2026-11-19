@@ -1,53 +1,27 @@
 # Remediate
 
-Switch from **critic** to **writer**. Take the latest `/audit` findings and fix them in product code. Then stop so a fresh **critic session** can `/audit` and post the GitHub check.
+Writer pass after critic **REQUEST CHANGES**. Fix product code, then stop for a **new critic session**.
 
-Authority: `AGENTS.md` (Review). Critic procedure: `.cursor/commands/audit.md`.
-
-`/cleanup` is removed. It is not an alias.
+Authority: `AGENTS.md`. Critic: `.cursor/commands/audit.md`.
 
 ## When to run
 
-- Latest **critic** `/audit` is **REQUEST CHANGES** with **Required changes**.
-- Kadin may order `/remediate` after notes only.
-
-**Do not run** on critic **APPROVE**, **HOLD FOR HUMAN**, or unaccepted **PATCH**.
+- Critic `/audit` returned **REQUEST CHANGES** with **Required changes**.
 
 ## Loop
 
-1. Writer build → self `/audit` + `/remediate` (prep; no GitHub check).
-2. Critic session `/audit` → posts **`Realms Independent Critic`** on approve.
-3. New commits void the check; repeat from 2.
-
-After two full critic↔remediate cycles, round 3+ must warn Kadin (`audit.md`).
-
-## Scope
-
-Only audit **Required changes**. Prefer deleting bloat the audit named.
+1. Writer: build → self `/audit` + `/remediate` (prep).
+2. Critic session `/audit` → posts **Realms Critic GitHub App** check on approve.
+3. New commits void the check on the old SHA; critic reviews new head.
 
 ## Procedure
 
-1. Copy required changes.
-2. Fix at root cause (REAL FIX / PATCH per item).
-3. Re-run repro + `node scripts/critic-gate-tests.mjs`.
-4. Commit; push when tested. New head SHA voids critic check — new independent `/audit` required.
-5. **Stop.** Do not merge. Do not `/audit` as critic in this writer session. Do not post the GitHub check from here.
+1. Fix only **Required changes**.
+2. Re-run repro (+ optional `npm run critic:gate`).
+3. Commit; push. New head SHA needs new App check from critic session.
+4. **Stop.** Do not post the App check from the writer session. Do not `/audit` as critic here.
 
 ## Do not
 
-- Expand beyond Required changes.
-- Re-audit as critic in the same turn.
+- Combine critic `/audit` in the writer turn.
 - Type Kadin approvals.
-
-## Report
-
-```markdown
-## Remediate (after critic round N)
-
-### Addressed
-| Audit required change | What we did | REAL FIX / PATCH | Test run |
-|-----------------------|-------------|------------------|----------|
-
-### Next
-Independent critic session: `/audit` on new head SHA, then dispatch `critic-verdict`.
-```

@@ -66,7 +66,7 @@ Required changes: (REQUEST CHANGES only)
 Question for human: (HOLD only, one clear decision for Kadin — product what)
 ```
 
-- **APPROVE:** all items pass or n/a, repro **run by critic**, independent session, **Head SHA** matches PR head, not unaccepted PATCH, high-risk label/brief/rollout satisfied when required. High risk alone is **not** HOLD. Submit `critic-verdict` to post **`Realms Independent Critic`**.
+- **APPROVE:** all items pass or n/a, repro **run by critic**, independent session, **Head SHA** matches PR head, not unaccepted PATCH, high-risk label/brief/rollout satisfied when required. High risk alone is **not** HOLD. Post **`Realms Independent Critic`** via **Realms Critic GitHub App** on that SHA.
 - **REQUEST CHANGES:** checklist fail the writer can fix; writer may self-audit in same session but does not post the GitHub check.
 - **HOLD FOR HUMAN:** missing/conflicting rule, product decision, PATCH veto, writer session, stale SHA, missing `high-risk` label or design brief when required, missing rollout matrix.
 - **PATCH veto:** cannot APPROVE; merges only if Kadin accepts PATCH in his own PR comment (`AGENTS.md`, Review).

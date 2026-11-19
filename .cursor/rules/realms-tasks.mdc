@@ -5,16 +5,16 @@ alwaysApply: true
 
 # Task order
 
-ClickUp is the only queue. In prose say Bob (`95261690`; legally James Owenby). **Coding agents must update ClickUp** on the task they implement, per `AGENTS.md` (**ClickUp**). Use the ClickUp MCP when connected; otherwise `CLICKUP_API_TOKEN` from `.env.local` (API v2). Never print the token.
+ClickUp is the only queue. Bob = `95261690` (James Owenby). **Coding agents must update ClickUp** per `AGENTS.md` (**ClickUp**).
 
-1. A person or a bot files the task. A vague task stays **to do** with a comment.
-2. **Start (Phase 2):** **to do → in progress**. One-line start comment. Stop with no PR → **to do** with reason.
-3. Branch from `origin/master`; ClickUp id in branch and PR **ClickUp** section (`cursor/` prefix fine).
-4. Draft PR when ready; comment PR link on the task.
-5. Writer: `/audit` + `/remediate` on own work (prep). **Independent** critic session: `/audit`, run tests, post **`Realms Independent Critic`** check (`.cursor/commands/audit.md`). Critic does **not** move ClickUp during `/audit`.
-6. `/remediate` only after critic **REQUEST CHANGES**.
-7. After **`Realms Independent Critic` success** + green CI → **in review**. Kadin merges when required.
-8. Agents do not merge. After merge → **testing** + QA steps when user-facing.
-9. Humans move **complete**.
+1. File task; vague → **to do** + comment.
+2. **to do → in progress** on Phase 2 start; stop without PR → **to do**.
+3. Branch from `origin/master`; ClickUp id in branch + PR.
+4. Draft PR; comment link on task.
+5. Writer: self `/audit` + `/remediate`. **Critic** (new session): `/audit`, run tests, post **Realms Critic GitHub App** check on PR head (`.cursor/commands/audit.md`). Critic does not move ClickUp during `/audit`.
+6. `/remediate` after critic **REQUEST CHANGES**.
+7. App check **success** + green CI → **in review**; Kadin merges when required.
+8. Agents do not merge. Merge → **testing** if user-facing.
+9. Humans → **complete**.
 
 Do not write `ACTIVE_TASKS.md`, `AI_TASK_QUEUE.md`, `AI_CHANGELOG.md`, or `TASK-###` in commit subjects.

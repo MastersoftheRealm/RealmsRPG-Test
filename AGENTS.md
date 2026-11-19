@@ -43,7 +43,7 @@ Stack: Next.js App Router, React, Tailwind, Supabase (no Prisma), Vercel. Repo `
 
 ### Review
 
-Writer prep and critic enforcement are separate. Self-attested "APPROVE" text in a PR does **not** satisfy review; only the GitHub check **`Realms Independent Critic`** on the current head SHA does (`.github/workflows/independent-critic.yml`).
+Writer prep and critic enforcement are separate. Self-attested "APPROVE" text in a PR does **not** satisfy review; only the GitHub check **`Realms Independent Critic`** on the **PR head SHA** does — posted by the **Realms Critic GitHub App** (not by Actions on the PR branch).
 
 | Step | Command / phase | Role | Counts for merge? |
 |------|-----------------|------|-------------------|
@@ -56,19 +56,20 @@ Writer prep and critic enforcement are separate. Self-attested "APPROVE" text in
 
 `/cleanup` is removed. The writer pass after critic **REQUEST CHANGES** is `/remediate` only.
 
-**Enforcement (GitHub)**
+**Enforcement (GitHub App + ruleset)**
 
-1. **Check name:** `Realms Independent Critic`. Only `.github/workflows/independent-critic.yml` may post **success** for that context on a commit. Repository rules must require this check before merging to `master` (see draft PR **SETTINGS-PROPOSAL**; Kadin applies in GitHub — agents do not change branch settings).
-2. **On every PR push** the workflow resets the check to **in progress**, voiding any prior critic approval on an older SHA.
-3. **Critic submit:** After `/audit`, the critic **runs the repro and `node scripts/critic-gate-tests.mjs` locally**, then triggers `repository_dispatch` (`critic-verdict`) or `workflow_dispatch` with `CRITIC_SUBMIT_TOKEN`. The workflow re-runs the gate bundle on that SHA; on **approve** it posts **success** only if tests pass and high-risk rules below are met.
-4. **Secrets (names only):** `CRITIC_SUBMIT_TOKEN` (Actions secret; critic session only). `GITHUB_CRITIC_DISPATCH_TOKEN` (Cursor cloud secret; PAT with `repo` + `workflow` for dispatch).
+1. **Check name:** `Realms Independent Critic`. Only the **Realms Critic GitHub App** may post **success** for that context. Ruleset must require this check from that App's **integration id** (not the generic `github-actions` app). Kadin applies ruleset JSON from the open PR **SETTINGS-PROPOSAL**; agents do not create Apps, secrets, or repo settings.
+2. **App private key** lives only in the critic's runtime (dedicated Cursor cloud environment or machine). **Never** in repo secrets, `.env`, or the writer agent environment.
+3. **Void on push:** A check is bound to one commit. After a new push, the **PR head SHA** has no critic success until the critic reviews that SHA and the App posts a new check. Old SHA checks do not satisfy merge.
+4. **Critic procedure:** Separate session → `/audit` → **run** repro and optionally `npm run critic:gate` locally → App creates check run on **current PR head** (`success` or `failure` with summary). No `workflow_dispatch`, no repo `CRITIC_*` secrets, no eval of shell from PR text.
+5. **High-risk label** `high-risk`: a **human** adds it on GitHub when [Risk by path](#risk-by-path) matches (agents do not self-apply). Critic fails merge posture without it on high-risk diffs.
 
 **Critic rules (same checklist; enforced by the job + verdict)**
 
 1. **Independence:** Critic session did not write commits on the PR branch. Never read the writer's survey as evidence; trace the code. Model routing: `.cursor/commands/audit.md`.
 2. **Tests:** Critic **runs** repro and gate tests; green CI alone is not enough. Confirm behavioral repro failure (not missing symbol); SQL tests use **canonical** `sql/` files.
 3. **Rollout matrix** (database or API contract changes): each intermediate state saves or **fails loud**; no silent dropped writes; include rollback SQL.
-4. **High-risk PRs** must carry the GitHub label `high-risk` when [Risk by path](#risk-by-path) matches; the critic job fails without it. Include the **design brief** before code when high-risk.
+4. **High-risk PRs** must carry the GitHub label `high-risk` (human-applied) when [Risk by path](#risk-by-path) matches. Include the **design brief** before code when high-risk.
 5. Checklist misses block critic **approve** (constitution items 1–15). **PATCH veto:** merge only if Kadin accepts PATCH in his own PR comment.
 6. Rules-math or rules-value PRs: Rules Balance Analyst ruling before Kadin signs off.
 
@@ -76,7 +77,7 @@ Writer prep and critic enforcement are separate. Self-attested "APPROVE" text in
 
 The merge button is not a code review. Kadin does not read code; his click is product OK where required, not a substitute for checks.
 
-**Required before merge to `master`:** all required CI checks green; **`Realms Independent Critic` = success** on the merge commit; PR not blocked by GitHub **stack merge order** (do not admin-bypass stack blocks — e.g. PR #601); unaccepted PATCH veto satisfied.
+**Required before merge to `master`:** all required CI checks green; **`Realms Independent Critic` = success** on the **PR head SHA** (the commit you merge); PR not blocked by GitHub **stack merge order** (do not admin-bypass stack blocks — e.g. PR #601); unaccepted PATCH veto satisfied.
 
 - **Standard-risk:** Kadin or the Bug and Audit Fixes bot may merge when checks pass. Kadin does not have to read the diff.
 - **High-risk** (paths in the table, including workflow/critic files): apply label `high-risk`, complete design brief + rollout evidence, Kadin's explicit product OK on the PR for data/rule changes, then merge. Agents never merge.
@@ -116,8 +117,7 @@ There are no public players. A change that breaks play for alpha testers on the 
 | Auth, session, CSRF, roles | `src/proxy.ts`, `src/lib/supabase/`, `src/app/(auth)/`, `src/lib/api-mutation-guard.ts`, `src/lib/api-validation.ts` |
 | Game rules and legality | `src/lib/game/`, `src/lib/calculators/`, `data/core-rules/`, `src/app/(main)/admin/core-rules/` |
 | Admin tools that write or delete data | `src/app/(main)/admin/`, `src/app/api/admin/` |
-| CI, tooling, settings | `.github/`, `scripts/`, `.husky/`, `package.json`, `next.config.ts`, `vercel.json` — pin versions (never `latest`); do not weaken checks without justification in **Risk by path** |
-| Workflow / critic enforcement | `AGENTS.md`, `.cursor/commands/audit.md`, `.cursor/commands/remediate.md`, `src/docs/ai/ARCHITECTURE_CONSTITUTION.md`, `.github/workflows/independent-critic.yml`, `scripts/critic-gate-tests.mjs`, critic portions of `.github/CODEOWNERS` |
+| CI, tooling, settings, workflow docs | `.github/`, `scripts/`, `.husky/`, `package.json`, `next.config.ts`, `vercel.json`, `AGENTS.md`, `.cursor/commands/audit.md`, `.cursor/commands/remediate.md`, `src/docs/ai/ARCHITECTURE_CONSTITUTION.md`, `scripts/critic-gate-tests.mjs` — pin versions (never `latest`); do not weaken checks or critic enforcement prose without justification in **Risk by path** |
 | Secrets, env, deploy | `.env.example`, deploy docs, Vercel settings |
 | Anything sent outside the team | email, messages, posts, billing |
 

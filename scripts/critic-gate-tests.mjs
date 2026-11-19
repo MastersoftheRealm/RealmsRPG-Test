@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 /**
- * Minimal test bundle the independent critic GitHub Actions job re-runs on the
- * exact PR head SHA before posting the "Realms Independent Critic" check.
- * Must match .github/workflows/independent-critic.yml (do not weaken without
- * updating AGENTS.md Risk by path and a ruleset/settings change).
+ * Optional bundle the independent critic runs locally during /audit (not a merge gate).
+ * Same commands CI already runs on PRs (typecheck, unit tests, agent doc checks).
  */
 import { execSync } from 'node:child_process';
 
