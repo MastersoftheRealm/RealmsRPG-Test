@@ -1,6 +1,6 @@
 BEGIN;
 
-SELECT plan(12);
+SELECT plan(13);
 
 SELECT has_function('public', 'apply_character_inventory_patch', ARRAY['text','text','jsonb']);
 SELECT has_function('public', 'patch_character_relational', ARRAY['text','jsonb','text']);
@@ -88,8 +88,13 @@ SELECT lives_ok(
 );
 
 SELECT results_eq(
-  $$SELECT coalesce(custom_type,''), coalesce(custom_description,'') FROM public.character_inventory WHERE inventory_row_id = '30000000-0000-4000-8000-000000000003'::uuid$$,
-  ARRAY['', ''], 'type and description cleared'
+  $$SELECT coalesce(custom_type,'') FROM public.character_inventory WHERE inventory_row_id = '30000000-0000-4000-8000-000000000003'::uuid$$,
+  ARRAY[''], 'type cleared'
+);
+
+SELECT results_eq(
+  $$SELECT coalesce(custom_description,'') FROM public.character_inventory WHERE inventory_row_id = '30000000-0000-4000-8000-000000000003'::uuid$$,
+  ARRAY[''], 'description cleared'
 );
 
 SELECT lives_ok(
