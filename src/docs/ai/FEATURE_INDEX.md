@@ -1474,6 +1474,7 @@ Every path below is a non-test source file. The checker fails if one is missing 
 - `src/lib/character/appearance-age.ts`
 - `src/lib/character/build-creator-skills.ts`
 - `src/lib/character/autosave-baseline.ts`
+- `src/lib/character/character-autosave-baseline-context.tsx`
 - `src/lib/character/character-autosave-equal.ts`
 - `src/lib/character/character-name-limit.ts`
 - `src/lib/character/character-relational-save-errors.ts`
@@ -3292,8 +3293,6 @@ No production file imports these names. A test import does not count. The file t
 - `src/lib/character/notes-tab-sections.ts`: `DEFAULT_NOTES_SECTION_ORDER`
 - `src/lib/character/prune-trait-sheet-state.ts`: `PruneTraitSheetStateCharacterInput` (type)
 - `src/lib/character/relational-lean-save.ts`: `RELATIONAL_SAVE_ENTRY_ALLOWLIST`
-- `src/lib/character/autosave-baseline.ts`: `advanceAutosaveBaselineFromSaveResult`
-- `src/lib/character/character-autosave-baseline-context.tsx`: `CharacterAutosaveBaselineProvider`
 - `src/lib/character/inventory-patch.ts`: `buildInventoryPatch`, `inventoryRowCasSnapshot`, `replaceEquipmentDirtyWithInventoryPatch`
 - `src/lib/character/save-lock.ts`: `resetCharacterSaveLockForTests`
 - `src/lib/character/sheet-allocation-reset.ts`: `resetSheetSkillAllocationRows`
@@ -3567,7 +3566,6 @@ No production file imports these names. A test import does not count. The file t
 - `src/lib/character-sheet/add-modal-existing-ids.ts`: `AddModalEntityType` (type)
 - `src/lib/character-view-enrichment.ts`: `CharacterViewRefIds` (type)
 - `src/lib/creature-chip-tier.ts`: `replaceTieredCreatureChipValue`
-- `src/lib/character/autosave-baseline.ts`: `CharacterSaveBaselineResult` (type)
 - `src/lib/character/build-creator-skills.ts`: `BuildCreatorSkillSaveRowsOptions` (type), `CreatorSkillCodexEntry` (type), `CreatorSkillSaveRow` (type)
 - `src/lib/character/character-relational-save-errors.ts`: `CharacterRelationalSaveLogIds` (type), `CharacterRelationalValidationPayload` (type)
 - `src/lib/character/character-size.ts`: `SpeciesSizeSource` (type)
