@@ -1,72 +1,39 @@
 # Audit (critic)
 
-Read-only adversarial review. Zero product edits from the audit chat unless the owner orders doc updates in this thread.
+Read-only adversarial review. Zero product edits unless the owner orders doc updates in this thread.
 
-The **merge gate** is GitHub check **`Realms Independent Critic`** on the **PR head SHA**, posted only by the **Realms Critic GitHub App**. Checklist: `src/docs/ai/ARCHITECTURE_CONSTITUTION.md`. Workflow: `AGENTS.md`.
+Merge gate: GitHub check **`Realms Independent Critic`** on **PR head SHA**, posted only by the **Realms Critic GitHub App**. Setup: `src/docs/ai/REALMS_CRITIC_GITHUB_APP.md`. Checklist: `src/docs/ai/ARCHITECTURE_CONSTITUTION.md`. Workflow: `AGENTS.md`.
 
 ## Writer vs critic
 
 | Session | `/audit` | Posts App check? |
 |---------|----------|------------------|
-| **Writer** (same session as implementer) | Self-review / prep; drives `/remediate` | **Never** |
-| **Critic** (new session; did not author PR commits) | Full `/audit` | **Yes** — via Realms Critic GitHub App |
+| **Writer** | Self-review / prep; `/remediate` | **Never** |
+| **Critic** (new session) | Full `/audit` | **Yes** |
 
-## Independence and model (required)
+## Independence and model
 
-New Cursor session or cloud agent. No commits on the PR branch from this session.
+New session; no PR-branch commits from this session. Different model from writer (never `-fast`). Writers stop; open a new session.
 
-Different agent and prompt from the writer. Never `-fast`. Never the writer model.
+**Head SHA:** Target current PR head; new commit needs new check.
 
-| Writer | Critic |
-|---|---|
-| `composer-2.5` | `grok-4.7-high` |
-| `grok-4.7-high` or `grok-4.7-xhigh` | `composer-2.5` |
+## Before posting the check
 
-Writers: stop here; open a **new** session for `/audit`.
+1. **Base ref:** `pulls.get` → `base.ref` must be **`master`**. Otherwise post App check **`failure`** (wrong base / stacked child) and stop.
+2. **High-risk label:** If the diff matches `AGENTS.md` [Risk by path](AGENTS.md#risk-by-path) and label **`high-risk`** is missing (humans apply; agents do not), post App check **`failure`** and stop.
+3. Run repro (behavioral). Optionally `npm run critic:gate`.
+4. On full checklist **approve**, post App check **`success`** via JWT → installation token → [Create check run](src/docs/ai/REALMS_CRITIC_GITHUB_APP.md) on **head SHA**.
 
-**Head SHA:** App check and verdict target the **current PR head**. Any new commit needs a fresh critic review (the new SHA has no check until posted).
+No repo Actions, `workflow_dispatch`, or `CRITIC_*` secrets.
 
-## Posting the check (critic only)
-
-After checklist **approve**:
-
-1. Run repro (behavioral — not missing symbol).
-2. Optionally `npm run critic:gate` (local bundle; not enforced by repo workflow).
-3. Use the **Realms Critic GitHub App** credentials (private key only in critic environment — never in repo or writer env) to create a **Check Run** on the PR head SHA:
-   - Name: `Realms Independent Critic`
-   - Conclusion: `success` or `failure`
-   - Summary: short audit notes (no secrets)
-
-There is **no** `workflow_dispatch`, `repository_dispatch`, or repo Actions workflow for this check. Do not use `secrets.CRITIC_*` in the repository.
-
-**High-risk** ([Risk by path](AGENTS.md#risk-by-path)): require human-applied label `high-risk`, design brief, rollout matrix when DB/API contract changes. **Plan pass** before Phase 2 code on high-risk tasks; implementation pass posts the check on the implementation head SHA.
-
-## What you may read
-
-ClickUp (done-when). `DECISIONS.md`. Code, diff, tests you run, CI, preview.
-
-Do **not** treat the writer's PR description as evidence. Trace root cause yourself.
-
-## Persona
-
-Adversarial. Flag AI bloat on fix/refine PRs.
-
-## Five questions
-
-Answer each. Fail needs `file:line`. Grade checklist 1–15 in Q5.
+**High-risk:** design brief before Phase 2 code; rollout matrix when DB/API contract changes.
 
 ## Verdict
 
-Use `ARCHITECTURE_CONSTITUTION.md` block.
-
-- **APPROVE:** checklist pass/n/a, repro **run by you**, independent session, head SHA matches PR, not unaccepted PATCH, high-risk label/brief/rollout when required. High risk alone is **not** HOLD. Then post App check **success**.
-- **REQUEST CHANGES:** writer fixes via `/remediate`; writer may self-audit but does not post App check.
-- **HOLD FOR HUMAN:** missing rule, Kadin product decision, PATCH veto, writer session, stale SHA, missing `high-risk` label or design brief when required.
-
-Round 3+: **For Kadin** escalation per constitution.
+- **APPROVE:** gates above pass; checklist pass/n/a; not unaccepted PATCH. Post **`success`** on head SHA (or **`failure`** if any gate fails — label/base are hard fails).
+- **REQUEST CHANGES:** writer `/remediate`; no App check from writer session.
+- **HOLD FOR HUMAN:** missing rule, Kadin product decision, PATCH veto, writer session, stale SHA.
 
 ## Do not
 
-- Edit product code (unless ordered).
-- Move ClickUp to **in review** (writer after App check success + CI).
-- Quote Kadin approvals he did not type.
+Edit product code (unless ordered). Move ClickUp to **in review** (writer after App success + CI). Quote Kadin approvals he did not type.

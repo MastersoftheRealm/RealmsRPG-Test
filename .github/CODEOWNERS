@@ -1,4 +1,5 @@
 # CODEOWNERS intentionally lists no owners (proposed PR #609, Kadin Nov 19).
 # A single writer account here looked like review but was not enforcement.
 # High-risk paths: AGENTS.md "Risk by path" + label `high-risk`. Merge gate: GitHub App
-# "Realms Independent Critic" check + repository ruleset (see open PR SETTINGS-PROPOSAL).
+# "Realms Independent Critic" check + repository ruleset — PR #609 body section
+# SETTINGS-PROPOSAL (until merged); App how-to: src/docs/ai/REALMS_CRITIC_GITHUB_APP.md

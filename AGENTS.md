@@ -58,8 +58,8 @@ Writer prep and critic enforcement are separate. Self-attested "APPROVE" text in
 
 **Enforcement (GitHub App + ruleset)**
 
-1. **Check name:** `Realms Independent Critic`. Only the **Realms Critic GitHub App** may post **success** for that context. Ruleset must require this check from that App's **integration id** (not the generic `github-actions` app). Kadin applies ruleset JSON from the open PR **SETTINGS-PROPOSAL**; agents do not create Apps, secrets, or repo settings.
-2. **App private key** lives only in the critic's runtime (dedicated Cursor cloud environment or machine). **Never** in repo secrets, `.env`, or the writer agent environment.
+1. **Check name:** `Realms Independent Critic`. Only the **Realms Critic GitHub App** may post **success** for that context. Ruleset must require this check from that App's **integration id** (not the generic `github-actions` app). Kadin applies ruleset JSON from the open PR **SETTINGS-PROPOSAL** (see #609 until merged); agents do not create Apps, secrets, or repo settings. App setup: [`src/docs/ai/REALMS_CRITIC_GITHUB_APP.md`](src/docs/ai/REALMS_CRITIC_GITHUB_APP.md).
+2. **App private key** — **TBD by Kadin: separate critic-only account.** Must **not** be in repo secrets, `.env`, or any Cursor environment / user secret / credential box **writer** agents can reach.
 3. **Void on push:** A check is bound to one commit. After a new push, the **PR head SHA** has no critic success until the critic reviews that SHA and the App posts a new check. Old SHA checks do not satisfy merge.
 4. **Critic procedure:** Separate session → `/audit` → **run** repro and optionally `npm run critic:gate` locally → App creates check run on **current PR head** (`success` or `failure` with summary). No `workflow_dispatch`, no repo `CRITIC_*` secrets, no eval of shell from PR text.
 5. **High-risk label** `high-risk`: a **human** adds it on GitHub when [Risk by path](#risk-by-path) matches (agents do not self-apply). Critic fails merge posture without it on high-risk diffs.
@@ -77,7 +77,9 @@ Writer prep and critic enforcement are separate. Self-attested "APPROVE" text in
 
 The merge button is not a code review. Kadin does not read code; his click is product OK where required, not a substitute for checks.
 
-**Required before merge to `master`:** all required CI checks green; **`Realms Independent Critic` = success** on the **PR head SHA** (the commit you merge); PR not blocked by GitHub **stack merge order** (do not admin-bypass stack blocks — e.g. PR #601); unaccepted PATCH veto satisfied.
+**Required before merge to `master`:** PR **base ref is `master`** (critic posts **failure** otherwise); all required CI checks green; **`Realms Independent Critic` = success** on the **PR head SHA**; unaccepted PATCH veto satisfied.
+
+**Stacked PRs:** Ruleset `strict_required_status_checks_policy` does **not** enforce GitHub stack merge order. Still: do not merge out of stack order (e.g. #601); do not merge without a critic check on the **current** head SHA; never admin-bypass stack merge blocks.
 
 - **Standard-risk:** Kadin or the Bug and Audit Fixes bot may merge when checks pass. Kadin does not have to read the diff.
 - **High-risk** (paths in the table, including workflow/critic files): apply label `high-risk`, complete design brief + rollout evidence, Kadin's explicit product OK on the PR for data/rule changes, then merge. Agents never merge.
