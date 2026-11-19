@@ -18,6 +18,7 @@ const BRANCH_CANONICAL_SQL = [
   'sql/tests/pgtap-relational-fk-stubs.sql',
   'sql/tests/inventory-cas-pgtap-bootstrap.sql',
   'sql/characters-relational-expand.sql',
+  'sql/characters-relational-cutover.sql',
   'sql/characters-inventory-row-id.sql',
   inventoryCasHelpersSql,
   'sql/characters-relational-read-rpc.sql',
@@ -28,6 +29,7 @@ const MASTER_CANONICAL_SQL = [
   'sql/tests/pgtap-relational-fk-stubs.sql',
   'sql/tests/inventory-cas-pgtap-bootstrap.sql',
   'sql/characters-relational-expand.sql',
+  'sql/characters-relational-cutover.sql',
   'sql/characters-relational-read-rpc.sql',
   'sql/characters-relational-write-rpc.sql',
 ];
