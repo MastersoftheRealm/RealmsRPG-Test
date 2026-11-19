@@ -31,7 +31,9 @@ separate `version int` column.
    `.eq('updated_at', <value just read>)` so a concurrent writer still 409s. Legacy null column or
    omitted `updatedAt` (portrait-after-create, resource-only sync) skips the lock but still stamps
    `updated_at` so later sheet saves can lock.
-3. **Success** `{ ok: true, updatedAt }` (column ISO). Client stores that token for the next PATCH.
+3. **Success** `{ ok: true, updatedAt }` (column ISO). When the body included an inventory patch that
+   created rows, the route may also return `inventoryPatchResult.createdRows` so the client can stamp
+   `inventoryRowId` on gear before the next save. Client stores `updatedAt` for the next PATCH.
 4. **409 handling.** Caller refetches, keeps local dirty keys, retries once with the remote token.
    Same-key conflicts: local dirty value wins on the retry (last writer of that key). Sheet
    `equipment` merges per inventory row against the autosave baseline so two tabs can change

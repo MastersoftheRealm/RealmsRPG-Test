@@ -18,7 +18,6 @@ import { buildRequiredProficiencies } from '@/lib/proficiencies';
 import type { Character, Item } from '@/types';
 import { useCodexItemProperties, useCodexPowerParts, useCodexTechniqueParts } from './use-codex';
 import { useCharacter, useSaveCharacter } from './use-characters';
-import { attachRelationalInventoryPatchToDirty } from '@/lib/character/inventory-patch';
 import {
   appendLibraryItemToCharacter,
   characterOwnsLibraryItem,
@@ -109,7 +108,6 @@ export function useAddToCharacterFromLibrary(kind: LibraryToCharacterKind, chara
     );
     const baseline = character as unknown as Record<string, unknown>;
     const dirty = libraryAddDirtyFields(kind, first.character) as Record<string, unknown>;
-    attachRelationalInventoryPatchToDirty(dirty, baseline);
     saveCharacter.mutate(
       {
         id: character.id,
@@ -119,10 +117,6 @@ export function useAddToCharacterFromLibrary(kind: LibraryToCharacterKind, chara
         mergeOnConflict: (remote) => {
           const next = mergeLibraryAddOnConflict(remote, kind, pending.raw, (c) =>
             applyLibraryAddToCharacter(c, kind, pending.raw, dbs, buildRequiredForCharacter),
-          );
-          attachRelationalInventoryPatchToDirty(
-            next.dirty as Record<string, unknown>,
-            remote as unknown as Record<string, unknown>,
           );
           return {
             ...next,
