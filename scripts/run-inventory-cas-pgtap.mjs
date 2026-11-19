@@ -39,12 +39,26 @@ function psqlSql(dbUrl, sql) {
   run('psql', [dbUrl, '-v', 'ON_ERROR_STOP=1', '-c', sql]);
 }
 
+function pgtapFails(combined) {
+  return (
+    /^not ok /m.test(combined) ||
+    /# Looks like you failed/i.test(combined) ||
+    /# Looks like you planned \d+ tests but/i.test(combined)
+  );
+}
+
 function pgtap(dbUrl) {
   const testFile = path.join(root, 'sql/tests/inventory_cas_pgtap_test.sql');
-  return spawnSync('psql', [dbUrl, '-v', 'ON_ERROR_STOP=1', '-f', testFile], {
+  const res = spawnSync('psql', [dbUrl, '-v', 'ON_ERROR_STOP=1', '-f', testFile], {
     cwd: root,
     encoding: 'utf8',
   });
+  const combined = `${res.stdout ?? ''}\n${res.stderr ?? ''}`;
+  if (res.stdout) process.stdout.write(res.stdout);
+  if (res.stderr) process.stderr.write(res.stderr);
+  const tapFailed = pgtapFails(combined);
+  const status = res.status !== 0 ? res.status : tapFailed ? 1 : 0;
+  return { ...res, status };
 }
 
 function dbUrlFromSupabase() {
@@ -111,8 +125,6 @@ function runBranchPositive(dbUrl) {
   resetDatabase(dbUrl);
   applyInventorySql(dbUrl);
   const res = pgtap(dbUrl);
-  if (res.stdout) process.stdout.write(res.stdout);
-  if (res.stderr) process.stderr.write(res.stderr);
   return res.status ?? 1;
 }
 
