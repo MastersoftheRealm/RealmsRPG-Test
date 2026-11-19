@@ -63,6 +63,9 @@ describe('SkillEncounterPage play wiring', () => {
         }),
       );
     });
-    expect(useEncounterPlayPageMock.mock.calls[0]?.[0]).not.toHaveProperty('keepaliveOnUnload');
+    const callArgs = (
+      useEncounterPlayPageMock.mock.lastCall as [{ keepaliveOnUnload?: boolean }] | undefined
+    )?.[0];
+    expect(callArgs ?? {}).not.toHaveProperty('keepaliveOnUnload');
   });
 });
