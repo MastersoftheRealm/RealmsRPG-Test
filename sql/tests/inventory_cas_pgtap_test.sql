@@ -1,6 +1,6 @@
 BEGIN;
 
-SELECT plan(13);
+SELECT plan(15);
 
 SELECT has_function('public', 'apply_character_inventory_patch', ARRAY['text','text','jsonb']);
 SELECT has_function('public', 'patch_character_relational', ARRAY['text','jsonb','text']);
@@ -153,6 +153,55 @@ SELECT lives_ok(
       ))
     );
   $q$, 'remove row'
+);
+
+INSERT INTO public.character_inventory (
+  character_id, inventory_row_id, category, position, source_kind, source_id, name_snapshot, quantity, equipped
+) VALUES
+  ('pgtap-char', '40000000-0000-4000-8000-000000000004', 'armor', 1, 'custom', 'leather', 'Leather', 1, false);
+
+SELECT lives_ok(
+  $q$
+    SELECT public.apply_character_inventory_patch(
+      'pgtap-char', '10000000-0000-4000-8000-000000000099',
+      jsonb_build_object('ops', jsonb_build_array(
+        jsonb_build_object(
+          'op', 'update', 'bucket', 'armor', 'inventoryRowId', '40000000-0000-4000-8000-000000000004',
+          'expected', jsonb_build_object('quantity', 1, 'equipped', false, 'name', 'Leather', 'type', '', 'description', '', 'cost', null),
+          'item', jsonb_build_object('quantity', 2)
+        )
+      ))
+    );
+  $q$, 'update armor row with null slot'
+);
+
+INSERT INTO public.character_inventory (
+  character_id, inventory_row_id, category, position, source_kind, source_id, name_snapshot, quantity, equipped
+) VALUES
+  ('pgtap-char', '50000000-0000-4000-8000-000000000005', 'weapon', 1, 'custom', 'w1', 'A', 1, false),
+  ('pgtap-char', '50000000-0000-4000-8000-000000000006', 'weapon', 2, 'custom', 'w2', 'B', 1, false),
+  ('pgtap-char', '50000000-0000-4000-8000-000000000007', 'weapon', 3, 'custom', 'w3', 'C', 1, false);
+
+SELECT lives_ok(
+  $q$
+    SELECT public.apply_character_inventory_patch(
+      'pgtap-char', '10000000-0000-4000-8000-000000000099',
+      jsonb_build_object('ops', jsonb_build_array(
+        jsonb_build_object(
+          'op', 'remove', 'bucket', 'weapons', 'inventoryRowId', '50000000-0000-4000-8000-000000000006',
+          'expected', jsonb_build_object('quantity', 1, 'equipped', false, 'name', 'B', 'type', '', 'description', '', 'cost', null)
+        ),
+        jsonb_build_object('op', 'add', 'bucket', 'weapons', 'position', 3,
+          'inventoryRowId', '50000000-0000-4000-8000-000000000008',
+          'item', jsonb_build_object('id', 'w4', 'name', 'D', 'quantity', 1))
+      ))
+    );
+  $q$, 'add at occupied position after middle remove'
+);
+
+SELECT results_eq(
+  $$SELECT count(*)::int FROM public.character_inventory WHERE character_id = 'pgtap-char' AND category = 'weapon' AND name_snapshot = 'D'$$,
+  ARRAY[1], 'add at tail position persisted'
 );
 
 SELECT * FROM finish();

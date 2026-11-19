@@ -64,4 +64,5 @@ separate `version int` column.
   list only (detail invalidate would clobber unsaved sheet edits).
 - Rejected alternatives: `version int` column (extra migration; `updated_at` already exists);
   requiring `updatedAt` on every PATCH (breaks portrait-after-create and encounter HP sync);
-  putting `updatedAt` in the 409 body (error shape stays `{ error: string }`; client GETs).
+  omitting `updatedAt` from inventory / lock 409 bodies (client would need an extra GET;
+  `{ error, updatedAt?, legacyEquipmentRejected? }` keeps the sheet token fresh).

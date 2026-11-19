@@ -21,7 +21,6 @@ RETURNS record LANGUAGE sql IMMUTABLE AS $$
     END,
     CASE
       WHEN p_bucket IN ('mainHand', 'offHand') THEN p_bucket
-      WHEN p_bucket = 'armor' THEN 'armor'
       ELSE NULL
     END;
 $$;
@@ -163,6 +162,11 @@ BEGIN
       END IF;
       IF nullif(v_op->>'position','') IS NOT NULL THEN
         v_position := (v_op->>'position')::integer;
+        UPDATE public.character_inventory
+        SET position = position + 1
+        WHERE character_id = p_character_id AND category = v_category
+          AND slot IS NOT DISTINCT FROM v_slot
+          AND position >= v_position;
       ELSE
         SELECT coalesce(max(position),0) + 1 INTO v_position
         FROM public.character_inventory
