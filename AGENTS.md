@@ -61,10 +61,10 @@ Writer prep and critic enforcement are separate. Self-attested "APPROVE" text in
 Setup, JWT, ruleset JSON, and bypass details: [`src/docs/ai/REALMS_CRITIC_GITHUB_APP.md`](src/docs/ai/REALMS_CRITIC_GITHUB_APP.md). Kadin applies the ruleset; agents do not create Apps, secrets, or GitHub settings.
 
 1. **Check name:** `Realms Independent Critic`. Ruleset requires this check from the **Realms Critic GitHub App**’s **integration id** (= App ID). Repo Actions and repo secrets **cannot** satisfy that required check once the ruleset is active (they are not a forged in-repo critic workflow). They do **not** stop an owner-session bot from changing GitHub settings outside that path — see **Writer bots and owner access** below.
-2. **App private key** — **TBD by Kadin: separate critic-only account.** Must **not** be in repo secrets, `.env`, or any Cursor environment / user secret / credential box **writer** agents can reach.
+2. **App private key (interim)** — In Kadin’s Personal Cursor runtime secret **`REALMS_CRITIC_APP_KEY_B64`** (details in `REALMS_CRITIC_GITHUB_APP.md`). Writer agents on that account can **technically read** it until the planned **account split** (write-only bot GitHub account + critic-only Cursor account); then generate a new key and delete this one. Must **not** be in repo secrets or committed `.env`. **Writer agents must never use or read it** — doing so breaks the workflow; only the independent critic session may use it to post the App check.
 3. **Void on push:** After a new push, the **PR head SHA** has no critic success until the App posts a check for that SHA.
 4. **Critic procedure:** Separate session → `/audit` (do not use writer PR text as evidence) → run repro (+ optional `npm run critic:gate`) → App check on **current PR head**.
-5. **High-risk label** `high-risk`: **human-applied** when [Risk by path](#risk-by-path) matches. Critic posts **failure** without it.
+5. **High-risk label** `high-risk`: The critic **independently** compares the PR diff to [Risk by path](#risk-by-path) and posts check **failure** when high-risk paths are touched but the label is missing, or when the label is present but the diff is not high-risk. (While bots act as owner, who applied the label is not enforceable — the diff is the gate.)
 
 **Writer bots and owner access (pending):** This gate is meant to bind **writer** agents to critic + CI once writers **no longer** use Kadin’s **owner/admin** GitHub/Cursor credentials. **Today** writer bots run as **owner** and could edit or delete the ruleset until the **account split** (writer bots moved off admin/owner rights). That split is **Kadin’s pending decision** (`REALMS_CRITIC_GITHUB_APP.md`).
 
@@ -73,7 +73,7 @@ Setup, JWT, ruleset JSON, and bypass details: [`src/docs/ai/REALMS_CRITIC_GITHUB
 1. **Independence:** Critic session did not write commits on the PR branch. Never read the writer's survey as evidence; trace the code. Model routing: `.cursor/commands/audit.md`.
 2. **Tests:** Critic **runs** repro and gate tests; green CI alone is not enough. Confirm behavioral repro failure (not missing symbol); SQL tests use **canonical** `sql/` files.
 3. **Rollout matrix** (database or API contract changes): each intermediate state saves or **fails loud**; no silent dropped writes; include rollback SQL.
-4. **High-risk PRs** must carry the GitHub label `high-risk` (human-applied) when [Risk by path](#risk-by-path) matches. Include the **design brief** before code when high-risk.
+4. **High-risk PRs** must carry the GitHub label `high-risk` when [Risk by path](#risk-by-path) matches; the critic enforces label ↔ diff consistency (see enforcement §5). Include the **design brief** before code when high-risk.
 5. Checklist misses block critic **approve** (constitution items 1–15). **PATCH veto:** merge only if Kadin accepts PATCH in his own PR comment.
 6. Rules-math or rules-value PRs: Rules Balance Analyst ruling before Kadin signs off.
 

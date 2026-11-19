@@ -58,7 +58,7 @@ Must **not** be in: this repo, Actions secrets, or `.env` committed to git.
 2. Decode **outside the repo** to a temp file (e.g. `mktemp`), mode **600**.
 3. Sign the App JWT with that file; **delete the file** after use.
 
-**Accepted risk (Kadin, 2026-11-19):** Until the planned **account split** (write-only bot GitHub account + critic-only Cursor account), **writer agents can read** this Personal secret. That is weaker than the long-term target (key reachable only from critic-only credentials). At the split: **generate a new App private key**, store it only on the critic-only side, **delete** the old key on GitHub and remove **`REALMS_CRITIC_APP_KEY_B64`**.
+**Ruling record:** On **2026-11-19 ~1:46 PM ET**, Web Manager told Kadin coding bots could technically read this secret while his account is used. Kadin chose: *“Store the key as a Cursor secret for now and replace it when we split accounts”* (**~1:49 PM ET**). Until **account split** (write-only bot GitHub + critic-only Cursor): writer agents can technically read it but **must never use or read it** (workflow break). At split: new App key on critic-only side; delete old key on GitHub and remove **`REALMS_CRITIC_APP_KEY_B64`**.
 
 Do **not** put the PEM or base64 value in repo files, PR text, or logs.
 
@@ -78,7 +78,7 @@ GitHub rejects requests without a **User-Agent**. Send on **every** GitHub REST 
 
 - **Header:** `{"alg":"RS256","typ":"JWT"}` (JSON, then encode).
 - **Payload:** `iss` = App ID **5837498** as a **string** (GitHub accepts string `iss`); `iat` and `exp` as integer Unix seconds.
-- **Clock skew:** Set **`iat = now - 60`** and **`exp = now + 540`** (nine minutes after `iat`, **`exp` within 10 minutes** of real time). Avoid `iat` in the future relative to GitHub’s clock.
+- **Clock skew:** Set **`iat = now - 60`** and **`exp = now + 540`** (**10 minutes** after `iat`; **`exp` nine minutes** after real time — under GitHub’s **10-minute** `exp` max). Avoid `iat` in the future relative to GitHub’s clock.
 - **Encoding:** Each of header and payload → **base64url** of the UTF-8 JSON, **no padding** (`=` stripped).
 - **Signature:** Sign the string **`{base64url_header}.{base64url_payload}`** with **RSA-SHA256** using the PKCS#1 PEM; append **`.` + base64url(signature, no padding)**.
 
@@ -100,7 +100,7 @@ Use `Authorization: Bearer <installation_token>` for subsequent API calls (same 
 
 1. `GET /repos/MastersoftheRealm/RealmsRPG-Test/pulls/{pull_number}` → **`base.ref` must be `master`**. Else check **`failure`** (stacked / wrong base).
 2. **`head.sha`** must match the commit under review.
-3. If diff is high-risk per `AGENTS.md` [Risk by path](../../../AGENTS.md#risk-by-path) and label **`high-risk`** is missing (human-applied), check **`failure`**.
+3. Compare the PR diff to `AGENTS.md` [Risk by path](../../../AGENTS.md#risk-by-path): check **`failure`** if high-risk paths are touched without label **`high-risk`**, or if the label is present but the diff is not high-risk.
 4. Run `/audit` (`.cursor/commands/audit.md`): do **not** treat the writer’s PR description as evidence; grade constitution 1–15; run repro (+ optional `npm run critic:gate`).
 5. `POST /repos/MastersoftheRealm/RealmsRPG-Test/check-runs` with at minimum:
 
@@ -114,7 +114,7 @@ Use `Authorization: Bearer <installation_token>` for subsequent API calls (same 
 }
 ```
 
-Use `"conclusion": "failure"` when the audit fails or gates fail. GitHub expects **`status`: `completed`** and **`completed_at`** alongside **`conclusion`** for a finished check (not `conclusion` alone).
+Use `"conclusion": "failure"` when the audit fails or gates fail. GitHub sets **`status`** to **`completed`** when **`conclusion`** is supplied; include **`completed_at`** explicitly (verified on #607).
 
 **Void on push:** Each commit needs its own check. A new push → new head SHA → critic run again.
 
