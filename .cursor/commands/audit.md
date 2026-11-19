@@ -2,89 +2,80 @@
 
 Read-only adversarial review. Zero product edits from the audit chat itself. Do not merge, push, or write to ClickUp, Drive, or the database **from the audit turn** unless the owner separately orders merge or doc updates in the same thread.
 
-This command **is** the critic gate: rules compliance **and** a brutal review. It replaced the retired four-point `/audit` (Oct 28, 2026) and is **deeper** than the old “separate critic only” pass (five questions + constitution items 1–15 + repro test). Checklist and verdict wording live in `src/docs/ai/ARCHITECTURE_CONSTITUTION.md`. Workflow, risk, and the PATCH veto live in `AGENTS.md`. Do not restate them.
+The **merge gate** is the GitHub check **`Realms Independent Critic`** (`.github/workflows/independent-critic.yml`), not checklist text in the PR. Checklist: `src/docs/ai/ARCHITECTURE_CONSTITUTION.md`. Workflow: `AGENTS.md`.
+
+## Writer vs critic
+
+| Session | `/audit` | Posts GitHub check? |
+|---------|----------|---------------------|
+| **Writer** (same session as implementer) | Self-review / prep; may drive `/remediate` | **Never** |
+| **Critic** (new session; did not author PR commits) | Full `/audit` | **Yes** — after running tests and submitting via dispatch |
 
 ## Independence and model (required)
 
-**Session:** `/audit` runs in a **separate Cursor session or cloud agent** from the writer. The critic must not have written commits on the PR branch in that session. Same-session `/audit` (writer or continuation of the writer chat) may produce **REQUEST CHANGES** or notes only; it **never** records **APPROVE** for merge.
+**Session:** New Cursor session or cloud agent. No commits on the PR branch from this session. Same-session `/audit` by the writer: **REQUEST CHANGES** or notes only.
 
-**Model:** a **different agent and a different prompt** from the writer. Never a slug ending in `-fast`. Never the agent that wrote the diff.
+**Model:** Different agent and prompt from the writer. Never `-fast`. Never the writer model.
 
 | Writer | Critic |
 |---|---|
 | `composer-2.5` | `grok-4.7-high` |
 | `grok-4.7-high` or `grok-4.7-xhigh` | `composer-2.5` |
 
-If you are the writer, stop and hand this command to the other model in a **new** session. Do not start Claude or GPT.
+If you are the writer, stop. Open a **new** session for `/audit`. Do not start Claude or GPT.
 
-**Head SHA:** Record the full PR **head commit SHA** in the verdict. **APPROVE** applies only to that SHA; after any new commit, a fresh independent `/audit` is required. The PR **Audit record** section must list each APPROVE with critic, round, and SHA (`AGENTS.md`, Review).
+**Head SHA:** Verdict and GitHub submit must target the current PR **head** SHA. Any new commit voids the check; submit again after push.
+
+## Posting the GitHub check (critic only)
+
+After checklist **approve** (not HOLD), the critic **runs locally**:
+
+1. Repro test from the PR (behavioral — not missing symbol).
+2. `node scripts/critic-gate-tests.mjs` (same bundle Actions re-runs).
+3. Optional: `npx vitest run …` if named in the PR (only this prefix is accepted in CI).
+
+Then submit **`critic-verdict`** (`repository_dispatch`) or `workflow_dispatch` on `independent-critic.yml` with:
+
+- `pull_number`, `head_sha`, `verdict`: `approve` | `reject`, `critic_id`, `submit_token` (= `CRITIC_SUBMIT_TOKEN`), optional `summary_markdown`, optional `repro_command`.
+
+Secrets: `CRITIC_SUBMIT_TOKEN` (Actions), `GITHUB_CRITIC_DISPATCH_TOKEN` (critic PAT). Names only in docs; never print values.
+
+**High-risk** per `AGENTS.md` [Risk by path](#risk-by-path): require GitHub label `high-risk`, design brief on the PR, rollout matrix when DB/API contract changes. **Plan pass** before Phase 2 code; **implementation** pass posts the check on the implementation SHA.
 
 ## What you may read
 
-Intent and done-when: the ClickUp task. Product rulings: `src/docs/ai/DECISIONS.md` (what was decided, not how the code behaves). Behavior: the code path, the diff, a test you run, CI, and the preview URL when one exists.
+ClickUp task (done-when). `DECISIONS.md` (rulings). Code, diff, tests you run, CI, preview.
 
-Documents are claims. `FEATURE_INDEX.md`, ADRs, surveys, PR text, and comments are not evidence of what the code does. `FEATURE_INDEX.md` may only give you a path. Open that file. If the sentence and the file disagree, the file wins. If the path does not exist, the helper does not exist. A helper in `src/lib/` or a barrel that the index omits still exists.
-
-Do **not** treat the writer's PR description, survey, or reasoning as evidence. Trace the root cause in the code yourself **before** you use the diff to check the fix. The writer's REAL FIX / PATCH label is a claim to test, not a fact.
+Do **not** treat the writer's PR description or survey as evidence. Trace the root cause yourself before using the diff.
 
 ## Persona
 
-You are a critic. Think like a developer who wants the long-term best version of this codebase, not a pass for the person who opened the pull request. Question the rationale. Trust nothing that is only claimed: not the PR body, not the REAL FIX label, not “this matches the task,” not a green check. The code, the task’s done-when, and a test you ran are what count.
-
-Watch for **AI bloat**: oversized diffs, redundant or vanity tests, plan dumps, comment fluff, doc prose that restates the PR, extra helpers that duplicate `src/lib/` or barrels, and “while I’m here” files. Bug-fix and refine PRs should **lean net-negative** when that is honest (delete or fold what the fix replaces). Net-negative is not required on every PR, but bloat on a small fix is a **REQUEST CHANGES** or a blocking note when it hides the real change.
+Adversarial. Question everything claimed. Watch for **AI bloat** on fix/refine PRs.
 
 ## Five questions
 
-Answer each. A fail needs `file:line`. These five are the critic’s questions (Kadin, Nov 12, 2026). They do not replace the constitution checklist below.
+Answer each. Fail needs `file:line`.
 
-1. **Real task, real cause.** Is there a real task with a clear outline and a done-when? Did the change find the root cause in the code path, and remove it? A missing task, a vague done-when, or a fix that leaves the cause in place fails. That last case is a PATCH, not a REAL FIX.
-2. **Does the job, at the right size.** Does the diff do what that done-when asked, without building extra machinery and without a shortcut that will break the next similar change? Fail obvious **AI bloat** (unnecessary tests, bulk docs, duplicate logic, huge `+` lines unrelated to the cause). On fix/refine work, ask whether the PR should be **smaller or net-negative** and name what to delete or merge.
-3. **No second copy.** Does it extend the existing helper, component, or pattern? Fail a new fork, pasted logic, or a duplicate component that should have been shared or deleted.
-4. **Same practice as the rest of the codebase.** Open the neighboring code, the barrels, and `src/lib/`. Fail a private copy of a helper that is already there. Do not pass or fail this question from a `FEATURE_INDEX.md` sentence.
-5. **The rest of the bar.** Grade constitution items 1–15 in `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` (pass / fail / n/a, `file:line` on every fail). The five questions above do not cover all of that. Do not skip:
-   - Security on the server (auth, RLS, validation), not only in the UI.
-   - A test that fails before the fix and passes after, which you run. Green CI is not that test. The failure must be **behavioral** (the bug), not a missing symbol or unapplied migration. Database tests must target **canonical** `sql/` (or migration) files, not hand-copied DDL in the test file.
-   - Rollout matrix on DB/API contract PRs (`AGENTS.md`, Review). Collection/list write changes: add, edit, remove, reorder, mixed — covered or PR explains why not.
-   - No invented game number or formula. A missing written rule is a HOLD for the Rules Balance Analyst, not a guess.
-   - Database safety and high-risk paths in `AGENTS.md` (Risk by path) have the approval that path requires. SQL in the PR is not applied SQL.
-   - Errors from writes are not swallowed.
-   - One task. No revert of a fix already on `master`.
-   - Docs the diff makes stale are updated. Compare the sentence to the code. If you can name a line that still describes the old behavior, including `FEATURE_INDEX.md`, item 11 fails. Marking that item pass, or moving the line into a note, is not allowed.
-   - UI changes meet the constitution’s UI item (tokens, accessibility, mobile).
-   - The REAL FIX / PATCH label matches what you found. A PATCH cannot be APPROVE (`AGENTS.md`, PATCH veto).
-
-Only correctness, security, data-safety, and checklist failures block. A checklist miss is not a note. If the review names the stale doc, the missing test, the swallowed error, or any other checklist miss, that item is fail and the verdict cannot be APPROVE. Anything that is not a checklist item is a note. A note does not become a task from this chat.
-
-## Fallback senior review
-
-When Kadin has invoked the Collin-unavailable fallback (`AGENTS.md`), run this command twice. Same model rules. Same refusal to read the writer's justification.
-
-- **Plan pass** (before he decides): task, his intent, the brief's options, and your own survey of the code. Challenge the root cause, the assumptions, and whether an option is over-built or too thin. Append that challenge to the brief unedited.
-- **Implementation pass:** his intent and decision, the diff, CI, and the preview URL. Not the writer's PR body. Trace the cause, then grade the checklist and label REAL FIX or PATCH. Head the verdict `## Senior fallback review: plan | implementation` and add the extra lines named under Fallback senior review in `ARCHITECTURE_CONSTITUTION.md`.
-
-If the task crosses systems, stop and say to split it. Do not jump to a bigger model to finish a wide task.
-
-After **`/remediate`**, the next `/audit` checks prior **Required changes** first, then the whole diff again for new bloat.
-
-### Audit rounds (no hard stop at two)
-
-Typical loop: write → audit (1) → remediate → audit (2) → … (`AGENTS.md`).
-
-- **Rounds 1–2:** normal **REQUEST CHANGES** / **APPROVE** / **HOLD**.
-- **Round 3+** and still **REQUEST CHANGES** or **HOLD:** you **must** add a **For Kadin** escalation block (plain language): what is still wrong, whether the problem looks **bigger than the PR** (wrong approach, crossed systems, unclear done-when), **two or more options** (including split task, revert slice, one more remediate, stop), and whether **another `/remediate` is likely to finish** or would be churn. Do not forbid round 3 or another remediate; **warn** so Kadin can choose. Only quote his words if he already decided on the task or PR.
+1. **Real task, real cause.** Clear done-when? Root cause removed? Else PATCH, not REAL FIX.
+2. **Right size.** No extra machinery or AI bloat.
+3. **No second copy.** Extends existing patterns.
+4. **Same practice.** Open neighbors in `src/lib/` and barrels.
+5. **Checklist 1–15** (`ARCHITECTURE_CONSTITUTION.md`), including behavioral repro, canonical SQL tests, rollout matrix, collection-write tests, no invented rules.
 
 ## Verdict
 
-Use the reviewer verdict block in `ARCHITECTURE_CONSTITUTION.md` (APPROVE, REQUEST CHANGES, or HOLD FOR HUMAN), including the plain-language block for Kadin on every high-risk PR and whenever he must decide.
+Use the block in `ARCHITECTURE_CONSTITUTION.md`.
 
-Before the checklist lines, answer the five questions in one line each (pass or fail, with `file:line` on a fail).
+Before checklist lines, answer the five questions in one line each (pass or fail, `file:line` on fail).
 
-- **APPROVE** when every checklist item is pass or n/a (a named stale doc line means item 11 is not pass), the repro was run, CI is green, the label is not an unaccepted PATCH, you are **not** the writer and **not** in the writer's session, and **Head SHA** matches the PR head at verdict time.
-- **REQUEST CHANGES** lists required changes the writer must fix (including **trim bloat** when Q2 fails). **`/remediate`** applies those items, then another `/audit` runs. Round 3+ with remaining blockers needs the **For Kadin** escalation block above.
-- **HOLD FOR HUMAN** when the path is high-risk, a rule is missing or conflicting, a product decision is open, you are the writer or in the writer's session, **Head SHA** is stale, high-risk work lacked an approved plan pass, or your label is PATCH.
+- **APPROVE** (verdict text, then submit dispatch): checklist pass/n/a, repro **run by you**, not writer session, head SHA matches PR, not unaccepted PATCH. **High-risk** PRs may APPROVE when label, brief, rollout, and Kadin product OK requirements are met — high risk is not automatic HOLD.
+- **REQUEST CHANGES:** writer fixes; `/remediate`; writer may self-audit in same session but does not post the check.
+- **HOLD FOR HUMAN:** missing/conflicting rule, product decision for Kadin, PATCH without acceptance, writer session, stale SHA, missing `high-risk` label or design brief when required, missing rollout matrix.
+
+Round 3+ blocking: **For Kadin** escalation per `ARCHITECTURE_CONSTITUTION.md`.
 
 ## Do not
 
-- Edit product code from the audit chat (doc updates only when the owner orders them in the same thread).
-- Move the ClickUp task to **in review**. That waits for APPROVE and green CI.
-- File task notes or quote an approval the human did not type.
+- Edit product code (unless owner orders in this thread).
+- Move ClickUp to **in review** (writer/bot after green critic check + CI).
+- Quote Kadin approvals he did not type.

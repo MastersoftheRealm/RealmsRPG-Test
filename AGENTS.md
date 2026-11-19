@@ -11,7 +11,7 @@ Stack: Next.js App Router, React, Tailwind, Supabase (no Prisma), Vercel. Repo `
 3. **Label every result** `REAL FIX` (the root cause is removed) or `PATCH` (a symptom is handled; state the known limits and what the real fix needs). Never present a PATCH as a fix.
 4. **Stop rather than hack.** If a real fix is not possible within these rules (missing rule, missing approval, a structural problem outside scope), stop and report what you found and the options. Do not route around a rule or an approval (for example, by hardcoding a value because the database write needs an OK).
 5. **Survey before you build.** Understand the whole affected area before changing it. If the area has forks, copy-paste duplicates, dead code, rule values typed into code, or an unclear done-when, report that before building on top of it.
-6. **Who decides what.** Kadin decides the **what**: product intent, game rules and values, copy. Collin (or the reviewer, for standard-risk work) decides the **how**: engineering approach and code approval. Kadin's OK is a product decision, never an engineering approval. Do not ask him to judge code. When Collin is unavailable, the [fallback path](#fallback-when-collin-is-unavailable) replaces his approval; it does not lower the bar.
+6. **Who decides what.** Kadin decides the **what**: product intent, game rules and values, copy. Kadin's OK is a product decision, never an engineering approval. Do not ask him to judge code. The **how** on a PR is enforced by an independent critic session plus CI (see [Review](#review)), not by self-attested checklist text in the PR body.
 7. **AI creative policy.** Never write art, images, creative names, item names, feat renames, plot, lore, flavor text, or visual/style choices (colors, fonts). You may fix grammar (unless deliberate style), write technical docs, and flag inconsistencies. Full policy: the ClickUp wiki [Using AI at Realms](https://app.clickup.com/9017636492/docs/8cqwdmc-3357/8cqwdmc-517).
 8. **Game rules are not yours.** Never invent or pick a formula or value. A missing or conflicting written rule is a hold: list the sources and their values and ask Kadin.
 9. **Guide Kadin; do not just satisfy him.** Kadin is not a developer. Explain the options and their tradeoffs in plain English, and challenge inaccuracies in his plans, in the task, and in existing code before building. A request that rests on a wrong assumption gets a correction and a better option, not a faithful implementation of the mistake. Anything that asks for his approval is a few short sentences: what it is, what can go wrong, and what he is agreeing to. No code and no file lists unless he asks.
@@ -28,9 +28,9 @@ Stack: Next.js App Router, React, Tailwind, Supabase (no Prisma), Vercel. Repo `
    - **Area health:** forks, duplicates, dead code, rule literals, missing tests, unclear done-when.
    - **Proposed fix**, labelled REAL FIX or PATCH, with what it deletes or consolidates.
    - **Done when**, **out of scope**, and **risk by path** (see [Risk by path](#risk-by-path)).
-   - **Questions for Kadin** (what) and **for Collin** (how), if any.
-4. **Sign-off before Phase 2** is required when any of these apply: a high-risk path, a game value or rule, a product question, a new shared module/component/store/API contract, a PATCH, or more than 10 files / 300 changed lines. Kadin signs off the what; Collin signs off the how. Otherwise the survey goes into the PR body and the reviewer checks it.
-5. **High-risk plan before code.** When the task touches `sql/`, schema, RPCs, auth (`src/proxy.ts`, `src/lib/supabase/`, `src/app/(auth)/`, mutation guards/validation), `scripts/`, or `.github/`, post a short **design brief** on the task or draft PR: done-when, out of scope, data model, rollout sketch. An **independent** critic runs `/audit` as a **plan pass** and records **APPROVE** before Phase 2 starts. The implementation `/audit` is a separate pass on the diff.
+   - **Questions for Kadin** (what), if any.
+4. **Sign-off before Phase 2** is required when any of these apply: a [high-risk path](#risk-by-path), a game value or rule, a product question, a new shared module/component/store/API contract, a PATCH, or more than 10 files / 300 changed lines. Kadin signs off the what. Otherwise the survey goes into the PR body and the critic checks it.
+5. **High-risk plan before code.** When the task is high-risk per [Risk by path](#risk-by-path), post a short **design brief** on the task or draft PR (done-when, out of scope, data model, rollout sketch) **before** Phase 2. The independent critic **plan pass** (`/audit`, separate session) must pass before implementation merges; the critic posts the GitHub check only on the implementation head SHA after the code exists.
 
 ### Phase 2 — Build
 
@@ -43,52 +43,47 @@ Stack: Next.js App Router, React, Tailwind, Supabase (no Prisma), Vercel. Repo `
 
 ### Review
 
-Commands carry this loop more reliably than prose alone. Default PR path:
+Writer prep and critic enforcement are separate. Self-attested "APPROVE" text in a PR does **not** satisfy review; only the GitHub check **`Realms Independent Critic`** on the current head SHA does (`.github/workflows/independent-critic.yml`).
 
-| Step | Command / phase | Role |
-|------|-----------------|------|
-| 1 | Phase 2 build | **Writer** (implementer) |
-| 2 | `/audit` (round 1) | **Critic** — `.cursor/commands/audit.md`; checklist in `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` |
-| 3 | `/remediate` if **REQUEST CHANGES** | **Writer** again — `.cursor/commands/remediate.md`; only audit **Required changes** |
-| 4 | `/audit` (round 2+) | **Critic** — prior gaps, then whole diff (incl. AI bloat / net-negative lean on fix/refine PRs) |
-| 5 | **APPROVE** + green CI | Merge per [Merge](#merge) |
+| Step | Command / phase | Role | Counts for merge? |
+|------|-----------------|------|-------------------|
+| 1 | Phase 2 build | **Writer** | — |
+| 2 | `/audit` + `/remediate` loop on own work | **Writer** (prep) | No — same-session notes only |
+| 3 | `/audit` on exact head SHA | **Critic** (new session; `.cursor/commands/audit.md`) | Yes — after posting the GitHub check |
+| 4 | Kadin product OK + merge | **Kadin** | Yes — human merge click |
 
-**Typical loop is two audit↔remediate cycles**; there is **no hard stop** at two. If a **third or later audit** still blocks, the audit **must** warn Kadin in plain language: likely bigger issue, options (split task, revert, one more remediate, stop), and whether another remediate is worthwhile. Pause a large third remediate until he chooses unless the audit says one narrow remediate should finish it. Collin still owns **how** when engineering approach is stuck.
+**Typical writer loop is two self-audit↔remediate cycles** before handoff; there is **no hard stop** at two. If a **third or later** critic `/audit` still blocks, the critic **must** warn Kadin in plain language (options, split, revert, stop).
 
-`/cleanup` is removed. It is not an alias. The writer pass after **REQUEST CHANGES** is `/remediate` only.
+`/cleanup` is removed. The writer pass after critic **REQUEST CHANGES** is `/remediate` only.
 
-Additional rules:
+**Enforcement (GitHub)**
 
-1. **Independent critic.** `/audit` runs in a **separate session or agent** that did not write the diff and did not rely on the writer's survey or PR reasoning as evidence. Default critic model routing is in `.cursor/commands/audit.md`. A **same-session** `/audit` (writer or continuation of the writer chat) is notes at most; it **never** counts as approval for merge.
-2. **Audit record on the PR.** Each critic **APPROVE** lists critic identity (agent/model), round (plan vs implementation when both apply), and the exact **head commit SHA**. **APPROVE** is valid only for that SHA; any new commit needs a fresh `/audit` before **in review** or merge.
-3. The critic **runs** the repro test and checks CI; reading the diff alone is not enough. The critic explicitly confirms the repro fails for the **behavioral** reason and that SQL tests use **canonical** `sql/` files, not copies.
-4. **Rollout matrix** (database or API contract changes): the PR lists every intermediate state (old app + new DB, new app + old DB, stale open tabs). Each state must save correctly or **fail loudly** (user-visible error). Reporting success while a write is dropped is never allowed. Include rollback SQL or revert steps.
-5. Only correctness, security, data-safety and checklist failures block. A checklist miss is not a note: if the review names a stale doc line, a missing test, a swallowed error, or any other checklist miss, that item fails and the verdict cannot be APPROVE. Anything that is not a checklist item is a note; it becomes a ClickUp task only if Kadin or Collin chooses.
-6. **PATCH veto.** If the reviewer judges the change a PATCH (whatever the writer labelled it), it does not merge unless Kadin explicitly accepts it as a patch in his own comment on the PR ("I accept this as a PATCH because …"). An agent relaying his acceptance does not count.
-7. Rules-math or rules-value PRs also go to the Rules Balance Analyst for a ruling check before Kadin signs off.
+1. **Check name:** `Realms Independent Critic`. Only `.github/workflows/independent-critic.yml` may post **success** for that context on a commit. Repository rules must require this check before merging to `master` (see draft PR **SETTINGS-PROPOSAL**; Kadin applies in GitHub — agents do not change branch settings).
+2. **On every PR push** the workflow resets the check to **in progress**, voiding any prior critic approval on an older SHA.
+3. **Critic submit:** After `/audit`, the critic **runs the repro and `node scripts/critic-gate-tests.mjs` locally**, then triggers `repository_dispatch` (`critic-verdict`) or `workflow_dispatch` with `CRITIC_SUBMIT_TOKEN`. The workflow re-runs the gate bundle on that SHA; on **approve** it posts **success** only if tests pass and high-risk rules below are met.
+4. **Secrets (names only):** `CRITIC_SUBMIT_TOKEN` (Actions secret; critic session only). `GITHUB_CRITIC_DISPATCH_TOKEN` (Cursor cloud secret; PAT with `repo` + `workflow` for dispatch).
 
-### Fallback when Collin is unavailable
+**Critic rules (same checklist; enforced by the job + verdict)**
 
-For high-risk work that cannot wait for Collin. **Only Kadin invokes it**, in his own comment on the ClickUp task or PR, saying why it cannot wait. An agent never invokes it or suggests that it applies. Every step below is required; none is waived.
-
-1. **Brief for Kadin before any code.** Plain English, no jargon: what exists now, what is wrong, two or more options with tradeoffs and risks (including "do nothing yet"), and a recommendation. Kadin picks the option; that is his product decision, recorded on the task.
-2. **Independent senior review, adversarial, twice.** Run `/audit` (`.cursor/commands/audit.md`) for the plan pass and again for the implementation pass. Model, what it may read, and the challenge are in that command. If that review finds the task crosses systems, stop and split the task. Do not jump to a bigger model to finish a wide task. The PATCH veto applies to the implementation pass.
-3. **Stricter proof**, all linked in the PR:
-   - a test that fails before and passes after (no "not feasible" exemption);
-   - the repro run on the Vercel preview deploy, with steps and the observed result;
-   - a written rollback plan (what to revert, how to restore data, how we would notice it failed);
-   - for a change to schema or official codex / `core_rules` rows, a backup taken immediately before apply, named in the PR (see [Database safety](#database-safety)). If the rollback cannot restore those rows, wait for Collin.
-4. **Merge and post-review.** Who presses the button is [Merge](#merge). The PR carries the `collin-post-review` label, and a ClickUp task "Collin post-review: PR #N" is assigned to Collin. Collin works that queue when he is back; his findings are filed as **urgent** and go ahead of all other work. He swaps the label for `collin-reviewed` when done. There is one GitHub account for now. Agents post as Kadin and must not type his approvals: invoking this fallback, accepting a PATCH, or approving a data change. He types those himself. GitHub cannot tell the comments apart.
+1. **Independence:** Critic session did not write commits on the PR branch. Never read the writer's survey as evidence; trace the code. Model routing: `.cursor/commands/audit.md`.
+2. **Tests:** Critic **runs** repro and gate tests; green CI alone is not enough. Confirm behavioral repro failure (not missing symbol); SQL tests use **canonical** `sql/` files.
+3. **Rollout matrix** (database or API contract changes): each intermediate state saves or **fails loud**; no silent dropped writes; include rollback SQL.
+4. **High-risk PRs** must carry the GitHub label `high-risk` when [Risk by path](#risk-by-path) matches; the critic job fails without it. Include the **design brief** before code when high-risk.
+5. Checklist misses block critic **approve** (constitution items 1–15). **PATCH veto:** merge only if Kadin accepts PATCH in his own PR comment.
+6. Rules-math or rules-value PRs: Rules Balance Analyst ruling before Kadin signs off.
 
 ### Merge
 
-The merge button is not a code review. Kadin does not read code, so his click is not a quality check. The reviewer and CI are the check.
+The merge button is not a code review. Kadin does not read code; his click is product OK where required, not a substitute for checks.
 
-- **Standard-risk** (no path in the table below), reviewer verdict APPROVE, CI green, and not an unaccepted PATCH: the Bug and Audit Fixes bot may merge. Kadin does not have to look.
-- **High-risk, Collin available:** Collin merges.
-- **High-risk, Collin unavailable, and the PR does not change schema or official codex / `core_rules` rows:** the same bot may merge after every fallback step is linked in the PR and the `collin-post-review` label is on. Breaking play for alpha testers is acceptable. The bot still may not merge an unaccepted PATCH.
-- **Schema or official data:** Kadin presses merge. That click means he accepts the data change described in plain English (what changes, which backup, how to undo). It is not a code review. Required CI checks are never skipped.
-- An agent quoting "Kadin approved" is not an approval. A workflow waiver or a PATCH acceptance counts only as his own comment on the PR or task.
+**Required before merge to `master`:** all required CI checks green; **`Realms Independent Critic` = success** on the merge commit; PR not blocked by GitHub **stack merge order** (do not admin-bypass stack blocks — e.g. PR #601); unaccepted PATCH veto satisfied.
+
+- **Standard-risk:** Kadin or the Bug and Audit Fixes bot may merge when checks pass. Kadin does not have to read the diff.
+- **High-risk** (paths in the table, including workflow/critic files): apply label `high-risk`, complete design brief + rollout evidence, Kadin's explicit product OK on the PR for data/rule changes, then merge. Agents never merge.
+- **Schema or official data:** Kadin presses merge after backup + plain-language acceptance on the PR. Required checks are never skipped.
+- An agent quoting "Kadin approved" is not an approval. PATCH acceptance counts only as his own comment on the PR or task.
+
+**Collin Morrison** (`@CollinMorrison` on GitHub) is **not** in the review workflow. He is listed only as a **ruleset bypass actor** so merges from his account are not blocked by the critic check (Kadin, Nov 19, 2026). Everyone else, including admins and bots using Kadin's account, needs the critic check unless bypass is explicitly configured in the ruleset.
 
 ### ClickUp
 
@@ -101,17 +96,17 @@ ClickUp is the only work queue. **Coding agents must keep the linked task curren
 | Phase 2 starts | **in progress** + one-line comment: agent name, date/time (America/New_York), model |
 | Phase 1 survey (when it goes on the task, not only the PR) | Survey comment on the task |
 | Draft PR opened | Comment with PR link; task id must match PR **ClickUp** section |
-| `/audit` **APPROVE** + green CI | **in review** (writer or merge bot — not the critic during `/audit`) |
+| **`Realms Independent Critic` success** on head SHA + green CI | **in review** (writer — not the critic during `/audit`) |
 | Merge | **testing** + QA steps comment when the change is user-facing |
 | Stop with no PR | **to do** + short reason |
 
 Stopping with no PR returns the task to **to do**. Already fixed on master: no branch, move to **testing** with evidence. Covered or superseded: stays **to do** with a comment. A vague task is split by whoever filed it, or stays **to do** with a comment; do not invent the split. Agents never move **complete**. Do not write `ACTIVE_TASKS.md`, `AI_TASK_QUEUE.md` or `AI_CHANGELOG.md`, and do not put `TASK-###` in commit subjects.
 
-Priority order: urgent, high, normal, low; skip tasks with unfinished dependencies. Assign Bob (`95261690`; legally James Owenby) only for high-importance or obvious visual QA. Collin Morrison is `44381886`.
+Priority order: urgent, high, normal, low; skip tasks with unfinished dependencies. Assign Bob (`95261690`; legally James Owenby) only for high-importance or obvious visual QA.
 
 ## Risk by path
 
-A PR is **high-risk** if it touches any of these. High-risk needs Collin's approval (CODEOWNERS), or the full [fallback path](#fallback-when-collin-is-unavailable), plus Kadin's product OK where a product or rule decision is involved.
+A PR is **high-risk** if it touches any path below. Apply the GitHub label **`high-risk`**. High-risk needs Kadin's product OK where a product or rule decision is involved, plus critic check + CI. Changes to **workflow / critic enforcement** files are always high-risk (paragraph edits cannot weaken the gate).
 
 There are no public players. A change that breaks play for alpha testers on the team is acceptable. The harm that matters is corrupting official codex, `core_rules`, or schema, because the team builds the game in that database. Review effort follows that harm.
 
@@ -121,7 +116,8 @@ There are no public players. A change that breaks play for alpha testers on the 
 | Auth, session, CSRF, roles | `src/proxy.ts`, `src/lib/supabase/`, `src/app/(auth)/`, `src/lib/api-mutation-guard.ts`, `src/lib/api-validation.ts` |
 | Game rules and legality | `src/lib/game/`, `src/lib/calculators/`, `data/core-rules/`, `src/app/(main)/admin/core-rules/` |
 | Admin tools that write or delete data | `src/app/(main)/admin/`, `src/app/api/admin/` |
-| CI, tooling, settings | `.github/`, `scripts/`, `.husky/`, `package.json`, `next.config.ts`, `vercel.json` — pin action and tool versions (never `latest`); do not weaken checks (ratchet bumps, ignored paths, dropped jobs) without justification in **Risk by path** and the approvals that path needs |
+| CI, tooling, settings | `.github/`, `scripts/`, `.husky/`, `package.json`, `next.config.ts`, `vercel.json` — pin versions (never `latest`); do not weaken checks without justification in **Risk by path** |
+| Workflow / critic enforcement | `AGENTS.md`, `.cursor/commands/audit.md`, `.cursor/commands/remediate.md`, `src/docs/ai/ARCHITECTURE_CONSTITUTION.md`, `.github/workflows/independent-critic.yml`, `scripts/critic-gate-tests.mjs`, critic portions of `.github/CODEOWNERS` |
 | Secrets, env, deploy | `.env.example`, deploy docs, Vercel settings |
 | Anything sent outside the team | email, messages, posts, billing |
 
@@ -131,7 +127,7 @@ The paths a PR touches decide its risk. A checkbox does not.
 
 - There is one database and the team builds the game in it. A separate test database does not exist yet. Cloud agents would use one if its keys were in their environment; Kadin would not run it himself. Until that exists, agents use this database under the limits below.
 - **QA rows.** Records prefixed `QA` or `QA Test` may be created, edited, and, during alpha, published on official pages for a test. Delete them from those pages when the test is done. They stay QA content (`DECISIONS.md`, QA / accounts).
-- **Official codex, `core_rules`, and schema.** Kadin's explicit OK, the SQL shown in the PR, and a named backup before apply. Collin approves the SQL when he is available. Agents draft the SQL and apply it after that OK. A CSV export in Drive is a content snapshot: name the file and its date. It can restore rows. It cannot restore table structure, so a schema change needs a Supabase backup, not only a CSV.
+- **Official codex, `core_rules`, and schema.** Kadin's explicit OK, the SQL shown in the PR, and a named backup before apply. Agents draft the SQL and apply it after that OK. A CSV export in Drive is a content snapshot: name the file and its date. It can restore rows. It cannot restore table structure, so a schema change needs a Supabase backup, not only a CSV.
 - SELECT-only reads are allowed. Details for codex edits: `.cursor/rules/realms-codex-data.mdc`.
 - Every `CREATE TABLE` in `public` enables RLS, adds policies and grants explicitly in the same file. Copy `sql/_TEMPLATE_new_table.sql`.
 
@@ -140,7 +136,7 @@ The paths a PR touches decide its risk. A checkbox does not.
 - The done-when is met, or the gap is stated on the task.
 - The result is labelled REAL FIX or PATCH, honestly.
 - A test that failed before passes after for the **behavioral** bug (or the PR says why that was not feasible).
-- Independent critic **APPROVE** on the PR **Audit record** matches the final head SHA; high-risk work had plan-pass **APPROVE** before code when required.
+- **`Realms Independent Critic`** check **success** on the final head SHA; high-risk work had design brief + critic plan pass before code when required.
 - Nothing new duplicates existing code; replaced code is deleted.
 - Stale docs are updated in the same PR.
 - CI is green. User-facing work has QA steps on the ClickUp task.

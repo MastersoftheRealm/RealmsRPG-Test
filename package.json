@@ -18,6 +18,7 @@
     "build": "next build --webpack",
     "start": "next start",
     "test": "vitest run",
+    "critic:gate": "node scripts/critic-gate-tests.mjs",
     "test:api": "vitest run src/app/api",
     "lint": "eslint . --max-warnings 0 && node scripts/check-task-id-ratchet.mjs && node scripts/check-test-source-read-ratchet.mjs && node scripts/check-site-chrome-barrel-imports.mjs && node scripts/check-character-legality-all-levels.mjs && node scripts/check-characters-direct-write.mjs && node scripts/check-knip-ratchet.mjs",
     "typecheck": "tsc --noEmit",

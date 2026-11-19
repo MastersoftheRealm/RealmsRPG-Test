@@ -7,7 +7,7 @@ The single engineering checklist. The writer checks it before opening a PR, the 
 | Role | When | Constraint |
 |------|------|------------|
 | **Implementer** (default) | Almost all tasks | Extend existing patterns only. |
-| **Architect** (rare) | New shared component (`src/components/patterns/`, `src/components/ui/`), zustand store, API contract, migration strategy, or a second way to do something | Needs an ADR in `src/docs/ai/ADR/` and Collin's sign-off on the survey. Prefer deleting the parallel system over documenting it. |
+| **Architect** (rare) | New shared component (`src/components/patterns/`, `src/components/ui/`), zustand store, API contract, migration strategy, or a second way to do something | Needs an ADR in `src/docs/ai/ADR/` and Kadin's product OK on the survey. Prefer deleting the parallel system over documenting it. |
 
 ## Checklist
 
@@ -63,17 +63,15 @@ SQL tests: canonical `sql/` files? (not hand-copied DDL in test)
 Rollout matrix: present and each state save-or-fail-loudly? (n/a if no DB/API contract change)
 Checklist: items 1–15 pass/fail/n.a., one line each, file:line for each fail
 Required changes: (REQUEST CHANGES only)
-Question for human: (HOLD only, one clear decision, addressed to Kadin for what or Collin for how)
+Question for human: (HOLD only, one clear decision for Kadin — product what)
 ```
 
-- **APPROVE:** standard risk, all items pass, CI green, repro test run, critic independent of writer, **Head SHA** matches PR head at verdict time.
-- **REQUEST CHANGES:** a checklist fail the writer can fix. Round count and the round-3 warning are in `AGENTS.md` (Review) and `audit.md`.
-- **HOLD FOR HUMAN:** high risk, a missing or conflicting rule, a product decision, you are not independent of the writer (including same-session `/audit`), or **Head SHA** no longer matches PR head.
-- **PATCH veto:** if your label check says PATCH, the verdict cannot be APPROVE. Use HOLD FOR HUMAN; it merges only if Kadin accepts it as a patch in his own PR comment (`AGENTS.md`, Review).
+- **APPROVE:** all items pass or n/a, repro **run by critic**, independent session, **Head SHA** matches PR head, not unaccepted PATCH, high-risk label/brief/rollout satisfied when required. High risk alone is **not** HOLD. Submit `critic-verdict` to post **`Realms Independent Critic`**.
+- **REQUEST CHANGES:** checklist fail the writer can fix; writer may self-audit in same session but does not post the GitHub check.
+- **HOLD FOR HUMAN:** missing/conflicting rule, product decision, PATCH veto, writer session, stale SHA, missing `high-risk` label or design brief when required, missing rollout matrix.
+- **PATCH veto:** cannot APPROVE; merges only if Kadin accepts PATCH in his own PR comment (`AGENTS.md`, Review).
 
-**Fallback senior review** (`AGENTS.md`, Fallback when Collin is unavailable): same format, headed `## Senior fallback review: plan | implementation`. Add `Own root-cause trace:` (written before reading the diff), `Assumptions challenged:`, and `Over-engineered / over-simplified:`. Do not read the writer's PR description or reasoning.
-
-The reviewer never approves its own writing, merges, pushes, changes settings, or writes to ClickUp, Drive or the database. Green CI is not proof of correctness.
+The critic never merges, pushes, changes GitHub settings, or writes to ClickUp, Drive or the database. Green CI is not proof. The GitHub critic check is not proof without the critic having run the tests locally.
 
 ### For Kadin (plain language)
 
