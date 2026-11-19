@@ -1,41 +1,86 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+const spawnSyncMock = vi.hoisted(() => vi.fn());
+
+vi.mock('node:child_process', () => ({
+  spawnSync: spawnSyncMock,
+}));
+
 import {
-  activeIgnoredGhsas,
   assertNpmAuditReport,
+  evaluateProductionNpmAuditReport,
+  evaluateProductionVulnerabilities,
   findBlockingHighProductionVulnerabilities,
+  runProductionNpmAuditGate,
+  validateProductionAuditVulnerabilities,
 } from './check-production-npm-audit.mjs';
 
-const PICOMATCH_GHSA = 'GHSA-FC5Q-39XC-VJPF';
-const OTHER_GHSA = 'GHSA-0000-0000-0001';
+const GHSA_A = 'GHSA-AAAA-AAAA-AAAA';
 
-describe('assertNpmAuditReport', () => {
-  const validSpawn = {
-    status: 0,
-    stdout: '',
-    stderr: '',
-    pid: 1,
-    output: ['', ''],
-    signal: null,
-    error: undefined,
-  };
+const validSpawn = {
+  status: 0,
+  stdout: '',
+  stderr: '',
+  pid: 1,
+  output: ['', ''],
+  signal: null,
+  error: undefined,
+};
 
-  it('rejects npm audit error JSON (registry unreachable)', () => {
-    const report = {
+/** @param {import('node:child_process').SpawnSyncReturns<string>} result */
+function gateFromParsedReport(result, report) {
+  return evaluateProductionNpmAuditReport(result, report);
+}
+
+describe('evaluateProductionNpmAuditReport (full gate through JSON)', () => {
+  it('rejects npm audit error JSON', () => {
+    const result = gateFromParsedReport(validSpawn, {
       message: 'request to https://invalid.registry.example failed',
       error: { summary: '', detail: '' },
-    };
-    expect(() => assertNpmAuditReport(validSpawn, report)).toThrow(/npm audit error:/);
+    });
+    expect(result.ok).toBe(false);
+    expect(result.errors[0]).toMatch(/npm audit error:/);
   });
 
-  it('rejects JSON without auditReportVersion or vulnerabilities', () => {
-    expect(() => assertNpmAuditReport(validSpawn, { vulnerabilities: {} })).toThrow(
-      /missing auditReportVersion/,
-    );
-    expect(() =>
-      assertNpmAuditReport(validSpawn, { auditReportVersion: 2, vulnerabilities: [] }),
-    ).toThrow(/missing vulnerabilities object/);
+  it('rejects empty parsed report', () => {
+    const emptySpawn = { ...validSpawn, status: 1, stdout: '', stderr: '' };
+    const result = gateFromParsedReport(emptySpawn, null);
+    expect(result.ok).toBe(false);
+    expect(result.errors[0]).toMatch(/invalid JSON/);
   });
 
+  it('rejects JSON missing auditReportVersion', () => {
+    const result = gateFromParsedReport(validSpawn, { vulnerabilities: {} });
+    expect(result.ok).toBe(false);
+    expect(result.errors[0]).toMatch(/missing auditReportVersion/);
+  });
+
+  it('rejects JSON missing vulnerabilities object', () => {
+    const result = gateFromParsedReport(validSpawn, {
+      auditReportVersion: 2,
+      vulnerabilities: [],
+    });
+    expect(result.ok).toBe(false);
+    expect(result.errors[0]).toMatch(/missing vulnerabilities object/);
+  });
+
+  it('passes a clean high+ production report', () => {
+    const result = gateFromParsedReport(validSpawn, {
+      auditReportVersion: 2,
+      vulnerabilities: {
+        lodash: {
+          severity: 'moderate',
+          via: [{ url: 'https://github.com/advisories/GHSA-xxxx', severity: 'moderate' }],
+        },
+      },
+    });
+    expect(result.ok).toBe(true);
+    expect(result.message).toMatch(/Production npm audit OK/);
+    expect(result.message).not.toMatch(/allowlist/i);
+  });
+});
+
+describe('assertNpmAuditReport', () => {
   it('accepts a normal audit report shape', () => {
     const report = assertNpmAuditReport(validSpawn, {
       auditReportVersion: 2,
@@ -46,52 +91,212 @@ describe('assertNpmAuditReport', () => {
 });
 
 describe('findBlockingHighProductionVulnerabilities', () => {
-  it('allows picomatch and its exclusive dependents when only GHSA-fc5q-39xc-vjpf is ignored', () => {
+  it('blocks a package npm rates high regardless of direct advisory severity (a)', () => {
     const vulnerabilities = {
-      picomatch: {
+      'vuln-pkg': {
         severity: 'high',
         via: [
           {
-            source: 1,
-            name: 'picomatch',
-            url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf',
-            severity: 'high',
+            url: `https://github.com/advisories/${GHSA_A}`,
+            severity: 'moderate',
           },
         ],
       },
-      '@rollup/plugin-commonjs': {
-        severity: 'high',
-        via: ['picomatch'],
-      },
     };
-    const ignored = activeIgnoredGhsas(new Set([PICOMATCH_GHSA]));
-    expect(findBlockingHighProductionVulnerabilities(vulnerabilities, ignored)).toEqual([]);
+    expect(findBlockingHighProductionVulnerabilities(vulnerabilities)).toEqual(['vuln-pkg']);
   });
 
-  it('still blocks a different high GHSA', () => {
+  it('blocks a package npm rates high when the advisory object omits severity (b)', () => {
     const vulnerabilities = {
-      picomatch: {
+      'vuln-pkg': {
         severity: 'high',
         via: [
           {
-            url: `https://github.com/advisories/${PICOMATCH_GHSA}`,
-            severity: 'high',
-          },
-        ],
-      },
-      'some-package': {
-        severity: 'high',
-        via: [
-          {
-            url: `https://github.com/advisories/${OTHER_GHSA}`,
-            severity: 'high',
+            url: `https://github.com/advisories/${GHSA_A}`,
+            title: 'advisory without severity field',
           },
         ],
       },
     };
-    const ignored = activeIgnoredGhsas(new Set([PICOMATCH_GHSA]));
-    expect(findBlockingHighProductionVulnerabilities(vulnerabilities, ignored)).toEqual([
-      'some-package',
-    ]);
+    expect(findBlockingHighProductionVulnerabilities(vulnerabilities)).toEqual(['vuln-pkg']);
+  });
+
+  it('blocks a package npm rates high when the only via is a moderate dependency (c)', () => {
+    const vulnerabilities = {
+      'moderate-leaf': {
+        severity: 'moderate',
+        via: [{ url: `https://github.com/advisories/${GHSA_A}`, severity: 'moderate' }],
+      },
+      parent: {
+        severity: 'high',
+        via: ['moderate-leaf'],
+      },
+    };
+    expect(findBlockingHighProductionVulnerabilities(vulnerabilities)).toEqual(['parent']);
+  });
+
+  it('blocks every top-level high/critical package npm includes', () => {
+    const vulnerabilities = {
+      leaf: { severity: 'critical', via: [] },
+      parent: { severity: 'high', via: ['leaf'] },
+    };
+    expect(findBlockingHighProductionVulnerabilities(vulnerabilities)).toEqual(['leaf', 'parent']);
+  });
+});
+
+describe('validateProductionAuditVulnerabilities', () => {
+  it('fails when a via string names a dependency missing from the report', () => {
+    const errors = validateProductionAuditVulnerabilities({
+      parent: {
+        severity: 'high',
+        via: ['missing-child'],
+      },
+    });
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toMatch(/missing dependency "missing-child"/);
+  });
+
+  it('fails on unknown non-object via entries on a high package', () => {
+    const errors = validateProductionAuditVulnerabilities({
+      broken: {
+        severity: 'high',
+        via: [null, 42],
+      },
+    });
+    expect(errors).toHaveLength(2);
+    expect(errors[0]).toMatch(/invalid via entry/);
+  });
+});
+
+describe('evaluateProductionVulnerabilities', () => {
+  it('returns structured failure when blocking packages exist', () => {
+    const result = evaluateProductionVulnerabilities({
+      bad: {
+        severity: 'critical',
+        via: [{ url: `https://github.com/advisories/${GHSA_A}`, severity: 'critical' }],
+      },
+    });
+    expect(result.ok).toBe(false);
+    expect(result.errors[0]).toMatch(/high\/critical package\(s\)/);
+    expect(result.errors[0]).toContain('bad');
+  });
+
+  it('fails closed on structural errors before severity blocking', () => {
+    const result = evaluateProductionVulnerabilities({
+      parent: {
+        severity: 'high',
+        via: ['missing-child'],
+      },
+    });
+    expect(result.ok).toBe(false);
+    expect(result.errors[0]).toMatch(/missing dependency/);
+  });
+
+  it('blocks npm-rated high packages with moderate direct advisories through the gate (a)', () => {
+    const result = evaluateProductionVulnerabilities({
+      'vuln-pkg': {
+        severity: 'high',
+        via: [{ url: `https://github.com/advisories/${GHSA_A}`, severity: 'moderate' }],
+      },
+    });
+    expect(result.ok).toBe(false);
+    expect(result.errors[0]).toContain('vuln-pkg');
+  });
+});
+
+describe('runProductionNpmAuditGate with mocked npm', () => {
+  afterEach(() => {
+    spawnSyncMock.mockReset();
+  });
+
+  it('fails when npm spawn returns unparseable output', () => {
+    spawnSyncMock.mockReturnValue({
+      status: 1,
+      stdout: '<<garbage>>',
+      stderr: '',
+      output: ['<<garbage>>', ''],
+      pid: 1,
+      signal: null,
+      error: undefined,
+    });
+    const result = runProductionNpmAuditGate();
+    expect(result.ok).toBe(false);
+    expect(result.errors[0]).toMatch(/failed to parse/);
+  });
+
+  it('fails when npm spawn returns empty stdout', () => {
+    spawnSyncMock.mockReturnValue({
+      status: 1,
+      stdout: '',
+      stderr: '',
+      output: ['', ''],
+      pid: 1,
+      signal: null,
+      error: undefined,
+    });
+    const result = runProductionNpmAuditGate();
+    expect(result.ok).toBe(false);
+    expect(result.errors[0]).toMatch(/failed to parse/);
+  });
+
+  it('passes when mocked npm returns a clean audit report', () => {
+    spawnSyncMock.mockReturnValue({
+      status: 0,
+      stdout: JSON.stringify({ auditReportVersion: 2, vulnerabilities: {} }),
+      stderr: '',
+      output: ['', ''],
+      pid: 1,
+      signal: null,
+      error: undefined,
+    });
+    const result = runProductionNpmAuditGate();
+    expect(result.ok).toBe(true);
+    expect(result.message).toMatch(/Production npm audit OK/);
+  });
+
+  it('fails when mocked npm returns audit JSON with a blocking vulnerability', () => {
+    spawnSyncMock.mockReturnValue({
+      status: 0,
+      stdout: JSON.stringify({
+        auditReportVersion: 2,
+        vulnerabilities: {
+          evil: {
+            severity: 'high',
+            via: [
+              {
+                url: `https://github.com/advisories/${GHSA_A}`,
+                severity: 'high',
+              },
+            ],
+          },
+        },
+      }),
+      stderr: '',
+      output: ['', ''],
+      pid: 1,
+      signal: null,
+      error: undefined,
+    });
+    const result = runProductionNpmAuditGate();
+    expect(result.ok).toBe(false);
+    expect(result.errors[0]).toContain('evil');
+  });
+
+  it('fails when mocked npm returns audit error JSON', () => {
+    spawnSyncMock.mockReturnValue({
+      status: 1,
+      stdout: JSON.stringify({
+        error: { summary: 'Registry down', detail: '' },
+        message: 'Registry down',
+      }),
+      stderr: '',
+      output: ['', ''],
+      pid: 1,
+      signal: null,
+      error: undefined,
+    });
+    const result = runProductionNpmAuditGate();
+    expect(result.ok).toBe(false);
+    expect(result.errors[0]).toMatch(/npm audit error:/);
   });
 });
