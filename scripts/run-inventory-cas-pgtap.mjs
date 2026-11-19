@@ -122,10 +122,6 @@ function gitShowRef(rel, ref) {
   });
 }
 
-function gitShowOriginMaster(rel) {
-  return gitShowRef(rel, 'origin/master');
-}
-
 function applySqlList(dbUrl, relPaths, { fromRef = null } = {}) {
   for (const rel of relPaths) {
     if (fromRef && rel.startsWith('sql/characters-relational-')) {

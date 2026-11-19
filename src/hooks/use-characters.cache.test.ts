@@ -73,7 +73,7 @@ describe('mergeCharacterSaveResultIntoDetailQuery (library gear add)', () => {
       equipment: {
         weapons: [
           { id: 'w1', name: 'Sword' },
-          { id: 'w2', name: 'Mace' },
+          { id: 'w2', name: 'Mace', inventoryRowId: 'row-new' },
         ],
         armor: [],
         shields: [],
