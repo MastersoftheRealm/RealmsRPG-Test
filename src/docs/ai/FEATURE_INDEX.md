@@ -302,7 +302,7 @@ Other barrels (the generator does not list their exports):
 
 ### Named exports left off a barrel that does import the file
 
-`src/hooks/index.ts` imports `src/hooks/use-characters.ts` but the export list is `useCharacters`, `useCharacter`, `useDeleteCharacter`, `useDuplicateCharacter`, `characterViewerId`, `patchCharacterDetailQuery`, `invalidateCharacterLists`. The same file also exports `useSaveCharacter`, `nextCharacterDetailQueryData`, and `mergeCharacterDetailQueryData`.
+`src/hooks/index.ts` imports `src/hooks/use-characters.ts` but the export list is `useCharacters`, `useCharacter`, `useDeleteCharacter`, `useDuplicateCharacter`, `characterViewerId`, `patchCharacterDetailQuery`, `invalidateCharacterLists`. The same file also exports `useSaveCharacter`, `nextCharacterDetailQueryData`, `mergeCharacterDetailQueryData`, and `mergeCharacterSaveResultIntoDetailQuery`.
 
 `src/hooks/index.ts` imports types from `src/hooks/use-add-library-item-data.ts` and does not export `useAddLibraryItemData`. That file re-exports the function from `src/hooks/add-library-item/use-add-library-item-data.ts`.
 
@@ -3262,7 +3262,7 @@ No production file imports these names. A test import does not count. The file t
 - `src/components/ui/tab-navigation.tsx`: `scrollDeltaToRevealChild`, `tabListOverflowState`
 - `src/hooks/use-auto-save.ts`: `AUTOSAVE_RETRY_DELAYS_MS`, `flushDirtyAutosave`, `nextAutosaveRetryDelayMs`
 - `src/hooks/use-browser-offline.ts`: `getBrowserOfflineSnapshot`, `subscribeBrowserOffline`
-- `src/hooks/use-characters.ts`: `mergeCharacterDetailQueryData`, `nextCharacterDetailQueryData`
+- `src/hooks/use-characters.ts`: `mergeCharacterDetailQueryData`, `mergeCharacterSaveResultIntoDetailQuery`, `nextCharacterDetailQueryData`
 - `src/hooks/use-library-section-collapse.ts`: `librarySectionExpandedForCount`, `librarySectionStateForMount`, `readLibrarySectionSession`, `rememberLibrarySectionSession`
 - `src/hooks/use-user-library.ts`: `userLibraryAfterMutationKeys`
 - `src/lib/admin-users-search.ts`: `buildAdminUsersIlikePattern`, `compareAdminUserProfilesForListing`, `profileMatchesAdminUserSearch`, `rolesMatchingAdminUserSearchQuery`
