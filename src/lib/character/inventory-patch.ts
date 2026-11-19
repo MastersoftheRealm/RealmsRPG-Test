@@ -93,13 +93,19 @@ function rowQuantity(row: Record<string, unknown>): number {
   return 1;
 }
 
+function inventoryRowCasType(row: Record<string, unknown>): string {
+  const idStr = row.id != null ? String(row.id) : '';
+  if (!idStr.startsWith('custom-')) return '';
+  return typeof row.type === 'string' ? row.type : '';
+}
+
 export function inventoryRowCasSnapshot(row: Record<string, unknown>): InventoryCasSnapshot {
   const cost = row.cost;
   return {
     quantity: rowQuantity(row),
     equipped: row.equipped === true,
     name: typeof row.name === 'string' ? row.name : '',
-    type: typeof row.type === 'string' ? row.type : '',
+    type: inventoryRowCasType(row),
     description: typeof row.description === 'string' ? row.description : '',
     cost: typeof cost === 'number' && Number.isFinite(cost) ? cost : null,
   };
@@ -110,8 +116,7 @@ function leanRowForPatchOp(row: Record<string, unknown>): Record<string, unknown
   if (row.id !== undefined) out.id = row.id;
   if (row.name !== undefined) out.name = row.name;
   out.equipped = row.equipped === true;
-  const q = rowQuantity(row);
-  if (q !== 1) out.quantity = q;
+  out.quantity = rowQuantity(row);
   if (Object.prototype.hasOwnProperty.call(row, 'type')) {
     const type = row.type;
     out.type = typeof type === 'string' && type.length > 0 ? type : null;
@@ -129,14 +134,14 @@ function leanRowForPatchOp(row: Record<string, unknown>): Record<string, unknown
 }
 
 function rowsEqual(a: Record<string, unknown>, b: Record<string, unknown>): boolean {
-  return (
-    JSON.stringify(inventoryRowCasSnapshot(a)) === JSON.stringify(inventoryRowCasSnapshot(b))
-  );
+  return JSON.stringify(inventoryRowCasSnapshot(a)) === JSON.stringify(inventoryRowCasSnapshot(b));
 }
 
 function orderRowIds(rows: Record<string, unknown>[]): string[] {
   return rows
-    .map((row) => readInventoryRowId(row) ?? (row as { _provisionalRowId?: string })._provisionalRowId)
+    .map(
+      (row) => readInventoryRowId(row) ?? (row as { _provisionalRowId?: string })._provisionalRowId,
+    )
     .filter((id): id is string => typeof id === 'string' && id.length > 0);
 }
 
@@ -210,11 +215,13 @@ export function buildInventoryPatch(
     }
 
     const orderBefore = orderRowIds(before);
-    const orderAfter = after.map((row) => {
-      const id = readInventoryRowId(row);
-      if (id) return id;
-      return provisionalIds.get(row) ?? '';
-    }).filter(Boolean);
+    const orderAfter = after
+      .map((row) => {
+        const id = readInventoryRowId(row);
+        if (id) return id;
+        return provisionalIds.get(row) ?? '';
+      })
+      .filter(Boolean);
 
     if (orderBefore.join('|') !== orderAfter.join('|')) {
       for (let position = 0; position < orderAfter.length; position++) {
@@ -277,11 +284,7 @@ export function mirrorInventoryRowIdsOntoSheetEquipment(
           idx = nextRows.findIndex(
             (row) =>
               !readInventoryRowId(row) &&
-              matchesSheetEquipmentItem(
-                row as { id?: string | number; name?: string },
-                itemId,
-                -1,
-              ),
+              matchesSheetEquipmentItem(row as { id?: string | number; name?: string }, itemId, -1),
           );
         }
       }
@@ -356,6 +359,54 @@ export function coerceInventoryPatchCreatedRows(
 }
 
 /** Stamp server-assigned (or confirmed) row ids onto equipment after a successful inventory patch. */
+/** Apply a persisted inventoryPatch onto an equipment snapshot (autosave baseline advance). */
+export function applyInventoryPatchToEquipment(
+  equipment: unknown,
+  patch: InventoryPatchPayload,
+): unknown {
+  if (!patch.ops.length) return equipment;
+  if (!equipment || typeof equipment !== 'object') return equipment;
+  const equip: Record<string, unknown> = { ...(equipment as Record<string, unknown>) };
+
+  for (const op of patch.ops) {
+    const bucket = op.bucket;
+    let rows = [...readEquipmentBucket(equip, bucket)];
+
+    if (op.op === 'remove') {
+      rows = rows.filter((row) => readInventoryRowId(row) !== op.inventoryRowId);
+    } else if (op.op === 'add') {
+      const rowId = op.inventoryRowId ?? readInventoryRowId(op.item);
+      const row: Record<string, unknown> = { ...op.item };
+      if (rowId) row.inventoryRowId = rowId;
+      const position = Math.max(1, op.position ?? rows.length + 1);
+      const index = Math.min(position - 1, rows.length);
+      rows = [...rows.slice(0, index), row, ...rows.slice(index)];
+    } else if (op.op === 'update') {
+      const index = rows.findIndex((row) => readInventoryRowId(row) === op.inventoryRowId);
+      if (index >= 0) {
+        rows[index] = { ...rows[index], ...op.item, inventoryRowId: op.inventoryRowId };
+      }
+    } else if (op.op === 'reorder') {
+      const from = rows.findIndex((row) => readInventoryRowId(row) === op.inventoryRowId);
+      if (from >= 0) {
+        const nextRows = [...rows];
+        const [row] = nextRows.splice(from, 1);
+        const to = Math.max(0, Math.min(op.position - 1, nextRows.length));
+        nextRows.splice(to, 0, row!);
+        rows = nextRows;
+      }
+    }
+
+    if (bucket === 'armor') {
+      equip.armor = rows[0] ?? null;
+    } else {
+      equip[bucket] = rows;
+    }
+  }
+
+  return equip;
+}
+
 export function mergeInventoryCreatedRows(
   equipment: unknown,
   createdRows: InventoryPatchCreatedRow[],
@@ -365,17 +416,7 @@ export function mergeInventoryCreatedRows(
   for (const created of createdRows) {
     const bucket = created.bucket;
     const rows = readEquipmentBucket(equip, bucket);
-    let index = rows.findIndex((row) => readInventoryRowId(row) === created.inventoryRowId);
-    if (index < 0) {
-      const byPosition = created.position - 1;
-      if (
-        byPosition >= 0 &&
-        byPosition < rows.length &&
-        !readInventoryRowId(rows[byPosition]!)
-      ) {
-        index = byPosition;
-      }
-    }
+    const index = rows.findIndex((row) => readInventoryRowId(row) === created.inventoryRowId);
     if (index < 0) continue;
     rows[index] = { ...rows[index], inventoryRowId: created.inventoryRowId };
     if (bucket === 'armor') {

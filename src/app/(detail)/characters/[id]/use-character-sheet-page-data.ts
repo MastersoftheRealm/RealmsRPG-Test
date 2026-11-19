@@ -37,6 +37,12 @@ import {
 import { useGameRules } from '@/hooks/use-game-rules';
 import { sheetCatalogFromEnrichment } from '@/lib/character-view-enrichment';
 import {
+  advanceAutosaveBaselineFromSaveResult,
+  registerCharacterAutosaveBaseline,
+} from '@/lib/character/autosave-baseline';
+import {
+  coerceInventoryPatchCreatedRows,
+  mergeInventoryCreatedRows,
   mirrorInventoryRowIdsOntoSheetEquipment,
   prepareInventoryPatchForAutosave,
 } from '@/lib/character/inventory-patch';
@@ -47,19 +53,13 @@ import {
   characterSaveWithoutOverlongName,
 } from '@/lib/character/character-name-limit';
 import {
-  applyCharacterDirtyPatch,
   applySheetAutosaveConflictFields,
   characterLockToken,
   mergeRemotePreservingDirty,
   pickDirtyCharacterFields,
-  remoteCharacterBaselineIsStale,
   withDirtyClears,
 } from '@/lib/character/dirty-patch';
 import { characterAutosaveDocumentsEqual } from '@/lib/character/character-autosave-equal';
-import {
-  coerceInventoryPatchCreatedRows,
-  mergeInventoryCreatedRows,
-} from '@/lib/character/inventory-patch';
 import { rememberCharacterLockToken } from '@/lib/character/save-lock';
 import { mergeSheetRealtimePayload } from '@/lib/character/realtime-merge';
 import {
@@ -125,14 +125,7 @@ export function useCharacterSheetPageData(id: string) {
     }
   }, [character, id, rules]);
 
-  /** Library add / realtime saves bump `updatedAt` without touching `savedCleanRef` (one-shot init). */
-  useEffect(() => {
-    if (!character || character.id !== id || savedSnapshotIdRef.current !== id) return;
-    if (!savedCleanRef.current) return;
-    if (!remoteCharacterBaselineIsStale(character.updatedAt, savedCleanRef.current)) return;
-    savedCleanRef.current = cleanForSave(character, rules) as Record<string, unknown>;
-    rememberCharacterLockToken(id, character.updatedAt);
-  }, [character, id, rules]);
+  useEffect(() => registerCharacterAutosaveBaseline(id, savedCleanRef), [id]);
 
   const { data: userPowers = [] } = useUserPowers({ enabled: loadCatalog });
   const { data: userTechniques = [] } = useUserTechniques({ enabled: loadCatalog });
@@ -419,7 +412,6 @@ export function useCharacterSheetPageData(id: string) {
             savedCleanRef.current,
           );
           mergedCleanRef.current = mergedClean;
-          savedCleanRef.current = remoteClean;
           setCharacter((prev) => {
             if (!prev || prev.id !== remote.id) return prev;
             return applySheetAutosaveConflictFields(
@@ -436,19 +428,17 @@ export function useCharacterSheetPageData(id: string) {
           };
         },
       });
-      savedCleanRef.current = applyCharacterDirtyPatch(
-        savedCleanRef.current ?? {},
-        result.applied as Record<string, unknown>,
-        result.updatedAt ? { documentUpdatedAt: result.updatedAt } : undefined,
-      );
+      savedCleanRef.current = advanceAutosaveBaselineFromSaveResult(savedCleanRef.current, {
+        applied: result.applied as Record<string, unknown>,
+        updatedAt: result.updatedAt,
+        ...(result.inventoryPatchResult
+          ? { inventoryPatchResult: result.inventoryPatchResult }
+          : {}),
+      });
       const createdRows = coerceInventoryPatchCreatedRows(
         result.inventoryPatchResult?.createdRows ?? [],
       );
       if (createdRows.length > 0) {
-        savedCleanRef.current = {
-          ...savedCleanRef.current,
-          equipment: mergeInventoryCreatedRows(savedCleanRef.current?.equipment, createdRows),
-        };
         setCharacter((prev) => {
           if (!prev) return prev;
           return {
@@ -462,6 +452,30 @@ export function useCharacterSheetPageData(id: string) {
       }
       if (result.updatedAt) {
         setCharacter((prev) => (prev ? { ...prev, updatedAt: result.updatedAt } : prev));
+      }
+      if (result.conflictRetried) {
+        showToast(
+          'Another tab updated this character. Your changes were merged and saved.',
+          'info',
+        );
+        try {
+          const fresh = await getCharacter(id);
+          const remoteCharacter = fresh.character;
+          if (remoteCharacter) {
+            setCharacter((prev) => {
+              if (!prev) return prev;
+              const { character: next } = mergeSheetRealtimePayload(
+                prev,
+                remoteCharacter as unknown as Record<string, unknown>,
+                savedCleanRef.current,
+                { updatedAt: remoteCharacter.updatedAt },
+              );
+              return next;
+            });
+          }
+        } catch {
+          // Conflict merge already updated the sheet; refetch is best-effort sync.
+        }
       }
     },
     delay: 2000,

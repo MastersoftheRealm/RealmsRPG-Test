@@ -142,13 +142,10 @@ export async function saveCharacter(
       inventoryPatchResult?: {
         createdRows?: Array<{ inventoryRowId: string; bucket: string; position: number }>;
       };
-    }>(
-      `${API_BASE}/${encodeURIComponent(id)}`,
-      {
-        method: 'PATCH',
-        body: JSON.stringify(body),
-      },
-    );
+    }>(`${API_BASE}/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
     if (result.updatedAt) rememberCharacterLockToken(id, result.updatedAt);
     return result;
   };
@@ -175,6 +172,7 @@ export async function saveCharacterWithConflictRetry(
 ): Promise<{
   updatedAt?: string | undefined;
   applied: Partial<Character>;
+  conflictRetried?: boolean | undefined;
   inventoryPatchResult?: {
     createdRows?: Array<{ inventoryRowId: string; bucket: string; position: number }>;
   };
@@ -184,7 +182,7 @@ export async function saveCharacterWithConflictRetry(
     saveGuestCharacter(id, dirty);
     const updatedAt = new Date().toISOString();
     rememberCharacterLockToken(id, updatedAt);
-    return { updatedAt, applied: dirty };
+    return { updatedAt, applied: dirty, conflictRetried: false };
   }
   return enqueueCharacterSave(id, async () => {
     try {
@@ -200,13 +198,19 @@ export async function saveCharacterWithConflictRetry(
       if (created.length > 0 && applied.equipment) {
         applied = {
           ...applied,
-          equipment: mergeInventoryCreatedRows(applied.equipment, created) as Character['equipment'],
+          equipment: mergeInventoryCreatedRows(
+            applied.equipment,
+            created,
+          ) as Character['equipment'],
         };
       }
       return {
         updatedAt: result.updatedAt,
         applied,
-        ...(result.inventoryPatchResult ? { inventoryPatchResult: result.inventoryPatchResult } : {}),
+        conflictRetried: false,
+        ...(result.inventoryPatchResult
+          ? { inventoryPatchResult: result.inventoryPatchResult }
+          : {}),
       };
     } catch (err) {
       if (!isConflictError(err)) throw err;
@@ -229,12 +233,16 @@ export async function saveCharacterWithConflictRetry(
       if (created.length > 0 && applied.equipment) {
         applied = {
           ...applied,
-          equipment: mergeInventoryCreatedRows(applied.equipment, created) as Character['equipment'],
+          equipment: mergeInventoryCreatedRows(
+            applied.equipment,
+            created,
+          ) as Character['equipment'],
         };
       }
       return {
         updatedAt: retried.updatedAt,
         applied,
+        conflictRetried: true,
         ...(retried.inventoryPatchResult
           ? { inventoryPatchResult: retried.inventoryPatchResult }
           : {}),

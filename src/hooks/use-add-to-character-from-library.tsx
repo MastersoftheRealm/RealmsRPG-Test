@@ -15,6 +15,8 @@ import {
 } from '@/components/character-sheet/use-sheet-auto-proficiencies';
 import { getErrorMessage } from '@/lib/api-client';
 import { buildRequiredProficiencies } from '@/lib/proficiencies';
+import { advanceCharacterAutosaveBaseline } from '@/lib/character/autosave-baseline';
+import { prepareInventoryPatchForAutosave } from '@/lib/character/inventory-patch';
 import { cleanForSave } from '@/lib/data-enrichment';
 import type { Character, Item } from '@/types';
 import { useCodexItemProperties, useCodexPowerParts, useCodexTechniqueParts } from './use-codex';
@@ -109,6 +111,7 @@ export function useAddToCharacterFromLibrary(kind: LibraryToCharacterKind, chara
     );
     const inventorySaveBaseline = cleanForSave(character) as Record<string, unknown>;
     const dirty = libraryAddDirtyFields(kind, first.character) as Record<string, unknown>;
+    prepareInventoryPatchForAutosave(inventorySaveBaseline, dirty);
     saveCharacter.mutate(
       {
         id: character.id,
@@ -121,12 +124,19 @@ export function useAddToCharacterFromLibrary(kind: LibraryToCharacterKind, chara
           );
           return {
             ...next,
-            inventorySaveBaseline: remote as unknown as Record<string, unknown>,
+            inventorySaveBaseline: cleanForSave(remote) as Record<string, unknown>,
           };
         },
       },
       {
-        onSuccess: () => {
+        onSuccess: (result) => {
+          advanceCharacterAutosaveBaseline(character.id, {
+            applied: result.applied as Record<string, unknown>,
+            updatedAt: result.updatedAt,
+            ...(result.inventoryPatchResult
+              ? { inventoryPatchResult: result.inventoryPatchResult }
+              : {}),
+          });
           showToast(`Added "${pending.name}" to ${character.name}.`, 'success');
           deferProficiencyOverLimitToast(showToast, first.overLimitWarning);
           setPending(null);

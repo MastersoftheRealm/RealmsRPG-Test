@@ -60,6 +60,48 @@ describe('inventory patch', () => {
     });
   });
 
+  it('quantity decrease to 1 still sends quantity on the update item', () => {
+    const before = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: HEALTH_ROW,
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 2,
+          },
+        ],
+      },
+    };
+    const after = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: HEALTH_ROW,
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 1,
+          },
+        ],
+      },
+    };
+    const patch = buildInventoryPatch(before.equipment, after.equipment);
+    expect(patch.ops[0]).toMatchObject({
+      op: 'update',
+      item: { quantity: 1 },
+    });
+  });
+
+  it('CAS snapshot ignores codex weapon type on the sheet row', () => {
+    expect(
+      inventoryRowCasSnapshot({
+        id: 'lib-knife',
+        name: 'Knife',
+        type: 'weapon',
+      }).type,
+    ).toBe('');
+  });
+
   it('sends full expected snapshot on update', () => {
     const tabA = {
       equipment: {
@@ -119,7 +161,7 @@ describe('inventory patch', () => {
         expect.objectContaining({
           op: 'add',
           bucket: 'items',
-          item: { id: 'grapple-rope', name: 'Grapple Rope', equipped: false },
+          item: { id: 'grapple-rope', name: 'Grapple Rope', equipped: false, quantity: 1 },
           position: 2,
         }),
       ]),
@@ -153,7 +195,7 @@ describe('inventory patch', () => {
         ],
       },
     };
-  const removed = {
+    const removed = {
       equipment: { items: [baseline.equipment.items[0]!] },
     };
     const removePatch = buildInventoryPatch(withExtra.equipment, removed.equipment);
@@ -194,7 +236,7 @@ describe('inventory patch', () => {
         items: [
           {
             inventoryRowId: HEALTH_ROW,
-            id: 'health-potion',
+            id: 'custom-potion',
             name: 'Health Potion',
             quantity: 1,
             type: 'consumable',
@@ -207,7 +249,7 @@ describe('inventory patch', () => {
         items: [
           {
             inventoryRowId: HEALTH_ROW,
-            id: 'health-potion',
+            id: 'custom-potion',
             name: 'Health Potion',
             quantity: 1,
             type: '',
@@ -291,9 +333,7 @@ describe('inventory patch', () => {
     const dirty = cleanForSave(edited as never) as Record<string, unknown>;
     replaceEquipmentDirtyWithInventoryPatch(dirty, baseline);
     const ops = (dirty.inventoryPatch as { ops: unknown[] }).ops;
-    expect(ops).toEqual([
-      expect.objectContaining({ op: 'update', inventoryRowId: HEALTH_ROW }),
-    ]);
+    expect(ops).toEqual([expect.objectContaining({ op: 'update', inventoryRowId: HEALTH_ROW })]);
   });
 
   it('replaces full equipment dirty payload with inventoryPatch on save', () => {
@@ -324,16 +364,6 @@ describe('inventory patch', () => {
 
 describe('mergeInventoryCreatedRows', () => {
   const PROVISIONAL = '90000000-0000-4000-8000-000000000099';
-
-  it('stamps row id by bucket position when applied row has no inventoryRowId yet', () => {
-    const equipment = {
-      weapons: [{ id: 'w-new', name: 'Dagger' }],
-    };
-    const merged = mergeInventoryCreatedRows(equipment, [
-      { inventoryRowId: PROVISIONAL, bucket: 'weapons', position: 1 },
-    ]) as { weapons: Array<{ inventoryRowId?: string }> };
-    expect(merged.weapons[0]?.inventoryRowId).toBe(PROVISIONAL);
-  });
 
   it('stamps row id by client provisional inventoryRowId, not server position', () => {
     const equipment = {
