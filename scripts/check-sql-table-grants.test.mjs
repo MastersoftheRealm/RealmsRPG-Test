@@ -20,7 +20,6 @@ import {
   validateSqlGrantCheckBaselineStructure,
 } from './lib/sql-grant-check-baseline.mjs';
 import {
-  findPrivateFunctionExecuteGrantViolations,
   findSqlFileViolations,
   isAllowlistedWritePolicyPredicate,
 } from './lib/sql-grant-check-engine.mjs';
@@ -1291,39 +1290,6 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON "secret" TO service_role;`;
     expect(findCreateTableSetupViolations(hidden)).not.toEqual(
       expect.arrayContaining(['public.if: missing ENABLE ROW LEVEL SECURITY in the same file']),
     );
-  });
-});
-
-describe('private function EXECUTE grants', () => {
-  const casRel = 'sql/characters-inventory-cas-patch-86e3juw0a.sql';
-
-  it('fails pre-fix CAS SQL on master for missing anon REVOKE (behavioral grant gap)', () => {
-    const repoRoot = path.resolve(path.dirname(scriptPath), '..');
-    const oldSql = execFileSync(
-      'git',
-      ['show', 'b9b23969:sql/characters-inventory-cas-patch-86e3juw0a.sql'],
-      { cwd: repoRoot, encoding: 'utf8' },
-    );
-    const oldViolations = findPrivateFunctionExecuteGrantViolations(oldSql);
-    expect(oldViolations.length).toBeGreaterThan(0);
-    expect(
-      oldViolations.every((v) =>
-        v.reason.includes('private function must REVOKE EXECUTE from anon'),
-      ),
-    ).toBe(true);
-    expect(
-      findGrantViolations([casRel]).some((v) =>
-        v.reason.includes('private function must REVOKE EXECUTE from anon'),
-      ),
-    ).toBe(false);
-  });
-
-  it('passes when the canonical CAS file revokes anon on every private function', () => {
-    const sql = fs.readFileSync(
-      path.join(path.resolve(path.dirname(scriptPath), '..'), casRel),
-      'utf8',
-    );
-    expect(findPrivateFunctionExecuteGrantViolations(sql)).toEqual([]);
   });
 });
 
