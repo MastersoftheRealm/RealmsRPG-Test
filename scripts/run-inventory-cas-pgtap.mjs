@@ -32,6 +32,8 @@ const MASTER_CANONICAL_SQL = [
   'sql/characters-relational-write-rpc.sql',
 ];
 
+const MASTER_NEGATIVE_TEST = 'sql/tests/inventory_cas_pgtap_master_negative.sql';
+
 function run(cmd, args, opts = {}) {
   const res = spawnSync(cmd, args, {
     cwd: root,
@@ -65,8 +67,8 @@ function pgtapFails(combined) {
   );
 }
 
-function pgtap(dbUrl) {
-  const testFile = path.join(root, 'sql/tests/inventory_cas_pgtap_test.sql');
+function pgtap(dbUrl, relTestFile = 'sql/tests/inventory_cas_pgtap_test.sql') {
+  const testFile = path.join(root, relTestFile);
   const res = spawnSync('psql', [dbUrl, '-v', 'ON_ERROR_STOP=1', '-f', testFile], {
     cwd: root,
     encoding: 'utf8',
@@ -113,16 +115,15 @@ function gitShowOriginMaster(rel) {
 function applySqlList(dbUrl, relPaths, { fromMaster = false } = {}) {
   for (const rel of relPaths) {
     if (fromMaster && rel.startsWith('sql/characters-relational-')) {
-      try {
-        const tmp = path.join(root, `.tmp-pgtap-${path.basename(rel)}`);
-        const sql = gitShowOriginMaster(rel);
-        fs.writeFileSync(tmp, sql);
-        psqlFile(dbUrl, tmp);
-        fs.unlinkSync(tmp);
-        continue;
-      } catch {
-        // Fall back to workspace file when master does not have the canonical SQL yet.
-      }
+      const tmp = path.join(root, `.tmp-pgtap-${path.basename(rel)}`);
+      const sql = gitShowOriginMaster(rel);
+      fs.writeFileSync(tmp, sql);
+      psqlFile(dbUrl, tmp);
+      fs.unlinkSync(tmp);
+      continue;
+    }
+    if (fromMaster) {
+      continue;
     }
     psqlFile(dbUrl, rel);
   }
@@ -147,7 +148,7 @@ function masterIncludesFullInventoryCasFix() {
 function runMasterNegative(dbUrl) {
   resetDatabase(dbUrl);
   applySqlList(dbUrl, MASTER_CANONICAL_SQL, { fromMaster: true });
-  const res = pgtap(dbUrl);
+  const res = pgtap(dbUrl, MASTER_NEGATIVE_TEST);
   return res.status ?? 1;
 }
 
