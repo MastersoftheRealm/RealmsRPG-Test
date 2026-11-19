@@ -1,5 +1,5 @@
 -- Empty FK targets so canonical characters-relational-expand.sql can apply in local pgTAP only.
-CREATE TABLE IF NOT EXISTS public.codex_archetypes (id text PRIMARY KEY);
+CREATE TABLE IF NOT EXISTS public.codex_archetypes (id text PRIMARY KEY, name text);
 CREATE TABLE IF NOT EXISTS public.codex_species (id text PRIMARY KEY);
 CREATE TABLE IF NOT EXISTS public.user_species (id text PRIMARY KEY, user_id text NOT NULL);
 CREATE TABLE IF NOT EXISTS public.codex_feats (id text PRIMARY KEY);
