@@ -279,19 +279,33 @@ BEGIN
       WHERE character_id = p_character_id AND inventory_row_id = v_row_id;
 
       IF v_row.position < v_position THEN
-        UPDATE public.character_inventory
-        SET position = position - 1
-        WHERE character_id = p_character_id AND category = v_row.category
-          AND slot IS NOT DISTINCT FROM v_row.slot
-          AND position > v_row.position AND position <= v_position
-          AND inventory_row_id IS DISTINCT FROM v_row_id;
+        FOR v_inv_row IN
+          SELECT inventory_row_id, position
+          FROM public.character_inventory
+          WHERE character_id = p_character_id AND category = v_row.category
+            AND slot IS NOT DISTINCT FROM v_row.slot
+            AND position > v_row.position AND position <= v_position
+            AND inventory_row_id IS DISTINCT FROM v_row_id
+          ORDER BY position ASC
+        LOOP
+          UPDATE public.character_inventory
+          SET position = v_inv_row.position - 1
+          WHERE inventory_row_id = v_inv_row.inventory_row_id;
+        END LOOP;
       ELSIF v_row.position > v_position THEN
-        UPDATE public.character_inventory
-        SET position = position + 1
-        WHERE character_id = p_character_id AND category = v_row.category
-          AND slot IS NOT DISTINCT FROM v_row.slot
-          AND position >= v_position AND position < v_row.position
-          AND inventory_row_id IS DISTINCT FROM v_row_id;
+        FOR v_inv_row IN
+          SELECT inventory_row_id, position
+          FROM public.character_inventory
+          WHERE character_id = p_character_id AND category = v_row.category
+            AND slot IS NOT DISTINCT FROM v_row.slot
+            AND position >= v_position AND position < v_row.position
+            AND inventory_row_id IS DISTINCT FROM v_row_id
+          ORDER BY position DESC
+        LOOP
+          UPDATE public.character_inventory
+          SET position = v_inv_row.position + 1
+          WHERE inventory_row_id = v_inv_row.inventory_row_id;
+        END LOOP;
       END IF;
 
       UPDATE public.character_inventory
