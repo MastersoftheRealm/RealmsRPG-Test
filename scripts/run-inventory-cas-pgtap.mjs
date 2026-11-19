@@ -93,9 +93,9 @@ function applyInventorySql(dbUrl) {
   psqlFile(dbUrl, inventoryCasHelpersSql);
 }
 
-function masterHasInventoryCas() {
+function gitHasOriginMasterFile(rel) {
   try {
-    execFileSync('git', ['cat-file', '-e', `origin/master:${inventoryCasHelpersSql}`], {
+    execFileSync('git', ['cat-file', '-e', `origin/master:${rel}`], {
       cwd: root,
       stdio: 'ignore',
     });
@@ -103,6 +103,18 @@ function masterHasInventoryCas() {
   } catch {
     return false;
   }
+}
+
+function masterHasInventoryCas() {
+  return gitHasOriginMasterFile(inventoryCasHelpersSql);
+}
+
+/** After the row-id + CAS migrations merge, master should pass pgTAP; skip the negative leg. */
+function masterIncludesFullInventoryCasFix() {
+  return (
+    gitHasOriginMasterFile(inventoryCasHelpersSql) &&
+    gitHasOriginMasterFile('sql/characters-inventory-row-id.sql')
+  );
 }
 
 function runMasterNegative(dbUrl) {
@@ -133,6 +145,10 @@ function main() {
   const dbUrl = dbUrlFromSupabase();
 
   if (onlyFail) {
+    if (masterIncludesFullInventoryCasFix()) {
+      console.error('Master already includes inventory CAS fix; negative leg is not applicable.');
+      process.exit(2);
+    }
     const code = runMasterNegative(dbUrl);
     if (code === 0) {
       console.error('Expected pgTAP to fail on master inventory CAS SQL; it passed.');
@@ -142,12 +158,16 @@ function main() {
     return;
   }
 
-  const negative = runMasterNegative(dbUrl);
-  if (negative === 0) {
-    console.error('Expected pgTAP to fail on master inventory CAS SQL; it passed.');
-    process.exit(2);
+  if (masterIncludesFullInventoryCasFix()) {
+    console.log('inventory-cas-pgtap: master already has full fix; skipping negative leg.');
+  } else {
+    const negative = runMasterNegative(dbUrl);
+    if (negative === 0) {
+      console.error('Expected pgTAP to fail on master inventory CAS SQL; it passed.');
+      process.exit(2);
+    }
+    console.log('inventory-cas-pgtap: master baseline failed as expected.');
   }
-  console.log('inventory-cas-pgtap: master baseline failed as expected.');
 
   const positive = runBranchPositive(dbUrl);
   if (positive !== 0) process.exit(positive);
