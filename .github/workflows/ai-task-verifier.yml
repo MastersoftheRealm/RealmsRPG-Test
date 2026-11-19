@@ -55,7 +55,7 @@ jobs:
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 3.2.0
 
       - name: Fetch default branch for inventory CAS negative test
         run: git fetch origin master

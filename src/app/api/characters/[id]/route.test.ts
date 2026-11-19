@@ -624,7 +624,7 @@ describe('PATCH /api/characters/[id]', () => {
     expect(body.error).not.toContain('Unmapped character');
   });
 
-  it('returns 409 when the PATCH body still includes equipment', async () => {
+  it('returns 409 for legacy equipment but still patches other dirty fields', async () => {
     const row = makeCharacterRow('char-owned', OWNER.uid, {
       equipment: {
         weapons: [{ id: 'w1', name: 'Sword', type: 'weapon', properties: [] }],
@@ -636,14 +636,27 @@ describe('PATCH /api/characters/[id]', () => {
     const supabase = createMockSupabase(row);
     mockCreateClient.mockResolvedValue(supabase as never);
 
-    const response = await PATCH(makePatchRequest('char-owned', { equipment: { weapons: [] } }), {
-      params: Promise.resolve({ id: 'char-owned' }),
-    });
+    const response = await PATCH(
+      makePatchRequest('char-owned', { name: 'Updated', equipment: { weapons: [] } }),
+      { params: Promise.resolve({ id: 'char-owned' }) },
+    );
 
     expect(response.status).toBe(409);
+    const body = await readJson<{ legacyEquipmentRejected?: boolean }>(response);
+    expect(body.legacyEquipmentRejected).toBe(true);
+    expect(supabase.rpcMock).toHaveBeenCalledWith(
+      'patch_character_relational',
+      expect.objectContaining({
+        p_patch: expect.objectContaining({ name: 'Updated' }),
+      }),
+    );
     expect(
-      supabase.rpcMock.mock.calls.filter(([name]) => name === 'patch_character_relational'),
-    ).toHaveLength(0);
+      (
+        supabase.rpcMock.mock.calls.find(([name]) => name === 'patch_character_relational')?.[1] as {
+          p_patch?: Record<string, unknown>;
+        }
+      ).p_patch,
+    ).not.toHaveProperty('equipment');
   });
 
   it('PATCH accepts inventoryPatch remove ops', async () => {
@@ -717,7 +730,10 @@ describe('PATCH /api/characters/[id]', () => {
     );
 
     expect(response.status).toBe(409);
-    await expect(readJson(response)).resolves.toEqual({ error: 'Character was updated elsewhere' });
+    await expect(readJson(response)).resolves.toEqual({
+      error: 'Character was updated elsewhere',
+      updatedAt: '2026-07-01T12:00:00.000Z',
+    });
     expect(supabase.rpcMock).toHaveBeenCalledWith(
       'patch_character_relational',
       expect.objectContaining({ p_expected_updated_at: '2026-01-01T00:00:00.000Z' }),

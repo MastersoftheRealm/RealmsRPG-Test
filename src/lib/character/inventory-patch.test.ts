@@ -91,6 +91,133 @@ describe('inventory patch', () => {
     });
   });
 
+  it('emits add op when a new item has no inventoryRowId yet', () => {
+    const tabA = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: HEALTH_ROW,
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 1,
+          },
+          {
+            id: 'grapple-rope',
+            name: 'Grapple Rope',
+            quantity: 1,
+          },
+        ],
+      },
+    };
+    const patch = buildInventoryPatch(baseline.equipment, tabA.equipment);
+    expect(patch.ops).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          op: 'add',
+          bucket: 'items',
+          item: { id: 'grapple-rope', name: 'Grapple Rope', equipped: false },
+          position: 2,
+        }),
+      ]),
+    );
+    const addOp = patch.ops.find((op) => op.op === 'add');
+    expect(addOp && 'inventoryRowId' in addOp && addOp.inventoryRowId).toBeTruthy();
+  });
+
+  it('remove and reorder ops include expected snapshots', () => {
+    const withExtra = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: HEALTH_ROW,
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 1,
+          },
+          {
+            inventoryRowId: ENERGY_ROW,
+            id: 'energy-potion',
+            name: 'Energy Potion',
+            quantity: 1,
+          },
+          {
+            inventoryRowId: '30000000-0000-4000-8000-000000000003',
+            id: 'rope',
+            name: 'Rope',
+            quantity: 1,
+          },
+        ],
+      },
+    };
+  const removed = {
+      equipment: { items: [baseline.equipment.items[0]!] },
+    };
+    const removePatch = buildInventoryPatch(withExtra.equipment, removed.equipment);
+    expect(removePatch.ops).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          op: 'remove',
+          inventoryRowId: ENERGY_ROW,
+        }),
+        expect.objectContaining({
+          op: 'remove',
+          inventoryRowId: '30000000-0000-4000-8000-000000000003',
+        }),
+      ]),
+    );
+
+    const reordered = {
+      equipment: {
+        items: [withExtra.equipment.items[2]!, withExtra.equipment.items[0]!],
+      },
+    };
+    const reorderPatch = buildInventoryPatch(withExtra.equipment, reordered.equipment);
+    expect(reorderPatch.ops).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ op: 'reorder', inventoryRowId: HEALTH_ROW, position: 2 }),
+        expect.objectContaining({
+          op: 'reorder',
+          inventoryRowId: '30000000-0000-4000-8000-000000000003',
+          position: 1,
+        }),
+      ]),
+    );
+  });
+
+  it('clearing type sends null in patch item', () => {
+    const before = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: HEALTH_ROW,
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 1,
+            type: 'consumable',
+          },
+        ],
+      },
+    };
+    const after = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: HEALTH_ROW,
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 1,
+            type: '',
+          },
+        ],
+      },
+    };
+    const patch = buildInventoryPatch(before.equipment, after.equipment);
+    expect(patch.ops[0]).toMatchObject({
+      op: 'update',
+      item: { type: null },
+    });
+  });
+
   it('replaces full equipment dirty payload with inventoryPatch on save', () => {
     const cleaned: Record<string, unknown> = {
       equipment: {

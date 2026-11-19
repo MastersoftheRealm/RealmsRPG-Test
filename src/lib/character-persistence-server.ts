@@ -8,7 +8,11 @@ type RpcCall = (name: string, args: Record<string, unknown>) => RpcResult;
 
 export type CharacterPatchResult =
   | { status: 'updated'; updatedAt: string }
-  | { status: 'conflict'; updatedAt?: string | undefined }
+  | {
+      status: 'conflict';
+      updatedAt?: string | undefined;
+      code?: string | undefined;
+    }
   | { status: 'not_found' };
 
 type CampaignCharacterReadResult =
@@ -114,7 +118,10 @@ export async function patchRelationalCharacter(
   const result = objectResult(data, 'patch_character_relational');
   if (result.status === 'not_found') return { status: 'not_found' };
   const updatedAt = typeof result.updatedAt === 'string' ? result.updatedAt : undefined;
-  if (result.status === 'conflict') return { status: 'conflict', updatedAt };
+  if (result.status === 'conflict') {
+    const code = typeof result.code === 'string' ? result.code : undefined;
+    return { status: 'conflict', updatedAt, code };
+  }
   if (result.status !== 'updated' || !updatedAt) {
     throw new Error('patch_character_relational returned an invalid outcome');
   }

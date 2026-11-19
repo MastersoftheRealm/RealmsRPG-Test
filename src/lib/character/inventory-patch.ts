@@ -75,6 +75,10 @@ function readInventoryRowId(row: Record<string, unknown>): string | null {
   return null;
 }
 
+function newInventoryRowId(): string {
+  return globalThis.crypto.randomUUID();
+}
+
 function rowQuantity(row: Record<string, unknown>): number {
   const q = row.quantity;
   if (typeof q === 'number' && Number.isFinite(q)) return q;
@@ -100,20 +104,36 @@ function leanRowForPatchOp(row: Record<string, unknown>): Record<string, unknown
   out.equipped = row.equipped === true;
   const q = rowQuantity(row);
   if (q !== 1) out.quantity = q;
-  if (typeof row.type === 'string' && row.type) out.type = row.type;
-  if (typeof row.description === 'string' && row.description.trim()) {
-    out.description = row.description.trim();
+  if (Object.prototype.hasOwnProperty.call(row, 'type')) {
+    const type = row.type;
+    out.type = typeof type === 'string' && type.length > 0 ? type : null;
   }
-  if (typeof row.cost === 'number' && Number.isFinite(row.cost)) out.cost = row.cost;
+  if (Object.prototype.hasOwnProperty.call(row, 'description')) {
+    const description = row.description;
+    out.description =
+      typeof description === 'string' && description.trim().length > 0 ? description.trim() : null;
+  }
+  if (Object.prototype.hasOwnProperty.call(row, 'cost')) {
+    const cost = row.cost;
+    out.cost = typeof cost === 'number' && Number.isFinite(cost) ? cost : null;
+  }
   return out;
 }
 
 function rowsEqual(a: Record<string, unknown>, b: Record<string, unknown>): boolean {
-  return JSON.stringify(leanRowForPatchOp(a)) === JSON.stringify(leanRowForPatchOp(b));
+  return (
+    JSON.stringify(inventoryRowCasSnapshot(a)) === JSON.stringify(inventoryRowCasSnapshot(b))
+  );
 }
 
 function findRowIndex(rows: Record<string, unknown>[], inventoryRowId: string): number {
   return rows.findIndex((row) => readInventoryRowId(row) === inventoryRowId);
+}
+
+function orderRowIds(rows: Record<string, unknown>[]): string[] {
+  return rows
+    .map((row) => readInventoryRowId(row) ?? (row as { _provisionalRowId?: string })._provisionalRowId)
+    .filter((id): id is string => typeof id === 'string' && id.length > 0);
 }
 
 /**
@@ -124,6 +144,7 @@ export function buildInventoryPatch(
   currentEquipment: unknown,
 ): InventoryPatchPayload {
   const ops: InventoryPatchOp[] = [];
+  const provisionalIds = new Map<Record<string, unknown>, string>();
 
   for (const bucket of INVENTORY_PATCH_BUCKETS) {
     const before = readEquipmentBucket(baselineEquipment, bucket);
@@ -135,15 +156,9 @@ export function buildInventoryPatch(
       if (!rowId) continue;
       beforeMap.set(rowId, row);
     }
-    const afterMap = new Map<string, Record<string, unknown>>();
-    for (const row of after) {
-      const rowId = readInventoryRowId(row);
-      if (!rowId) continue;
-      afterMap.set(rowId, row);
-    }
 
     for (const [rowId, row] of beforeMap) {
-      if (!afterMap.has(rowId)) {
+      if (!after.some((candidate) => readInventoryRowId(candidate) === rowId)) {
         ops.push({
           op: 'remove',
           bucket,
@@ -153,35 +168,49 @@ export function buildInventoryPatch(
       }
     }
 
-    for (const [rowId, row] of afterMap) {
-      const prev = beforeMap.get(rowId);
-      if (!prev) {
-        const item = leanRowForPatchOp(row);
-        const op: InventoryPatchOp = {
-          op: 'add',
-          bucket,
-          item,
-          position: findRowIndex(after, rowId) + 1 || undefined,
-        };
-        if (typeof row.inventoryRowId === 'string' && row.inventoryRowId.trim()) {
-          (op as { inventoryRowId?: string }).inventoryRowId = row.inventoryRowId.trim();
+    for (let i = 0; i < after.length; i++) {
+      const row = after[i]!;
+      const existingId = readInventoryRowId(row);
+      if (existingId) {
+        const prev = beforeMap.get(existingId);
+        if (!prev) {
+          ops.push({
+            op: 'add',
+            bucket,
+            inventoryRowId: existingId,
+            item: leanRowForPatchOp(row),
+            position: i + 1,
+          });
+        } else if (!rowsEqual(prev, row)) {
+          ops.push({
+            op: 'update',
+            bucket,
+            inventoryRowId: existingId,
+            expected: inventoryRowCasSnapshot(prev),
+            item: leanRowForPatchOp(row),
+          });
         }
-        ops.push(op);
         continue;
       }
-      if (!rowsEqual(prev, row)) {
-        ops.push({
-          op: 'update',
-          bucket,
-          inventoryRowId: rowId,
-          expected: inventoryRowCasSnapshot(prev),
-          item: leanRowForPatchOp(row),
-        });
-      }
+
+      const provisionalId = newInventoryRowId();
+      provisionalIds.set(row, provisionalId);
+      ops.push({
+        op: 'add',
+        bucket,
+        inventoryRowId: provisionalId,
+        item: leanRowForPatchOp(row),
+        position: i + 1,
+      });
     }
 
-    const orderBefore = before.map((row) => readInventoryRowId(row)).filter(Boolean) as string[];
-    const orderAfter = after.map((row) => readInventoryRowId(row)).filter(Boolean) as string[];
+    const orderBefore = orderRowIds(before);
+    const orderAfter = after.map((row) => {
+      const id = readInventoryRowId(row);
+      if (id) return id;
+      return provisionalIds.get(row) ?? '';
+    }).filter(Boolean);
+
     if (orderBefore.join('|') !== orderAfter.join('|')) {
       for (let position = 0; position < orderAfter.length; position++) {
         const rowId = orderAfter[position]!;

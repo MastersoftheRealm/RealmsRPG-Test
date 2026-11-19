@@ -14,6 +14,24 @@ const inventoryCasHelpersSql = path.join(
   `characters-inventory-cas-patch-${['86e3', 'juw0a'].join('')}.sql`,
 );
 
+const BRANCH_CANONICAL_SQL = [
+  'sql/tests/pgtap-relational-fk-stubs.sql',
+  'sql/tests/inventory-cas-pgtap-bootstrap.sql',
+  'sql/characters-relational-expand.sql',
+  'sql/characters-inventory-row-id.sql',
+  inventoryCasHelpersSql,
+  'sql/characters-relational-read-rpc.sql',
+  'sql/characters-relational-write-rpc.sql',
+];
+
+const MASTER_CANONICAL_SQL = [
+  'sql/tests/pgtap-relational-fk-stubs.sql',
+  'sql/tests/inventory-cas-pgtap-bootstrap.sql',
+  'sql/characters-relational-expand.sql',
+  'sql/characters-relational-read-rpc.sql',
+  'sql/characters-relational-write-rpc.sql',
+];
+
 function run(cmd, args, opts = {}) {
   const res = spawnSync(cmd, args, {
     cwd: root,
@@ -31,7 +49,7 @@ function run(cmd, args, opts = {}) {
 }
 
 function psqlFile(dbUrl, rel) {
-  const abs = path.join(root, rel);
+  const abs = path.isAbsolute(rel) ? rel : path.join(root, rel);
   run('psql', [dbUrl, '-v', 'ON_ERROR_STOP=1', '-f', abs]);
 }
 
@@ -83,19 +101,40 @@ function startSupabase() {
 
 function resetDatabase(dbUrl) {
   psqlSql(dbUrl, 'DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;');
-  psqlFile(dbUrl, 'sql/tests/inventory-cas-pgtap-bootstrap.sql');
 }
 
-function applyInventorySql(dbUrl) {
-  if (fs.existsSync(path.join(root, 'sql/characters-inventory-row-id.sql'))) {
-    psqlFile(dbUrl, 'sql/characters-inventory-row-id.sql');
+function gitShowOriginMaster(rel) {
+  return execFileSync('git', ['show', `origin/master:${rel}`], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+}
+
+function applySqlList(dbUrl, relPaths, { fromMaster = false } = {}) {
+  for (const rel of relPaths) {
+    if (fromMaster && rel.startsWith('sql/characters-relational-')) {
+      try {
+        const tmp = path.join(root, `.tmp-pgtap-${path.basename(rel)}`);
+        const sql = gitShowOriginMaster(rel);
+        fs.writeFileSync(tmp, sql);
+        psqlFile(dbUrl, tmp);
+        fs.unlinkSync(tmp);
+        continue;
+      } catch {
+        // Fall back to workspace file when master does not have the canonical SQL yet.
+      }
+    }
+    psqlFile(dbUrl, rel);
   }
-  psqlFile(dbUrl, inventoryCasHelpersSql);
 }
 
-function gitHasOriginMasterFile(rel) {
+function masterIncludesFullInventoryCasFix() {
   try {
-    execFileSync('git', ['cat-file', '-e', `origin/master:${rel}`], {
+    execFileSync('git', ['cat-file', '-e', `origin/master:sql/characters-inventory-row-id.sql`], {
+      cwd: root,
+      stdio: 'ignore',
+    });
+    execFileSync('git', ['cat-file', '-e', `origin/master:${inventoryCasHelpersSql}`], {
       cwd: root,
       stdio: 'ignore',
     });
@@ -105,37 +144,16 @@ function gitHasOriginMasterFile(rel) {
   }
 }
 
-function masterHasInventoryCas() {
-  return gitHasOriginMasterFile(inventoryCasHelpersSql);
-}
-
-/** After the row-id + CAS migrations merge, master should pass pgTAP; skip the negative leg. */
-function masterIncludesFullInventoryCasFix() {
-  return (
-    gitHasOriginMasterFile(inventoryCasHelpersSql) &&
-    gitHasOriginMasterFile('sql/characters-inventory-row-id.sql')
-  );
-}
-
 function runMasterNegative(dbUrl) {
   resetDatabase(dbUrl);
-  if (masterHasInventoryCas()) {
-    const tmp = path.join(root, '.tmp-master-cas.sql');
-    const sql = execFileSync('git', ['show', `origin/master:${inventoryCasHelpersSql}`], {
-      cwd: root,
-      encoding: 'utf8',
-    });
-    fs.writeFileSync(tmp, sql);
-    run('psql', [dbUrl, '-v', 'ON_ERROR_STOP=1', '-f', tmp]);
-    fs.unlinkSync(tmp);
-  }
+  applySqlList(dbUrl, MASTER_CANONICAL_SQL, { fromMaster: true });
   const res = pgtap(dbUrl);
   return res.status ?? 1;
 }
 
 function runBranchPositive(dbUrl) {
   resetDatabase(dbUrl);
-  applyInventorySql(dbUrl);
+  applySqlList(dbUrl, BRANCH_CANONICAL_SQL);
   const res = pgtap(dbUrl);
   return res.status ?? 1;
 }

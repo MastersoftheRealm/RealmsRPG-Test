@@ -38,26 +38,20 @@ RETURNS jsonb LANGUAGE sql IMMUTABLE AS $$
   );
 $$;
 
-CREATE OR REPLACE FUNCTION public.inventory_item_from_patch(p_item jsonb)
-RETURNS TABLE (
-  quantity integer,
-  equipped boolean,
-  name text,
-  custom_type text,
-  custom_description text,
-  cost_snapshot numeric
+CREATE OR REPLACE FUNCTION public.inventory_patch_field_clear(
+  p_item jsonb,
+  p_key text,
+  OUT p_clear boolean,
+  OUT p_value text
 )
-LANGUAGE sql IMMUTABLE AS $$
+RETURNS record LANGUAGE sql IMMUTABLE AS $$
   SELECT
-    coalesce(nullif(p_item->>'quantity','')::integer, 1),
-  CASE
-    WHEN p_item ? 'equipped' THEN coalesce(nullif(p_item->>'equipped','')::boolean, false)
-    ELSE NULL::boolean
-  END,
-    nullif(p_item->>'name',''),
-    nullif(p_item->>'type',''),
-    nullif(p_item->>'description',''),
-    nullif(p_item->>'cost','')::numeric;
+    (p_item ? p_key AND (p_item->p_key = 'null'::jsonb OR p_item->>p_key = '')),
+    CASE
+      WHEN NOT (p_item ? p_key) THEN NULL
+      WHEN p_item->p_key = 'null'::jsonb OR p_item->>p_key = '' THEN NULL
+      ELSE p_item->>p_key
+    END;
 $$;
 
 CREATE OR REPLACE FUNCTION public.apply_character_inventory_patch(
@@ -65,7 +59,7 @@ CREATE OR REPLACE FUNCTION public.apply_character_inventory_patch(
   p_owner_id text,
   p_patch jsonb
 )
-RETURNS void LANGUAGE plpgsql SECURITY INVOKER SET search_path = public AS $fn$
+RETURNS jsonb LANGUAGE plpgsql SECURITY INVOKER SET search_path = public AS $fn$
 DECLARE
   v_op jsonb;
   v_bucket text;
@@ -75,12 +69,17 @@ DECLARE
   v_row_id uuid;
   v_item jsonb;
   v_expected jsonb;
-  v_hand_category text;
   v_position integer;
   v_max integer;
-  v_fields record;
   v_plan jsonb[] := ARRAY[]::jsonb[];
   v_step jsonb;
+  v_created jsonb := '[]'::jsonb;
+  v_type record;
+  v_description record;
+  v_name text;
+  v_quantity integer;
+  v_equipped boolean;
+  v_cost numeric;
 BEGIN
   IF jsonb_typeof(p_patch) IS DISTINCT FROM 'object'
      OR jsonb_typeof(p_patch->'ops') IS DISTINCT FROM 'array' THEN
@@ -159,6 +158,9 @@ BEGIN
       IF v_bucket IN ('mainHand','offHand') AND jsonb_typeof(v_item) = 'object' THEN
         v_item := v_item || jsonb_build_object('type', coalesce(v_item->>'type', 'weapon'));
       END IF;
+      IF nullif(v_op->>'inventoryRowId','') IS NOT NULL AND jsonb_typeof(v_item) = 'object' THEN
+        v_item := v_item || jsonb_build_object('inventoryRowId', v_op->>'inventoryRowId');
+      END IF;
       IF nullif(v_op->>'position','') IS NOT NULL THEN
         v_position := (v_op->>'position')::integer;
       ELSE
@@ -174,13 +176,30 @@ BEGIN
       END IF;
       PERFORM public.insert_character_inventory_item(
         p_character_id, p_owner_id, v_category, v_position, v_item, v_slot);
+      v_row_id := nullif(v_op->>'inventoryRowId','')::uuid;
+      IF v_row_id IS NULL AND jsonb_typeof(v_item) = 'object' THEN
+        v_row_id := nullif(v_item->>'inventoryRowId','')::uuid;
+      END IF;
+      IF v_row_id IS NULL THEN
+        SELECT inventory_row_id INTO v_row_id
+        FROM public.character_inventory
+        WHERE character_id = p_character_id AND category = v_category
+          AND slot IS NOT DISTINCT FROM v_slot AND position = v_position
+        ORDER BY inventory_row_id LIMIT 1;
+      END IF;
+      IF v_row_id IS NOT NULL THEN
+        v_created := v_created || jsonb_build_array(jsonb_build_object(
+          'inventoryRowId', v_row_id,
+          'bucket', v_bucket,
+          'position', v_position
+        ));
+      END IF;
       CONTINUE;
     END IF;
 
     v_row := jsonb_populate_record(NULL::public.character_inventory, v_step->'row');
     v_row_id := v_row.inventory_row_id;
     v_item := coalesce(v_op->'item', '{}'::jsonb);
-    SELECT * INTO v_fields FROM public.inventory_item_from_patch(v_item);
 
     IF v_op->>'op' = 'remove' THEN
       DELETE FROM public.character_inventory
@@ -189,13 +208,39 @@ BEGIN
     END IF;
 
     IF v_op->>'op' = 'update' THEN
+      v_quantity := v_row.quantity;
+      v_equipped := v_row.equipped;
+      v_name := v_row.name_snapshot;
+      IF v_item ? 'quantity' THEN
+        v_quantity := coalesce(nullif(v_item->>'quantity','')::integer, 1);
+      END IF;
+      IF v_item ? 'equipped' THEN
+        v_equipped := coalesce(nullif(v_item->>'equipped','')::boolean, false);
+      END IF;
+      IF v_item ? 'name' THEN
+        v_name := nullif(v_item->>'name', '');
+      END IF;
+      SELECT * INTO v_type FROM public.inventory_patch_field_clear(v_item, 'type');
+      SELECT * INTO v_description FROM public.inventory_patch_field_clear(v_item, 'description');
+      v_cost := v_row.cost_snapshot;
+      IF v_item ? 'cost' THEN
+        IF v_item->'cost' = 'null'::jsonb THEN
+          v_cost := NULL;
+        ELSE
+          v_cost := nullif(v_item->>'cost','')::numeric;
+        END IF;
+      END IF;
       UPDATE public.character_inventory
-      SET quantity = coalesce(v_fields.quantity, quantity),
-          equipped = coalesce(v_fields.equipped, equipped),
-          name_snapshot = coalesce(v_fields.name, name_snapshot),
-          custom_type = coalesce(v_fields.custom_type, custom_type),
-          custom_description = coalesce(v_fields.custom_description, custom_description),
-          cost_snapshot = coalesce(v_fields.cost_snapshot, cost_snapshot)
+      SET quantity = v_quantity,
+          equipped = v_equipped,
+          name_snapshot = v_name,
+          custom_type = CASE WHEN v_type.p_clear THEN NULL
+            WHEN v_type.p_value IS NOT NULL THEN v_type.p_value
+            ELSE custom_type END,
+          custom_description = CASE WHEN v_description.p_clear THEN NULL
+            WHEN v_description.p_value IS NOT NULL THEN v_description.p_value
+            ELSE custom_description END,
+          cost_snapshot = v_cost
       WHERE character_id = p_character_id AND inventory_row_id = v_row_id;
       CONTINUE;
     END IF;
@@ -217,35 +262,24 @@ BEGIN
         RAISE EXCEPTION USING ERRCODE = '40001', MESSAGE = 'inventory_cas_conflict';
       END IF;
 
-      DELETE FROM public.character_inventory
+      UPDATE public.character_inventory
+      SET position = position + 100000
+      WHERE character_id = p_character_id AND category = v_row.category
+        AND slot IS NOT DISTINCT FROM v_row.slot;
+
+      UPDATE public.character_inventory
+      SET position = v_position + 100000
       WHERE character_id = p_character_id AND inventory_row_id = v_row_id;
 
-      IF v_row.position < v_position THEN
-        UPDATE public.character_inventory
-        SET position = position - 1
-        WHERE character_id = p_character_id AND category = v_row.category
-          AND slot IS NOT DISTINCT FROM v_row.slot
-          AND position > v_row.position AND position <= v_position;
-      ELSE
-        UPDATE public.character_inventory
-        SET position = position + 1
-        WHERE character_id = p_character_id AND category = v_row.category
-          AND slot IS NOT DISTINCT FROM v_row.slot
-          AND position >= v_position AND position < v_row.position;
-      END IF;
-
-      INSERT INTO public.character_inventory (
-        character_id, inventory_row_id, category, position, source_kind, source_id, name_snapshot,
-        slot, official_item_id, user_item_id, codex_equipment_id, quantity,
-        equipped, custom_type, custom_description, cost_snapshot
-      ) VALUES (
-        v_row.character_id, v_row.inventory_row_id, v_row.category, v_position, v_row.source_kind,
-        v_row.source_id, v_row.name_snapshot, v_row.slot, v_row.official_item_id, v_row.user_item_id,
-        v_row.codex_equipment_id, v_row.quantity, v_row.equipped, v_row.custom_type,
-        v_row.custom_description, v_row.cost_snapshot
-      );
+      UPDATE public.character_inventory
+      SET position = position - 100000
+      WHERE character_id = p_character_id AND category = v_row.category
+        AND slot IS NOT DISTINCT FROM v_row.slot
+        AND position > 100000;
     END IF;
   END LOOP;
+
+  RETURN jsonb_build_object('createdRows', v_created);
 END;
 $fn$;
 
