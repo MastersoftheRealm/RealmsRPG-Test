@@ -6,9 +6,14 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  validateMasterLwwNegativeOutput,
+  validatePreFixCasAnonExecuteNegativeOutput,
+} from './lib/inventory-cas-pgtap-harness.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const onlyFail = process.argv.includes('--expect-fail');
+const selfTestNegativeHarness = process.argv.includes('--self-test-negative-harness');
 const inventoryCasHelpersSql = path.join(
   'sql',
   `characters-inventory-cas-patch-${['86e3', 'juw0a'].join('')}.sql`,
@@ -93,7 +98,12 @@ function pgtap(dbUrl, relTestFile = 'sql/tests/inventory_cas_pgtap_test.sql') {
   if (res.stderr) process.stderr.write(res.stderr);
   const tapFailed = pgtapFails(combined);
   const status = res.status !== 0 ? res.status : tapFailed ? 1 : 0;
-  return { ...res, status };
+  return { ...res, status, combined };
+}
+
+function harnessExit(message) {
+  console.error(message);
+  process.exit(2);
 }
 
 function dbUrlFromSupabase() {
@@ -187,14 +197,28 @@ function runMasterNegative(dbUrl) {
   resetDatabase(dbUrl);
   applySqlList(dbUrl, MASTER_CANONICAL_SQL, { fromRef: 'origin/master' });
   const res = pgtap(dbUrl, MASTER_NEGATIVE_TEST);
-  return res.status ?? 1;
+  if ((res.status ?? 1) === 0) {
+    return { type: 'unexpected_pass' };
+  }
+  const validation = validateMasterLwwNegativeOutput(res.combined);
+  if (!validation.ok) {
+    return { type: 'harness', error: validation.error };
+  }
+  return { type: 'negative_ok' };
 }
 
 function runPreFixCasAnonExecuteNegative(dbUrl) {
   resetDatabase(dbUrl);
   applySqlList(dbUrl, BRANCH_CANONICAL_SQL, { casSqlRef: PREF_FIX_CAS_REF });
   const res = pgtap(dbUrl, ANON_EXECUTE_GATE_TEST);
-  return res.status ?? 1;
+  if ((res.status ?? 1) === 0) {
+    return { type: 'unexpected_pass' };
+  }
+  const validation = validatePreFixCasAnonExecuteNegativeOutput(res.combined);
+  if (!validation.ok) {
+    return { type: 'harness', error: validation.error };
+  }
+  return { type: 'negative_ok' };
 }
 
 function runBranchPositive(dbUrl) {
@@ -212,6 +236,17 @@ function runBranchPositive(dbUrl) {
 }
 
 function main() {
+  if (selfTestNegativeHarness) {
+    const reject = validatePreFixCasAnonExecuteNegativeOutput(
+      'psql:gate.sql:50: ERROR:  function bag_eq(text[], text[], unknown) does not exist\n',
+    );
+    if (reject.ok) {
+      harnessExit('self-test: negative harness must reject output containing ERROR:');
+    }
+    console.log('inventory-cas-pgtap: negative harness self-test OK (ERROR: rejected → would exit 2)');
+    return;
+  }
+
   startSupabase();
   const dbUrl = dbUrlFromSupabase();
 
@@ -220,21 +255,27 @@ function main() {
       console.error('Master already includes inventory CAS fix; negative leg is not applicable.');
       process.exit(2);
     }
-    const code = runMasterNegative(dbUrl);
-    if (code === 0) {
+    const negative = runMasterNegative(dbUrl);
+    if (negative.type === 'unexpected_pass') {
       console.error('Expected pgTAP to fail on master inventory CAS SQL; it passed.');
       process.exit(2);
+    }
+    if (negative.type === 'harness') {
+      harnessExit(negative.error);
     }
     console.log('inventory-cas-pgtap: master baseline failed as expected.');
     return;
   }
 
   const preFixGate = runPreFixCasAnonExecuteNegative(dbUrl);
-  if (preFixGate === 0) {
+  if (preFixGate.type === 'unexpected_pass') {
     console.error(
       `Expected anon execute gate to fail with pre-fix CAS at ${PREF_FIX_CAS_REF}; it passed.`,
     );
     process.exit(2);
+  }
+  if (preFixGate.type === 'harness') {
+    harnessExit(preFixGate.error);
   }
   console.log('inventory-cas-pgtap: pre-fix CAS anon execute gate failed as expected.');
 
@@ -242,9 +283,12 @@ function main() {
     console.log('inventory-cas-pgtap: master already has full fix; skipping LWW negative leg.');
   } else {
     const negative = runMasterNegative(dbUrl);
-    if (negative === 0) {
+    if (negative.type === 'unexpected_pass') {
       console.error('Expected pgTAP to fail on master inventory CAS SQL; it passed.');
       process.exit(2);
+    }
+    if (negative.type === 'harness') {
+      harnessExit(negative.error);
     }
     console.log('inventory-cas-pgtap: master LWW baseline failed as expected.');
   }
