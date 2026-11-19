@@ -624,7 +624,7 @@ describe('PATCH /api/characters/[id]', () => {
     expect(body.error).not.toContain('Unmapped character');
   });
 
-  it('translates legacy equipment patches to inventoryPatch using the stored document', async () => {
+  it('returns 409 when the PATCH body still includes equipment', async () => {
     const row = makeCharacterRow('char-owned', OWNER.uid, {
       equipment: {
         weapons: [{ id: 'w1', name: 'Sword', type: 'weapon', properties: [] }],
@@ -640,24 +640,10 @@ describe('PATCH /api/characters/[id]', () => {
       params: Promise.resolve({ id: 'char-owned' }),
     });
 
-    expect(response.status).toBe(200);
-    expect(supabase.rpcMock).toHaveBeenCalledWith(
-      'patch_character_relational',
-      expect.objectContaining({
-        p_patch: expect.objectContaining({
-          inventoryPatch: {
-            ops: [{ op: 'remove', bucket: 'weapons', id: 'w1', expectedQuantity: 1 }],
-          },
-        }),
-      }),
-    );
+    expect(response.status).toBe(409);
     expect(
-      (
-        supabase.rpcMock.mock.calls.find(([name]) => name === 'patch_character_relational')?.[1] as {
-          p_patch?: Record<string, unknown>;
-        }
-      )?.p_patch,
-    ).not.toHaveProperty('equipment');
+      supabase.rpcMock.mock.calls.filter(([name]) => name === 'patch_character_relational'),
+    ).toHaveLength(0);
   });
 
   it('PATCH accepts inventoryPatch remove ops', async () => {

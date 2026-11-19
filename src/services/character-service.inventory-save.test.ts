@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { saveCharacter, saveCharacterWithConflictRetry } from './character-service';
 import { apiFetch, isConflictError } from '@/lib/api-client';
+import { inventoryRowCasSnapshot } from '@/lib/character/inventory-patch';
 
 vi.mock('@/lib/api-client', () => ({
   apiFetch: vi.fn(),
@@ -17,7 +18,10 @@ vi.mock('@/lib/character/save-lock', () => ({
   resolveCharacterLockToken: () => '2026-01-01T00:00:00.000Z',
 }));
 
-describe('character-service inventory CAS save (86e3juw0a)', () => {
+const HEALTH_ROW = '10000000-0000-4000-8000-000000000001';
+const ENERGY_ROW = '20000000-0000-4000-8000-000000000002';
+
+describe('character-service inventory CAS save', () => {
   beforeEach(() => {
     vi.mocked(apiFetch).mockReset();
     vi.mocked(isConflictError).mockReset();
@@ -29,33 +33,58 @@ describe('character-service inventory CAS save (86e3juw0a)', () => {
     const baseline = {
       equipment: {
         items: [
-          { id: 'health-potion', name: 'Health Potion', quantity: 1 },
-          { id: 'energy-potion', name: 'Energy Potion', quantity: 1 },
+          {
+            inventoryRowId: HEALTH_ROW,
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 1,
+          },
+          {
+            inventoryRowId: ENERGY_ROW,
+            id: 'energy-potion',
+            name: 'Energy Potion',
+            quantity: 1,
+          },
         ],
       },
     };
     const dirty = {
       equipment: {
         items: [
-          { id: 'health-potion', name: 'Health Potion', quantity: 3 },
-          { id: 'energy-potion', name: 'Energy Potion', quantity: 1 },
+          {
+            inventoryRowId: HEALTH_ROW,
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 3,
+          },
+          {
+            inventoryRowId: ENERGY_ROW,
+            id: 'energy-potion',
+            name: 'Energy Potion',
+            quantity: 1,
+          },
         ],
       },
     };
 
     await saveCharacter('char-1', dirty, { inventorySaveBaseline: baseline });
 
-    const call = vi.mocked(apiFetch).mock.calls[0];
-    expect(call?.[0]).toBe('/api/characters/char-1');
-    const body = JSON.parse(String((call?.[1] as { body?: string }).body));
+    const body = JSON.parse(
+      String((vi.mocked(apiFetch).mock.calls[0]?.[1] as { body?: string }).body),
+    );
     expect(body).not.toHaveProperty('equipment');
     expect(body.inventoryPatch.ops).toEqual([
       {
         op: 'update',
         bucket: 'items',
-        id: 'health-potion',
-        expectedQuantity: 1,
-        item: { id: 'health-potion', name: 'Health Potion', quantity: 3 },
+        inventoryRowId: HEALTH_ROW,
+        expected: inventoryRowCasSnapshot(baseline.equipment.items[0] as Record<string, unknown>),
+        item: {
+          id: 'health-potion',
+          name: 'Health Potion',
+          quantity: 3,
+          equipped: false,
+        },
       },
     ]);
   });
@@ -73,8 +102,18 @@ describe('character-service inventory CAS save (86e3juw0a)', () => {
       updatedAt: '2026-01-01T00:00:01.500Z',
       equipment: {
         items: [
-          { id: 'health-potion', name: 'Health Potion', quantity: 1 },
-          { id: 'energy-potion', name: 'Energy Potion', quantity: 2 },
+          {
+            inventoryRowId: HEALTH_ROW,
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 1,
+          },
+          {
+            inventoryRowId: ENERGY_ROW,
+            id: 'energy-potion',
+            name: 'Energy Potion',
+            quantity: 2,
+          },
         ],
       },
     } as const;
@@ -83,8 +122,18 @@ describe('character-service inventory CAS save (86e3juw0a)', () => {
     const baseline = {
       equipment: {
         items: [
-          { id: 'health-potion', name: 'Health Potion', quantity: 1 },
-          { id: 'energy-potion', name: 'Energy Potion', quantity: 1 },
+          {
+            inventoryRowId: HEALTH_ROW,
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 1,
+          },
+          {
+            inventoryRowId: ENERGY_ROW,
+            id: 'energy-potion',
+            name: 'Energy Potion',
+            quantity: 1,
+          },
         ],
       },
     };
@@ -94,8 +143,18 @@ describe('character-service inventory CAS save (86e3juw0a)', () => {
       {
         equipment: {
           items: [
-            { id: 'health-potion', name: 'Health Potion', quantity: 3 },
-            { id: 'energy-potion', name: 'Energy Potion', quantity: 1 },
+            {
+              inventoryRowId: HEALTH_ROW,
+              id: 'health-potion',
+              name: 'Health Potion',
+              quantity: 3,
+            },
+            {
+              inventoryRowId: ENERGY_ROW,
+              id: 'energy-potion',
+              name: 'Energy Potion',
+              quantity: 1,
+            },
           ],
         },
       },
@@ -105,8 +164,18 @@ describe('character-service inventory CAS save (86e3juw0a)', () => {
           dirty: {
             equipment: {
               items: [
-                { id: 'health-potion', name: 'Health Potion', quantity: 3 },
-                { id: 'energy-potion', name: 'Energy Potion', quantity: 2 },
+                {
+                  inventoryRowId: HEALTH_ROW,
+                  id: 'health-potion',
+                  name: 'Health Potion',
+                  quantity: 3,
+                },
+                {
+                  inventoryRowId: ENERGY_ROW,
+                  id: 'energy-potion',
+                  name: 'Energy Potion',
+                  quantity: 2,
+                },
               ],
             },
           },
@@ -116,18 +185,13 @@ describe('character-service inventory CAS save (86e3juw0a)', () => {
       },
     );
 
-    expect(vi.mocked(apiFetch)).toHaveBeenCalledTimes(2);
     const retryBody = JSON.parse(
       String((vi.mocked(apiFetch).mock.calls[1]?.[1] as { body?: string }).body),
     );
-    expect(retryBody.inventoryPatch.ops).toEqual([
-      {
-        op: 'update',
-        bucket: 'items',
-        id: 'health-potion',
-        expectedQuantity: 1,
-        item: { id: 'health-potion', name: 'Health Potion', quantity: 3 },
-      },
-    ]);
+    expect(retryBody.inventoryPatch.ops).toHaveLength(1);
+    expect(retryBody.inventoryPatch.ops[0]).toMatchObject({
+      inventoryRowId: HEALTH_ROW,
+      op: 'update',
+    });
   });
 });

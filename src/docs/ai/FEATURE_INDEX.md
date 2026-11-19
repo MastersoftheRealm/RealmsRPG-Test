@@ -2694,7 +2694,7 @@ Signed-in users see account characters (`useCharacters`), delete, duplicate (`us
 
 **Character sheet page** — `/characters/[id]` → `character-sheet-route.tsx` + `useCharacterSheetPage` (data in `use-character-sheet-page-data`, chrome in `use-character-sheet-page-ui`).
 
-**Load & save:** `useCharacter` hydrates React Query; owner edits `patchCharacterDetailQuery`. **`useAutoSave`** debounces → `cleanForSave` → **dirty-field** patch via `saveCharacterWithConflictRetry` (`/api/characters/[id]`). Gear saves translate `equipment` dirty keys to **`inventoryPatch`** item ops (quantity CAS) in `src/lib/character/inventory-patch.ts` + `saveCharacter` using the autosave baseline. Guest ids use guest storage branch inside character service. Owners get `CloudSyncOfflineBanner`, conflict merge (`mergeRemotePreservingDirty`), optional **realtime** merge; guests skip `useCharacterResourceSync` (encounter HP sync).
+**Load & save:** `useCharacter` hydrates React Query; owner edits `patchCharacterDetailQuery`. **`useAutoSave`** debounces → `cleanForSave` → **dirty-field** patch via `saveCharacterWithConflictRetry` (`/api/characters/[id]`). Gear saves translate `equipment` dirty keys to **`inventoryPatch`** item ops keyed by **`inventoryRowId`** with full-field CAS in `src/lib/character/inventory-patch.ts` + `saveCharacter` using the autosave baseline. Guest ids use guest storage branch inside character service. Owners get `CloudSyncOfflineBanner`, conflict merge (`mergeRemotePreservingDirty`), optional **realtime** merge; guests skip `useCharacterResourceSync` (encounter HP sync).
 
 **Owner vs viewer:** `isOwner` = guest sheet **or** `character.userId === user.uid`. Non-owners see “View only”, no `SheetActionToolbar`, handlers stripped with `whenSheetOwner`. `RollProvider` sets `canRoll={isOwner}` and personal roll log id for owners.
 
@@ -3216,7 +3216,7 @@ No production file imports these names. A test import does not count. The file t
 - `src/app/(main)/creature-creator/creature-creator-remove-section-confirm-placeholder.ts`: `REMOVE_SECTION_CONFIRM_CONFIRM_LABEL`, `REMOVE_SECTION_CONFIRM_DESCRIPTION`
 - `src/app/(main)/creature-creator/map-creature-inventory-rows.ts`: `creatureArmamentToSheetItem`
 - `src/app/(main)/creature-creator/transformers.ts`: `customEquipmentItemToCreatureArmament`
-- `src/lib/character/inventory-patch.ts`: `buildInventoryPatch`, `replaceEquipmentDirtyWithInventoryPatch`
+- `src/lib/character/inventory-patch.ts`: `buildInventoryPatch`, `inventoryRowCasSnapshot`, `replaceEquipmentDirtyWithInventoryPatch`
 - `src/lib/encounter/character-resource-sync.ts`: `CharacterResourcePatch` (type)
 - `src/app/(main)/encounters/[id]/_components/combat/use-combat-round-actions.ts`: `encounterStateAfterEnd`, `encounterStateAfterStart`
 - `src/app/(main)/encounters/[id]/_components/encounter-play-page-shell.tsx`: `encounterPlayPageGatePhase`
@@ -3568,7 +3568,7 @@ No production file imports these names. A test import does not count. The file t
 - `src/lib/character/character-relational-save-errors.ts`: `CharacterRelationalSaveLogIds` (type), `CharacterRelationalValidationPayload` (type)
 - `src/lib/character/character-size.ts`: `SpeciesSizeSource` (type)
 - `src/lib/character/collect-sheet-traits.ts`: `CollectSheetTraitsInput` (type), `SheetTraitCategory` (type), `SheetTraitRow` (type), `VanillaTraitFields` (type)
-- `src/lib/character/inventory-patch.ts`: `INVENTORY_PATCH_BUCKETS`, `InventoryPatchBucket` (type), `InventoryPatchOp` (type), `InventoryPatchPayload` (type), `inventoryRowIdentity`
+- `src/lib/character/inventory-patch.ts`: `InventoryCasSnapshot` (type), `InventoryPatchOp` (type), `InventoryPatchPayload` (type)
 - `src/lib/character/notes-tab-sections.ts`: `NotesTabSectionDef` (type)
 - `src/lib/character/realtime-merge.ts`: `SheetRealtimeMerge` (type)
 - `src/lib/character/recovery-uses.ts`: `RecoveryUseSource` (type)

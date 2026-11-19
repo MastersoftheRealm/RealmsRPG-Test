@@ -153,7 +153,7 @@ SELECT jsonb_strip_nulls(jsonb_build_object(
     FROM public.character_proficiencies p WHERE p.character_id=c.id),
   'equipment', jsonb_build_object(
     'mainHand', (SELECT jsonb_strip_nulls(jsonb_build_object(
-      'id',i.source_id,'name',i.name_snapshot,
+      'inventoryRowId',i.inventory_row_id,'id',i.source_id,'name',i.name_snapshot,
       'equipped',CASE WHEN i.equipped THEN true END,
       'quantity',CASE WHEN i.quantity<>1 THEN i.quantity END,
       'type',i.custom_type,'description',i.custom_description,
@@ -161,7 +161,7 @@ SELECT jsonb_strip_nulls(jsonb_build_object(
       FROM public.character_inventory i WHERE i.character_id=c.id
         AND i.slot='mainHand' ORDER BY i.position LIMIT 1),
     'offHand', (SELECT jsonb_strip_nulls(jsonb_build_object(
-      'id',i.source_id,'name',i.name_snapshot,
+      'inventoryRowId',i.inventory_row_id,'id',i.source_id,'name',i.name_snapshot,
       'equipped',CASE WHEN i.equipped THEN true END,
       'quantity',CASE WHEN i.quantity<>1 THEN i.quantity END,
       'type',i.custom_type,'description',i.custom_description,
@@ -169,7 +169,7 @@ SELECT jsonb_strip_nulls(jsonb_build_object(
       FROM public.character_inventory i WHERE i.character_id=c.id
         AND i.slot='offHand' ORDER BY i.position LIMIT 1),
     'weapons', (SELECT coalesce(jsonb_agg(jsonb_strip_nulls(jsonb_build_object(
-      'id',i.source_id,'name',i.name_snapshot,
+      'inventoryRowId',i.inventory_row_id,'id',i.source_id,'name',i.name_snapshot,
       'equipped',CASE WHEN i.equipped THEN true END,
       'quantity',CASE WHEN i.quantity<>1 THEN i.quantity END,
       'type',i.custom_type,'description',i.custom_description,
@@ -177,7 +177,7 @@ SELECT jsonb_strip_nulls(jsonb_build_object(
       FROM public.character_inventory i WHERE i.character_id=c.id
         AND i.category='weapon' AND i.slot IS NULL),
     'shields', (SELECT coalesce(jsonb_agg(jsonb_strip_nulls(jsonb_build_object(
-      'id',i.source_id,'name',i.name_snapshot,
+      'inventoryRowId',i.inventory_row_id,'id',i.source_id,'name',i.name_snapshot,
       'equipped',CASE WHEN i.equipped THEN true END,
       'quantity',CASE WHEN i.quantity<>1 THEN i.quantity END,
       'type',i.custom_type,'description',i.custom_description,
@@ -186,7 +186,7 @@ SELECT jsonb_strip_nulls(jsonb_build_object(
         AND i.category='shield' AND i.slot IS NULL),
     'armor', coalesce(
       (SELECT jsonb_strip_nulls(jsonb_build_object(
-        'id',i.source_id,'name',i.name_snapshot,
+        'inventoryRowId',i.inventory_row_id,'id',i.source_id,'name',i.name_snapshot,
         'equipped',CASE WHEN i.equipped THEN true END,
         'quantity',CASE WHEN i.quantity<>1 THEN i.quantity END,
         'type',i.custom_type,'description',i.custom_description,
@@ -195,7 +195,7 @@ SELECT jsonb_strip_nulls(jsonb_build_object(
          AND i.category='armor' AND i.slot='armor'
        ORDER BY i.position LIMIT 1),
       (SELECT coalesce(jsonb_agg(jsonb_strip_nulls(jsonb_build_object(
-        'id',i.source_id,'name',i.name_snapshot,
+        'inventoryRowId',i.inventory_row_id,'id',i.source_id,'name',i.name_snapshot,
         'equipped',CASE WHEN i.equipped THEN true END,
         'quantity',CASE WHEN i.quantity<>1 THEN i.quantity END,
         'type',i.custom_type,'description',i.custom_description,
@@ -204,7 +204,7 @@ SELECT jsonb_strip_nulls(jsonb_build_object(
          AND i.category='armor' AND i.slot IS NULL)
     ),
     'items', (SELECT coalesce(jsonb_agg(jsonb_strip_nulls(jsonb_build_object(
-      'id',i.source_id,'name',i.name_snapshot,
+      'inventoryRowId',i.inventory_row_id,'id',i.source_id,'name',i.name_snapshot,
       'equipped',CASE WHEN i.equipped THEN true END,
       'quantity',CASE WHEN i.quantity<>1 THEN i.quantity END,
       'type',i.custom_type,'description',i.custom_description,
@@ -212,7 +212,7 @@ SELECT jsonb_strip_nulls(jsonb_build_object(
       FROM public.character_inventory i WHERE i.character_id=c.id
         AND i.category='equipment' AND i.slot IS NULL),
     'accessories', (SELECT coalesce(jsonb_agg(jsonb_strip_nulls(jsonb_build_object(
-      'id',i.source_id,'name',i.name_snapshot,
+      'inventoryRowId',i.inventory_row_id,'id',i.source_id,'name',i.name_snapshot,
       'equipped',CASE WHEN i.equipped THEN true END,
       'quantity',CASE WHEN i.quantity<>1 THEN i.quantity END,
       'type',i.custom_type,'description',i.custom_description,

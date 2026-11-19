@@ -49,6 +49,23 @@ jobs:
       - name: Unit tests (lib/glr contracts)
         run: npm test
 
+      - name: Install pgTAP runner
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client libtap-parser-sourcehandler-pgtap-perl
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Fetch default branch for inventory CAS negative test
+        run: git fetch origin master
+
+      - name: Inventory CAS pgTAP fails on master baseline
+        run: npm run test:inventory-cas-pgtap:master-fail
+
+      - name: Inventory CAS pgTAP (local Supabase)
+        run: npm run test:inventory-cas-pgtap
+
       - name: Dependency audit — production deps (high+, blocking)
         run: npm run audit:production
 

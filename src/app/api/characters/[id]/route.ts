@@ -30,7 +30,6 @@ import {
   getRelationalCharacterDocument,
   patchRelationalCharacter,
 } from '@/lib/character-persistence-server';
-import { attachRelationalInventoryPatchToDirty } from '@/lib/character/inventory-patch';
 import {
   appendCharacterLegalityToResponse,
   evaluateCharacterLegalityForSave,
@@ -185,7 +184,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     const cleanedData = prepareCharacterForSave(data, { storedDocument: currentDocument });
-    attachRelationalInventoryPatchToDirty(cleanedData, currentDocument);
+    if (Object.prototype.hasOwnProperty.call(cleanedData, 'equipment')) {
+      return NextResponse.json(
+        {
+          error: 'Full equipment save is no longer supported. Reload the character and try again.',
+        },
+        { status: 409 },
+      );
+    }
 
     const mergedData = applyCharacterDirtyPatch(currentDocument, cleanedData, {
       documentUpdatedAt: new Date().toISOString(),

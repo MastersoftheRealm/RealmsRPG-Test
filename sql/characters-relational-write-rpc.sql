@@ -163,7 +163,7 @@ DECLARE
   v_now timestamp without time zone;
   v_inventory_patch jsonb;
   v_skip_sync text;
-  v_applied boolean;
+  v_patch_body jsonb;
 BEGIN
   IF v_owner_id IS NULL THEN
     RAISE EXCEPTION 'Authentication required' USING ERRCODE = '42501';
@@ -187,25 +187,26 @@ BEGIN
     );
   END IF;
 
-  v_inventory_patch := p_patch->'inventoryPatch';
-  IF p_patch ? 'equipment' THEN
-    RAISE EXCEPTION 'Full equipment patches are not supported; send inventoryPatch'
-      USING ERRCODE = '22023';
+  v_patch_body := p_patch;
+  IF v_patch_body ? 'equipment' THEN
+    v_patch_body := v_patch_body - 'equipment';
   END IF;
 
+  v_inventory_patch := v_patch_body->'inventoryPatch';
   IF v_inventory_patch IS NOT NULL AND v_inventory_patch <> 'null'::jsonb THEN
-    v_applied := public.apply_character_inventory_patch(
-      p_character_id, v_owner_id, v_inventory_patch);
-    IF NOT v_applied THEN
-      SELECT updated_at INTO v_row.updated_at FROM public.characters WHERE id = p_character_id;
-      RETURN jsonb_build_object(
-        'status','conflict','updatedAt',to_jsonb(v_row.updated_at)
-      );
-    END IF;
+    BEGIN
+      PERFORM public.apply_character_inventory_patch(
+        p_character_id, v_owner_id, v_inventory_patch);
+    EXCEPTION
+      WHEN SQLSTATE '40001' THEN
+        RETURN jsonb_build_object(
+          'status','conflict','updatedAt',to_jsonb(v_row.updated_at)
+        );
+    END;
   END IF;
 
   v_document := public.get_character_relational_document(p_character_id);
-  FOR v_entry IN SELECT key, value FROM jsonb_each(p_patch) LOOP
+  FOR v_entry IN SELECT key, value FROM jsonb_each(v_patch_body) LOOP
     IF v_entry.key IN ('id','userId','createdAt','updatedAt','lastPlayedAt','inventoryPatch') THEN
       CONTINUE;
     ELSIF v_entry.value = 'null'::jsonb THEN

@@ -3,9 +3,7 @@
  * Leaf module — no UI imports.
  */
 
-import { matchesSheetEquipmentItem } from '@/lib/character/sheet-equipment-match';
-
-export const INVENTORY_PATCH_BUCKETS = [
+const INVENTORY_PATCH_BUCKETS = [
   'weapons',
   'shields',
   'armor',
@@ -15,39 +13,47 @@ export const INVENTORY_PATCH_BUCKETS = [
   'offHand',
 ] as const;
 
-export type InventoryPatchBucket = (typeof INVENTORY_PATCH_BUCKETS)[number];
+type InventoryPatchBucket = (typeof INVENTORY_PATCH_BUCKETS)[number];
+
+export type InventoryCasSnapshot = {
+  quantity: number;
+  equipped: boolean;
+  name: string;
+  type: string;
+  description: string;
+  cost: number | null;
+};
 
 export type InventoryPatchOp =
   | {
       op: 'add';
       bucket: InventoryPatchBucket;
+      inventoryRowId?: string | undefined;
       item: Record<string, unknown>;
       position?: number | undefined;
     }
   | {
       op: 'update';
       bucket: InventoryPatchBucket;
-      id: string;
-      expectedQuantity: number;
+      inventoryRowId: string;
+      expected: InventoryCasSnapshot;
       item: Record<string, unknown>;
     }
   | {
       op: 'remove';
       bucket: InventoryPatchBucket;
-      id: string;
-      expectedQuantity: number;
+      inventoryRowId: string;
+      expected: InventoryCasSnapshot;
     }
   | {
       op: 'reorder';
       bucket: InventoryPatchBucket;
-      id: string;
-      expectedQuantity: number;
+      inventoryRowId: string;
+      expected: InventoryCasSnapshot;
       position: number;
     };
 
 export type InventoryPatchPayload = { ops: InventoryPatchOp[] };
-
-type SheetEquipmentRow = { id?: string | number | undefined; name?: string | undefined };
 
 function readEquipmentBucket(
   equipment: unknown,
@@ -63,12 +69,9 @@ function readEquipmentBucket(
   return raw.filter((row): row is Record<string, unknown> => !!row && typeof row === 'object');
 }
 
-export function inventoryRowIdentity(row: Record<string, unknown>): string | null {
-  const id = row.id;
-  if (typeof id === 'string' && id.trim()) return id.trim();
-  if (typeof id === 'number' && Number.isFinite(id)) return String(id);
-  const name = row.name;
-  if (typeof name === 'string' && name.trim()) return `name:${name.trim()}`;
+function readInventoryRowId(row: Record<string, unknown>): string | null {
+  const raw = row.inventoryRowId;
+  if (typeof raw === 'string' && raw.trim()) return raw.trim();
   return null;
 }
 
@@ -78,11 +81,23 @@ function rowQuantity(row: Record<string, unknown>): number {
   return 1;
 }
 
+export function inventoryRowCasSnapshot(row: Record<string, unknown>): InventoryCasSnapshot {
+  const cost = row.cost;
+  return {
+    quantity: rowQuantity(row),
+    equipped: row.equipped === true,
+    name: typeof row.name === 'string' ? row.name : '',
+    type: typeof row.type === 'string' ? row.type : '',
+    description: typeof row.description === 'string' ? row.description : '',
+    cost: typeof cost === 'number' && Number.isFinite(cost) ? cost : null,
+  };
+}
+
 function leanRowForPatchOp(row: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   if (row.id !== undefined) out.id = row.id;
   if (row.name !== undefined) out.name = row.name;
-  if (row.equipped) out.equipped = true;
+  out.equipped = row.equipped === true;
   const q = rowQuantity(row);
   if (q !== 1) out.quantity = q;
   if (typeof row.type === 'string' && row.type) out.type = row.type;
@@ -97,21 +112,12 @@ function rowsEqual(a: Record<string, unknown>, b: Record<string, unknown>): bool
   return JSON.stringify(leanRowForPatchOp(a)) === JSON.stringify(leanRowForPatchOp(b));
 }
 
-function findRowIndex(rows: Record<string, unknown>[], identity: string): number {
-  for (let idx = 0; idx < rows.length; idx++) {
-    const row = rows[idx];
-    if (!row) continue;
-    if (inventoryRowIdentity(row) === identity) return idx;
-    const itemId = identity.startsWith('name:') ? identity.slice(5) : identity;
-    if (matchesSheetEquipmentItem(row as SheetEquipmentRow, itemId, idx)) return idx;
-  }
-  return -1;
+function findRowIndex(rows: Record<string, unknown>[], inventoryRowId: string): number {
+  return rows.findIndex((row) => readInventoryRowId(row) === inventoryRowId);
 }
 
 /**
- * Build item-level ops from autosave baseline → current equipment.
- * Custom rows without `id` use `name:<name>` only when that name is unique in the bucket;
- * otherwise the whole bucket is replaced with remove+add ops (server rejects ambiguous ids).
+ * Build item-level ops from autosave baseline → current equipment (requires inventoryRowId).
  */
 export function buildInventoryPatch(
   baselineEquipment: unknown,
@@ -123,90 +129,71 @@ export function buildInventoryPatch(
     const before = readEquipmentBucket(baselineEquipment, bucket);
     const after = readEquipmentBucket(currentEquipment, bucket);
 
-    const beforeIds = before.map((row) => inventoryRowIdentity(row)).filter(Boolean) as string[];
-    const nameOnly = beforeIds.filter((id) => id.startsWith('name:'));
-    const dupNames = new Set(
-      nameOnly.filter((name, _i, arr) => arr.filter((n) => n === name).length > 1),
-    );
-    const ambiguousBucket =
-      dupNames.size > 0 ||
-      new Set(beforeIds).size !== beforeIds.length ||
-      new Set(after.map((r) => inventoryRowIdentity(r)).filter(Boolean)).size !==
-        after.filter((r) => inventoryRowIdentity(r)).length;
-
-    if (ambiguousBucket) {
-      for (const row of before) {
-        const id = inventoryRowIdentity(row);
-        if (!id) continue;
-        ops.push({ op: 'remove', bucket, id, expectedQuantity: rowQuantity(row) });
-      }
-      for (let position = 0; position < after.length; position++) {
-        const row = after[position]!;
-        const id = inventoryRowIdentity(row);
-        if (!id) continue;
-        ops.push({
-          op: 'add',
-          bucket,
-          item: leanRowForPatchOp(row),
-          position: position + 1,
-        });
-      }
-      continue;
-    }
-
     const beforeMap = new Map<string, Record<string, unknown>>();
     for (const row of before) {
-      const id = inventoryRowIdentity(row);
-      if (id) beforeMap.set(id, row);
+      const rowId = readInventoryRowId(row);
+      if (!rowId) continue;
+      beforeMap.set(rowId, row);
     }
     const afterMap = new Map<string, Record<string, unknown>>();
     for (const row of after) {
-      const id = inventoryRowIdentity(row);
-      if (id) afterMap.set(id, row);
+      const rowId = readInventoryRowId(row);
+      if (!rowId) continue;
+      afterMap.set(rowId, row);
     }
 
-    for (const [id, row] of beforeMap) {
-      if (!afterMap.has(id)) {
-        ops.push({ op: 'remove', bucket, id, expectedQuantity: rowQuantity(row) });
+    for (const [rowId, row] of beforeMap) {
+      if (!afterMap.has(rowId)) {
+        ops.push({
+          op: 'remove',
+          bucket,
+          inventoryRowId: rowId,
+          expected: inventoryRowCasSnapshot(row),
+        });
       }
     }
 
-    for (const [id, row] of afterMap) {
-      const prev = beforeMap.get(id);
+    for (const [rowId, row] of afterMap) {
+      const prev = beforeMap.get(rowId);
       if (!prev) {
-        ops.push({
+        const item = leanRowForPatchOp(row);
+        const op: InventoryPatchOp = {
           op: 'add',
           bucket,
-          item: leanRowForPatchOp(row),
-          position: findRowIndex(after, id) + 1 || undefined,
-        });
+          item,
+          position: findRowIndex(after, rowId) + 1 || undefined,
+        };
+        if (typeof row.inventoryRowId === 'string' && row.inventoryRowId.trim()) {
+          (op as { inventoryRowId?: string }).inventoryRowId = row.inventoryRowId.trim();
+        }
+        ops.push(op);
         continue;
       }
       if (!rowsEqual(prev, row)) {
         ops.push({
           op: 'update',
           bucket,
-          id,
-          expectedQuantity: rowQuantity(prev),
+          inventoryRowId: rowId,
+          expected: inventoryRowCasSnapshot(prev),
           item: leanRowForPatchOp(row),
         });
       }
     }
 
-    const orderBefore = before.map((row) => inventoryRowIdentity(row)).filter(Boolean) as string[];
-    const orderAfter = after.map((row) => inventoryRowIdentity(row)).filter(Boolean) as string[];
+    const orderBefore = before.map((row) => readInventoryRowId(row)).filter(Boolean) as string[];
+    const orderAfter = after.map((row) => readInventoryRowId(row)).filter(Boolean) as string[];
     if (orderBefore.join('|') !== orderAfter.join('|')) {
       for (let position = 0; position < orderAfter.length; position++) {
-        const id = orderAfter[position]!;
-        const prev = beforeMap.get(id);
+        const rowId = orderAfter[position]!;
+        const prev = beforeMap.get(rowId);
         if (!prev) continue;
-        const prevIndex = orderBefore.indexOf(id);
+        const prevIndex = orderBefore.indexOf(rowId);
         if (prevIndex === position) continue;
         ops.push({
           op: 'reorder',
           bucket,
-          id,
-          expectedQuantity: rowQuantity(prev),
+          inventoryRowId: rowId,
+          expected: inventoryRowCasSnapshot(prev),
           position: position + 1,
         });
       }
@@ -216,7 +203,6 @@ export function buildInventoryPatch(
   return { ops };
 }
 
-/** When equipment is dirty, replace the full blob with an incremental inventory patch. */
 export function replaceEquipmentDirtyWithInventoryPatch(
   cleaned: Record<string, unknown>,
   saveBaseline: Record<string, unknown>,
@@ -228,7 +214,6 @@ export function replaceEquipmentDirtyWithInventoryPatch(
   cleaned.inventoryPatch = patch;
 }
 
-/** Prefer existing inventoryPatch; otherwise translate equipment using the save baseline snapshot. */
 export function attachRelationalInventoryPatchToDirty(
   dirty: Record<string, unknown>,
   saveBaseline: Record<string, unknown>,
