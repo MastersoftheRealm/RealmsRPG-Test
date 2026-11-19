@@ -58,11 +58,15 @@ Writer prep and critic enforcement are separate. Self-attested "APPROVE" text in
 
 **Enforcement (GitHub App + ruleset)**
 
-1. **Check name:** `Realms Independent Critic`. Only the **Realms Critic GitHub App** may post **success** for that context. Ruleset must require this check from that App's **integration id** (not the generic `github-actions` app). Kadin applies ruleset JSON from the open PR **SETTINGS-PROPOSAL** (see #609 until merged); agents do not create Apps, secrets, or repo settings. App setup: [`src/docs/ai/REALMS_CRITIC_GITHUB_APP.md`](src/docs/ai/REALMS_CRITIC_GITHUB_APP.md).
+Setup, JWT, ruleset JSON, and bypass details: [`src/docs/ai/REALMS_CRITIC_GITHUB_APP.md`](src/docs/ai/REALMS_CRITIC_GITHUB_APP.md). Kadin applies the ruleset; agents do not create Apps, secrets, or GitHub settings.
+
+1. **Check name:** `Realms Independent Critic`. Ruleset requires this check from the **Realms Critic GitHub App**’s **integration id** (= App ID). Repo Actions and repo secrets **cannot** satisfy that required check once the ruleset is active (they are not a forged in-repo critic workflow). They do **not** stop an owner-session bot from changing GitHub settings outside that path — see **Writer bots and owner access** below.
 2. **App private key** — **TBD by Kadin: separate critic-only account.** Must **not** be in repo secrets, `.env`, or any Cursor environment / user secret / credential box **writer** agents can reach.
-3. **Void on push:** A check is bound to one commit. After a new push, the **PR head SHA** has no critic success until the critic reviews that SHA and the App posts a new check. Old SHA checks do not satisfy merge.
-4. **Critic procedure:** Separate session → `/audit` → **run** repro and optionally `npm run critic:gate` locally → App creates check run on **current PR head** (`success` or `failure` with summary). No `workflow_dispatch`, no repo `CRITIC_*` secrets, no eval of shell from PR text.
-5. **High-risk label** `high-risk`: a **human** adds it on GitHub when [Risk by path](#risk-by-path) matches (agents do not self-apply). Critic fails merge posture without it on high-risk diffs.
+3. **Void on push:** After a new push, the **PR head SHA** has no critic success until the App posts a check for that SHA.
+4. **Critic procedure:** Separate session → `/audit` (do not use writer PR text as evidence) → run repro (+ optional `npm run critic:gate`) → App check on **current PR head**.
+5. **High-risk label** `high-risk`: **human-applied** when [Risk by path](#risk-by-path) matches. Critic posts **failure** without it.
+
+**Writer bots and owner access (pending):** This gate is meant to bind **writer** agents to critic + CI once writers **no longer** use Kadin’s **owner/admin** GitHub/Cursor credentials. **Today** writer bots run as **owner** and could edit or delete the ruleset until Kadin applies it and until account split is decided. That split is **Kadin’s pending decision** (`REALMS_CRITIC_GITHUB_APP.md`).
 
 **Critic rules (same checklist; enforced by the job + verdict)**
 
