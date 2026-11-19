@@ -3560,7 +3560,7 @@ No production file imports these names. A test import does not count. The file t
 - `src/lib/auth/auth-page-client.ts`: `ResendConfirmationResult` (type)
 - `src/lib/auth/oauth-delete-grant-core.ts`: `SignedOAuthDeleteIntentPayload` (type)
 - `src/lib/auth/sensitive-account-auth.ts`: `SensitiveAccountReauthInput` (type)
-- `src/lib/character-persistence-server.ts`: `CharacterPatchResult` (type)
+- `src/lib/character-persistence-server.ts`: `CharacterPatchResult` (type), `InventoryPatchApplyResult` (type)
 - `src/lib/character-sheet/add-modal-existing-ids.ts`: `AddModalEntityType` (type)
 - `src/lib/character-view-enrichment.ts`: `CharacterViewRefIds` (type)
 - `src/lib/creature-chip-tier.ts`: `replaceTieredCreatureChipValue`
@@ -3568,7 +3568,7 @@ No production file imports these names. A test import does not count. The file t
 - `src/lib/character/character-relational-save-errors.ts`: `CharacterRelationalSaveLogIds` (type), `CharacterRelationalValidationPayload` (type)
 - `src/lib/character/character-size.ts`: `SpeciesSizeSource` (type)
 - `src/lib/character/collect-sheet-traits.ts`: `CollectSheetTraitsInput` (type), `SheetTraitCategory` (type), `SheetTraitRow` (type), `VanillaTraitFields` (type)
-- `src/lib/character/inventory-patch.ts`: `InventoryCasSnapshot` (type), `InventoryPatchOp` (type), `InventoryPatchPayload` (type)
+- `src/lib/character/inventory-patch.ts`: `InventoryCasSnapshot` (type), `InventoryPatchCreatedRow` (type), `InventoryPatchOp` (type), `InventoryPatchPayload` (type)
 - `src/lib/character/notes-tab-sections.ts`: `NotesTabSectionDef` (type)
 - `src/lib/character/realtime-merge.ts`: `SheetRealtimeMerge` (type)
 - `src/lib/character/recovery-uses.ts`: `RecoveryUseSource` (type)
