@@ -192,7 +192,7 @@ export async function saveCharacterWithConflictRetry(
       return {
         updatedAt: result.updatedAt,
         applied: dirty,
-        inventoryPatchResult: result.inventoryPatchResult,
+        ...(result.inventoryPatchResult ? { inventoryPatchResult: result.inventoryPatchResult } : {}),
       };
     } catch (err) {
       if (!isConflictError(err)) throw err;
@@ -211,7 +211,9 @@ export async function saveCharacterWithConflictRetry(
       return {
         updatedAt: retried.updatedAt,
         applied: next.dirty,
-        inventoryPatchResult: retried.inventoryPatchResult,
+        ...(retried.inventoryPatchResult
+          ? { inventoryPatchResult: retried.inventoryPatchResult }
+          : {}),
       };
     }
   });

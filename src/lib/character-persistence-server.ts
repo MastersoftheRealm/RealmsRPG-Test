@@ -135,12 +135,21 @@ export async function patchRelationalCharacter(
 
   if (result.status === 'conflict') {
     const code = typeof result.code === 'string' ? result.code : undefined;
-    return { status: 'conflict', updatedAt, code, inventoryPatchResult };
+    return {
+      status: 'conflict',
+      updatedAt,
+      code,
+      ...(inventoryPatchResult ? { inventoryPatchResult } : {}),
+    };
   }
   if (result.status !== 'updated' || !updatedAt) {
     throw new Error('patch_character_relational returned an invalid outcome');
   }
-  return { status: 'updated', updatedAt, inventoryPatchResult };
+  return {
+    status: 'updated',
+    updatedAt,
+    ...(inventoryPatchResult ? { inventoryPatchResult } : {}),
+  };
 }
 
 function parseInventoryPatchResult(

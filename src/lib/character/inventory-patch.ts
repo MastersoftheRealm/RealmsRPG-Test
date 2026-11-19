@@ -253,6 +253,23 @@ export type InventoryPatchCreatedRow = {
   position: number;
 };
 
+const PATCH_BUCKETS = new Set<string>(INVENTORY_PATCH_BUCKETS);
+
+export function coerceInventoryPatchCreatedRows(
+  rows: Array<{ inventoryRowId: string; bucket: string; position: number }>,
+): InventoryPatchCreatedRow[] {
+  return rows.flatMap((row) => {
+    if (!PATCH_BUCKETS.has(row.bucket)) return [];
+    return [
+      {
+        inventoryRowId: row.inventoryRowId,
+        bucket: row.bucket as InventoryPatchBucket,
+        position: row.position,
+      },
+    ];
+  });
+}
+
 /** Stamp server-assigned (or confirmed) row ids onto equipment after a successful inventory patch. */
 export function mergeInventoryCreatedRows(
   equipment: unknown,
