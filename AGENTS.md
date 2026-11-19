@@ -66,7 +66,7 @@ Setup, JWT, ruleset JSON, and bypass details: [`src/docs/ai/REALMS_CRITIC_GITHUB
 4. **Critic procedure:** Separate session → `/audit` (do not use writer PR text as evidence) → run repro (+ optional `npm run critic:gate`) → App check on **current PR head**.
 5. **High-risk label** `high-risk`: **human-applied** when [Risk by path](#risk-by-path) matches. Critic posts **failure** without it.
 
-**Writer bots and owner access (pending):** This gate is meant to bind **writer** agents to critic + CI once writers **no longer** use Kadin’s **owner/admin** GitHub/Cursor credentials. **Today** writer bots run as **owner** and could edit or delete the ruleset until Kadin applies it and until account split is decided. That split is **Kadin’s pending decision** (`REALMS_CRITIC_GITHUB_APP.md`).
+**Writer bots and owner access (pending):** This gate is meant to bind **writer** agents to critic + CI once writers **no longer** use Kadin’s **owner/admin** GitHub/Cursor credentials. **Today** writer bots run as **owner** and could edit or delete the ruleset until the **account split** (writer bots moved off admin/owner rights). That split is **Kadin’s pending decision** (`REALMS_CRITIC_GITHUB_APP.md`).
 
 **Critic rules (same checklist; enforced by the job + verdict)**
 
