@@ -365,9 +365,17 @@ export function mergeInventoryCreatedRows(
   for (const created of createdRows) {
     const bucket = created.bucket;
     const rows = readEquipmentBucket(equip, bucket);
-    const index = rows.findIndex(
-      (row) => readInventoryRowId(row) === created.inventoryRowId,
-    );
+    let index = rows.findIndex((row) => readInventoryRowId(row) === created.inventoryRowId);
+    if (index < 0) {
+      const byPosition = created.position - 1;
+      if (
+        byPosition >= 0 &&
+        byPosition < rows.length &&
+        !readInventoryRowId(rows[byPosition]!)
+      ) {
+        index = byPosition;
+      }
+    }
     if (index < 0) continue;
     rows[index] = { ...rows[index], inventoryRowId: created.inventoryRowId };
     if (bucket === 'armor') {

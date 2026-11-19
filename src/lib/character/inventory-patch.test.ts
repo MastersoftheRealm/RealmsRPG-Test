@@ -325,6 +325,16 @@ describe('inventory patch', () => {
 describe('mergeInventoryCreatedRows', () => {
   const PROVISIONAL = '90000000-0000-4000-8000-000000000099';
 
+  it('stamps row id by bucket position when applied row has no inventoryRowId yet', () => {
+    const equipment = {
+      weapons: [{ id: 'w-new', name: 'Dagger' }],
+    };
+    const merged = mergeInventoryCreatedRows(equipment, [
+      { inventoryRowId: PROVISIONAL, bucket: 'weapons', position: 1 },
+    ]) as { weapons: Array<{ inventoryRowId?: string }> };
+    expect(merged.weapons[0]?.inventoryRowId).toBe(PROVISIONAL);
+  });
+
   it('stamps row id by client provisional inventoryRowId, not server position', () => {
     const equipment = {
       weapons: [

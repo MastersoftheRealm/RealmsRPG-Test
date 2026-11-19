@@ -52,6 +52,7 @@ import {
   characterLockToken,
   mergeRemotePreservingDirty,
   pickDirtyCharacterFields,
+  remoteCharacterBaselineIsStale,
   withDirtyClears,
 } from '@/lib/character/dirty-patch';
 import { characterAutosaveDocumentsEqual } from '@/lib/character/character-autosave-equal';
@@ -122,6 +123,15 @@ export function useCharacterSheetPageData(id: string) {
       savedSnapshotIdRef.current = null;
       savedCleanRef.current = null;
     }
+  }, [character, id, rules]);
+
+  /** Library add / realtime saves bump `updatedAt` without touching `savedCleanRef` (one-shot init). */
+  useEffect(() => {
+    if (!character || character.id !== id || savedSnapshotIdRef.current !== id) return;
+    if (!savedCleanRef.current) return;
+    if (!remoteCharacterBaselineIsStale(character.updatedAt, savedCleanRef.current)) return;
+    savedCleanRef.current = cleanForSave(character, rules) as Record<string, unknown>;
+    rememberCharacterLockToken(id, character.updatedAt);
   }, [character, id, rules]);
 
   const { data: userPowers = [] } = useUserPowers({ enabled: loadCatalog });

@@ -9,7 +9,11 @@ import type { UserCreature, UserItem, UserPower, UserTechnique } from '@/hooks/u
 import type { CharacterViewEnrichment } from '@/lib/character-view-enrichment';
 import { apiFetch, apiFetchOrNull, isConflictError } from '@/lib/api-client';
 import { characterLockToken } from '@/lib/character/dirty-patch';
-import { attachRelationalInventoryPatchToDirty } from '@/lib/character/inventory-patch';
+import {
+  attachRelationalInventoryPatchToDirty,
+  coerceInventoryPatchCreatedRows,
+  mergeInventoryCreatedRows,
+} from '@/lib/character/inventory-patch';
 import {
   enqueueCharacterSave,
   rememberCharacterLockToken,
@@ -189,9 +193,19 @@ export async function saveCharacterWithConflictRetry(
         enqueue: false,
         inventorySaveBaseline: options.inventorySaveBaseline,
       });
+      let applied: Partial<Character> = dirty;
+      const created = coerceInventoryPatchCreatedRows(
+        result.inventoryPatchResult?.createdRows ?? [],
+      );
+      if (created.length > 0 && applied.equipment) {
+        applied = {
+          ...applied,
+          equipment: mergeInventoryCreatedRows(applied.equipment, created) as Character['equipment'],
+        };
+      }
       return {
         updatedAt: result.updatedAt,
-        applied: dirty,
+        applied,
         ...(result.inventoryPatchResult ? { inventoryPatchResult: result.inventoryPatchResult } : {}),
       };
     } catch (err) {
@@ -208,9 +222,19 @@ export async function saveCharacterWithConflictRetry(
         inventorySaveBaseline:
           next.inventorySaveBaseline ?? (remote as unknown as Record<string, unknown>),
       });
+      let applied: Partial<Character> = next.dirty;
+      const created = coerceInventoryPatchCreatedRows(
+        retried.inventoryPatchResult?.createdRows ?? [],
+      );
+      if (created.length > 0 && applied.equipment) {
+        applied = {
+          ...applied,
+          equipment: mergeInventoryCreatedRows(applied.equipment, created) as Character['equipment'],
+        };
+      }
       return {
         updatedAt: retried.updatedAt,
-        applied: next.dirty,
+        applied,
         ...(retried.inventoryPatchResult
           ? { inventoryPatchResult: retried.inventoryPatchResult }
           : {}),

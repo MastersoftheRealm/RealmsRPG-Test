@@ -5,6 +5,26 @@
 
 import { matchesSheetEquipmentItem } from '@/lib/character/sheet-equipment-match';
 
+/** True when `remote` has a strictly newer `updatedAt` than the autosave baseline. */
+export function remoteCharacterBaselineIsStale(
+  remoteUpdatedAt: string | Date | null | undefined,
+  baseline: Record<string, unknown> | null | undefined,
+): boolean {
+  const remote = characterLockToken(remoteUpdatedAt);
+  const saved = characterLockToken(
+    typeof baseline?.updatedAt === 'string' || baseline?.updatedAt instanceof Date
+      ? (baseline.updatedAt as string | Date)
+      : undefined,
+  );
+  if (!remote) return false;
+  if (!saved) return true;
+  if (characterTimestampsMatch(remote, saved)) return false;
+  const dr = Date.parse(remote);
+  const ds = Date.parse(saved);
+  if (Number.isFinite(dr) && Number.isFinite(ds)) return dr > ds;
+  return remote !== saved;
+}
+
 export function characterLockToken(value: string | Date | null | undefined): string | undefined {
   if (value == null) return undefined;
   if (typeof value === 'string' && value.trim()) return value;
