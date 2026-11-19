@@ -93,6 +93,54 @@ export function findBlockingHighProductionVulnerabilities(vulnerabilities, activ
   return blocked.sort();
 }
 
+/**
+ * @param {import('node:child_process').SpawnSyncReturns<string>} result
+ * @param {unknown} report
+ */
+export function assertNpmAuditReport(result, report) {
+  if (result.error) {
+    throw new Error(`npm audit failed to run: ${result.error.message}`);
+  }
+
+  if (!report || typeof report !== 'object') {
+    const snippet = (result.stdout || result.stderr || '').trim().slice(0, 400);
+    throw new Error(
+      `npm audit returned invalid JSON (exit ${result.status ?? '?'}): ${snippet || '(empty output)'}`,
+    );
+  }
+
+  const payload = /** @type {Record<string, unknown>} */ (report);
+  if (payload.error) {
+    const errObj =
+      typeof payload.error === 'object' && payload.error
+        ? /** @type {{ summary?: string, detail?: string }} */ (payload.error)
+        : {};
+    const message =
+      (typeof payload.message === 'string' && payload.message) ||
+      errObj.summary ||
+      errObj.detail ||
+      'npm audit reported an error';
+    throw new Error(`npm audit error: ${message}`);
+  }
+
+  if (typeof payload.auditReportVersion !== 'number') {
+    const snippet = (result.stdout || result.stderr || '').trim().slice(0, 400);
+    throw new Error(
+      `npm audit JSON missing auditReportVersion (exit ${result.status ?? '?'}): ${snippet || '(empty output)'}`,
+    );
+  }
+
+  if (
+    !payload.vulnerabilities ||
+    typeof payload.vulnerabilities !== 'object' ||
+    Array.isArray(payload.vulnerabilities)
+  ) {
+    throw new Error('npm audit JSON missing vulnerabilities object');
+  }
+
+  return /** @type {{ vulnerabilities: Record<string, unknown> }} */ (payload);
+}
+
 /** @returns {{ vulnerabilities: Record<string, unknown> }} */
 export function runNpmProductionAuditJson() {
   const result = spawnSync(
@@ -101,15 +149,15 @@ export function runNpmProductionAuditJson() {
     { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 },
   );
   const stdout = result.stdout ?? '';
-  let report;
+  let parsed;
   try {
-    report = JSON.parse(stdout);
+    parsed = JSON.parse(stdout);
   } catch {
     throw new Error(
-      `npm audit --json failed to parse (exit ${result.status}): ${(stdout || result.stderr || '').slice(0, 400)}`,
+      `npm audit --json failed to parse (exit ${result.status ?? '?'}): ${(stdout || result.stderr || '').trim().slice(0, 400) || '(empty output)'}`,
     );
   }
-  return report;
+  return assertNpmAuditReport(result, parsed);
 }
 
 /** @param {Set<string>} [ignored] */
@@ -126,8 +174,14 @@ export function runProductionNpmAuditGate() {
   }
 
   const ignored = activeIgnoredGhsas();
-  const report = runNpmProductionAuditJson();
-  const vulnerabilities = report.vulnerabilities ?? {};
+  let report;
+  try {
+    report = runNpmProductionAuditJson();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { ok: false, errors: [msg] };
+  }
+  const vulnerabilities = report.vulnerabilities;
   const blocking = findBlockingHighProductionVulnerabilities(vulnerabilities, ignored);
 
   if (blocking.length > 0) {
