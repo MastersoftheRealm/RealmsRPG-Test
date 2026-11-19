@@ -27,7 +27,7 @@
 
 ## Risk by path
 - Risk: <!-- standard | high — paths from AGENTS.md table only -->
-- [ ] GitHub label **`high-risk`** applied by a human when required (agents do not add)
+- [ ] Label `high-risk` applied when Risk by path matches (critic checks label against diff)
 - CI / workflow changes: <!-- describe or "none" -->
 - Kadin product OK: <!-- comment link | not needed -->
 

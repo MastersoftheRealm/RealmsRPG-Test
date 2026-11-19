@@ -51,7 +51,7 @@ Only correctness, security, data-safety, and checklist failures block **approve*
 ## Before posting the App check
 
 1. **`base.ref === master`** — else post **`failure`** and stop.
-2. **High-risk** diff without human-applied label **`high-risk`** — post **`failure`** and stop (`pulls.listFiles` + `AGENTS.md` [Risk by path](AGENTS.md#risk-by-path)).
+2. **High-risk label ↔ diff** — Compare `pulls.listFiles` to `AGENTS.md` [Risk by path](AGENTS.md#risk-by-path). Post **`failure`** and stop if high-risk paths are touched but label **`high-risk`** is missing, or if the label is present but the diff matches no high-risk path.
 3. Run repro (behavioral). Optionally `npm run critic:gate`.
 4. On **approve**, post **`success`** via App JWT flow (`REALMS_CRITIC_GITHUB_APP.md`).
 

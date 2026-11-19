@@ -2,6 +2,18 @@
 
 Authoritative workflow: root `AGENTS.md` (Review, Merge). This file is setup, ruleset JSON, and how the critic posts the check.
 
+## Installed app (live values)
+
+| Field | Value |
+|-------|--------|
+| **App ID** / ruleset **`integration_id`** | **5837498** |
+| **App slug** | `realms-independent-critic` |
+| **Installation ID** (`MastersoftheRealm/RealmsRPG-Test`) | **183782952** |
+| **Check run name** | `Realms Independent Critic` |
+| **Ruleset applied** | **2026-11-19** (Kadin; JSON below uses `5837498`) |
+
+Live verification: check run **135810298321** on PR **#607**, posted by App **5837498**.
+
 ## What it does
 
 - Posts check run **`Realms Independent Critic`** on the **PR head SHA**.
@@ -18,6 +30,8 @@ Until that split: the App stops **forgeable in-repo critic workflows** (PR #607 
 
 ## Create and install (Kadin; agents do not)
 
+Done for this repo (see **Installed app**). For a fresh environment:
+
 1. GitHub → **Settings** → **Developer settings** → **GitHub Apps** → **New GitHub App**.
 2. **Name:** e.g. `Realms Independent Critic`.
 3. **Webhook:** inactive.
@@ -32,25 +46,75 @@ Until that split: the App stops **forgeable in-repo critic workflows** (PR #607 
 
 ## Private key storage
 
-Must **not** be in: this repo, Actions secrets, `.env`, or any **Cursor environment / user secret / credential box that writer agents can reach**.
+Must **not** be in: this repo, Actions secrets, or `.env` committed to git.
 
-**TBD by Kadin:** separate critic-only account / runtime (exact host not chosen in repo).
+### Interim (until account split)
+
+**Location:** Cursor **Personal** runtime secret **`REALMS_CRITIC_APP_KEY_B64`** — standard **base64** encoding of the App’s **PKCS#1 PEM** private key (not base64url).
+
+**Use (critic runtime only):**
+
+1. Read the secret in the critic session; **never print** it or commit it.
+2. Decode **outside the repo** to a temp file (e.g. `mktemp`), mode **600**.
+3. Sign the App JWT with that file; **delete the file** after use.
+
+**Ruling record:** On **2026-11-19 ~1:46 PM ET**, Web Manager told Kadin coding bots could technically read this secret while his account is used. Kadin chose: *“Store the key as a Cursor secret for now and replace it when we split accounts”* (**~1:49 PM ET**). Until **account split** (write-only bot GitHub + critic-only Cursor): writer agents can technically read it but **must never use or read it** (workflow break). At split: new App key on critic-only side; delete old key on GitHub and remove **`REALMS_CRITIC_APP_KEY_B64`**.
+
+Do **not** put the PEM or base64 value in repo files, PR text, or logs.
+
+## GitHub API headers (every call)
+
+GitHub rejects requests without a **User-Agent**. Send on **every** GitHub REST request (JWT step, installation token, check run, `GET` pull):
+
+| Header | Value |
+|--------|--------|
+| `Accept` | `application/vnd.github+json` |
+| `X-GitHub-Api-Version` | `2022-11-28` |
+| `User-Agent` | A stable app name (e.g. `RealmsIndependentCritic/1.0`) |
 
 ## Authentication (critic runtime)
 
-1. Build a **JWT** signed with the App’s private key (**RS256**):
-   - `iss`: App ID (integer)
-   - `iat`, `exp`: **`exp` at most 10 minutes** after `iat`
-2. `POST https://api.github.com/app/installations/{installation_id}/access_tokens` with `Authorization: Bearer <JWT>`.
-3. Use the returned **installation access token** for API calls (e.g. create check run).
+### 1. App JWT
 
-## How the critic posts a check
+- **Header:** `{"alg":"RS256","typ":"JWT"}` (JSON, then encode).
+- **Payload:** `iss` = App ID **5837498** as a **string** (GitHub accepts string `iss`); `iat` and `exp` as integer Unix seconds.
+- **Clock skew:** Set **`iat = now - 60`** and **`exp = now + 540`** (**10 minutes** after `iat`; **`exp` nine minutes** after real time — under GitHub’s **10-minute** `exp` max). Avoid `iat` in the future relative to GitHub’s clock.
+- **Encoding:** Each of header and payload → **base64url** of the UTF-8 JSON, **no padding** (`=` stripped).
+- **Signature:** Sign the string **`{base64url_header}.{base64url_payload}`** with **RSA-SHA256** using the PKCS#1 PEM; append **`.` + base64url(signature, no padding)**.
 
-1. `GET` pull request → **`base.ref` must be `master`**. Else check **`failure`** (stacked / wrong base).
+`Authorization: Bearer <jwt>` on the installation-token request (plus [headers above](#github-api-headers-every-call)).
+
+### 2. Installation access token
+
+```http
+POST https://api.github.com/app/installations/183782952/access_tokens
+Authorization: Bearer <app_jwt>
+```
+
+- **Body:** may be **empty** (`{}` or no body).
+- **Response:** use the **`token`** field (installation access token), valid for **about one hour**.
+
+Use `Authorization: Bearer <installation_token>` for subsequent API calls (same headers).
+
+### 3. How the critic posts a check
+
+1. `GET /repos/MastersoftheRealm/RealmsRPG-Test/pulls/{pull_number}` → **`base.ref` must be `master`**. Else check **`failure`** (stacked / wrong base).
 2. **`head.sha`** must match the commit under review.
-3. If diff is high-risk per `AGENTS.md` [Risk by path](../../../AGENTS.md#risk-by-path) and label **`high-risk`** is missing (human-applied), check **`failure`**.
+3. Compare the PR diff to `AGENTS.md` [Risk by path](../../../AGENTS.md#risk-by-path): check **`failure`** if high-risk paths are touched without label **`high-risk`**, or if the label is present but the diff is not high-risk.
 4. Run `/audit` (`.cursor/commands/audit.md`): do **not** treat the writer’s PR description as evidence; grade constitution 1–15; run repro (+ optional `npm run critic:gate`).
-5. `POST /repos/MastersoftheRealm/RealmsRPG-Test/check-runs` with `name`: `Realms Independent Critic`, `head_sha`, `conclusion` `success` or `failure`.
+5. `POST /repos/MastersoftheRealm/RealmsRPG-Test/check-runs` with at minimum:
+
+```json
+{
+  "name": "Realms Independent Critic",
+  "head_sha": "<pr-head-sha>",
+  "status": "completed",
+  "completed_at": "<ISO-8601 UTC, e.g. 2026-11-19T18:00:00Z>",
+  "conclusion": "success"
+}
+```
+
+Use `"conclusion": "failure"` when the audit fails or gates fail. GitHub sets **`status`** to **`completed`** when **`conclusion`** is supplied; include **`completed_at`** explicitly (verified on #607).
 
 **Void on push:** Each commit needs its own check. A new push → new head SHA → critic run again.
 
@@ -58,13 +122,13 @@ Must **not** be in: this repo, Actions secrets, `.env`, or any **Cursor environm
 
 **Account:** `MastersoftheRealm` is a **personal** account — no OrganizationAdmin / Team bypass. **Only** bypass actor: user **CollinMorrison**, `actor_id` **94765159**, `bypass_mode` **always**. Disable **repository admin bypass** and **organization admin bypass** on this ruleset.
 
+**Applied 2026-11-19** with critic App **`integration_id` `5837498`**.
+
 **After apply:** Confirm the ruleset API/UI accepted the **User** bypass on this personal-account repo (GitHub sometimes treats bypass differently than org repos).
 
 **`strict_required_status_checks_policy: true`:** Every merge to `master` requires checks on the **current** PR head. When `master` moves, open PRs often need a **merge / update branch** → **new head SHA** → **new critic run** (extra cost; intentional).
 
 **Stack order:** Strict checks do **not** enforce GitHub stack merge order. Policy: no merging out of stack order; critic **failure** if `base.ref !== master` (see `AGENTS.md`).
-
-Replace `REALMS_CRITIC_APP_ID` with the App’s numeric **App ID** (same as `integration_id`):
 
 ```json
 {
@@ -97,7 +161,7 @@ Replace `REALMS_CRITIC_APP_ID` with the App’s numeric **App ID** (same as `int
         "required_status_checks": [
           {
             "context": "Realms Independent Critic",
-            "integration_id": "REALMS_CRITIC_APP_ID"
+            "integration_id": 5837498
           },
           {
             "context": "verify",
