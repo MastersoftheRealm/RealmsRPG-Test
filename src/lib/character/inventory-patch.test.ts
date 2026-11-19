@@ -255,9 +255,9 @@ describe('inventory patch', () => {
       cleaned.equipment,
     ) as { items: Array<{ inventoryRowId?: string; name?: string }> };
     const rope = mirrored.items.find((row) => row.name === 'Rope');
-    const cleanedRope = (cleaned.equipment as { items: Array<{ inventoryRowId?: string }> }).items.find(
-      (row) => row.name === 'Rope',
-    );
+    const cleanedRope = (
+      cleaned.equipment as { items: Array<{ inventoryRowId?: string; name?: string }> }
+    ).items.find((row) => row.name === 'Rope');
     expect(cleanedRope?.inventoryRowId).toBeTruthy();
     expect(rope?.inventoryRowId).toBe(cleanedRope?.inventoryRowId);
   });

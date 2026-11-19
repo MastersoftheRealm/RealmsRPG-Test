@@ -271,12 +271,19 @@ export function mirrorInventoryRowIdsOntoSheetEquipment(
           (row) => !readInventoryRowId(row) && equipmentRowIdentityKey(row) === key,
         );
       }
-      if (idx < 0 && cleanRow.id != null) {
-        idx = nextRows.findIndex(
-          (row) =>
-            !readInventoryRowId(row) &&
-            matchesSheetEquipmentItem(row as { id?: string | number; name?: string }, cleanRow.id, -1),
-        );
+      if (idx < 0) {
+        const itemId = cleanRow.id;
+        if (typeof itemId === 'string' || typeof itemId === 'number') {
+          idx = nextRows.findIndex(
+            (row) =>
+              !readInventoryRowId(row) &&
+              matchesSheetEquipmentItem(
+                row as { id?: string | number; name?: string },
+                itemId,
+                -1,
+              ),
+          );
+        }
       }
       if (idx < 0) continue;
 
