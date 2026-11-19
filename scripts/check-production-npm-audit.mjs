@@ -2,6 +2,9 @@
 /**
  * CI blocking gate: production deps (`npm audit --omit=dev`) at high+.
  *
+ * Blocks every package npm rates high or critical (top-level `severity`).
+ * Structural checks fail closed on inconsistent audit JSON.
+ *
  *   node scripts/check-production-npm-audit.mjs
  */
 import { spawnSync } from 'node:child_process';
@@ -9,74 +12,29 @@ import { fileURLToPath } from 'node:url';
 
 const AUDIT_LEVEL = 'high';
 
-/** @param {unknown} entry */
-function ghsaFromAdvisoryEntry(entry) {
-  if (!entry || typeof entry !== 'object' || typeof entry.url !== 'string') return null;
-  const match = entry.url.match(/GHSA-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}/i);
-  return match ? match[0].toUpperCase() : null;
-}
-
-/** @param {unknown} entry */
-function advisoryIsHighOrCritical(entry) {
-  return (
-    !!entry &&
-    typeof entry === 'object' &&
-    /** @type {{ severity?: string }} */ ((entry).severity === 'high' ||
-      /** @type {{ severity?: string }} */ (entry).severity === 'critical')
-  );
-}
-
 /**
  * @param {Record<string, { severity?: string, via?: unknown[] }>} vulnerabilities
- * @param {string} pkg
- * @param {Set<string>} stack
+ * @returns {string[]}
  */
-function packageBlockedByHigh(vulnerabilities, pkg, stack) {
-  if (stack.has(pkg)) return false;
-
-  const vuln = vulnerabilities[pkg];
-  if (!vuln) {
-    return true;
-  }
-  if (vuln.severity !== 'high' && vuln.severity !== 'critical') {
-    return false;
-  }
-
-  stack.add(pkg);
-
-  let blockedByDirectAdvisory = false;
-  const deps = [];
-  for (const via of vuln.via ?? []) {
-    if (typeof via === 'string') {
-      deps.push(via);
-      continue;
-    }
-    if (!via || typeof via !== 'object') {
-      blockedByDirectAdvisory = true;
-      continue;
-    }
-    const ghsa = ghsaFromAdvisoryEntry(via);
-    if (ghsa) {
-      if (advisoryIsHighOrCritical(via)) {
-        blockedByDirectAdvisory = true;
+export function validateProductionAuditVulnerabilities(vulnerabilities) {
+  const errors = [];
+  for (const [name, vuln] of Object.entries(vulnerabilities)) {
+    if (vuln.severity !== 'high' && vuln.severity !== 'critical') continue;
+    for (const via of vuln.via ?? []) {
+      if (typeof via === 'string') {
+        if (!Object.hasOwn(vulnerabilities, via)) {
+          errors.push(
+            `Production npm audit: package "${name}" references missing dependency "${via}" in via`,
+          );
+        }
+        continue;
       }
-      continue;
-    }
-    if (advisoryIsHighOrCritical(via)) {
-      blockedByDirectAdvisory = true;
+      if (!via || typeof via !== 'object') {
+        errors.push(`Production npm audit: package "${name}" has invalid via entry`);
+      }
     }
   }
-
-  const blockedByDeps =
-    deps.length > 0 && deps.some((dep) => packageBlockedByHigh(vulnerabilities, dep, stack));
-
-  const blocked =
-    blockedByDirectAdvisory ||
-    blockedByDeps ||
-    (deps.length === 0 && (vuln.via ?? []).length === 0);
-
-  stack.delete(pkg);
-  return blocked;
+  return errors;
 }
 
 /**
@@ -85,8 +43,7 @@ function packageBlockedByHigh(vulnerabilities, pkg, stack) {
 export function findBlockingHighProductionVulnerabilities(vulnerabilities) {
   const blocked = [];
   for (const [name, vuln] of Object.entries(vulnerabilities)) {
-    if (vuln.severity !== 'high' && vuln.severity !== 'critical') continue;
-    if (packageBlockedByHigh(vulnerabilities, name, new Set())) {
+    if (vuln.severity === 'high' || vuln.severity === 'critical') {
       blocked.push(name);
     }
   }
@@ -161,13 +118,14 @@ export function runNpmProductionAuditJson() {
 }
 
 /**
- * @param {import('node:child_process').SpawnSyncReturns<string>} auditResult
- * @param {unknown} parsedReport
- */
-/**
  * @param {Record<string, { severity?: string, via?: unknown[] }>} vulnerabilities
  */
 export function evaluateProductionVulnerabilities(vulnerabilities) {
+  const structuralErrors = validateProductionAuditVulnerabilities(vulnerabilities);
+  if (structuralErrors.length > 0) {
+    return { ok: false, errors: structuralErrors };
+  }
+
   const blocking = findBlockingHighProductionVulnerabilities(vulnerabilities);
 
   if (blocking.length > 0) {

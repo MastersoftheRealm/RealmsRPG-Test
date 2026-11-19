@@ -12,10 +12,10 @@ import {
   evaluateProductionVulnerabilities,
   findBlockingHighProductionVulnerabilities,
   runProductionNpmAuditGate,
+  validateProductionAuditVulnerabilities,
 } from './check-production-npm-audit.mjs';
 
 const GHSA_A = 'GHSA-AAAA-AAAA-AAAA';
-const GHSA_B = 'GHSA-BBBB-BBBB-BBBB';
 
 const validSpawn = {
   status: 0,
@@ -91,18 +91,14 @@ describe('assertNpmAuditReport', () => {
 });
 
 describe('findBlockingHighProductionVulnerabilities', () => {
-  it('blocks when the same package carries two high/critical GHSAs (each advisory judged)', () => {
+  it('blocks a package npm rates high regardless of direct advisory severity (a)', () => {
     const vulnerabilities = {
       'vuln-pkg': {
         severity: 'high',
         via: [
           {
             url: `https://github.com/advisories/${GHSA_A}`,
-            severity: 'high',
-          },
-          {
-            url: `https://github.com/advisories/${GHSA_B}`,
-            severity: 'critical',
+            severity: 'moderate',
           },
         ],
       },
@@ -110,18 +106,14 @@ describe('findBlockingHighProductionVulnerabilities', () => {
     expect(findBlockingHighProductionVulnerabilities(vulnerabilities)).toEqual(['vuln-pkg']);
   });
 
-  it('blocks on a high/critical advisory without a GHSA URL alongside a allowlisted-style GHSA entry', () => {
+  it('blocks a package npm rates high when the advisory object omits severity (b)', () => {
     const vulnerabilities = {
       'vuln-pkg': {
         severity: 'high',
         via: [
           {
-            url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf',
-            severity: 'high',
-          },
-          {
-            severity: 'critical',
-            title: 'second advisory without url',
+            url: `https://github.com/advisories/${GHSA_A}`,
+            title: 'advisory without severity field',
           },
         ],
       },
@@ -129,64 +121,50 @@ describe('findBlockingHighProductionVulnerabilities', () => {
     expect(findBlockingHighProductionVulnerabilities(vulnerabilities)).toEqual(['vuln-pkg']);
   });
 
-  it('still evaluates transitive deps when direct GHSAs exist on the package', () => {
+  it('blocks a package npm rates high when the only via is a moderate dependency (c)', () => {
     const vulnerabilities = {
-      leaf: {
-        severity: 'high',
-        via: [
-          {
-            url: `https://github.com/advisories/${GHSA_A}`,
-            severity: 'high',
-          },
-        ],
+      'moderate-leaf': {
+        severity: 'moderate',
+        via: [{ url: `https://github.com/advisories/${GHSA_A}`, severity: 'moderate' }],
       },
       parent: {
         severity: 'high',
-        via: [
-          {
-            url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf',
-            severity: 'high',
-          },
-          'leaf',
-        ],
-      },
-    };
-    expect(findBlockingHighProductionVulnerabilities(vulnerabilities)).toEqual(['leaf', 'parent']);
-  });
-
-  it('fails when a via string names a dependency missing from the report', () => {
-    const vulnerabilities = {
-      parent: {
-        severity: 'high',
-        via: ['missing-child'],
+        via: ['moderate-leaf'],
       },
     };
     expect(findBlockingHighProductionVulnerabilities(vulnerabilities)).toEqual(['parent']);
   });
 
-  it('fails on unknown non-object via entries on a high package', () => {
+  it('blocks every top-level high/critical package npm includes', () => {
     const vulnerabilities = {
+      leaf: { severity: 'critical', via: [] },
+      parent: { severity: 'high', via: ['leaf'] },
+    };
+    expect(findBlockingHighProductionVulnerabilities(vulnerabilities)).toEqual(['leaf', 'parent']);
+  });
+});
+
+describe('validateProductionAuditVulnerabilities', () => {
+  it('fails when a via string names a dependency missing from the report', () => {
+    const errors = validateProductionAuditVulnerabilities({
+      parent: {
+        severity: 'high',
+        via: ['missing-child'],
+      },
+    });
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toMatch(/missing dependency "missing-child"/);
+  });
+
+  it('fails on unknown non-object via entries on a high package', () => {
+    const errors = validateProductionAuditVulnerabilities({
       broken: {
         severity: 'high',
         via: [null, 42],
       },
-    };
-    expect(findBlockingHighProductionVulnerabilities(vulnerabilities)).toEqual(['broken']);
-  });
-
-  it('blocks a standalone high package with a different GHSA', () => {
-    const vulnerabilities = {
-      'some-package': {
-        severity: 'high',
-        via: [
-          {
-            url: `https://github.com/advisories/${GHSA_B}`,
-            severity: 'high',
-          },
-        ],
-      },
-    };
-    expect(findBlockingHighProductionVulnerabilities(vulnerabilities)).toEqual(['some-package']);
+    });
+    expect(errors).toHaveLength(2);
+    expect(errors[0]).toMatch(/invalid via entry/);
   });
 });
 
@@ -201,6 +179,28 @@ describe('evaluateProductionVulnerabilities', () => {
     expect(result.ok).toBe(false);
     expect(result.errors[0]).toMatch(/high\/critical package\(s\)/);
     expect(result.errors[0]).toContain('bad');
+  });
+
+  it('fails closed on structural errors before severity blocking', () => {
+    const result = evaluateProductionVulnerabilities({
+      parent: {
+        severity: 'high',
+        via: ['missing-child'],
+      },
+    });
+    expect(result.ok).toBe(false);
+    expect(result.errors[0]).toMatch(/missing dependency/);
+  });
+
+  it('blocks npm-rated high packages with moderate direct advisories through the gate (a)', () => {
+    const result = evaluateProductionVulnerabilities({
+      'vuln-pkg': {
+        severity: 'high',
+        via: [{ url: `https://github.com/advisories/${GHSA_A}`, severity: 'moderate' }],
+      },
+    });
+    expect(result.ok).toBe(false);
+    expect(result.errors[0]).toContain('vuln-pkg');
   });
 });
 
