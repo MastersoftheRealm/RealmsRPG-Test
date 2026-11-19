@@ -1,4 +1,4 @@
--- RPC coverage for 86e3juw0a inventory CAS (run after characters-inventory-cas-patch-86e3juw0a.sql).
+-- RPC smoke for inventory CAS (run after helpers migration + canonical expand/write-rpc in same commit).
 BEGIN;
 
 DO $tests$

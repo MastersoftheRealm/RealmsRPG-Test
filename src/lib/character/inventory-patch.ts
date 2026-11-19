@@ -1,5 +1,5 @@
 /**
- * Item-level inventory patch for relational CAS saves (86e3juw0a).
+ * Item-level inventory patch for relational CAS saves.
  * Leaf module — no UI imports.
  */
 

@@ -1480,6 +1480,7 @@ Every path below is a non-test source file. The checker fails if one is missing 
 - `src/lib/character/collect-sheet-traits.ts`
 - `src/lib/character/current-follows-max.ts`
 - `src/lib/character/dirty-patch.ts`
+- `src/lib/character/inventory-patch.ts`
 - `src/lib/character/innate-power-capacity.ts`
 - `src/lib/character/notes-tab-sections.ts`
 - `src/lib/character/power-energy-spend.ts`
@@ -3215,6 +3216,7 @@ No production file imports these names. A test import does not count. The file t
 - `src/app/(main)/creature-creator/creature-creator-remove-section-confirm-placeholder.ts`: `REMOVE_SECTION_CONFIRM_CONFIRM_LABEL`, `REMOVE_SECTION_CONFIRM_DESCRIPTION`
 - `src/app/(main)/creature-creator/map-creature-inventory-rows.ts`: `creatureArmamentToSheetItem`
 - `src/app/(main)/creature-creator/transformers.ts`: `customEquipmentItemToCreatureArmament`
+- `src/lib/character/inventory-patch.ts`: `buildInventoryPatch`, `replaceEquipmentDirtyWithInventoryPatch`
 - `src/lib/encounter/character-resource-sync.ts`: `CharacterResourcePatch` (type)
 - `src/app/(main)/encounters/[id]/_components/combat/use-combat-round-actions.ts`: `encounterStateAfterEnd`, `encounterStateAfterStart`
 - `src/app/(main)/encounters/[id]/_components/encounter-play-page-shell.tsx`: `encounterPlayPageGatePhase`
@@ -3566,6 +3568,7 @@ No production file imports these names. A test import does not count. The file t
 - `src/lib/character/character-relational-save-errors.ts`: `CharacterRelationalSaveLogIds` (type), `CharacterRelationalValidationPayload` (type)
 - `src/lib/character/character-size.ts`: `SpeciesSizeSource` (type)
 - `src/lib/character/collect-sheet-traits.ts`: `CollectSheetTraitsInput` (type), `SheetTraitCategory` (type), `SheetTraitRow` (type), `VanillaTraitFields` (type)
+- `src/lib/character/inventory-patch.ts`: `INVENTORY_PATCH_BUCKETS`, `InventoryPatchBucket` (type), `InventoryPatchOp` (type), `InventoryPatchPayload` (type), `inventoryRowIdentity`
 - `src/lib/character/notes-tab-sections.ts`: `NotesTabSectionDef` (type)
 - `src/lib/character/realtime-merge.ts`: `SheetRealtimeMerge` (type)
 - `src/lib/character/recovery-uses.ts`: `RecoveryUseSource` (type)

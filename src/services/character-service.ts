@@ -99,7 +99,7 @@ export async function saveCharacter(
     updatedAt?: string | Date | null | undefined;
     skipLock?: boolean | undefined;
     enqueue?: boolean | undefined;
-    /** Autosave baseline for item-level inventory CAS (86e3juw0a). Required when dirty includes equipment. */
+    /** Autosave baseline for item-level inventory CAS. Required when dirty includes equipment. */
     inventorySaveBaseline?: Record<string, unknown> | null | undefined;
   } = {},
 ): Promise<{ ok: true; updatedAt?: string | undefined }> {

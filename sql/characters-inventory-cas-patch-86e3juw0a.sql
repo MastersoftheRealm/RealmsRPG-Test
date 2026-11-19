@@ -1,4 +1,4 @@
--- 86e3juw0a — inventory CAS (apply after named backup; agents do not run).
+-- Inventory CAS helpers (apply after named backup; agents do not run).
 --
 -- One logical migration, three files from the **same git commit** (in order):
 --   1. This file (new helper RPCs only)
