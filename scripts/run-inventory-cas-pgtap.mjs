@@ -40,7 +40,7 @@ function psqlSql(dbUrl, sql) {
 }
 
 function pgtap(dbUrl) {
-  const testFile = path.join(root, 'supabase/tests/inventory_cas_test.sql');
+  const testFile = path.join(root, 'sql/tests/inventory_cas_pgtap_test.sql');
   return spawnSync('psql', [dbUrl, '-v', 'ON_ERROR_STOP=1', '-f', testFile], {
     cwd: root,
     encoding: 'utf8',
