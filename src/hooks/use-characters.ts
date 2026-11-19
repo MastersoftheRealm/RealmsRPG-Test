@@ -76,7 +76,7 @@ export function mergeCharacterSaveResultIntoDetailQuery(
     };
   },
 ): GetCharacterResult | undefined {
-  let merged = mergeCharacterDetailQueryData(prev, {
+  const merged = mergeCharacterDetailQueryData(prev, {
     ...result.applied,
     ...(result.updatedAt ? { updatedAt: result.updatedAt } : {}),
   });
