@@ -30,12 +30,13 @@ Stack: Next.js App Router, React, Tailwind, Supabase (no Prisma), Vercel. Repo `
    - **Done when**, **out of scope**, and **risk by path** (see [Risk by path](#risk-by-path)).
    - **Questions for Kadin** (what) and **for Collin** (how), if any.
 4. **Sign-off before Phase 2** is required when any of these apply: a high-risk path, a game value or rule, a product question, a new shared module/component/store/API contract, a PATCH, or more than 10 files / 300 changed lines. Kadin signs off the what; Collin signs off the how. Otherwise the survey goes into the PR body and the reviewer checks it.
+5. **High-risk plan before code.** When the task touches `sql/`, schema, RPCs, auth (`src/proxy.ts`, `src/lib/supabase/`, `src/app/(auth)/`, mutation guards/validation), `scripts/`, or `.github/`, post a short **design brief** on the task or draft PR: done-when, out of scope, data model, rollout sketch. An **independent** critic runs `/audit` as a **plan pass** and records **APPROVE** before Phase 2 starts. The implementation `/audit` is a separate pass on the diff.
 
 ### Phase 2 — Build
 
 1. One task, one branch, one PR. Branch from current `origin/master`; include the ClickUp id in the branch name (a platform prefix such as `cursor/` is fine). Never push `master`. Put the same task id and link in the PR **ClickUp** section (`.github/PULL_REQUEST_TEMPLATE.md`).
 2. When coding starts, move the linked ClickUp task to **in progress** and add the one-line start comment (see [ClickUp](#clickup)). Use the ClickUp MCP when it is connected; otherwise `CLICKUP_API_TOKEN` in `.env.local` (API v2). Never print the token.
-3. Write a test that **fails before** the fix and **passes after**, from the repro, when feasible. Run it locally; CI runs the rest.
+3. Write a test that **fails before** the fix and **passes after**, from the repro, when feasible. The failure must be the **behavioral** bug (wrong save, dropped write, wrong value), not a missing symbol or unapplied migration. Database tests run against the **canonical** `sql/` (or migration) files the PR ships, not a hand-copied DDL in the test. Collection or ordered-list writes also need coverage for **add, edit, remove, reorder**, and at least one **mixed** scenario when feasible (or say why not in the PR). Run it locally; CI runs the rest.
 4. Make the smallest change that removes the root cause. Extend existing code; do not add a parallel helper. Delete what you replace.
 5. Update or delete any doc text your change makes stale, in the same PR.
 6. Fill in `.github/PULL_REQUEST_TEMPLATE.md` completely. Open the PR as a draft so CI starts; comment on the ClickUp task with the PR link.
@@ -58,11 +59,13 @@ Commands carry this loop more reliably than prose alone. Default PR path:
 
 Additional rules:
 
-1. Default critic model routing and the owner override for a full `/audit` are in `.cursor/commands/audit.md`; this file does not restate them.
-2. The critic **runs** the repro test and checks CI; reading the diff alone is not enough.
-3. Only correctness, security, data-safety and checklist failures block. A checklist miss is not a note: if the review names a stale doc line, a missing test, a swallowed error, or any other checklist miss, that item fails and the verdict cannot be APPROVE. Anything that is not a checklist item is a note; it becomes a ClickUp task only if Kadin or Collin chooses.
-4. **PATCH veto.** If the reviewer judges the change a PATCH (whatever the writer labelled it), it does not merge unless Kadin explicitly accepts it as a patch in his own comment on the PR ("I accept this as a PATCH because …"). An agent relaying his acceptance does not count.
-5. Rules-math or rules-value PRs also go to the Rules Balance Analyst for a ruling check before Kadin signs off.
+1. **Independent critic.** `/audit` runs in a **separate session or agent** that did not write the diff and did not rely on the writer's survey or PR reasoning as evidence. Default critic model routing is in `.cursor/commands/audit.md`. A **same-session** `/audit` (writer or continuation of the writer chat) is notes at most; it **never** counts as approval for merge.
+2. **Audit record on the PR.** Each critic **APPROVE** lists critic identity (agent/model), round (plan vs implementation when both apply), and the exact **head commit SHA**. **APPROVE** is valid only for that SHA; any new commit needs a fresh `/audit` before **in review** or merge.
+3. The critic **runs** the repro test and checks CI; reading the diff alone is not enough. The critic explicitly confirms the repro fails for the **behavioral** reason and that SQL tests use **canonical** `sql/` files, not copies.
+4. **Rollout matrix** (database or API contract changes): the PR lists every intermediate state (old app + new DB, new app + old DB, stale open tabs). Each state must save correctly or **fail loudly** (user-visible error). Reporting success while a write is dropped is never allowed. Include rollback SQL or revert steps.
+5. Only correctness, security, data-safety and checklist failures block. A checklist miss is not a note: if the review names a stale doc line, a missing test, a swallowed error, or any other checklist miss, that item fails and the verdict cannot be APPROVE. Anything that is not a checklist item is a note; it becomes a ClickUp task only if Kadin or Collin chooses.
+6. **PATCH veto.** If the reviewer judges the change a PATCH (whatever the writer labelled it), it does not merge unless Kadin explicitly accepts it as a patch in his own comment on the PR ("I accept this as a PATCH because …"). An agent relaying his acceptance does not count.
+7. Rules-math or rules-value PRs also go to the Rules Balance Analyst for a ruling check before Kadin signs off.
 
 ### Fallback when Collin is unavailable
 
@@ -118,7 +121,7 @@ There are no public players. A change that breaks play for alpha testers on the 
 | Auth, session, CSRF, roles | `src/proxy.ts`, `src/lib/supabase/`, `src/app/(auth)/`, `src/lib/api-mutation-guard.ts`, `src/lib/api-validation.ts` |
 | Game rules and legality | `src/lib/game/`, `src/lib/calculators/`, `data/core-rules/`, `src/app/(main)/admin/core-rules/` |
 | Admin tools that write or delete data | `src/app/(main)/admin/`, `src/app/api/admin/` |
-| CI, tooling, settings | `.github/`, `scripts/`, `.husky/`, `package.json`, `next.config.ts`, `vercel.json` |
+| CI, tooling, settings | `.github/`, `scripts/`, `.husky/`, `package.json`, `next.config.ts`, `vercel.json` — pin action and tool versions (never `latest`); do not weaken checks (ratchet bumps, ignored paths, dropped jobs) without justification in **Risk by path** and the approvals that path needs |
 | Secrets, env, deploy | `.env.example`, deploy docs, Vercel settings |
 | Anything sent outside the team | email, messages, posts, billing |
 
@@ -136,7 +139,8 @@ The paths a PR touches decide its risk. A checkbox does not.
 
 - The done-when is met, or the gap is stated on the task.
 - The result is labelled REAL FIX or PATCH, honestly.
-- A test that failed before passes after (or the PR says why that was not feasible).
+- A test that failed before passes after for the **behavioral** bug (or the PR says why that was not feasible).
+- Independent critic **APPROVE** on the PR **Audit record** matches the final head SHA; high-risk work had plan-pass **APPROVE** before code when required.
 - Nothing new duplicates existing code; replaced code is deleted.
 - Stale docs are updated in the same PR.
 - CI is green. User-facing work has QA steps on the ClickUp task.
@@ -167,4 +171,4 @@ One fact, one place. Other docs link; they do not restate.
 
 ## Models
 
-Never use a slug ending in `-fast`. Writer: `composer-2.5`, one system, scope tight enough to survey. Critic (`/audit`): the other of `grok-4.7-high` and `composer-2.5` — never the writer, never `-fast` (`.cursor/commands/audit.md`). If the task crosses systems, stop and split it. If High misses inside that same scope, use `grok-4.7-xhigh` or a larger context on the same model, and note it on the task. Do not start Claude or GPT. Do not redo the same bug on the same model.
+Never use a slug ending in `-fast`. Writer: `composer-2.5`, one system, scope tight enough to survey. Critic (`/audit`): the other of `grok-4.7-high` and `composer-2.5` — never the writer, never `-fast`, and always a **separate session or agent** from the writer (`.cursor/commands/audit.md`). If the task crosses systems, stop and split it. If High misses inside that same scope, use `grok-4.7-xhigh` or a larger context on the same model, and note it on the task. Do not start Claude or GPT. Do not redo the same bug on the same model.

@@ -4,18 +4,20 @@ Read-only adversarial review. Zero product edits from the audit chat itself. Do 
 
 This command **is** the critic gate: rules compliance **and** a brutal review. It replaced the retired four-point `/audit` (Oct 28, 2026) and is **deeper** than the old “separate critic only” pass (five questions + constitution items 1–15 + repro test). Checklist and verdict wording live in `src/docs/ai/ARCHITECTURE_CONSTITUTION.md`. Workflow, risk, and the PATCH veto live in `AGENTS.md`. Do not restate them.
 
-## Model (default vs owner override)
+## Independence and model (required)
 
-**Default:** a **different agent and a different prompt** from the writer. Never a slug ending in `-fast`. Never the agent that wrote the diff.
+**Session:** `/audit` runs in a **separate Cursor session or cloud agent** from the writer. The critic must not have written commits on the PR branch in that session. Same-session `/audit` (writer or continuation of the writer chat) may produce **REQUEST CHANGES** or notes only; it **never** records **APPROVE** for merge.
+
+**Model:** a **different agent and a different prompt** from the writer. Never a slug ending in `-fast`. Never the agent that wrote the diff.
 
 | Writer | Critic |
 |---|---|
 | `composer-2.5` | `grok-4.7-high` |
 | `grok-4.7-high` or `grok-4.7-xhigh` | `composer-2.5` |
 
-If you are the writer, **default** is to stop and hand this command to the other model. Do not start Claude or GPT.
+If you are the writer, stop and hand this command to the other model in a **new** session. Do not start Claude or GPT.
 
-**Owner override (Kadin, Nov 12, 2026):** A **full** `/audit` on the PR — five questions answered with evidence, checklist 1–15 graded, repro test **run** (not only CI), verdict recorded — **satisfies the separate critic session** for that PR when Kadin says so on the task or PR. He accepts the weaker independence (same session/model) in exchange for the deeper bar. `DECISIONS.md` changelog references this rule. Fallback senior review (`AGENTS.md`) still uses two passes when that path is invoked; this override does not replace those two passes.
+**Head SHA:** Record the full PR **head commit SHA** in the verdict. **APPROVE** applies only to that SHA; after any new commit, a fresh independent `/audit` is required. The PR **Audit record** section must list each APPROVE with critic, round, and SHA (`AGENTS.md`, Review).
 
 ## What you may read
 
@@ -41,7 +43,8 @@ Answer each. A fail needs `file:line`. These five are the critic’s questions (
 4. **Same practice as the rest of the codebase.** Open the neighboring code, the barrels, and `src/lib/`. Fail a private copy of a helper that is already there. Do not pass or fail this question from a `FEATURE_INDEX.md` sentence.
 5. **The rest of the bar.** Grade constitution items 1–15 in `src/docs/ai/ARCHITECTURE_CONSTITUTION.md` (pass / fail / n/a, `file:line` on every fail). The five questions above do not cover all of that. Do not skip:
    - Security on the server (auth, RLS, validation), not only in the UI.
-   - A test that fails before the fix and passes after, which you run. Green CI is not that test.
+   - A test that fails before the fix and passes after, which you run. Green CI is not that test. The failure must be **behavioral** (the bug), not a missing symbol or unapplied migration. Database tests must target **canonical** `sql/` (or migration) files, not hand-copied DDL in the test file.
+   - Rollout matrix on DB/API contract PRs (`AGENTS.md`, Review). Collection/list write changes: add, edit, remove, reorder, mixed — covered or PR explains why not.
    - No invented game number or formula. A missing written rule is a HOLD for the Rules Balance Analyst, not a guess.
    - Database safety and high-risk paths in `AGENTS.md` (Risk by path) have the approval that path requires. SQL in the PR is not applied SQL.
    - Errors from writes are not swallowed.
@@ -76,9 +79,9 @@ Use the reviewer verdict block in `ARCHITECTURE_CONSTITUTION.md` (APPROVE, REQUE
 
 Before the checklist lines, answer the five questions in one line each (pass or fail, with `file:line` on a fail).
 
-- **APPROVE** when every checklist item is pass or n/a (a named stale doc line means item 11 is not pass), the repro was run, CI is green, the label is not an unaccepted PATCH, and either (a) you are not the writer, or (b) Kadin recorded on the task or PR that this full `/audit` satisfies separate critic for this PR.
+- **APPROVE** when every checklist item is pass or n/a (a named stale doc line means item 11 is not pass), the repro was run, CI is green, the label is not an unaccepted PATCH, you are **not** the writer and **not** in the writer's session, and **Head SHA** matches the PR head at verdict time.
 - **REQUEST CHANGES** lists required changes the writer must fix (including **trim bloat** when Q2 fails). **`/remediate`** applies those items, then another `/audit` runs. Round 3+ with remaining blockers needs the **For Kadin** escalation block above.
-- **HOLD FOR HUMAN** when the path is high-risk, a rule is missing or conflicting, a product decision is open, you are the writer without the owner override, or your label is PATCH.
+- **HOLD FOR HUMAN** when the path is high-risk, a rule is missing or conflicting, a product decision is open, you are the writer or in the writer's session, **Head SHA** is stale, high-risk work lacked an approved plan pass, or your label is PATCH.
 
 ## Do not
 

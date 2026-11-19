@@ -11,7 +11,7 @@ ClickUp is the only queue. In prose say Bob (`95261690`; legally James Owenby �
 2. **Start (Phase 2):** **to do → in progress**. One comment: agent, time (America/New_York), model, one line. Stop with no PR → back to **to do** with reason. Nothing stays **in progress** after the agent stops.
 3. Branch from current `origin/master`; include the ClickUp id in the branch and in the PR **ClickUp** section (`cursor/` prefix is fine).
 4. Open the draft PR when the fix is ready so CI starts. Comment the PR link on the task.
-5. `/audit` (critic, different agent than the writer) per `.cursor/commands/audit.md` and `src/docs/ai/ARCHITECTURE_CONSTITUTION.md`. The critic does **not** move ClickUp status during the audit turn.
+5. `/audit` (critic: different agent **and separate session** from the writer) per `.cursor/commands/audit.md` and `src/docs/ai/ARCHITECTURE_CONSTITUTION.md`. High-risk paths need an approved **plan pass** before Phase 2 (`AGENTS.md`). The critic does **not** move ClickUp status during the audit turn. Record each APPROVE on the PR with critic, round, and head SHA.
 6. `/remediate` only when the audit verdict is **REQUEST CHANGES** (`.cursor/commands/remediate.md`).
 7. Writer (or merge bot) after **APPROVE** + green CI → **in review** for human merge when required.
 8. Merge per `AGENTS.md` (**Merge**). Coding agents do not merge. After merge → **testing** with QA steps when user-facing work needs human QA.

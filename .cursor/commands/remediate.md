@@ -42,8 +42,8 @@ If a required change is not fixable without a product or rule decision, **stop**
 1. Copy each **Required change** from the audit verdict into your working list.
 2. Trace each item in code; fix at root cause. Honest **REAL FIX** vs **PATCH** per item.
 3. Re-run the repro test the audit named. If none, run the task’s repro or the tests that cover the changed paths.
-4. Commit on the task branch; push when fixes are tested (one push per remediate turn is enough).
-5. **Stop.** Do not merge. Do not run `/audit` in the same turn unless the owner explicitly combines them (default: separate turn, separate mindset).
+4. Commit on the task branch; push when fixes are tested (one push per remediate turn is enough). A new head SHA invalidates any prior critic **APPROVE**; the next `/audit` must be an independent session (`AGENTS.md`, Review).
+5. **Stop.** Do not merge. Do not run `/audit` in the same turn unless the owner explicitly combines them (default: separate turn, separate session and mindset).
 
 ## Persona
 

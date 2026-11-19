@@ -17,12 +17,12 @@ Each item says what to search and what a failure looks like. The reviewer report
 2. **No forks or duplicates.** Search the barrels and `src/lib/` and open the file. `FEATURE_INDEX.md` may only supply a path; a sentence there is not proof. Fail: a new parallel helper, duplicated math, "copied from X" logic, or copying from a `DEFERRED.md` area.
 3. **Security is on the server.** For every UI gate, find the server or RLS check. Fail: a permission enforced only in the UI; a route without auth; service-role use from a user path; a route reading query, params or JSON without `validateQuery` / `validateRouteParams` / `validateJson` (`@/lib/api-validation`).
 4. **One role model.** Search for the existing role and permission helpers. Fail: an ad-hoc `role === ...` check or a new role list.
-5. **Tests prove behavior.** Fail: a bug fix without a test that fails before and passes after (unless the PR says why that was not feasible); a test that pins a known bug with no ruling or ticket cited; a test that reads source files as text.
-6. **Known bugs stay visible.** Fail: skipping or weakening a test, broadening an assertion, catching and ignoring, or adding a fallback so CI goes green while the bug remains. A visible, ticketed failing test is acceptable.
+5. **Tests prove behavior.** Fail: a bug fix without a test that fails before and passes after (unless the PR says why that was not feasible); a test that pins a known bug with no ruling or ticket cited; a test that reads source files as text; a repro that fails only because a symbol or migration is missing (not the bug behavior); a database test that uses hand-copied SQL instead of the **canonical** `sql/` (or migration) file the PR ships; a collection or ordered-list write change without tests for add, edit, remove, reorder, and at least one mixed scenario (unless the PR says why not).
+6. **Known bugs stay visible.** Fail: skipping or weakening a test, broadening an assertion, catching and ignoring, or adding a fallback so CI goes green while the bug remains. A visible, ticketed failing test is acceptable. Fail: unpinned `latest` (or floating) CI tool versions in `.github/`; ratchet/baseline bumps or ignored paths to get green without justification in PR **Risk by path**.
 7. **Errors are not swallowed.** Every `catch` around a write surfaces or rethrows. Fail: an empty catch, `console.log` only, or a silent default. Client: `apiFetch` throws; check Supabase `{ error }`.
 8. **Comments are not narration.** Fail: new task-id comments, "keep in sync", "TODO remove later", or comments claiming more than the code does. Delete dead code; do not comment it out.
 9. **Legality is advisory.** Fail: hard-blocking "illegal" or homebrew characters. Expected: warnings, visible overrides, temporary modifiers. A missing written rule is a hold, not a guess.
-10. **Database safety.** Fail: any production write, migration, seed or reset without the approvals in `AGENTS.md`; SQL with `DROP`, force-delete or "verify" writes; a new `public` table without RLS, policies and GRANT in the same file.
+10. **Database safety.** Fail: any production write, migration, seed or reset without the approvals in `AGENTS.md`; SQL with `DROP`, force-delete or "verify" writes; a new `public` table without RLS, policies and GRANT in the same file; a schema, RPC, or API contract change without the **rollout matrix** in `AGENTS.md` (Review); any listed rollout state that can report success while dropping a write.
 11. **Docs are current.** Compare doc sentences to the code this PR changes. Fail: a line that still describes the old behavior, including `FEATURE_INDEX.md`. Naming that line and then marking pass, or calling it a note, is still a fail. Also fail a doc that claims "done/fixed" when the PR does not prove it.
 12. **Scope.** One task. Fail: unrelated edits, or reverting a fix already on `master`.
 13. **Honest label.** Fail: the PR says REAL FIX but the root cause is still there, or the survey findings in the PR body are missing.
@@ -53,18 +53,22 @@ Route Handlers return `{ error: string }` on failure (4xx/5xx). Log raw Supabase
 
 ```
 ## PR Reviewer verdict: APPROVE | REQUEST CHANGES | HOLD FOR HUMAN
-Round: 1 | 2 | 3+ (3+ must include For Kadin escalation if still blocking)
+Round: 1 | 2 | 3+ | plan | implementation (3+ must include For Kadin escalation if still blocking)
+Critic: <agent/model — separate session from writer>
+Head SHA: <full commit sha this verdict covers>
 Risk: standard | high (paths)
 Label check: REAL FIX | PATCH — agrees with the writer? (why)
-Repro test: ran <command> — failed before / passes after
+Repro test: ran <command> — failed before / passes after — behavioral cause confirmed? (not missing symbol)
+SQL tests: canonical `sql/` files? (not hand-copied DDL in test)
+Rollout matrix: present and each state save-or-fail-loudly? (n/a if no DB/API contract change)
 Checklist: items 1–15 pass/fail/n.a., one line each, file:line for each fail
 Required changes: (REQUEST CHANGES only)
 Question for human: (HOLD only, one clear decision, addressed to Kadin for what or Collin for how)
 ```
 
-- **APPROVE:** standard risk, all items pass, CI green, repro test run.
+- **APPROVE:** standard risk, all items pass, CI green, repro test run, critic independent of writer, **Head SHA** matches PR head at verdict time.
 - **REQUEST CHANGES:** a checklist fail the writer can fix. Round count and the round-3 warning are in `AGENTS.md` (Review) and `audit.md`.
-- **HOLD FOR HUMAN:** high risk, a missing or conflicting rule, a product decision, or you are not independent of the writer.
+- **HOLD FOR HUMAN:** high risk, a missing or conflicting rule, a product decision, you are not independent of the writer (including same-session `/audit`), or **Head SHA** no longer matches PR head.
 - **PATCH veto:** if your label check says PATCH, the verdict cannot be APPROVE. Use HOLD FOR HUMAN; it merges only if Kadin accepts it as a patch in his own PR comment (`AGENTS.md`, Review).
 
 **Fallback senior review** (`AGENTS.md`, Fallback when Collin is unavailable): same format, headed `## Senior fallback review: plan | implementation`. Add `Own root-cause trace:` (written before reading the diff), `Assumptions challenged:`, and `Over-engineered / over-simplified:`. Do not read the writer's PR description or reasoning.
