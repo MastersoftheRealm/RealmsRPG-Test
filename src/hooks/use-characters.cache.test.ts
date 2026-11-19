@@ -61,15 +61,14 @@ describe('mergeCharacterDetailQueryData', () => {
 
 describe('mergeCharacterSaveResultIntoDetailQuery (library gear add)', () => {
   it('keeps equipment from applied dirty and stamps new inventoryRowId from save result', () => {
-    const cached: Character = {
-      id: 'c1',
-      name: 'Hero',
+    const cached = {
+      ...hero,
       equipment: {
         weapons: [{ id: 'w1', name: 'Sword', type: 'weapon', properties: [] }],
         armor: null,
         shields: [],
       },
-    } as Character;
+    } satisfies Character;
     const applied = {
       equipment: {
         weapons: [
