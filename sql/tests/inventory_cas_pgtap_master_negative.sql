@@ -15,13 +15,13 @@ BEGIN
 END;
 $fn$;
 
-INSERT INTO public.characters (id, user_id, name, updated_at) VALUES ('pgtap-char', 'pgtap-owner', 'Before', now() AT TIME ZONE 'UTC');
+INSERT INTO public.characters (id, user_id, name, updated_at) VALUES ('pgtap-char', '10000000-0000-4000-8000-000000000099', 'Before', now() AT TIME ZONE 'UTC');
 
 SELECT results_eq(
   $q$
     SELECT (pgtap_patch_as_owner(
       'pgtap-char',
-      'pgtap-owner',
+      '10000000-0000-4000-8000-000000000099',
       jsonb_build_object(
         'name', 'Renamed',
         'equipment', jsonb_build_object('items', jsonb_build_array(jsonb_build_object('id','rope','name','Rope','quantity',2)))

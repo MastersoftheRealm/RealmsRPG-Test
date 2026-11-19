@@ -20,7 +20,7 @@ BEGIN
 END;
 $fn$;
 
-INSERT INTO public.characters (id, user_id, updated_at) VALUES ('pgtap-char', 'pgtap-owner', now() AT TIME ZONE 'UTC');
+INSERT INTO public.characters (id, user_id, updated_at) VALUES ('pgtap-char', '10000000-0000-4000-8000-000000000099', now() AT TIME ZONE 'UTC');
 
 INSERT INTO public.character_inventory (
   character_id, inventory_row_id, category, position, source_kind, source_id, name_snapshot, quantity, equipped
@@ -31,7 +31,7 @@ INSERT INTO public.character_inventory (
 SELECT throws_ok(
   $q$
     SELECT public.apply_character_inventory_patch(
-      'pgtap-char', 'pgtap-owner',
+      'pgtap-char', '10000000-0000-4000-8000-000000000099',
       jsonb_build_object('ops', jsonb_build_array(
         jsonb_build_object(
           'op', 'update', 'bucket', 'items', 'inventoryRowId', '10000000-0000-4000-8000-000000000001',
@@ -57,7 +57,7 @@ SELECT results_eq(
 SELECT lives_ok(
   $q$
     SELECT public.apply_character_inventory_patch(
-      'pgtap-char', 'pgtap-owner',
+      'pgtap-char', '10000000-0000-4000-8000-000000000099',
       jsonb_build_object('ops', jsonb_build_array(
         jsonb_build_object('op', 'add', 'bucket', 'items', 'position', 3,
           'inventoryRowId', '30000000-0000-4000-8000-000000000003',
@@ -75,7 +75,7 @@ SELECT results_eq(
 SELECT lives_ok(
   $q$
     SELECT public.apply_character_inventory_patch(
-      'pgtap-char', 'pgtap-owner',
+      'pgtap-char', '10000000-0000-4000-8000-000000000099',
       jsonb_build_object('ops', jsonb_build_array(
         jsonb_build_object(
           'op', 'update', 'bucket', 'items', 'inventoryRowId', '30000000-0000-4000-8000-000000000003',
@@ -95,7 +95,7 @@ SELECT results_eq(
 SELECT lives_ok(
   $q$
     SELECT public.apply_character_inventory_patch(
-      'pgtap-char', 'pgtap-owner',
+      'pgtap-char', '10000000-0000-4000-8000-000000000099',
       jsonb_build_object('ops', jsonb_build_array(
         jsonb_build_object(
           'op', 'reorder', 'bucket', 'items', 'inventoryRowId', '20000000-0000-4000-8000-000000000002',
@@ -111,7 +111,7 @@ SELECT results_eq(
   $q$
     SELECT (pgtap_patch_as_owner(
       'pgtap-char',
-      'pgtap-owner',
+      '10000000-0000-4000-8000-000000000099',
       jsonb_build_object(
         'name', 'Renamed For Test',
         'equipment', jsonb_build_object('items', '[]'::jsonb)
@@ -133,7 +133,7 @@ SELECT results_eq(
 SELECT lives_ok(
   $q$
     SELECT public.apply_character_inventory_patch(
-      'pgtap-char', 'pgtap-owner',
+      'pgtap-char', '10000000-0000-4000-8000-000000000099',
       jsonb_build_object('ops', jsonb_build_array(
         jsonb_build_object(
           'op', 'remove', 'bucket', 'items', 'inventoryRowId', '30000000-0000-4000-8000-000000000003',
