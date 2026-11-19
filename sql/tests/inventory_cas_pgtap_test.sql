@@ -99,11 +99,14 @@ SELECT lives_ok(
       jsonb_build_object('ops', jsonb_build_array(
         jsonb_build_object(
           'op', 'reorder', 'bucket', 'items', 'inventoryRowId', '20000000-0000-4000-8000-000000000002',
-          'expected', public.inventory_row_cas_snapshot(r), 'position', 1
+          'expected', jsonb_build_object(
+            'quantity', 1, 'equipped', false, 'name', 'Energy Potion',
+            'type', '', 'description', '', 'cost', null
+          ),
+          'position', 1
         )
       ))
-      FROM public.character_inventory r
-      WHERE inventory_row_id = '20000000-0000-4000-8000-000000000002'::uuid;
+    );
   $q$, 'reorder without PK violation'
 );
 
@@ -137,11 +140,13 @@ SELECT lives_ok(
       jsonb_build_object('ops', jsonb_build_array(
         jsonb_build_object(
           'op', 'remove', 'bucket', 'items', 'inventoryRowId', '30000000-0000-4000-8000-000000000003',
-          'expected', public.inventory_row_cas_snapshot(r)
+          'expected', jsonb_build_object(
+            'quantity', 1, 'equipped', false, 'name', 'Grapple Rope',
+            'type', '', 'description', '', 'cost', null
+          )
         )
       ))
-      FROM public.character_inventory r
-      WHERE inventory_row_id = '30000000-0000-4000-8000-000000000003'::uuid;
+    );
   $q$, 'remove row'
 );
 

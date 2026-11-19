@@ -126,10 +126,6 @@ function rowsEqual(a: Record<string, unknown>, b: Record<string, unknown>): bool
   );
 }
 
-function findRowIndex(rows: Record<string, unknown>[], inventoryRowId: string): number {
-  return rows.findIndex((row) => readInventoryRowId(row) === inventoryRowId);
-}
-
 function orderRowIds(rows: Record<string, unknown>[]): string[] {
   return rows
     .map((row) => readInventoryRowId(row) ?? (row as { _provisionalRowId?: string })._provisionalRowId)
