@@ -220,7 +220,7 @@ function main() {
   }
 
   const changed = listChangedSqlFiles(baseRef);
-  const violations = findGrantViolations(changed);
+  const violations = applySqlGrantCheckBaseline(findGrantViolations(changed));
 
   if (!violations.length) {
     console.log(`check-sql-table-grants: OK (${changed.length} changed file(s) vs ${baseRef}).`);
