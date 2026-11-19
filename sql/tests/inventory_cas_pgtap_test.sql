@@ -1,6 +1,6 @@
 BEGIN;
 
-SELECT plan(15);
+SELECT plan(16);
 
 SELECT has_function('public', 'apply_character_inventory_patch', ARRAY['text','text','jsonb']);
 SELECT has_function('public', 'patch_character_relational', ARRAY['text','jsonb','text']);
