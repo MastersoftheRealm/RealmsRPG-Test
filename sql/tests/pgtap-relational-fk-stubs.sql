@@ -16,3 +16,17 @@ CREATE TABLE IF NOT EXISTS public.user_items (id text PRIMARY KEY);
 CREATE TABLE IF NOT EXISTS public.codex_equipment (id text PRIMARY KEY);
 CREATE TABLE IF NOT EXISTS public.codex_parts (id text PRIMARY KEY);
 CREATE TABLE IF NOT EXISTS public.codex_properties (id text PRIMARY KEY);
+
+CREATE TABLE IF NOT EXISTS public.campaigns (
+  id text PRIMARY KEY,
+  owner_id text NOT NULL,
+  name text NOT NULL DEFAULT 'pgtap',
+  invite_code text NOT NULL DEFAULT 'pgtap',
+  characters jsonb NOT NULL DEFAULT '[]'::jsonb
+);
+
+CREATE TABLE IF NOT EXISTS public.campaign_members (
+  campaign_id text NOT NULL REFERENCES public.campaigns(id),
+  user_id text NOT NULL,
+  PRIMARY KEY (campaign_id, user_id)
+);
