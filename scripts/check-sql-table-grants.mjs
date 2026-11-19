@@ -84,7 +84,11 @@ export function findViolationsInSqlTree(root = repoRoot) {
     const rel = `sql/${name}`;
     if (isIgnoredSqlGrantCheckPath(rel)) continue;
     const sql = fs.readFileSync(path.join(sqlDir, name), 'utf8');
-    for (const issue of findSqlFileViolations(sql, { relPath: rel })) {
+    // Private-function EXECUTE grants: changed-file gate only (baseline cannot grow on PR).
+    for (const issue of findSqlFileViolations(sql, {
+      relPath: rel,
+      enforcePrivateFunctionGrants: false,
+    })) {
       violations.push({
         file: rel,
         reason: issue.reason,

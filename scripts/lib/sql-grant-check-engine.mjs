@@ -1864,6 +1864,73 @@ function findClientRoleGrantViolations(code) {
   return finalizeSqlGrantViolations(out);
 }
 
+/**
+ * Fail when a public function defined in-file is not client-exposed (no GRANT EXECUTE
+ * to anon/authenticated) but EXECUTE was not revoked from anon — Supabase defaults
+ * grant anon EXECUTE on new functions.
+ *
+ * @param {string} sql
+ * @returns {SqlGrantCheckViolation[]}
+ */
+export function findPrivateFunctionExecuteGrantViolations(sql) {
+  const code = sqlCodeWithoutCommentsAndLiterals(sql);
+
+  /** @type {Set<string>} */
+  const definedPublicFns = new Set();
+  const createRe = /\bcreate\s+or\s+replace\s+function\s+(public\.\w+)\s*\(/gi;
+  let match;
+  while ((match = createRe.exec(code))) {
+    definedPublicFns.add(match[1].toLowerCase());
+  }
+  if (!definedPublicFns.size) return [];
+
+  /** @type {Map<string, Set<string>>} */
+  const revokedRolesByFn = new Map();
+  const revokeRe = /\brevoke\s+all\s+on\s+function\s+([\s\S]*?)\s+from\s+([^;]+)/gi;
+  while ((match = revokeRe.exec(code))) {
+    const sig = match[1].replace(/\s+/g, ' ').trim().toLowerCase();
+    const nameMatch = sig.match(/^(public\.\w+)/);
+    if (!nameMatch) continue;
+    const name = nameMatch[1];
+    const roles = parseGrantRoleSet(match[2]);
+    if (!revokedRolesByFn.has(name)) revokedRolesByFn.set(name, new Set());
+    const bucket = revokedRolesByFn.get(name);
+    for (const role of roles) bucket.add(role);
+    if (roles.has('public')) bucket.add('public');
+  }
+
+  /** @type {Map<string, Set<string>>} */
+  const grantedExecuteRolesByFn = new Map();
+  const grantRe = /\bgrant\s+execute\s+on\s+function\s+([\s\S]*?)\s+to\s+([^;]+)/gi;
+  while ((match = grantRe.exec(code))) {
+    const sig = match[1].replace(/\s+/g, ' ').trim().toLowerCase();
+    const nameMatch = sig.match(/^(public\.\w+)/);
+    if (!nameMatch) continue;
+    const name = nameMatch[1];
+    const roles = parseGrantRoleSet(match[2]);
+    if (!grantedExecuteRolesByFn.has(name)) grantedExecuteRolesByFn.set(name, new Set());
+    for (const role of roles) grantedExecuteRolesByFn.get(name).add(role);
+  }
+
+  /** @type {SqlGrantCheckViolation[]} */
+  const out = [];
+  for (const name of definedPublicFns) {
+    const granted = grantedExecuteRolesByFn.get(name) ?? new Set();
+    if (granted.has('authenticated') || granted.has('anon')) continue;
+
+    const revoked = revokedRolesByFn.get(name) ?? new Set();
+    if (!revoked.has('anon')) {
+      out.push({
+        reason: `${name}: private function must REVOKE EXECUTE from anon (Supabase default privileges)`,
+        statement: normalizeSqlStatement(
+          revoked.size ? `revoke all on function ${name}` : `create or replace function ${name}`,
+        ),
+      });
+    }
+  }
+  return finalizeSqlGrantViolations(out);
+}
+
 export function buildEffectiveSanitizedCode(sql) {
   const rawDoBodies = extractRawTopLevelDoBodies(sql);
   const rawFunctionBodies = extractRawFunctionBodies(sql);
@@ -1916,7 +1983,7 @@ export function buildEffectiveSanitizedCode(sql) {
  * @param {{ relPath?: string }} [options]
  */
 export function findSqlFileViolations(sql, options = {}) {
-  void options;
+  const enforcePrivateFunctionGrants = options.enforcePrivateFunctionGrants !== false;
   const {
     code,
     violations: pre,
@@ -1993,6 +2060,9 @@ export function findSqlFileViolations(sql, options = {}) {
   }
 
   violations.push(...findClientRoleGrantViolations(code));
+  if (enforcePrivateFunctionGrants) {
+    violations.push(...findPrivateFunctionExecuteGrantViolations(sql));
+  }
 
   for (const { schema, name } of collectReferencedTables(code)) {
     const key = `${schema}.${name}`;
