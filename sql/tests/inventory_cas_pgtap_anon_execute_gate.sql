@@ -22,12 +22,12 @@ SELECT ok(
 FROM pgtap_anon_execute_allowlist a;
 
 SELECT ok(
-  has_function_privilege('anon', a.regprocedure::regprocedure, 'EXECUTE'),
+  has_function_privilege('anon', to_regprocedure(a.regprocedure), 'EXECUTE'),
   format('allowlist entry is anon-executable: %s', a.regprocedure)
 )
 FROM pgtap_anon_execute_allowlist a;
 
-SELECT bag_eq(
+SELECT is(
   (
     SELECT coalesce(
       array_agg(p.oid::regprocedure::text ORDER BY p.oid::regprocedure::text),
@@ -38,11 +38,18 @@ SELECT bag_eq(
     WHERE n.nspname = 'public'
       AND p.prorettype <> 'pg_catalog.trigger'::regtype
       AND p.prokind IN ('f', 'p')
+      AND NOT EXISTS (
+        SELECT 1
+        FROM pg_depend dep
+        WHERE dep.classid = 'pg_proc'::regclass
+          AND dep.objid = p.oid
+          AND dep.deptype = 'e'
+      )
       AND has_function_privilege('anon', p.oid, 'EXECUTE')
       AND NOT EXISTS (
         SELECT 1
         FROM pgtap_anon_execute_allowlist a
-        WHERE a.regprocedure = p.oid::regprocedure::text
+        WHERE p.oid = to_regprocedure(a.regprocedure)
       )
   ),
   ARRAY[]::text[],
