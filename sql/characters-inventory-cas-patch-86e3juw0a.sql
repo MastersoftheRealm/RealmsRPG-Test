@@ -79,6 +79,7 @@ DECLARE
   v_quantity integer;
   v_equipped boolean;
   v_cost numeric;
+  v_inv_row record;
 BEGIN
   IF jsonb_typeof(p_patch) IS DISTINCT FROM 'object'
      OR jsonb_typeof(p_patch->'ops') IS DISTINCT FROM 'array' THEN
@@ -162,11 +163,18 @@ BEGIN
       END IF;
       IF nullif(v_op->>'position','') IS NOT NULL THEN
         v_position := (v_op->>'position')::integer;
-        UPDATE public.character_inventory
-        SET position = position + 1
-        WHERE character_id = p_character_id AND category = v_category
-          AND slot IS NOT DISTINCT FROM v_slot
-          AND position >= v_position;
+        FOR v_inv_row IN
+          SELECT inventory_row_id, position
+          FROM public.character_inventory
+          WHERE character_id = p_character_id AND category = v_category
+            AND slot IS NOT DISTINCT FROM v_slot
+            AND position >= v_position
+          ORDER BY position DESC
+        LOOP
+          UPDATE public.character_inventory
+          SET position = v_inv_row.position + 1
+          WHERE inventory_row_id = v_inv_row.inventory_row_id;
+        END LOOP;
       ELSE
         SELECT coalesce(max(position),0) + 1 INTO v_position
         FROM public.character_inventory

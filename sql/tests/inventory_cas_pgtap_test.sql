@@ -1,6 +1,6 @@
 BEGIN;
 
-SELECT plan(16);
+SELECT plan(18);
 
 SELECT has_function('public', 'apply_character_inventory_patch', ARRAY['text','text','jsonb']);
 SELECT has_function('public', 'patch_character_relational', ARRAY['text','jsonb','text']);
@@ -175,6 +175,11 @@ SELECT lives_ok(
   $q$, 'update armor row with null slot'
 );
 
+SELECT results_eq(
+  $$SELECT quantity::int FROM public.character_inventory WHERE inventory_row_id = '40000000-0000-4000-8000-000000000004'::uuid$$,
+  ARRAY[2], 'armor quantity updated'
+);
+
 INSERT INTO public.character_inventory (
   character_id, inventory_row_id, category, position, source_kind, source_id, name_snapshot, quantity, equipped
 ) VALUES
@@ -202,6 +207,34 @@ SELECT lives_ok(
 SELECT results_eq(
   $$SELECT count(*)::int FROM public.character_inventory WHERE character_id = 'pgtap-char' AND category = 'weapon' AND name_snapshot = 'D'$$,
   ARRAY[1], 'add at tail position persisted'
+);
+
+DELETE FROM public.character_inventory
+WHERE character_id = 'pgtap-char' AND category = 'weapon';
+
+INSERT INTO public.character_inventory (
+  character_id, inventory_row_id, category, position, source_kind, source_id, name_snapshot, quantity, equipped
+) VALUES
+  ('pgtap-char', '60000000-0000-4000-8000-000000000009', 'weapon', 1, 'custom', 'w1', 'One', 1, false),
+  ('pgtap-char', '60000000-0000-4000-8000-00000000000a', 'weapon', 2, 'custom', 'w2', 'Two', 1, false),
+  ('pgtap-char', '60000000-0000-4000-8000-00000000000b', 'weapon', 3, 'custom', 'w3', 'Three', 1, false);
+
+SELECT lives_ok(
+  $q$
+    SELECT public.apply_character_inventory_patch(
+      'pgtap-char', '10000000-0000-4000-8000-000000000099',
+      jsonb_build_object('ops', jsonb_build_array(
+        jsonb_build_object('op', 'add', 'bucket', 'weapons', 'position', 1,
+          'inventoryRowId', '60000000-0000-4000-8000-00000000000c',
+          'item', jsonb_build_object('id', 'w0', 'name', 'Zero', 'quantity', 1))
+      ))
+    );
+  $q$, 'add at front of dense three-weapon list'
+);
+
+SELECT results_eq(
+  $$SELECT count(*)::int FROM public.character_inventory WHERE character_id = 'pgtap-char' AND category = 'weapon'$$,
+  ARRAY[4], 'dense add keeps four weapons'
 );
 
 SELECT * FROM finish();
