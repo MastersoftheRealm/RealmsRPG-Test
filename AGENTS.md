@@ -31,7 +31,7 @@ Stack: Next.js App Router, React, Tailwind, Supabase (no Prisma), Vercel. Repo `
    - **Questions for Kadin** (what), if any.
 4. **Sign-off before Phase 2** is required when any of these apply: a [high-risk path](#risk-by-path), a game value or rule, a product question, a new shared module/component/store/API contract, a PATCH, or more than 10 files / 300 changed lines. Kadin signs off the what. Otherwise the survey goes into the PR body and the critic checks it when required (see [Review](#review)).
 5. **Plan before code (Kadin, Nov 20, 2026).** Before Phase 2, any change touching **saves or autosave**, **sign-in or auth**, **database** work (SQL, RPCs, RLS, grants), or **payments** needs a **one-page plan** on the task or draft PR: what must always stay true, failure cases, files touched, tests (max one page). The independent critic **plan pass** (`/audit`, separate session) must pass before implementation. High-risk per [Risk by path](#risk-by-path) also needs rollout sketch in the plan or brief when the rollout matrix applies (Review).
-6. **Briefs stay short (Kadin, Nov 20, 2026):** goal, what must stay true, done-when — whenever a brief or plan is required above. The critic posts the GitHub check only on the implementation head SHA after the code exists.
+6. **Briefs stay short (Critic recommendations; Kadin approved starting, Nov 20, 2026):** goal, what must stay true, done-when — whenever a brief or plan is required above.
 
 ### Phase 2 — Build
 
@@ -46,7 +46,7 @@ Stack: Next.js App Router, React, Tailwind, Supabase (no Prisma), Vercel. Repo `
 
 Writer prep and critic enforcement are separate. Self-attested "APPROVE" text in a PR does **not** satisfy review (writer self-approval never counts).
 
-**One reviewer per PR (Kadin, Nov 20, 2026).** Independent critic `/audit` and the **`Realms Independent Critic`** App check apply only when the PR touches **saves or autosave**, **sign-in or auth**, **database** (SQL, RPCs, RLS, grants), or **payments**. **Copy-only** and **UI-only** PRs need **CI only**. When critic review applies, only the GitHub check **`Realms Independent Critic`** on the **PR head SHA** counts — posted by the **Realms Critic GitHub App** (not by Actions on the PR branch).
+**One reviewer per PR (Critic recommendations; Kadin approved starting, Nov 20, 2026).** **PR Reviewer**, **QA** (preview/testing on the ClickUp task), and the independent **Critic** (`/audit`) do not all review the same PR — assign **one** independent review path (today `/audit` is the critic gate; writer prep does not count). **Critic** `/audit` and the **`Realms Independent Critic`** App check apply when the PR matches any row in [Risk by path](#risk-by-path) or touches **saves or autosave**, **sign-in or auth**, **database** (SQL, RPCs, RLS, grants), or **payments**. **Copy-only** and **UI-only** PRs that match **no** [Risk by path](#risk-by-path) row need **CI only** (no critic session). Writer self-audit never counts. When critic review applies, only the GitHub check **`Realms Independent Critic`** on the **PR head SHA** counts — posted by the **Realms Critic GitHub App** on the **implementation head SHA after the code exists** (not by Actions on the PR branch). **Until the GitHub ruleset changes**, the ruleset still requires that App check on **every** PR; **CI-only** for UI/copy PRs is **not in effect** yet (do not change CI or settings to match this doc alone).
 
 | Step | Command / phase | Role | Counts for merge? |
 |------|-----------------|------|-------------------|
@@ -57,7 +57,7 @@ Writer prep and critic enforcement are separate. Self-attested "APPROVE" text in
 
 **Typical writer loop is two self-audit↔remediate cycles** before handoff; there is **no hard stop** at two for writer prep.
 
-**Two strikes (Kadin, Nov 20, 2026).** If the independent critic returns **`REQUEST CHANGES` twice** on the same PR line of work, **stop patching** and return to the **plan** (new critic plan pass before more code). If a **third or later** critic `/audit` still blocks after replan, the critic **must** warn Kadin in plain language (options, split, revert, stop).
+**Two strikes (Critic recommendations; Kadin approved starting, Nov 20, 2026).** If the independent critic returns **`REQUEST CHANGES` twice** on the same PR line of work, **stop patching** and return to the **plan** (new critic plan pass before more code). If a **third or later** critic `/audit` still blocks after replan, the critic **must** warn Kadin in plain language (options, split, revert, stop).
 
 `/cleanup` is removed. The writer pass after critic **REQUEST CHANGES** is `/remediate` only.
 
@@ -86,20 +86,20 @@ Setup, JWT, ruleset JSON, and bypass details: [`src/docs/ai/REALMS_CRITIC_GITHUB
 
 The merge button is not a code review. Kadin does not read code; his click is product OK where required, not a substitute for checks.
 
-**Required before merge to `master`:** PR **base ref is `master`** (critic posts **failure** otherwise when critic review applies); all required CI checks green; **`Realms Independent Critic` = success** on the **PR head SHA** when the PR touches plan-first areas (Phase 1 §5); unaccepted PATCH veto satisfied.
+**Required before merge to `master`:** PR **base ref is `master`** (critic posts **failure** otherwise); all required CI checks green; **`Realms Independent Critic` = success** on the **PR head SHA** (ruleset still requires this on every PR until settings align with [Review](#review)); unaccepted PATCH veto satisfied.
 
 **Stacked PRs:** Ruleset `strict_required_status_checks_policy` does **not** enforce GitHub stack merge order. Still: do not merge out of stack order (e.g. #601); do not merge without a critic check on the **current** head SHA; never admin-bypass stack merge blocks.
 
-- **Standard-risk:** Kadin or the Bug and Audit Fixes bot may merge when checks pass (CI-only when copy/UI-only and no plan-first paths). Kadin does not have to read the diff.
+- **Standard-risk:** Kadin or the Bug and Audit Fixes bot may merge when checks pass. Kadin does not have to read the diff.
 - **High-risk** (paths in the table, including workflow/critic files): apply label `high-risk`, complete design brief + rollout evidence, Kadin's explicit product OK on the PR for data/rule changes, then merge. Agents never merge.
 - **Schema or official data:** Kadin presses merge after backup + plain-language acceptance on the PR. Required checks are never skipped.
 - An agent quoting "Kadin approved" is not an approval. PATCH acceptance counts only as his own comment on the PR or task.
 
-**Collin Morrison** (`@CollinMorrison` on GitHub) is **not** in the review workflow. He is listed only as a **ruleset bypass actor** so merges from his account are not blocked by the critic check (Kadin, Nov 19, 2026). Everyone else, including admins and bots using Kadin's account, needs the critic check on plan-first PRs unless bypass is explicitly configured in the ruleset.
+**Collin Morrison** (`@CollinMorrison` on GitHub) is **not** in the review workflow. He is listed only as a **ruleset bypass actor** so merges from his account are not blocked by the critic check (Kadin, Nov 19, 2026). Everyone else, including admins and bots using Kadin's account, needs the critic check unless bypass is explicitly configured in the ruleset.
 
-### Technical debt (Kadin, Nov 20, 2026)
+### Technical debt (Critic recommendations; Kadin approved starting, Nov 20, 2026)
 
-Debt is tracked as **tagged ClickUp tasks by area**, not in new repo docs. **Cleanup PRs:** one area only; end **smaller** or justify why not in the PR; add **behavior-locking tests first**; add **no new shared helper** unless it **deletes at least two** old copies; **no features** in the area being cleaned.
+Debt is tracked as **tagged ClickUp tasks by area**, not in new repo docs. **Cleanup PRs:** one area only; **list every path or module touched** in the PR; end **smaller** or justify why not; add **behavior-locking tests first**; add **no new shared helper** unless it **deletes at least two** old copies; **no features** in the area being cleaned.
 
 ### ClickUp
 
@@ -151,7 +151,7 @@ The paths a PR touches decide its risk. A checkbox does not.
 - The done-when is met, or the gap is stated on the task.
 - The result is labelled REAL FIX or PATCH, honestly.
 - A test that failed before passes after for the **behavioral** bug (or the PR says why that was not feasible).
-- **`Realms Independent Critic`** check **success** on the final head SHA when required (Review); plan-first / high-risk work had critic plan pass before code when required.
+- **`Realms Independent Critic`** check **success** on the final head SHA (ruleset may require this even when Review would be CI-only); plan-first / high-risk work had critic plan pass before code when required.
 - Nothing new duplicates existing code; replaced code is deleted.
 - Stale docs are updated in the same PR.
 - CI is green. User-facing work has QA steps on the ClickUp task.
