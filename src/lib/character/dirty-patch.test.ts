@@ -346,6 +346,26 @@ describe('applyCharacterDirtyPatch / mergeRemotePreservingDirty', () => {
     expect(formatInventoryConflictOverwriteToast(['notes'])).toContain('notes');
   });
 
+  it('C1 master-shaped sheet collector yields generic notes toast', () => {
+    const baseline = { notes: 'start' };
+    const remote = { notes: 'tab-a' };
+    const local = { notes: 'tab-b' };
+    const dirtyKeys = ['notes'];
+    const masterFields = (dirtyKeys as string[]).includes('equipment')
+      ? listEquipmentConflictRemoteOverwrites(
+          (baseline as Record<string, unknown>).equipment,
+          (local as Record<string, unknown>).equipment,
+          (remote as Record<string, unknown>).equipment,
+        )
+      : [];
+    expect(formatInventoryConflictOverwriteToast(masterFields)).not.toContain('notes');
+    expect(
+      formatInventoryConflictOverwriteToast(
+        listAutosaveConflictRemoteOverwrites(baseline, local, remote, dirtyKeys),
+      ),
+    ).toContain('notes');
+  });
+
   it('keeps local description when remote only changed quantity', () => {
     const baseline = {
       equipment: {

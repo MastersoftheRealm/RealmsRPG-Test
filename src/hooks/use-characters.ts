@@ -23,6 +23,7 @@ import { getGuestCharactersList, isGuestCharacterId } from '@/lib/guest-characte
 import {
   applyInventoryPatchToEquipment,
   coerceInventoryPatchCreatedRows,
+  filterIdempotentInventoryPatchOps,
   mergeInventoryCreatedRows,
   normalizeEquipmentForInventoryRelational,
   type InventoryPatchPayload,
@@ -83,24 +84,36 @@ export function mergeCharacterSaveResultIntoDetailQuery(
   const inventoryPatch = applied.inventoryPatch as InventoryPatchPayload | undefined;
   if (inventoryPatch) delete applied.inventoryPatch;
 
+  const prevUpdatedAt = prev?.character?.updatedAt;
+  const saveIsStale =
+    prevUpdatedAt &&
+    result.updatedAt &&
+    String(prevUpdatedAt) > String(result.updatedAt);
+
   const merged = mergeCharacterDetailQueryData(prev, {
     ...(applied as Partial<Character>),
-    ...(result.updatedAt ? { updatedAt: result.updatedAt } : {}),
+    ...(result.updatedAt && !saveIsStale ? { updatedAt: result.updatedAt } : {}),
   });
   const created = coerceInventoryPatchCreatedRows(result.inventoryPatchResult?.createdRows ?? []);
   if (!merged?.character) return merged;
   let equipment = merged.character.equipment;
-  if (inventoryPatch?.ops?.length) {
-    equipment = applyInventoryPatchToEquipment(
-      equipment,
-      inventoryPatch,
-    ) as Character['equipment'];
+  let equipmentTouched = false;
+  if (!saveIsStale && inventoryPatch?.ops?.length) {
+    const replay = filterIdempotentInventoryPatchOps(equipment, inventoryPatch);
+    if (replay.ops.length > 0) {
+      equipment = applyInventoryPatchToEquipment(
+        equipment,
+        replay,
+      ) as Character['equipment'];
+      equipmentTouched = true;
+    }
   }
-  if (created.length > 0) {
+  if (!saveIsStale && created.length > 0) {
     equipment = mergeInventoryCreatedRows(equipment, created) as Character['equipment'];
+    equipmentTouched = true;
   }
   const normalized = normalizeEquipmentForInventoryRelational(equipment) as Character['equipment'];
-  if (normalized === equipment && created.length === 0 && !inventoryPatch?.ops?.length) return merged;
+  if (normalized === equipment && !equipmentTouched) return merged;
   return {
     ...merged,
     character: {

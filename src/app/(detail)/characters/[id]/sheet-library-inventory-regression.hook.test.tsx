@@ -4,6 +4,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { emptyCharacterViewEnrichment } from '@/lib/character-view-enrichment';
+import { cleanForSave } from '@/lib/data-enrichment/clean-for-save';
 import { ApiError, apiFetch, apiFetchOrNull } from '@/lib/api-client';
 import {
   CharacterAutosaveBaselineProvider,
@@ -11,6 +12,10 @@ import {
 } from '@/lib/character/character-autosave-baseline-context';
 import type { CharacterSaveBaselineResult } from '@/lib/character/autosave-baseline';
 import { inventoryRowCasSnapshot } from '@/lib/character/inventory-patch';
+import {
+  InventoryCasMockServer,
+  type InventoryCasMockRow,
+} from '@/lib/character/inventory-cas-mock-server';
 import { characterViewerId, mergeCharacterSaveResultIntoDetailQuery } from '@/hooks/use-characters';
 import { saveCharacterWithConflictRetry } from '@/services/character-service';
 import { useAuthStore } from '@/stores/auth-store';
@@ -27,6 +32,7 @@ const characterMocks = vi.hoisted(() => ({
   getCharacter: vi.fn(),
   saveCharacterMutate: vi.fn(),
   lastPatchBody: null as Record<string, unknown> | null,
+  lastSaveResult: null as Record<string, unknown> | null,
   realtimeHandlers: [] as Array<(payload: unknown) => void>,
 }));
 
@@ -167,6 +173,7 @@ function characterWithHealthPotion(): Character {
           id: 'health-potion',
           name: 'Health Potion',
           quantity: 3,
+          cost: 25,
         },
       ],
       weapons: [],
@@ -186,7 +193,7 @@ function libraryAddSaveResult() {
             op: 'add',
             bucket: 'weapons',
             inventoryRowId: KNIFE_ROW,
-            item: { id: 'lib-knife', name: 'Knife', type: 'weapon', equipped: false },
+            item: { id: 'lib-knife', name: 'Knife', type: 'weapon', equipped: false, cost: 0 },
             position: 1,
           },
         ],
@@ -198,9 +205,12 @@ function libraryAddSaveResult() {
             id: 'health-potion',
             name: 'Health Potion',
             quantity: 3,
+            cost: 25,
           },
         ],
-        weapons: [{ id: 'lib-knife', name: 'Knife', type: 'weapon', inventoryRowId: KNIFE_ROW }],
+        weapons: [
+          { id: 'lib-knife', name: 'Knife', type: 'weapon', inventoryRowId: KNIFE_ROW, cost: 0 },
+        ],
         armor: [],
         shields: [],
       },
@@ -209,6 +219,46 @@ function libraryAddSaveResult() {
     inventoryPatchResult: {
       createdRows: [{ inventoryRowId: KNIFE_ROW, bucket: 'weapons', position: 1 }],
     },
+  };
+}
+
+const inventoryCasState = {
+  server: null as InventoryCasMockServer | null,
+  updatedAt: '2026-01-01T00:00:00.000Z',
+};
+
+function seedInventoryCasServer(character: Character): InventoryCasMockServer {
+  const rows: InventoryCasMockRow[] = [];
+  const pushRows = (bucket: InventoryCasMockRow['bucket'], list: unknown) => {
+    if (!Array.isArray(list)) return;
+    for (const row of list) {
+      if (!row || typeof row !== 'object') continue;
+      const r = row as Record<string, unknown>;
+      const inventoryRowId = r.inventoryRowId;
+      if (typeof inventoryRowId !== 'string' || !inventoryRowId.trim()) continue;
+      rows.push({ ...r, inventoryRowId, bucket });
+    }
+  };
+  const equip = character.equipment ?? {};
+  pushRows('items', equip.items);
+  pushRows('weapons', equip.weapons);
+  pushRows('shields', equip.shields);
+  pushRows('accessories', equip.accessories);
+  if (equip.armor && typeof equip.armor === 'object' && !Array.isArray(equip.armor)) {
+    const armor = equip.armor as unknown as Record<string, unknown>;
+    if (typeof armor.inventoryRowId === 'string') {
+      rows.push({ ...armor, inventoryRowId: armor.inventoryRowId, bucket: 'armor' });
+    }
+  }
+  return new InventoryCasMockServer(rows);
+}
+
+function characterFromInventoryServer(base: Character): Character {
+  const equipment = inventoryCasState.server?.toEquipment() ?? base.equipment;
+  return {
+    ...base,
+    equipment: equipment as Character['equipment'],
+    updatedAt: inventoryCasState.updatedAt,
   };
 }
 
@@ -224,10 +274,21 @@ function wrapperDefaultSaveImplementation() {
     const patch = characterMocks.lastPatchBody?.inventoryPatch as
       | { ops?: Array<{ op?: string; inventoryRowId?: string; bucket?: string }> }
       | undefined;
+    if (patch?.ops?.length) {
+      inventoryCasState.server?.applyPatchOrThrow(
+        patch as Parameters<InventoryCasMockServer['applyPatchOrThrow']>[0],
+      );
+    }
+    inventoryCasState.updatedAt = '2026-01-02T00:00:01.000Z';
+    const nextCharacter = characterFromInventoryServer(characterWithHealthPotion());
+    characterMocks.getCharacter.mockResolvedValue({
+      character: nextCharacter,
+      enrichment: emptyCharacterViewEnrichment(),
+    });
     const addOp = patch?.ops?.find((op) => op.op === 'add' && op.bucket === 'weapons');
     return {
       ok: true as const,
-      updatedAt: '2026-01-02T00:00:01.000Z',
+      updatedAt: inventoryCasState.updatedAt,
       ...(addOp?.inventoryRowId
         ? {
             inventoryPatchResult: {
@@ -265,15 +326,25 @@ describe('library inventory + sheet autosave baseline (hook)', () => {
     characterMocks.saveCharacterMutate.mockReset();
     characterMocks.realtimeHandlers.length = 0;
     advanceBaselineBridge.current = null;
+    const seedCharacter = characterWithHealthPotion();
+    inventoryCasState.server = seedInventoryCasServer(seedCharacter);
+    const seedUpdatedAt = seedCharacter.updatedAt;
+    inventoryCasState.updatedAt =
+      typeof seedUpdatedAt === 'string'
+        ? seedUpdatedAt
+        : seedUpdatedAt instanceof Date
+          ? seedUpdatedAt.toISOString()
+          : '2026-01-01T00:00:00.000Z';
     characterMocks.getCharacter.mockResolvedValue({
-      character: characterWithHealthPotion(),
+      character: seedCharacter,
       enrichment: emptyCharacterViewEnrichment(),
     });
     characterMocks.lastPatchBody = null;
+    characterMocks.lastSaveResult = null;
     queryClient.setQueryData(
       ['characters', 'detail', characterViewerId('user'), 'c-qa'],
       {
-        character: characterWithHealthPotion(),
+        character: seedCharacter,
         enrichment: emptyCharacterViewEnrichment(),
       },
     );
@@ -290,6 +361,7 @@ describe('library inventory + sheet autosave baseline (hook)', () => {
             inventorySaveBaseline: remote as unknown as Record<string, unknown>,
           })),
       }).then((result) => {
+        characterMocks.lastSaveResult = result as unknown as Record<string, unknown>;
         queryClient.setQueryData(
           ['characters', 'detail', characterViewerId('user'), vars.id],
           (prev: unknown) => mergeCharacterSaveResultIntoDetailQuery(prev as never, result),
@@ -311,20 +383,86 @@ describe('library inventory + sheet autosave baseline (hook)', () => {
     });
   }
 
-  it('after library add success, baseline includes new weapon row id for remove', async () => {
-    const { result } = await mountSheet();
-    await waitFor(() => expect(result.current.character?.id).toBe('c-qa'));
-
-    const saveResult = libraryAddSaveResult();
+  async function libraryAddKnifeViaHook(sheet: Awaited<ReturnType<typeof mountSheet>>) {
+    const { result: library } = renderHook(() => useAddToCharacterFromLibrary('weapon', 'c-qa'), {
+      wrapper: ({ children }) => <Wrapper client={queryClient}>{children}</Wrapper>,
+    });
+    await waitFor(() => expect(library.current.active).toBe(true));
     await act(async () => {
-      advanceBaselineBridge.current?.('c-qa', saveResult);
-      result.current.setCharacter({
-        ...(result.current.character as Character),
-        equipment: saveResult.applied.equipment as Character['equipment'],
-        updatedAt: saveResult.updatedAt,
+      library.current.openAddConfirm('Knife', {
+        id: 'lib-knife',
+        docId: 'lib-knife',
+        name: 'Knife',
+        type: 'weapon',
+        properties: [],
       });
     });
+    await act(async () => {
+      const modal = library.current.confirmModal as React.ReactElement<{ onConfirm: () => void }>;
+      modal.props.onConfirm();
+    });
+    await waitFor(() => expect(characterMocks.saveCharacterMutate).toHaveBeenCalled());
+    await waitFor(() => {
+      const weapons = (sheet.result.current.character?.equipment?.weapons ?? []) as Array<{ id?: string }>;
+      expect(weapons.some((w) => w.id === 'lib-knife')).toBe(true);
+    });
+    await waitFor(() => expect(characterMocks.lastSaveResult).toBeTruthy());
+  }
 
+  async function syncSheetBaselineFromCasServer(sheet: Awaited<ReturnType<typeof mountSheet>>) {
+    const synced = characterFromInventoryServer(characterWithHealthPotion());
+    await waitFor(() => expect(advanceBaselineBridge.current).toBeTruthy());
+    await act(async () => {
+      const syncedUpdatedAt =
+        typeof synced.updatedAt === 'string'
+          ? synced.updatedAt
+          : synced.updatedAt instanceof Date
+            ? synced.updatedAt.toISOString()
+            : inventoryCasState.updatedAt;
+      advanceBaselineBridge.current?.('c-qa', {
+        applied: cleanForSave(synced, undefined) as Record<string, unknown>,
+        updatedAt: syncedUpdatedAt,
+      });
+      sheet.result.current.setCharacter({
+        ...synced,
+        updatedAt: synced.updatedAt,
+      });
+    });
+    await waitFor(() => {
+      expect(sheet.result.current.character?.equipment?.weapons?.length).toBe(1);
+    });
+  }
+
+  async function advanceBaselineFromLibraryAdd(
+    sheet: Awaited<ReturnType<typeof mountSheet>>,
+    options?: { skipServerSeed?: boolean },
+  ) {
+    if (!options?.skipServerSeed) {
+      const saveResult = libraryAddSaveResult();
+      inventoryCasState.server?.applyPatchOrThrow(
+        saveResult.applied.inventoryPatch as Parameters<
+          InventoryCasMockServer['applyPatchOrThrow']
+        >[0],
+      );
+    }
+    await syncSheetBaselineFromCasServer(sheet);
+  }
+
+  function knifeInventoryRowId(sheet: Awaited<ReturnType<typeof mountSheet>>): string {
+    const row = (sheet.result.current.character?.equipment?.weapons ?? []).find(
+      (w) => w.id === 'lib-knife',
+    );
+    if (!row?.inventoryRowId) throw new Error('expected library knife row');
+    return row.inventoryRowId;
+  }
+
+  it('sheet saveNow remove library knife succeeds when baseline includes stored cost (B)', async () => {
+    const sheet = await mountSheet();
+    await waitFor(() => expect(sheet.result.current.character?.id).toBe('c-qa'));
+    await advanceBaselineFromLibraryAdd(sheet);
+    const { result } = sheet;
+
+    characterMocks.lastPatchBody = null;
     await act(async () => {
       result.current.setCharacter({
         ...(result.current.character as Character),
@@ -341,9 +479,11 @@ describe('library inventory + sheet autosave baseline (hook)', () => {
       await result.current.saveNow();
     });
 
-    await waitFor(() => expect(characterMocks.lastPatchBody?.inventoryPatch).toBeDefined());
-
-    const ops = (characterMocks.lastPatchBody?.inventoryPatch as { ops: unknown[] }).ops;
+    await waitFor(() =>
+      expect((characterMocks.lastPatchBody as Record<string, unknown> | null)?.inventoryPatch).toBeDefined(),
+    );
+    const patchBody = characterMocks.lastPatchBody as unknown as Record<string, unknown>;
+    const ops = (patchBody.inventoryPatch as { ops: unknown[] }).ops;
     expect(ops).toEqual([
       expect.objectContaining({
         op: 'remove',
@@ -354,12 +494,13 @@ describe('library inventory + sheet autosave baseline (hook)', () => {
             inventoryRowId: KNIFE_ROW,
             id: 'lib-knife',
             name: 'Knife',
-            type: 'weapon',
+            cost: 0,
           },
           'weapons',
         ),
       }),
     ]);
+    expect(inventoryCasState.server?.getRow(KNIFE_ROW)).toBeUndefined();
   });
 
   it('library-add hook issues inventory save and onSuccess runs through conflict retry', async () => {
@@ -402,127 +543,77 @@ describe('library inventory + sheet autosave baseline (hook)', () => {
     );
   });
 
-  it('after inventoryPatch-only save merge, sheet remove library knife uses remove CAS', async () => {
-    const { result } = await mountSheet();
-    await waitFor(() => expect(result.current.character?.id).toBe('c-qa'));
+  describe('prod retest B/C1/E (CAS mock server + real hooks)', () => {
+    it('library add then first + persists quantity 2 on server (E)', async () => {
+      const sheet = await mountSheet();
+      await waitFor(() => expect(sheet.result.current.character?.id).toBe('c-qa'));
+      await libraryAddKnifeViaHook(sheet);
+      await syncSheetBaselineFromCasServer(sheet);
+      const knifeId = knifeInventoryRowId(sheet);
 
-    const saveResult: CharacterSaveBaselineResult = {
-      applied: {
-        inventoryPatch: (libraryAddSaveResult().applied as { inventoryPatch: unknown }).inventoryPatch,
-      },
-      updatedAt: libraryAddSaveResult().updatedAt,
-      inventoryPatchResult: libraryAddSaveResult().inventoryPatchResult,
-    };
-
-    await act(async () => {
-      queryClient.setQueryData(
-        ['characters', 'detail', characterViewerId('user'), 'c-qa'],
-        (prev: unknown) =>
-          mergeCharacterSaveResultIntoDetailQuery(
-            prev as Parameters<typeof mergeCharacterSaveResultIntoDetailQuery>[0],
-            saveResult as Parameters<typeof mergeCharacterSaveResultIntoDetailQuery>[1],
-          ),
-      );
-      advanceBaselineBridge.current?.('c-qa', saveResult);
-    });
-
-    await waitFor(() => {
-      const weapons = (result.current.character?.equipment?.weapons ?? []) as Array<{
-        inventoryRowId?: string;
-      }>;
-      expect(weapons.some((w) => w.inventoryRowId === KNIFE_ROW)).toBe(true);
-    });
-
-    await act(async () => {
-      result.current.setCharacter({
-        ...(result.current.character as Character),
-        equipment: {
-          ...(result.current.character as Character).equipment,
-          weapons: [],
-        },
+      characterMocks.lastPatchBody = null;
+      await act(async () => {
+        const knife = (sheet.result.current.character as Character).equipment?.weapons?.find(
+          (w) => w.inventoryRowId === knifeId,
+        );
+        sheet.result.current.setCharacter({
+          ...(sheet.result.current.character as Character),
+          equipment: {
+            ...(sheet.result.current.character as Character).equipment,
+            weapons: [{ ...knife!, quantity: 2 }],
+          },
+        });
       });
-    });
-
-    await waitFor(() => expect(result.current.hasUnsavedChanges).toBe(true));
-    characterMocks.lastPatchBody = null;
-    await act(async () => {
-      await result.current.saveNow();
-    });
-
-    await waitFor(() => expect(characterMocks.lastPatchBody).toBeTruthy());
-    const removePatch = (characterMocks.lastPatchBody as unknown as Record<string, unknown>)
-      .inventoryPatch as {
-      ops: unknown[];
-    };
-    const ops = removePatch.ops;
-    expect(ops).toEqual([
-      expect.objectContaining({
-        op: 'remove',
-        bucket: 'weapons',
-        inventoryRowId: KNIFE_ROW,
-      }),
-    ]);
-    expect(ops.some((op) => (op as { op?: string }).op === 'add')).toBe(false);
-  });
-
-  it('after inventoryPatch-only save merge, first knife qty bump sends update not add (E)', async () => {
-    const { result } = await mountSheet();
-    await waitFor(() => expect(result.current.character?.id).toBe('c-qa'));
-
-    const saveResult: CharacterSaveBaselineResult = {
-      applied: {
-        inventoryPatch: (libraryAddSaveResult().applied as { inventoryPatch: unknown }).inventoryPatch,
-      },
-      updatedAt: libraryAddSaveResult().updatedAt,
-      inventoryPatchResult: libraryAddSaveResult().inventoryPatchResult,
-    };
-
-    await act(async () => {
-      queryClient.setQueryData(
-        ['characters', 'detail', characterViewerId('user'), 'c-qa'],
-        (prev: unknown) =>
-          mergeCharacterSaveResultIntoDetailQuery(
-            prev as Parameters<typeof mergeCharacterSaveResultIntoDetailQuery>[0],
-            saveResult as Parameters<typeof mergeCharacterSaveResultIntoDetailQuery>[1],
-          ),
-      );
-      advanceBaselineBridge.current?.('c-qa', saveResult);
-    });
-
-    await waitFor(() => {
-      const weapons = (result.current.character?.equipment?.weapons ?? []) as Array<{
-        inventoryRowId?: string;
-      }>;
-      expect(weapons.some((w) => w.inventoryRowId === KNIFE_ROW)).toBe(true);
-    });
-
-    characterMocks.lastPatchBody = null;
-    await act(async () => {
-      const weapons = (result.current.character as Character).equipment?.weapons ?? [];
-      const knife = weapons.find((w) => w.inventoryRowId === KNIFE_ROW);
-      result.current.setCharacter({
-        ...(result.current.character as Character),
-        equipment: {
-          ...(result.current.character as Character).equipment,
-          weapons: [{ ...knife!, quantity: 2 }],
-        },
+      await waitFor(() => expect(sheet.result.current.hasUnsavedChanges).toBe(true));
+      await act(async () => {
+        await sheet.result.current.saveNow();
       });
+      await waitFor(() => expect(characterMocks.lastPatchBody).toBeTruthy());
+      const update = (
+        (characterMocks.lastPatchBody as unknown as Record<string, unknown>).inventoryPatch as {
+          ops: Array<{ op: string; item?: { quantity?: number } }>;
+        }
+      ).ops[0];
+      expect(update?.op).toBe('update');
+      expect(update?.item?.quantity).toBe(2);
+      expect((update as { inventoryRowId?: string }).inventoryRowId).toBe(knifeId);
+      expect(inventoryCasState.server?.getRow(knifeId)?.quantity).toBe(2);
     });
 
-    await waitFor(() => expect(result.current.hasUnsavedChanges).toBe(true));
-    await act(async () => {
-      await result.current.saveNow();
+    it('stored cost 25 row qty 3→4 succeeds under CAS (B)', async () => {
+      const sheet = await mountSheet();
+      await waitFor(() => expect(sheet.result.current.character?.id).toBe('c-qa'));
+      await act(async () => {
+        sheet.result.current.setCharacter({
+          ...(sheet.result.current.character as Character),
+          equipment: {
+            ...(sheet.result.current.character as Character).equipment,
+            items: [
+              {
+                inventoryRowId: HEALTH_ROW,
+                id: 'health-potion',
+                name: 'Health Potion',
+                quantity: 4,
+                cost: 25,
+              },
+            ],
+          },
+        });
+      });
+      await waitFor(() => expect(sheet.result.current.hasUnsavedChanges).toBe(true));
+      await act(async () => {
+        await sheet.result.current.saveNow();
+      });
+      await waitFor(() => expect(characterMocks.lastPatchBody).toBeTruthy());
+      const op = (
+        (characterMocks.lastPatchBody as unknown as Record<string, unknown>).inventoryPatch as {
+          ops: Array<{ expected?: { cost?: number }; item?: { quantity?: number } }>;
+        }
+      ).ops[0];
+      expect(op?.expected?.cost).toBe(25);
+      expect(op?.item?.quantity).toBe(4);
+      expect(inventoryCasState.server?.getRow(HEALTH_ROW)?.quantity).toBe(4);
     });
-
-    await waitFor(() => expect(characterMocks.lastPatchBody).toBeTruthy());
-    const qtyPatch = (characterMocks.lastPatchBody as unknown as Record<string, unknown>).inventoryPatch as {
-      ops: unknown[];
-    };
-    const ops = qtyPatch.ops;
-    expect(ops).toEqual([
-      expect.objectContaining({ op: 'update', inventoryRowId: KNIFE_ROW, bucket: 'weapons' }),
-    ]);
-    expect(ops.some((op) => (op as { op?: string }).op === 'add')).toBe(false);
   });
 
   it('pending local notes are included on the next sheet PATCH after library baseline advance', async () => {
@@ -635,12 +726,15 @@ describe('library inventory + sheet autosave baseline (hook)', () => {
   });
 
   it('after library add, qty edit sends inventory update not add', async () => {
-    const { result } = await mountSheet();
-    await waitFor(() => expect(result.current.character?.id).toBe('c-qa'));
+    const sheet = await mountSheet();
+    await waitFor(() => expect(sheet.result.current.character?.id).toBe('c-qa'));
+    await advanceBaselineFromLibraryAdd(sheet);
+    const { result } = sheet;
 
-    const saveResult = libraryAddSaveResult();
+    const postAddWeapons = (result.current.character?.equipment?.weapons ?? []) as NonNullable<
+      Character['equipment']
+    >['weapons'];
     await act(async () => {
-      advanceBaselineBridge.current?.('c-qa', saveResult);
       result.current.setCharacter({
         ...(result.current.character as Character),
         equipment: {
@@ -650,13 +744,13 @@ describe('library inventory + sheet autosave baseline (hook)', () => {
               id: 'health-potion',
               name: 'Health Potion',
               quantity: 5,
+              cost: 25,
             },
           ],
-          weapons: [{ id: 'lib-knife', name: 'Knife', type: 'weapon', inventoryRowId: KNIFE_ROW }],
+          weapons: postAddWeapons ?? [],
           armor: [],
           shields: [],
         },
-        updatedAt: saveResult.updatedAt,
       });
     });
 
@@ -665,41 +759,31 @@ describe('library inventory + sheet autosave baseline (hook)', () => {
       await result.current.saveNow();
     });
 
-    await waitFor(() => expect(characterMocks.lastPatchBody?.inventoryPatch).toBeDefined());
-    const ops = (characterMocks.lastPatchBody?.inventoryPatch as { ops: unknown[] }).ops;
+    await waitFor(() =>
+      expect((characterMocks.lastPatchBody as Record<string, unknown> | null)?.inventoryPatch).toBeDefined(),
+    );
+    const patchBody = characterMocks.lastPatchBody as unknown as Record<string, unknown>;
+    const ops = (patchBody.inventoryPatch as { ops: unknown[] }).ops;
     expect(ops.some((op) => (op as { op?: string }).op === 'add')).toBe(false);
     expect(ops.some((op) => (op as { op?: string }).op === 'remove')).toBe(false);
     expect(ops).toEqual([expect.objectContaining({ op: 'update', inventoryRowId: HEALTH_ROW })]);
   });
 
   it('after library add, removing a pre-existing inventory item emits remove with CAS', async () => {
-    const { result } = await mountSheet();
-    await waitFor(() => expect(result.current.character?.id).toBe('c-qa'));
+    const sheet = await mountSheet();
+    await waitFor(() => expect(sheet.result.current.character?.id).toBe('c-qa'));
+    await advanceBaselineFromLibraryAdd(sheet);
+    const { result } = sheet;
 
-    const saveResult = libraryAddSaveResult();
-    const postAddEquipment = saveResult.applied.equipment as NonNullable<Character['equipment']>;
-
-    await act(async () => {
-      advanceBaselineBridge.current?.('c-qa', saveResult);
-      result.current.setCharacter({
-        ...(result.current.character as Character),
-        equipment: postAddEquipment,
-        updatedAt: saveResult.updatedAt,
-      });
-    });
-
-    await waitFor(() => {
-      expect((result.current.character?.equipment?.weapons as unknown[] | undefined)?.length).toBe(
-        1,
-      );
-    });
-
+    const postAddWeapons = (result.current.character?.equipment?.weapons ?? []) as NonNullable<
+      Character['equipment']
+    >['weapons'];
     await act(async () => {
       result.current.setCharacter({
         ...(result.current.character as Character),
         equipment: {
           items: [],
-          weapons: postAddEquipment.weapons ?? [],
+          weapons: postAddWeapons ?? [],
           armor: [],
           shields: [],
         },
@@ -730,6 +814,7 @@ describe('library inventory + sheet autosave baseline (hook)', () => {
             id: 'health-potion',
             name: 'Health Potion',
             quantity: 3,
+            cost: 25,
           },
           'items',
         ),

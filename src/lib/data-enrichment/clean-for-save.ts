@@ -420,6 +420,7 @@ export function cleanForSave(
       if (typeof item === 'string') return { name: item };
       if (item && typeof item === 'object') {
         const i = item as Record<string, unknown>;
+        const idStr = i.id != null ? String(i.id) : '';
         const clean: Record<string, unknown> = {};
         if (i.id) clean.id = i.id;
         if (typeof i.inventoryRowId === 'string' && i.inventoryRowId.trim()) {
@@ -431,8 +432,13 @@ export function cleanForSave(
         if (i.equipped) clean.equipped = true;
         // Quantity 0 is stored. Quantity 1 stays omitted as the default.
         if (i.quantity === 0 || (i.quantity && i.quantity !== 1)) clean.quantity = i.quantity;
+        // Relational CAS (`inventory_row_cas_snapshot`) compares cost_snapshot; keep cost on row ids.
+        if (typeof i.cost === 'number' && Number.isFinite(i.cost)) {
+          clean.cost = i.cost;
+        } else if (idStr.startsWith('lib-')) {
+          clean.cost = 0;
+        }
         // One-off custom inventory rows are not in codex/library — persist type + notes.
-        const idStr = i.id != null ? String(i.id) : '';
         if (idStr.startsWith('custom-')) {
           if (i.type) clean.type = i.type;
           if (typeof i.description === 'string' && i.description.trim()) {
