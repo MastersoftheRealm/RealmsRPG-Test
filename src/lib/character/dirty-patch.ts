@@ -80,6 +80,14 @@ function stableEqual(a: unknown, b: unknown): boolean {
   }
 }
 
+export function characterHasAutosaveDirtyEdits(
+  current: Record<string, unknown> | null | undefined,
+  baseline: Record<string, unknown> | null | undefined,
+): boolean {
+  if (!current || !baseline) return false;
+  return Object.keys(pickDirtyCharacterFields(current, baseline)).length > 0;
+}
+
 /**
  * Keys in `current` that differ from `baseline`. Meta keys are never dirty.
  * When `baseline` is null (first save / no snapshot), every non-meta defined key is dirty.

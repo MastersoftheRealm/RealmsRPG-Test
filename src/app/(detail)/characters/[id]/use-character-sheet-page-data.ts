@@ -8,7 +8,15 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useRef, useCallback, type SetStateAction } from 'react';
+import {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useCallback,
+  type SetStateAction,
+} from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getCharacter, saveCharacterWithConflictRetry } from '@/services/character-service';
 import {
@@ -36,7 +44,6 @@ import {
 } from '@/hooks';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { sheetCatalogFromEnrichment } from '@/lib/character-view-enrichment';
-import { advanceAutosaveBaselineFromSaveResult } from '@/lib/character/autosave-baseline';
 import {
   useAdvanceCharacterAutosaveBaseline,
   useRegisterCharacterAutosaveBaseline,
@@ -56,6 +63,7 @@ import {
 } from '@/lib/character/character-name-limit';
 import {
   applySheetAutosaveConflictFields,
+  characterHasAutosaveDirtyEdits,
   characterLockToken,
   formatInventoryConflictOverwriteToast,
   listAutosaveConflictRemoteOverwrites,
@@ -64,7 +72,6 @@ import {
   pickDirtyCharacterFields,
   withDirtyClears,
 } from '@/lib/character/dirty-patch';
-import { characterAutosaveDocumentsEqual } from '@/lib/character/character-autosave-equal';
 import { rememberCharacterLockToken } from '@/lib/character/save-lock';
 import { mergeSheetRealtimePayload } from '@/lib/character/realtime-merge';
 import {
@@ -108,11 +115,19 @@ export function useCharacterSheetPageData(id: string) {
   const savedCleanRef = useRef<Record<string, unknown> | null>(null);
   const conflictOverwriteFieldsRef = useRef<string[]>([]);
   const realtimeRefetchGenerationRef = useRef(0);
-  const hasUnsavedChangesRef = useRef(false);
-  const baselineSeedTokenRef = useRef<string | null>(null);
+  const rulesRef = useRef(rules);
+  useEffect(() => {
+    rulesRef.current = rules;
+  }, [rules]);
 
   useRegisterCharacterAutosaveBaseline(id, savedCleanRef);
   const advanceSheetAutosaveBaseline = useAdvanceCharacterAutosaveBaseline();
+
+  const sheetDirtyAgainstSavedBaseline = useCallback((doc: Character | null | undefined) => {
+    if (!doc || !savedCleanRef.current) return false;
+    const cleaned = cleanForSave(doc, rulesRef.current) as Record<string, unknown>;
+    return characterHasAutosaveDirtyEdits(cleaned, savedCleanRef.current);
+  }, []);
 
   const setCharacter = useCallback(
     (update: SetStateAction<Character | null>) => {
@@ -121,21 +136,21 @@ export function useCharacterSheetPageData(id: string) {
     [queryClient, viewerKey, id],
   );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!character || character.id !== id) {
-      if (character?.id !== id) {
-        savedCleanRef.current = null;
-        baselineSeedTokenRef.current = null;
-      }
+      savedCleanRef.current = null;
       return;
     }
     rememberCharacterLockToken(id, character.updatedAt);
-    if (hasUnsavedChangesRef.current) return;
-    const seedToken = characterLockToken(character.updatedAt) ?? character.id;
-    if (baselineSeedTokenRef.current === seedToken && savedCleanRef.current) return;
-    baselineSeedTokenRef.current = seedToken;
-    savedCleanRef.current = cleanForSave(character, rules) as Record<string, unknown>;
+    if (!savedCleanRef.current) {
+      savedCleanRef.current = cleanForSave(character, rules) as Record<string, unknown>;
+    }
   }, [character, id, rules]);
+
+  const isAutosaveDocumentClean = useCallback(
+    (doc: Character | null | undefined) => !sheetDirtyAgainstSavedBaseline(doc),
+    [sheetDirtyAgainstSavedBaseline],
+  );
 
   const { data: userPowers = [] } = useUserPowers({ enabled: loadCatalog });
   const { data: userTechniques = [] } = useUserTechniques({ enabled: loadCatalog });
@@ -302,14 +317,8 @@ export function useCharacterSheetPageData(id: string) {
                 updatedAt: payload.new.updated_at,
               },
             );
-            if (nextBaseline && !hasUnsavedChangesRef.current) {
-              const baseline = nextBaseline;
-              // Defer so Strict Mode's double updater both read the same savedCleanRef.
-              queueMicrotask(() => {
-                if (!hasUnsavedChangesRef.current) {
-                  savedCleanRef.current = baseline;
-                }
-              });
+            if (nextBaseline && !sheetDirtyAgainstSavedBaseline(prev)) {
+              savedCleanRef.current = nextBaseline;
             }
             return next;
           });
@@ -330,7 +339,7 @@ export function useCharacterSheetPageData(id: string) {
                   savedCleanRef.current,
                   { suppressResources, updatedAt: remote.updatedAt },
                 );
-                if (nextBaseline && !hasUnsavedChangesRef.current) {
+                if (nextBaseline && !sheetDirtyAgainstSavedBaseline(prev)) {
                   savedCleanRef.current = nextBaseline;
                 }
                 return next;
@@ -346,7 +355,7 @@ export function useCharacterSheetPageData(id: string) {
       realtimeRefetchGenerationRef.current += 1;
       supabase.removeChannel(channel);
     };
-  }, [character?.id, setCharacter]);
+  }, [character?.id, setCharacter, sheetDirtyAgainstSavedBaseline]);
 
   const isOwner = Boolean(character && (isGuestSheet || (user && character.userId === user.uid)));
 
@@ -383,11 +392,7 @@ export function useCharacterSheetPageData(id: string) {
 
   const { hasUnsavedChanges, saveNow, syncBlockedByNetwork } = useAutoSave({
     data: character,
-    areEqual: (a, b) => {
-      const equal = characterAutosaveDocumentsEqual(a, b);
-      hasUnsavedChangesRef.current = !equal;
-      return equal;
-    },
+    areEqual: (a) => isAutosaveDocumentClean(a),
     onSave: async (data) => {
       if (!data) return;
       const rawCleaned = cleanForSave(data, rules) as Record<string, unknown>;
@@ -468,10 +473,6 @@ export function useCharacterSheetPageData(id: string) {
           ? { inventoryPatchResult: result.inventoryPatchResult }
           : {}),
       };
-      savedCleanRef.current = advanceAutosaveBaselineFromSaveResult(
-        savedCleanRef.current,
-        baselineResult,
-      );
       advanceSheetAutosaveBaseline(id, baselineResult);
       const createdRows = coerceInventoryPatchCreatedRows(
         result.inventoryPatchResult?.createdRows ?? [],
@@ -515,7 +516,9 @@ export function useCharacterSheetPageData(id: string) {
                 savedCleanRef.current,
                 { updatedAt: remoteCharacter.updatedAt },
               );
-              if (nextBaseline) savedCleanRef.current = nextBaseline;
+              if (nextBaseline && !sheetDirtyAgainstSavedBaseline(prev)) {
+                savedCleanRef.current = nextBaseline;
+              }
               return next;
             });
           }

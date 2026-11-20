@@ -1,6 +1,6 @@
 /** @vitest-environment happy-dom */
-import React from 'react';
-import { renderHook, act } from '@testing-library/react';
+import React, { useEffect, useState } from 'react';
+import { render, renderHook, act } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import {
   CharacterAutosaveBaselineProvider,
@@ -22,35 +22,85 @@ function Wrapper({ children }: { children: React.ReactNode }) {
 }
 
 describe('CharacterAutosaveBaselineProvider', () => {
-  it('does not restore a persisted baseline snapshot on remount', () => {
+  it('does not restore a persisted baseline snapshot on remount', async () => {
     const initial = {
       notes: 'start',
-      equipment: { items: [{ id: 'health-potion', name: 'Health Potion', quantity: 3 }] },
+      equipment: {
+        items: [
+          {
+            inventoryRowId: HEALTH_ROW,
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 3,
+          },
+        ],
+      },
+    };
+    const serverRow = {
+      notes: 'server',
+      equipment: {
+        items: [
+          {
+            inventoryRowId: HEALTH_ROW,
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 4,
+          },
+        ],
+      },
     };
 
-    const { result: first, unmount } = renderHook(
-      () => useBaselineHarness('c1', structuredClone(initial) as Record<string, unknown>),
-      { wrapper: Wrapper },
-    );
+    type Harness = ReturnType<typeof useBaselineHarness>;
+    const harnessLatch = { current: null as Harness | null };
 
-    act(() => {
-      first.current.ref.current = {
-        notes: 'after-advance',
-        equipment: { items: [{ id: 'health-potion', name: 'Health Potion', quantity: 99 }] },
-      };
+    function BaselineHost({ row }: { row: Record<string, unknown> }) {
+      const harness = useBaselineHarness('c1', structuredClone(row) as Record<string, unknown>);
+      useEffect(() => {
+        harnessLatch.current = harness;
+      }, [harness]);
+      return null;
+    }
+
+    function Tree() {
+      const [generation, setGeneration] = useState(0);
+      const [row, setRow] = useState(initial);
+      return (
+        <Wrapper>
+          <BaselineHost key={generation} row={row} />
+          <button
+            type="button"
+            data-testid="remount-with-server-row"
+            onClick={() => {
+              setRow(structuredClone(serverRow) as Record<string, unknown>);
+              setGeneration((g) => g + 1);
+            }}
+          />
+        </Wrapper>
+      );
+    }
+
+    const view = render(<Tree />);
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
     });
-    unmount();
 
-    const { result: second } = renderHook(
-      () => useBaselineHarness('c1', structuredClone(initial) as Record<string, unknown>),
-      { wrapper: Wrapper },
-    );
+    await act(async () => {
+      harnessLatch.current?.advance('c1', {
+        applied: structuredClone(initial) as Record<string, unknown>,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+      });
+    });
 
-    expect(second.current.ref.current?.notes).toBe('start');
+    await act(async () => {
+      view.getByTestId('remount-with-server-row').click();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
     expect(
-      (second.current.ref.current?.equipment as { items: Array<{ quantity?: number }> }).items[0]
-        ?.quantity,
-    ).toBe(3);
+      (
+        harnessLatch.current?.ref.current?.equipment as { items: Array<{ quantity?: number }> }
+      ).items[0]?.quantity,
+    ).toBe(4);
   });
 
   it('advances the mounted sheet ref when library/sheet reports a save result', () => {

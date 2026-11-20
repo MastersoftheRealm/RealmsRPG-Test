@@ -1,6 +1,6 @@
 /** @vitest-environment happy-dom */
-import React, { useEffect } from 'react';
-import { act, renderHook, waitFor } from '@testing-library/react';
+import React, { useEffect, useState } from 'react';
+import { act, render, renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { emptyCharacterViewEnrichment } from '@/lib/character-view-enrichment';
@@ -326,6 +326,52 @@ describe('library inventory + sheet autosave baseline (hook)', () => {
     return renderHook(() => useCharacterSheetPageData('c-qa'), {
       wrapper: ({ children }) => <Wrapper client={queryClient}>{children}</Wrapper>,
     });
+  }
+
+  async function mountSheetWithSharedProvider() {
+    const apiRef = { current: null as ReturnType<typeof useCharacterSheetPageData> | null };
+    let remountButton: HTMLButtonElement | null = null;
+
+    function SheetHost() {
+      const data = useCharacterSheetPageData('c-qa');
+      useEffect(() => {
+        apiRef.current = data;
+      }, [data]);
+      return null;
+    }
+
+    function Tree() {
+      const [generation, setGeneration] = useState(0);
+      return (
+        <Wrapper client={queryClient}>
+          <SheetHost key={generation} />
+          <button
+            type="button"
+            data-testid="remount-sheet-host"
+            onClick={() => setGeneration((g) => g + 1)}
+          />
+        </Wrapper>
+      );
+    }
+
+    const view = render(<Tree />);
+    remountButton = view.getByTestId('remount-sheet-host');
+    await waitFor(() => expect(apiRef.current?.character?.id).toBe('c-qa'));
+
+    return {
+      result: {
+        get current() {
+          if (!apiRef.current) throw new Error('sheet hook not mounted');
+          return apiRef.current;
+        },
+      },
+      remountHost: async () => {
+        await act(async () => {
+          remountButton?.click();
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        });
+      },
+    };
   }
 
   it('after library add success, baseline includes new weapon row id for remove', async () => {
@@ -997,19 +1043,8 @@ describe('library inventory + sheet autosave baseline (hook)', () => {
   });
 
   it('sequence 1: remount after potion save notes-only PATCH does not CAS stale potion qty', async () => {
-    const { result, unmount } = await mountSheet();
+    const { result, remountHost } = await mountSheetWithSharedProvider();
     await waitFor(() => expect(result.current.character?.id).toBe('c-qa'));
-
-    const saveResult = libraryAddSaveResult();
-    await act(async () => {
-      advanceBaselineBridge.current?.('c-qa', saveResult);
-      result.current.setCharacter({
-        ...(result.current.character as Character),
-        equipment: saveResult.applied.equipment as Character['equipment'],
-        updatedAt: saveResult.updatedAt,
-      });
-    });
-    await waitFor(() => expect(result.current.hasUnsavedChanges).toBe(false));
 
     await act(async () => {
       result.current.setCharacter({
@@ -1032,11 +1067,16 @@ describe('library inventory + sheet autosave baseline (hook)', () => {
       await result.current.saveNow();
     });
 
+    const staleBaseline = cleanForSave(characterWithHealthPotion()) as Record<string, unknown>;
+    await act(async () => {
+      advanceBaselineBridge.current?.('c-qa', {
+        applied: staleBaseline,
+        updatedAt: '2026-01-02T00:00:00.000Z',
+      });
+    });
+
     const afterQtySave = characterWithHealthPotion();
     afterQtySave.equipment!.items![0]!.quantity = 4;
-    afterQtySave.equipment!.weapons = [
-      { id: 'lib-knife', name: 'Knife', type: 'weapon', inventoryRowId: KNIFE_ROW },
-    ];
     afterQtySave.updatedAt = '2026-01-03T00:00:00.000Z';
 
     queryClient.setQueryData(['characters', 'detail', characterViewerId('user'), 'c-qa'], {
@@ -1048,21 +1088,18 @@ describe('library inventory + sheet autosave baseline (hook)', () => {
       enrichment: emptyCharacterViewEnrichment(),
     });
 
-    unmount();
-    const remounted = await mountSheet();
-    await waitFor(() =>
-      expect(remounted.result.current.character?.equipment?.items?.[0]?.quantity).toBe(4),
-    );
+    await remountHost();
+    await waitFor(() => expect(result.current.character?.equipment?.items?.[0]?.quantity).toBe(4));
 
     await act(async () => {
-      remounted.result.current.setCharacter({
-        ...(remounted.result.current.character as Character),
+      result.current.setCharacter({
+        ...(result.current.character as Character),
         notes: 'edited-after-remount',
       });
     });
-    await waitFor(() => expect(remounted.result.current.hasUnsavedChanges).toBe(true));
+    await waitFor(() => expect(result.current.hasUnsavedChanges).toBe(true));
     await act(async () => {
-      await remounted.result.current.saveNow();
+      await result.current.saveNow();
     });
 
     await waitFor(() => expect(characterMocks.lastPatchBody?.notes).toBe('edited-after-remount'));
@@ -1106,5 +1143,46 @@ describe('library inventory + sheet autosave baseline (hook)', () => {
     const knifeOps = ops.filter((op) => op.inventoryRowId === KNIFE_ROW);
     expect(knifeOps).toHaveLength(0);
     expect(ops.filter((op) => op.op === 'update')).toHaveLength(0);
+  });
+
+  it('swallowed edit: qty change plus updatedAt bump in one commit stays dirty and PATCHes', async () => {
+    const { result } = await mountSheet();
+    await waitFor(() => expect(result.current.character?.equipment?.items?.[0]?.quantity).toBe(3));
+
+    await act(async () => {
+      result.current.setCharacter({
+        ...(result.current.character as Character),
+        updatedAt: '2026-01-05T12:00:00.000Z',
+        equipment: {
+          ...(result.current.character as Character).equipment,
+          items: [
+            {
+              inventoryRowId: HEALTH_ROW,
+              id: 'health-potion',
+              name: 'Health Potion',
+              quantity: 7,
+            },
+          ],
+        },
+      });
+    });
+
+    await waitFor(() =>
+      expect(result.current.character?.equipment?.items?.[0]?.quantity).toBe(7),
+    );
+    await waitFor(() => expect(result.current.hasUnsavedChanges).toBe(true));
+    await act(async () => {
+      await result.current.saveNow();
+    });
+
+    await waitFor(() => expect(characterMocks.lastPatchBody?.inventoryPatch).toBeDefined());
+    const ops =
+      (characterMocks.lastPatchBody?.inventoryPatch as {
+        ops?: Array<{ op?: string; inventoryRowId?: string; item?: { quantity?: number } }>;
+      })?.ops ?? [];
+    const qtyUpdate = ops.find(
+      (op) => op.op === 'update' && op.inventoryRowId === HEALTH_ROW && op.item?.quantity === 7,
+    );
+    expect(qtyUpdate).toBeDefined();
   });
 });

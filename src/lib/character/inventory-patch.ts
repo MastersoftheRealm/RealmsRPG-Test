@@ -263,13 +263,22 @@ export function buildInventoryPatch(
       if (existingId) {
         const prev = beforeMap.get(existingId);
         if (!prev) {
-          ops.push({
-            op: 'add',
-            bucket,
-            inventoryRowId: existingId,
-            item: leanRowForPatchOp(row, bucket),
-            position: i + 1,
-          });
+          const duplicateAdd = ops.some(
+            (op) =>
+              op.op === 'add' &&
+              'inventoryRowId' in op &&
+              op.inventoryRowId === existingId &&
+              op.bucket === bucket,
+          );
+          if (!duplicateAdd) {
+            ops.push({
+              op: 'add',
+              bucket,
+              inventoryRowId: existingId,
+              item: leanRowForPatchOp(row, bucket),
+              position: i + 1,
+            });
+          }
         } else if (!rowsEqual(prev, row, bucket)) {
           ops.push({
             op: 'update',
