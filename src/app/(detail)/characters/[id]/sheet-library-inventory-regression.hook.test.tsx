@@ -1,6 +1,6 @@
 /** @vitest-environment happy-dom */
 import React, { useEffect, useState } from 'react';
-import { act, render, renderHook, waitFor } from '@testing-library/react';
+import { act, render, renderHook, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { emptyCharacterViewEnrichment } from '@/lib/character-view-enrichment';
@@ -900,148 +900,6 @@ describe('library inventory + sheet autosave baseline (hook)', () => {
     );
   });
 
-  it('C2: tab A +1 then tab B −1 merges to qty 2 (not silent last-write-wins)', async () => {
-    resetCharacterSaveLockForTests();
-    const initial = characterWithHealthPotionQty2();
-    let serverQty = 2;
-    let serverUpdatedAt = initial.updatedAt as string;
-    const patchLog: Array<{
-      updatedAt?: string | undefined;
-      expectedQty?: number | undefined;
-      itemQty?: number | undefined;
-      outcome: 'ok' | '409';
-    }> = [];
-
-    const remoteAfterA = () => ({
-      ...characterWithHealthPotionQty2(),
-      equipment: {
-        ...initial.equipment!,
-        items: [{ ...initial.equipment!.items![0]!, quantity: serverQty }],
-      },
-      updatedAt: serverUpdatedAt,
-    });
-
-    characterMocks.getCharacter.mockImplementation(async () => ({
-      character: remoteAfterA(),
-      enrichment: emptyCharacterViewEnrichment(),
-    }));
-    queryClient.setQueryData(['characters', 'detail', characterViewerId('user'), 'c-qa'], {
-      character: initial,
-      enrichment: emptyCharacterViewEnrichment(),
-    });
-
-    vi.mocked(apiFetch).mockImplementation(async (_url, opts) => {
-      const body = JSON.parse(opts?.body as string) as Record<string, unknown>;
-      const lock = body.updatedAt as string | undefined;
-      const inv = body.inventoryPatch as
-        | { ops?: Array<{ expected?: { quantity?: number }; item?: { quantity?: number } }> }
-        | undefined;
-      const op = inv?.ops?.[0];
-      const expectedQty = op?.expected?.quantity;
-      const itemQty = op?.item?.quantity;
-
-      if (lock && lock !== serverUpdatedAt) {
-        patchLog.push({ updatedAt: lock, expectedQty, itemQty, outcome: '409' });
-        throw new ApiError('Character was modified elsewhere', 409);
-      }
-      if (
-        expectedQty !== undefined &&
-        itemQty !== undefined &&
-        expectedQty !== serverQty
-      ) {
-        patchLog.push({ updatedAt: lock, expectedQty, itemQty, outcome: '409' });
-        throw new ApiError('inventory_cas_conflict', 409);
-      }
-
-      serverQty = itemQty ?? serverQty;
-      const nextUpdatedAt = `2026-01-02T00:00:0${patchLog.filter((e) => e.outcome === 'ok').length + 1}.000Z`;
-      serverUpdatedAt = nextUpdatedAt;
-      rememberCharacterLockToken('c-qa', serverUpdatedAt);
-      patchLog.push({ updatedAt: lock, expectedQty, itemQty, outcome: 'ok' });
-
-      for (const handler of characterMocks.realtimeHandlers) {
-        await handler({
-          new: { id: 'c-qa', updated_at: serverUpdatedAt },
-        });
-      }
-      characterMocks.getCharacter.mockResolvedValue({
-        character: remoteAfterA(),
-        enrichment: emptyCharacterViewEnrichment(),
-      });
-
-      return { ok: true as const, updatedAt: serverUpdatedAt };
-    });
-
-    const tabA = await mountSheet();
-    const tabB = await mountSheet();
-    await waitFor(() => expect(tabA.result.current.character?.id).toBe('c-qa'));
-    await waitFor(() => expect(tabB.result.current.character?.id).toBe('c-qa'));
-
-    await act(async () => {
-      tabA.result.current.setCharacter({
-        ...(tabA.result.current.character as Character),
-        equipment: {
-          ...(tabA.result.current.character as Character).equipment,
-          items: [
-            {
-              inventoryRowId: HEALTH_ROW,
-              id: 'health-potion',
-              name: 'Health Potion',
-              quantity: 3,
-            },
-          ],
-        },
-      });
-    });
-    await waitFor(() =>
-      expect(tabA.result.current.character?.equipment?.items?.[0]?.quantity).toBe(3),
-    );
-    await waitFor(() => expect(tabA.result.current.hasUnsavedChanges).toBe(true));
-
-    await act(async () => {
-      await tabA.result.current.saveNow();
-    });
-
-    await waitFor(() => expect(patchLog.some((entry) => entry.outcome === 'ok')).toBe(true));
-    await waitFor(() => expect(serverQty).toBe(3));
-
-    await act(async () => {
-      tabB.result.current.setCharacter({
-        ...(tabB.result.current.character as Character),
-        equipment: {
-          ...(tabB.result.current.character as Character).equipment,
-          items: [
-            {
-              inventoryRowId: HEALTH_ROW,
-              id: 'health-potion',
-              name: 'Health Potion',
-              quantity: 1,
-            },
-          ],
-        },
-      });
-    });
-    await waitFor(() => expect(tabB.result.current.hasUnsavedChanges).toBe(true));
-
-    await new Promise((resolve) => setTimeout(resolve, 900));
-
-    await act(async () => {
-      await tabB.result.current.saveNow();
-    });
-
-    await waitFor(() => expect(patchLog.some((entry) => entry.outcome === '409')).toBe(true));
-    await waitFor(() => expect(serverQty).toBe(2));
-
-    const tabBFirstInventoryPatch = patchLog.find(
-      (entry) => entry.itemQty === 1 && entry.expectedQty !== undefined,
-    );
-    expect(tabBFirstInventoryPatch?.expectedQty).toBe(2);
-    const tabBRetry = patchLog.find(
-      (entry) => entry.outcome === 'ok' && entry.expectedQty === 3 && entry.itemQty === 2,
-    );
-    expect(tabBRetry).toBeDefined();
-  });
-
   it('sequence 1: remount after potion save notes-only PATCH does not CAS stale potion qty', async () => {
     const { result, remountHost } = await mountSheetWithSharedProvider();
     await waitFor(() => expect(result.current.character?.id).toBe('c-qa'));
@@ -1256,6 +1114,209 @@ describe('library inventory + sheet autosave baseline (hook)', () => {
       expect(strayRevert).toBe(false);
     });
     expect(serverNotes).toBe('my-notes');
+  });
+
+  async function mountRealtimeQtyConflictCase(
+    localQty: number,
+    remoteQty: number,
+    expectedAfterRealtime: number,
+    expectedServerAfterSave: number,
+  ) {
+    resetCharacterSaveLockForTests();
+    let serverQty = 3;
+    let serverUpdatedAt = '2026-01-01T00:00:00.000Z';
+    const patchBodies: Array<Record<string, unknown>> = [];
+
+    const serverDoc = () => {
+      const base = characterWithHealthPotion();
+      base.equipment!.items![0]!.quantity = serverQty;
+      base.updatedAt = serverUpdatedAt;
+      return base;
+    };
+
+    characterMocks.getCharacter.mockImplementation(async () => ({
+      character: serverDoc(),
+      enrichment: emptyCharacterViewEnrichment(),
+    }));
+    queryClient.setQueryData(['characters', 'detail', characterViewerId('user'), 'c-qa'], {
+      character: serverDoc(),
+      enrichment: emptyCharacterViewEnrichment(),
+    });
+
+    vi.mocked(apiFetch).mockImplementation(async (_url, opts) => {
+      const body = JSON.parse(opts?.body as string) as Record<string, unknown>;
+      patchBodies.push(body);
+      characterMocks.lastPatchBody = body;
+
+      const lock = body.updatedAt as string | undefined;
+      if (lock && lock !== serverUpdatedAt) {
+        throw new ApiError('Character was modified elsewhere', 409);
+      }
+
+      const inv = body.inventoryPatch as
+        | { ops?: Array<{ expected?: { quantity?: number }; item?: { quantity?: number } }> }
+        | undefined;
+      const invOp = inv?.ops?.[0];
+      if (invOp) {
+        const expectedQty = invOp.expected?.quantity;
+        const itemQty = invOp.item?.quantity;
+        if (expectedQty !== undefined && expectedQty !== serverQty) {
+          throw new ApiError('inventory_cas_conflict', 409);
+        }
+        if (itemQty !== undefined) serverQty = itemQty;
+      }
+
+      serverUpdatedAt = `2026-01-03T00:00:0${patchBodies.length}.000Z`;
+      rememberCharacterLockToken('c-qa', serverUpdatedAt);
+      characterMocks.getCharacter.mockResolvedValue({
+        character: serverDoc(),
+        enrichment: emptyCharacterViewEnrichment(),
+      });
+
+      return { ok: true as const, updatedAt: serverUpdatedAt };
+    });
+
+    const { result } = await mountSheet();
+    await waitFor(() => expect(characterMocks.realtimeHandlers.length).toBeGreaterThan(0));
+
+    await act(async () => {
+      result.current.setCharacter({
+        ...(result.current.character as Character),
+        equipment: {
+          ...(result.current.character as Character).equipment,
+          items: [
+            {
+              inventoryRowId: HEALTH_ROW,
+              id: 'health-potion',
+              name: 'Health Potion',
+              quantity: localQty,
+            },
+          ],
+        },
+      });
+    });
+    await waitFor(() => expect(result.current.hasUnsavedChanges).toBe(true));
+    expect(result.current.character?.equipment?.items?.[0]?.quantity).toBe(localQty);
+
+    serverQty = remoteQty;
+    const remote = serverDoc();
+    remote.updatedAt = '2026-01-02T00:00:00.000Z';
+    serverUpdatedAt = remote.updatedAt as string;
+    characterMocks.getCharacter.mockResolvedValue({
+      character: remote,
+      enrichment: emptyCharacterViewEnrichment(),
+    });
+
+    patchBodies.length = 0;
+    characterMocks.lastPatchBody = null;
+    const getCharacterCallsBefore = characterMocks.getCharacter.mock.calls.length;
+    const handler = characterMocks.realtimeHandlers[0]!;
+    await act(async () => {
+      handler({ new: { id: 'c-qa', updated_at: remote.updatedAt } });
+    });
+    await waitFor(() =>
+      expect(characterMocks.getCharacter.mock.calls.length).toBeGreaterThan(getCharacterCallsBefore),
+    );
+    await waitFor(
+      () =>
+        expect(result.current.character?.equipment?.items?.[0]?.quantity).toBe(expectedAfterRealtime),
+      { timeout: 3000 },
+    );
+    expect(patchBodies.length).toBe(0);
+    await act(async () => {
+      await result.current.saveNow();
+    });
+    await waitFor(() => expect(patchBodies.length).toBe(1));
+    expect(serverQty).toBe(expectedServerAfterSave);
+    await waitFor(() => expect(result.current.hasUnsavedChanges).toBe(false));
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 2_500));
+    });
+    expect(patchBodies.length).toBe(1);
+    return { result, patchBodies };
+  }
+
+  it('REALTIME C2 +1/+2 concurrent qty merge shows merged qty 6 and saves once', async () => {
+    await mountRealtimeQtyConflictCase(4, 5, 6, 6);
+  });
+
+  it('REALTIME C2 +2/+2 concurrent qty merge shows merged qty 7 and saves once', async () => {
+    await mountRealtimeQtyConflictCase(5, 5, 7, 7);
+  });
+
+  it('REALTIME C2 -1/+2 concurrent qty merge shows merged qty 4 and saves once', async () => {
+    await mountRealtimeQtyConflictCase(2, 5, 4, 4);
+  });
+
+  it('REALTIME concurrent notes on both tabs keeps local and toasts overwrite', async () => {
+    resetCharacterSaveLockForTests();
+    let serverNotes = 'remote-notes';
+    let serverUpdatedAt = '2026-01-01T00:00:00.000Z';
+    const patchBodies: Array<Record<string, unknown>> = [];
+
+    const serverDoc = () => {
+      const base = characterWithHealthPotion();
+      base.notes = serverNotes;
+      base.updatedAt = serverUpdatedAt;
+      return base;
+    };
+
+    characterMocks.getCharacter.mockImplementation(async () => ({
+      character: serverDoc(),
+      enrichment: emptyCharacterViewEnrichment(),
+    }));
+    queryClient.setQueryData(['characters', 'detail', characterViewerId('user'), 'c-qa'], {
+      character: serverDoc(),
+      enrichment: emptyCharacterViewEnrichment(),
+    });
+
+    vi.mocked(apiFetch).mockImplementation(async (_url, opts) => {
+      const body = JSON.parse(opts?.body as string) as Record<string, unknown>;
+      patchBodies.push(body);
+      if (typeof body.notes === 'string') serverNotes = body.notes;
+      serverUpdatedAt = `2026-01-03T00:00:0${patchBodies.length}.000Z`;
+      return { ok: true as const, updatedAt: serverUpdatedAt };
+    });
+
+    const { result } = await mountSheet();
+    await waitFor(() => expect(characterMocks.realtimeHandlers.length).toBeGreaterThan(0));
+
+    await act(async () => {
+      result.current.setCharacter({
+        ...(result.current.character as Character),
+        notes: 'local-notes',
+      });
+    });
+    await waitFor(() => expect(result.current.hasUnsavedChanges).toBe(true));
+
+    const remote = serverDoc();
+    remote.notes = 'other-tab-notes';
+    remote.updatedAt = '2026-01-02T00:00:00.000Z';
+    serverUpdatedAt = remote.updatedAt as string;
+    characterMocks.getCharacter.mockResolvedValue({
+      character: remote,
+      enrichment: emptyCharacterViewEnrichment(),
+    });
+
+    const handler = characterMocks.realtimeHandlers[0]!;
+    await act(async () => {
+      handler({ new: { id: 'c-qa', updated_at: remote.updatedAt } });
+    });
+
+    await waitFor(() => expect(result.current.character?.notes).toBe('local-notes'));
+    await waitFor(() =>
+      expect(screen.getAllByText(/Another tab updated this character.*notes/i).length).toBeGreaterThan(
+        0,
+      ),
+    );
+
+    await act(async () => {
+      await result.current.saveNow();
+    });
+
+    await waitFor(() => expect(result.current.hasUnsavedChanges).toBe(false));
+    expect(patchBodies).toHaveLength(1);
+    expect(serverNotes).toBe('local-notes');
   });
 
   it('swallowed edit: qty change plus updatedAt bump in one commit stays dirty and PATCHes', async () => {

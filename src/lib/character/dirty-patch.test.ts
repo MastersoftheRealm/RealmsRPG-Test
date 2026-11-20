@@ -12,6 +12,7 @@ import {
   listAutosaveConflictRemoteOverwrites,
   listEquipmentConflictRemoteOverwrites,
   mergeRemotePreservingDirty,
+  mergeSheetAutosaveBaseline,
   pickDirtyCharacterFields,
   withDirtyClears,
 } from './dirty-patch';
@@ -338,6 +339,100 @@ describe('applyCharacterDirtyPatch / mergeRemotePreservingDirty', () => {
     };
     const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
     expect((merged.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(4);
+  });
+
+  it('autosave baseline adopts remote qty when both tabs changed +2/+2 (realtime CAS)', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 3,
+          },
+        ],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 5,
+          },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 5,
+          },
+        ],
+      },
+    };
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    expect((merged.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(7);
+    const nextBaseline = mergeSheetAutosaveBaseline(merged, baseline, ['equipment'], local, remote);
+    expect((nextBaseline.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(
+      5,
+    );
+  });
+
+  it('autosave baseline adopts remote qty when both tabs changed quantity (realtime CAS)', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 3,
+          },
+        ],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 5,
+          },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 4,
+          },
+        ],
+      },
+    };
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    expect((merged.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(6);
+    const nextBaseline = mergeSheetAutosaveBaseline(merged, baseline, ['equipment'], local, remote);
+    expect((nextBaseline.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(
+      5,
+    );
+    const retryDirty = pickDirtyCharacterFields(merged, nextBaseline);
+    expect((retryDirty.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(
+      6,
+    );
   });
 
   it('409 merge treats cleanForSave omitted quantity 1 as one', () => {

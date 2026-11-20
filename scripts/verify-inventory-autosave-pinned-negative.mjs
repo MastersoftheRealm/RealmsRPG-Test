@@ -11,6 +11,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PIN_FACD = 'facd105e';
 const PIN_RESEED = '36318f11';
 const PIN_BASELINE_GUARD = '6cc795bf';
+const PIN_REALTIME_C2 = 'd492eb7c';
 
 const REGRESSION_GLOBS = [
   'src/lib/character/character-autosave-baseline-context.test.tsx',
@@ -18,7 +19,7 @@ const REGRESSION_GLOBS = [
   'src/lib/character/dirty-patch.test.ts',
 ];
 const TEST_NAME_FILTER =
-  'sequence 1|sequence 3|swallowed edit|concurrent remote potion|does not restore a persisted baseline|fresh row default qty';
+  'sequence 1|sequence 3|swallowed edit|concurrent remote potion|does not restore a persisted baseline|fresh row default qty|REALTIME C2|REALTIME concurrent notes';
 
 const PINNED_FACD_FILES = [
   'src/lib/character/dirty-patch.ts',
@@ -27,6 +28,11 @@ const PINNED_FACD_FILES = [
 ];
 const PINNED_RESEED_FILES = ['src/app/(detail)/characters/[id]/use-character-sheet-page-data.ts'];
 const PINNED_BASELINE_GUARD_FILES = [
+  'src/app/(detail)/characters/[id]/use-character-sheet-page-data.ts',
+];
+const PINNED_REALTIME_C2_FILES = [
+  'src/lib/character/dirty-patch.ts',
+  'src/lib/character/realtime-merge.ts',
   'src/app/(detail)/characters/[id]/use-character-sheet-page-data.ts',
 ];
 
@@ -87,7 +93,12 @@ function assertPasses(res, label) {
 
 const currentBackups = new Map();
 for (const rel of [
-  ...new Set([...PINNED_FACD_FILES, ...PINNED_RESEED_FILES, ...PINNED_BASELINE_GUARD_FILES]),
+  ...new Set([
+    ...PINNED_FACD_FILES,
+    ...PINNED_RESEED_FILES,
+    ...PINNED_BASELINE_GUARD_FILES,
+    ...PINNED_REALTIME_C2_FILES,
+  ]),
 ]) {
   currentBackups.set(rel, fs.readFileSync(path.join(root, rel), 'utf8'));
 }
@@ -109,6 +120,12 @@ const guardBackups = swapFiles(PIN_BASELINE_GUARD, PINNED_BASELINE_GUARD_FILES);
 const guardRes = runVitest('concurrent remote potion');
 restoreFiles(guardBackups);
 assertFails(guardRes, PIN_BASELINE_GUARD);
+
+// d492eb7c: realtime C2 qty merge + baseline CAS + notes toast
+const c2Backups = swapFiles(PIN_REALTIME_C2, PINNED_REALTIME_C2_FILES);
+const c2Res = runVitest('REALTIME C2|REALTIME concurrent notes');
+restoreFiles(c2Backups);
+assertFails(c2Res, PIN_REALTIME_C2);
 
 // Current tree must pass
 const passRes = runVitest(TEST_NAME_FILTER);
