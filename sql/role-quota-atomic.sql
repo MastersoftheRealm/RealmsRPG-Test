@@ -331,7 +331,7 @@ BEGIN
 END;
 $fn$;
 
--- Live has no service_role EXECUTE on create_character_relational; decision pending ClickUp 1dfe8wf2g9e.
+-- Live has no service_role EXECUTE on create_character_relational; whether it should is an open decision (tracked in ClickUp).
 REVOKE ALL ON FUNCTION public.create_character_relational(text,jsonb,uuid)
   FROM PUBLIC, anon, authenticated, service_role;
 REVOKE ALL ON FUNCTION public.insert_user_library_row_with_quota(text,jsonb)

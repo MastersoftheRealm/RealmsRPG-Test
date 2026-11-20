@@ -71,4 +71,13 @@ describe('runTaskIdRatchetCheck on fixture tree', () => {
     fs.writeFileSync(path.join(dir, 'src', 'ok.ts'), '// TASK-1');
     expect(measureTaskIdRatchet(dir)).toEqual({ 'src/ok.ts': { taskNumeric: 1 } });
   });
+
+  it('measureTaskIdRatchet ignores pg_dump baselines under sql/schema/', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'task-id-schema-'));
+    fs.mkdirSync(path.join(dir, 'sql', 'schema'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'sql', 'schema', '0000_baseline.sql'), '-- TASK-999');
+    fs.mkdirSync(path.join(dir, 'sql'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'sql', 'utility.sql'), '-- TASK-1');
+    expect(measureTaskIdRatchet(dir)).toEqual({ 'sql/utility.sql': { taskNumeric: 1 } });
+  });
 });
