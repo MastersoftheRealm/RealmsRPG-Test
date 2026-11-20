@@ -26,7 +26,7 @@ import {
 } from '@/components/patterns/list/creature-stat-block-helpers';
 import type { GuidedDraft } from '@/stores/guided-creator-store';
 import type { LibraryPower } from '@/types/library';
-import type { CharacterPower } from '@/types';
+import type { CharacterPower, Item } from '@/types';
 import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
 
 /**
@@ -145,7 +145,7 @@ describe('Power Range Training Points on the live paths', () => {
         innatePowerIds: [],
         techniqueIds: [],
         equipment: [],
-      } as GuidedDraft,
+      } as unknown as GuidedDraft,
       { officialPowers: [near, far], powerPartsDb: [range] },
     );
     expect(guided).toBe(3);
@@ -249,7 +249,7 @@ describe('Power Range Training Points on the live paths', () => {
           id: 'weapon',
           name: 'Weapon',
           properties: [{ id: property.id, name: property.name, op_1_lvl: 1 }],
-        },
+        } as unknown as Item,
       ],
       armor: [],
       itemPropertiesDb: [property],
