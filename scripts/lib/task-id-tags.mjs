@@ -100,6 +100,8 @@ export function isTaskIdRatchetScopeFile(relPath) {
   if (TASK_ID_RATCHET_IGNORED.has(normalized)) return false;
   if (normalized.endsWith('.md')) return false;
   if (!/^(src|scripts|sql)\//.test(normalized)) return false;
+  // pg_dump baselines under sql/schema/ are machine output (TASK-* tags come from live comments).
+  if (normalized.startsWith('sql/schema/')) return false;
   if (/\.(test|spec)\.(ts|tsx|js|jsx|mjs|cjs)$/.test(normalized)) return false;
   if (normalized.endsWith('.test.mjs')) return false;
   return /\.(ts|tsx|js|jsx|mjs|cjs|sql)$/.test(normalized);

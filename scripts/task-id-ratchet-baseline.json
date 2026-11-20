@@ -11,9 +11,6 @@
       "taskNumeric": 1,
       "devVerification": 2
     },
-    "sql/schema/0000_baseline_2026-08-13.sql": {
-      "taskNumeric": 7
-    },
     "src/app/(auth)/actions.ts": {
       "clickupLegacy": 2
     },

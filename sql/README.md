@@ -32,7 +32,7 @@
 7. Merge and deploy the matching app build.
 
 Automated proof: `npm run test:inventory-cas-pgtap`.
-| [`schema/0000_baseline_2026-08-13.sql`](schema/0000_baseline_2026-08-13.sql) | Committed `pg_dump --schema-only` snapshot (**stale** vs live — regenerate before relying on it). |
+| [`schema/0000_baseline_2026-11-20.sql`](schema/0000_baseline_2026-11-20.sql) | Committed `pg_dump --schema-only --no-owner` snapshot of live RealmsRPG-Test (ACLs included; `npm run db:diff` compares against this). |
 
 **Relational characters (ADR-0031):** Run
 [`characters-relational-audit.sql`](characters-relational-audit.sql) read-only
