@@ -55,7 +55,7 @@ import {
   applySheetAutosaveConflictFields,
   characterLockToken,
   formatInventoryConflictOverwriteToast,
-  listEquipmentConflictRemoteOverwrites,
+  listAutosaveConflictRemoteOverwrites,
   mergeRemotePreservingDirty,
   mergeSheetAutosaveBaseline,
   pickDirtyCharacterFields,
@@ -409,15 +409,12 @@ export function useCharacterSheetPageData(id: string) {
         mergeOnConflict: (remote) => {
           const remoteClean = cleanForSave(remote, rules) as Record<string, unknown>;
           const localClean = withDirtyClears(cleaned, dirty);
-          if (Object.prototype.hasOwnProperty.call(dirty, 'equipment')) {
-            conflictOverwriteFieldsRef.current = listEquipmentConflictRemoteOverwrites(
-              inventoryBaselineAtSave?.equipment,
-              localClean.equipment,
-              remoteClean.equipment,
-            );
-          } else {
-            conflictOverwriteFieldsRef.current = [];
-          }
+          conflictOverwriteFieldsRef.current = listAutosaveConflictRemoteOverwrites(
+            inventoryBaselineAtSave,
+            localClean,
+            remoteClean,
+            Object.keys(dirty),
+          );
           const mergedClean = mergeRemotePreservingDirty(
             remoteClean,
             localClean,

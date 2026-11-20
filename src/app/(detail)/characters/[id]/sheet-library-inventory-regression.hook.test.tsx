@@ -402,6 +402,129 @@ describe('library inventory + sheet autosave baseline (hook)', () => {
     );
   });
 
+  it('after inventoryPatch-only save merge, sheet remove library knife uses remove CAS', async () => {
+    const { result } = await mountSheet();
+    await waitFor(() => expect(result.current.character?.id).toBe('c-qa'));
+
+    const saveResult: CharacterSaveBaselineResult = {
+      applied: {
+        inventoryPatch: (libraryAddSaveResult().applied as { inventoryPatch: unknown }).inventoryPatch,
+      },
+      updatedAt: libraryAddSaveResult().updatedAt,
+      inventoryPatchResult: libraryAddSaveResult().inventoryPatchResult,
+    };
+
+    await act(async () => {
+      queryClient.setQueryData(
+        ['characters', 'detail', characterViewerId('user'), 'c-qa'],
+        (prev: unknown) =>
+          mergeCharacterSaveResultIntoDetailQuery(
+            prev as Parameters<typeof mergeCharacterSaveResultIntoDetailQuery>[0],
+            saveResult as Parameters<typeof mergeCharacterSaveResultIntoDetailQuery>[1],
+          ),
+      );
+      advanceBaselineBridge.current?.('c-qa', saveResult);
+    });
+
+    await waitFor(() => {
+      const weapons = (result.current.character?.equipment?.weapons ?? []) as Array<{
+        inventoryRowId?: string;
+      }>;
+      expect(weapons.some((w) => w.inventoryRowId === KNIFE_ROW)).toBe(true);
+    });
+
+    await act(async () => {
+      result.current.setCharacter({
+        ...(result.current.character as Character),
+        equipment: {
+          ...(result.current.character as Character).equipment,
+          weapons: [],
+        },
+      });
+    });
+
+    await waitFor(() => expect(result.current.hasUnsavedChanges).toBe(true));
+    characterMocks.lastPatchBody = null;
+    await act(async () => {
+      await result.current.saveNow();
+    });
+
+    await waitFor(() => expect(characterMocks.lastPatchBody).toBeTruthy());
+    const removePatch = (characterMocks.lastPatchBody as unknown as Record<string, unknown>)
+      .inventoryPatch as {
+      ops: unknown[];
+    };
+    const ops = removePatch.ops;
+    expect(ops).toEqual([
+      expect.objectContaining({
+        op: 'remove',
+        bucket: 'weapons',
+        inventoryRowId: KNIFE_ROW,
+      }),
+    ]);
+    expect(ops.some((op) => (op as { op?: string }).op === 'add')).toBe(false);
+  });
+
+  it('after inventoryPatch-only save merge, first knife qty bump sends update not add (E)', async () => {
+    const { result } = await mountSheet();
+    await waitFor(() => expect(result.current.character?.id).toBe('c-qa'));
+
+    const saveResult: CharacterSaveBaselineResult = {
+      applied: {
+        inventoryPatch: (libraryAddSaveResult().applied as { inventoryPatch: unknown }).inventoryPatch,
+      },
+      updatedAt: libraryAddSaveResult().updatedAt,
+      inventoryPatchResult: libraryAddSaveResult().inventoryPatchResult,
+    };
+
+    await act(async () => {
+      queryClient.setQueryData(
+        ['characters', 'detail', characterViewerId('user'), 'c-qa'],
+        (prev: unknown) =>
+          mergeCharacterSaveResultIntoDetailQuery(
+            prev as Parameters<typeof mergeCharacterSaveResultIntoDetailQuery>[0],
+            saveResult as Parameters<typeof mergeCharacterSaveResultIntoDetailQuery>[1],
+          ),
+      );
+      advanceBaselineBridge.current?.('c-qa', saveResult);
+    });
+
+    await waitFor(() => {
+      const weapons = (result.current.character?.equipment?.weapons ?? []) as Array<{
+        inventoryRowId?: string;
+      }>;
+      expect(weapons.some((w) => w.inventoryRowId === KNIFE_ROW)).toBe(true);
+    });
+
+    characterMocks.lastPatchBody = null;
+    await act(async () => {
+      const weapons = (result.current.character as Character).equipment?.weapons ?? [];
+      const knife = weapons.find((w) => w.inventoryRowId === KNIFE_ROW);
+      result.current.setCharacter({
+        ...(result.current.character as Character),
+        equipment: {
+          ...(result.current.character as Character).equipment,
+          weapons: [{ ...knife!, quantity: 2 }],
+        },
+      });
+    });
+
+    await waitFor(() => expect(result.current.hasUnsavedChanges).toBe(true));
+    await act(async () => {
+      await result.current.saveNow();
+    });
+
+    await waitFor(() => expect(characterMocks.lastPatchBody).toBeTruthy());
+    const qtyPatch = (characterMocks.lastPatchBody as unknown as Record<string, unknown>).inventoryPatch as {
+      ops: unknown[];
+    };
+    const ops = qtyPatch.ops;
+    expect(ops).toEqual([
+      expect.objectContaining({ op: 'update', inventoryRowId: KNIFE_ROW, bucket: 'weapons' }),
+    ]);
+    expect(ops.some((op) => (op as { op?: string }).op === 'add')).toBe(false);
+  });
+
   it('pending local notes are included on the next sheet PATCH after library baseline advance', async () => {
     const { result } = await mountSheet();
     await waitFor(() => expect(result.current.character?.id).toBe('c-qa'));

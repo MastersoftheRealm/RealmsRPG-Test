@@ -9,6 +9,7 @@ import {
   characterTimestampsMatch,
   formatInventoryConflictOverwriteToast,
   isStaleCharacterWrite,
+  listAutosaveConflictRemoteOverwrites,
   listEquipmentConflictRemoteOverwrites,
   mergeRemotePreservingDirty,
   pickDirtyCharacterFields,
@@ -333,6 +334,16 @@ describe('applyCharacterDirtyPatch / mergeRemotePreservingDirty', () => {
       'description',
     ]);
     expect(formatInventoryConflictOverwriteToast(['description'])).toContain('description');
+  });
+
+  it('lists notes when both tabs edited the same top-level field (C1)', () => {
+    const baseline = { notes: 'start' };
+    const remote = { notes: 'tab-a' };
+    const local = { notes: 'tab-b' };
+    expect(listAutosaveConflictRemoteOverwrites(baseline, local, remote, ['notes'])).toEqual([
+      'notes',
+    ]);
+    expect(formatInventoryConflictOverwriteToast(['notes'])).toContain('notes');
   });
 
   it('keeps local description when remote only changed quantity', () => {
