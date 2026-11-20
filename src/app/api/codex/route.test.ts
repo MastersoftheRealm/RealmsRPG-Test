@@ -299,6 +299,17 @@ describe('GET /api/codex', () => {
     expect(mockGetSession).toHaveBeenCalled();
   });
 
+  it('hides a species with no catalog_listing value from public reads (same rule as /api/official)', async () => {
+    const species = ROWS.codex_species!;
+    species.push({ id: 'species-no-listing', name: 'No Listing', sizes: 'Medium' });
+    try {
+      const body = await getJson('http://localhost/api/codex?collection=species');
+      expect(body.species?.map((s) => s.id)).toEqual(['species-1']);
+    } finally {
+      species.pop();
+    }
+  });
+
   it('routes admin creatureFeats includeUnlisted=1 through the session client (not the CDN path)', async () => {
     mockCreatePublicClient.mockReturnValue(mockSupabase() as never);
     mockGetSession.mockResolvedValue({
