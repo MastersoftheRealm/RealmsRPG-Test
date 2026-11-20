@@ -3288,7 +3288,7 @@ No production file imports these names. A test import does not count. The file t
 - `src/lib/character/appearance-age.ts`: `parseAgeFromAppearance`, `stripAgeFromAppearance`
 - `src/lib/character/character-name-limit.ts`: `CHARACTER_DEFAULT_NAME`
 - `src/lib/character/character-relational-save-errors.ts`: `CHARACTER_SAVE_FAILED_MESSAGE`, `parseCharacterRelationalValidationError`
-- `src/lib/character/dirty-patch.ts`: `isStaleCharacterWrite`
+- `src/lib/character/dirty-patch.ts`: `isStaleCharacterWrite`, `listAutosaveConflictRemoteOverwrites`, `listEquipmentConflictRemoteOverwrites`, `formatInventoryConflictOverwriteToast`
 - `src/lib/character/innate-power-capacity.ts`: `resolveCharacterInnateEnergy`
 - `src/lib/character/notes-tab-sections.ts`: `DEFAULT_NOTES_SECTION_ORDER`
 - `src/lib/character/prune-trait-sheet-state.ts`: `PruneTraitSheetStateCharacterInput` (type)
