@@ -21,9 +21,12 @@ import { useAuthStore } from '@/stores/auth-store';
 import type { Character, CharacterSummary } from '@/types';
 import { getGuestCharactersList, isGuestCharacterId } from '@/lib/guest-character-storage';
 import {
+  applyInventoryPatchToEquipment,
   coerceInventoryPatchCreatedRows,
+  filterIdempotentInventoryPatchOps,
   mergeInventoryCreatedRows,
   normalizeEquipmentForInventoryRelational,
+  type InventoryPatchPayload,
 } from '@/lib/character/inventory-patch';
 
 /** Viewer segment for `characterKeys` (ADR-0013 / TASK-741). */
@@ -77,18 +80,40 @@ export function mergeCharacterSaveResultIntoDetailQuery(
     };
   },
 ): GetCharacterResult | undefined {
+  const applied = { ...result.applied } as Record<string, unknown>;
+  const inventoryPatch = applied.inventoryPatch as InventoryPatchPayload | undefined;
+  if (inventoryPatch) delete applied.inventoryPatch;
+
+  const prevUpdatedAt = prev?.character?.updatedAt;
+  const saveIsStale =
+    prevUpdatedAt &&
+    result.updatedAt &&
+    String(prevUpdatedAt) > String(result.updatedAt);
+
   const merged = mergeCharacterDetailQueryData(prev, {
-    ...result.applied,
-    ...(result.updatedAt ? { updatedAt: result.updatedAt } : {}),
+    ...(applied as Partial<Character>),
+    ...(result.updatedAt && !saveIsStale ? { updatedAt: result.updatedAt } : {}),
   });
   const created = coerceInventoryPatchCreatedRows(result.inventoryPatchResult?.createdRows ?? []);
   if (!merged?.character) return merged;
   let equipment = merged.character.equipment;
-  if (created.length > 0) {
+  let equipmentTouched = false;
+  if (!saveIsStale && inventoryPatch?.ops?.length) {
+    const replay = filterIdempotentInventoryPatchOps(equipment, inventoryPatch);
+    if (replay.ops.length > 0) {
+      equipment = applyInventoryPatchToEquipment(
+        equipment,
+        replay,
+      ) as Character['equipment'];
+      equipmentTouched = true;
+    }
+  }
+  if (!saveIsStale && created.length > 0) {
     equipment = mergeInventoryCreatedRows(equipment, created) as Character['equipment'];
+    equipmentTouched = true;
   }
   const normalized = normalizeEquipmentForInventoryRelational(equipment) as Character['equipment'];
-  if (normalized === equipment && created.length === 0) return merged;
+  if (normalized === equipment && !equipmentTouched) return merged;
   return {
     ...merged,
     character: {

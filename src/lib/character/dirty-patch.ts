@@ -316,6 +316,45 @@ export function listEquipmentConflictRemoteOverwrites(
   return [...overwrites];
 }
 
+const TOP_LEVEL_CONFLICT_LABELS: Record<string, string> = {
+  notes: 'notes',
+  name: 'name',
+};
+
+/** Same-field overwrites for autosave conflict retry (equipment + top-level dirty keys). */
+export function listAutosaveConflictRemoteOverwrites(
+  baselineDocument: Record<string, unknown> | null | undefined,
+  localClean: Record<string, unknown>,
+  remoteClean: Record<string, unknown>,
+  dirtyKeys: readonly string[],
+): string[] {
+  const overwrites = new Set<string>();
+  const baseline = baselineDocument ?? {};
+
+  if (dirtyKeys.includes('equipment')) {
+    for (const field of listEquipmentConflictRemoteOverwrites(
+      baseline.equipment,
+      localClean.equipment,
+      remoteClean.equipment,
+    )) {
+      overwrites.add(field);
+    }
+  }
+
+  for (const key of dirtyKeys) {
+    if (key === 'equipment' || isCharacterPatchMetaKey(key)) continue;
+    const b = baseline[key];
+    const l = localClean[key];
+    const r = remoteClean[key];
+    const localChanged = !stableEqual(l, b);
+    const remoteChanged = !stableEqual(r, b);
+    if (localChanged && remoteChanged) {
+      overwrites.add(TOP_LEVEL_CONFLICT_LABELS[key] ?? key);
+    }
+  }
+  return [...overwrites];
+}
+
 export function formatInventoryConflictOverwriteToast(overwrittenFields: string[]): string {
   const unique = [...new Set(overwrittenFields)];
   if (unique.length === 0) {

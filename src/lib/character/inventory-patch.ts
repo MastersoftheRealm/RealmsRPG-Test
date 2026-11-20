@@ -15,7 +15,7 @@ const INVENTORY_PATCH_BUCKETS = [
   'offHand',
 ] as const;
 
-type InventoryPatchBucket = (typeof INVENTORY_PATCH_BUCKETS)[number];
+export type InventoryPatchBucket = (typeof INVENTORY_PATCH_BUCKETS)[number];
 
 export type InventoryCasSnapshot = {
   quantity: number;
@@ -81,6 +81,40 @@ function readInventoryRowId(row: Record<string, unknown>): string | null {
   const raw = row.inventoryRowId;
   if (typeof raw === 'string' && raw.trim()) return raw.trim();
   return null;
+}
+
+function equipmentHasInventoryRow(
+  equipment: unknown,
+  bucket: InventoryPatchBucket,
+  inventoryRowId: string,
+): boolean {
+  return readEquipmentBucket(equipment, bucket).some(
+    (row) => readInventoryRowId(row) === inventoryRowId,
+  );
+}
+
+/** Skip `add` ops when the detail cache already holds the row (replay-safe library saves). */
+export function filterIdempotentInventoryPatchOps(
+  equipment: unknown,
+  patch: InventoryPatchPayload,
+): InventoryPatchPayload {
+  const ops = patch.ops.filter((op) => {
+    if (op.op !== 'add') return true;
+    const rowId = op.inventoryRowId ?? readInventoryRowId(op.item);
+    if (!rowId) return true;
+    return !equipmentHasInventoryRow(equipment, op.bucket, rowId);
+  });
+  return { ops };
+}
+
+export function inventoryCasExpectedMatchesRow(
+  row: Record<string, unknown>,
+  bucket: InventoryPatchBucket,
+  expected: InventoryCasSnapshot | Record<string, unknown>,
+): boolean {
+  return (
+    JSON.stringify(inventoryRowCasSnapshot(row, bucket)) === JSON.stringify(expected)
+  );
 }
 
 function newInventoryRowId(): string {
@@ -195,10 +229,8 @@ function leanRowForPatchOp(
     out.description =
       typeof description === 'string' && description.trim().length > 0 ? description.trim() : null;
   }
-  if (Object.prototype.hasOwnProperty.call(normalized, 'cost')) {
-    const cost = normalized.cost;
-    out.cost = typeof cost === 'number' && Number.isFinite(cost) ? cost : null;
-  }
+  const cost = normalized.cost;
+  out.cost = typeof cost === 'number' && Number.isFinite(cost) ? cost : null;
   return out;
 }
 
@@ -441,8 +473,10 @@ export function applyInventoryPatchToEquipment(
   patch: InventoryPatchPayload,
 ): unknown {
   if (!patch.ops.length) return equipment;
-  if (!equipment || typeof equipment !== 'object') return equipment;
-  const equip: Record<string, unknown> = { ...(equipment as Record<string, unknown>) };
+  const equip: Record<string, unknown> =
+    equipment && typeof equipment === 'object'
+      ? { ...(equipment as Record<string, unknown>) }
+      : {};
 
   for (const op of patch.ops) {
     const bucket = op.bucket;
@@ -453,10 +487,19 @@ export function applyInventoryPatchToEquipment(
     } else if (op.op === 'add') {
       const rowId = op.inventoryRowId ?? readInventoryRowId(op.item);
       const row: Record<string, unknown> = normalizeInventoryRowForRelational(
-        { ...op.item },
+        { ...op.item, ...(rowId ? { inventoryRowId: rowId } : {}) },
         bucket,
       );
       if (rowId) row.inventoryRowId = rowId;
+      if (!Object.prototype.hasOwnProperty.call(row, 'cost')) {
+        if (typeof op.item.cost === 'number' && Number.isFinite(op.item.cost)) {
+          row.cost = op.item.cost;
+        } else if (String(op.item.id ?? '').startsWith('lib-')) {
+          row.cost = 0;
+        } else if (op.item.cost === null) {
+          row.cost = null;
+        }
+      }
       const position = Math.max(1, op.position ?? rows.length + 1);
       const index = Math.min(position - 1, rows.length);
       rows = [...rows.slice(0, index), row, ...rows.slice(index)];

@@ -87,6 +87,7 @@ describe('character-service inventory CAS save', () => {
           name: 'Health Potion',
           quantity: 3,
           equipped: false,
+          cost: null,
         },
       },
     ]);

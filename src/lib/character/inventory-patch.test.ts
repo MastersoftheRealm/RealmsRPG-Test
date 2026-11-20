@@ -139,6 +139,7 @@ describe('inventory patch', () => {
         name: 'Health Potion',
         quantity: 3,
         equipped: true,
+        cost: null,
       },
     });
   });
@@ -167,7 +168,13 @@ describe('inventory patch', () => {
         expect.objectContaining({
           op: 'add',
           bucket: 'items',
-          item: { id: 'grapple-rope', name: 'Grapple Rope', equipped: false, quantity: 1 },
+          item: {
+            id: 'grapple-rope',
+            name: 'Grapple Rope',
+            equipped: false,
+            quantity: 1,
+            cost: null,
+          },
           position: 2,
         }),
       ]),

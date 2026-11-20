@@ -1483,6 +1483,7 @@ Every path below is a non-test source file. The checker fails if one is missing 
 - `src/lib/character/current-follows-max.ts`
 - `src/lib/character/dirty-patch.ts`
 - `src/lib/character/inventory-patch.ts`
+- `src/lib/character/inventory-cas-mock-server.ts`
 - `src/lib/character/innate-power-capacity.ts`
 - `src/lib/character/notes-tab-sections.ts`
 - `src/lib/character/power-energy-spend.ts`
@@ -3268,7 +3269,6 @@ No production file imports these names. A test import does not count. The file t
 - `src/hooks/use-user-library.ts`: `userLibraryAfterMutationKeys`
 - `src/lib/admin-users-search.ts`: `buildAdminUsersIlikePattern`, `compareAdminUserProfilesForListing`, `profileMatchesAdminUserSearch`, `rolesMatchingAdminUserSearchQuery`
 - `src/lib/ancestry/ancestry-selection.ts`: `areSpeciesTraitChoicesComplete`
-- `src/lib/api-client.ts`: `ApiError`
 - `src/lib/api-input-validation-scan.ts`: `collectInputValidationGaps`, `collectReExportedHandlerMethods`, `getHandlerMethod`, `handlerReadsJsonBody`, `handlerReadsQuery`, `handlerUsesRouteParams`, `splitHandlerChunks`
 - `src/lib/api-mutation-guard-route-scan.ts`: `chunkInvokesMutationGuard`, `stripCommentsAndStringLiterals`
 - `src/lib/api-mutation-guard.ts`: `isApiMutationMethod`
@@ -3288,11 +3288,12 @@ No production file imports these names. A test import does not count. The file t
 - `src/lib/character/appearance-age.ts`: `parseAgeFromAppearance`, `stripAgeFromAppearance`
 - `src/lib/character/character-name-limit.ts`: `CHARACTER_DEFAULT_NAME`
 - `src/lib/character/character-relational-save-errors.ts`: `CHARACTER_SAVE_FAILED_MESSAGE`, `parseCharacterRelationalValidationError`
-- `src/lib/character/dirty-patch.ts`: `isStaleCharacterWrite`
+- `src/lib/character/dirty-patch.ts`: `isStaleCharacterWrite`, `listEquipmentConflictRemoteOverwrites`
 - `src/lib/character/innate-power-capacity.ts`: `resolveCharacterInnateEnergy`
 - `src/lib/character/notes-tab-sections.ts`: `DEFAULT_NOTES_SECTION_ORDER`
 - `src/lib/character/prune-trait-sheet-state.ts`: `PruneTraitSheetStateCharacterInput` (type)
 - `src/lib/character/relational-lean-save.ts`: `RELATIONAL_SAVE_ENTRY_ALLOWLIST`
+- `src/lib/character/inventory-cas-mock-server.ts`: `InventoryCasMockServer`, `InventoryCasMockRow` (type)
 - `src/lib/character/inventory-patch.ts`: `buildInventoryPatch`, `inventoryRowCasSnapshot`, `replaceEquipmentDirtyWithInventoryPatch`
 - `src/lib/character/save-lock.ts`: `resetCharacterSaveLockForTests`
 - `src/lib/character/sheet-allocation-reset.ts`: `resetSheetSkillAllocationRows`
