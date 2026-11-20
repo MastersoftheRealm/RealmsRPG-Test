@@ -63,7 +63,7 @@ describe('CharacterAutosaveBaselineProvider', () => {
 
     function Tree() {
       const [generation, setGeneration] = useState(0);
-      const [row, setRow] = useState(initial);
+      const [row, setRow] = useState<Record<string, unknown>>(initial);
       return (
         <Wrapper>
           <BaselineHost key={generation} row={row} />
@@ -71,7 +71,7 @@ describe('CharacterAutosaveBaselineProvider', () => {
             type="button"
             data-testid="remount-with-server-row"
             onClick={() => {
-              setRow(structuredClone(serverRow) as Record<string, unknown>);
+              setRow(structuredClone(serverRow));
               setGeneration((g) => g + 1);
             }}
           />

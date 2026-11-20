@@ -317,7 +317,7 @@ export function useCharacterSheetPageData(id: string) {
                 updatedAt: payload.new.updated_at,
               },
             );
-            if (nextBaseline && !sheetDirtyAgainstSavedBaseline(prev)) {
+            if (nextBaseline) {
               savedCleanRef.current = nextBaseline;
             }
             return next;
@@ -339,7 +339,7 @@ export function useCharacterSheetPageData(id: string) {
                   savedCleanRef.current,
                   { suppressResources, updatedAt: remote.updatedAt },
                 );
-                if (nextBaseline && !sheetDirtyAgainstSavedBaseline(prev)) {
+                if (nextBaseline) {
                   savedCleanRef.current = nextBaseline;
                 }
                 return next;
@@ -516,7 +516,7 @@ export function useCharacterSheetPageData(id: string) {
                 savedCleanRef.current,
                 { updatedAt: remoteCharacter.updatedAt },
               );
-              if (nextBaseline && !sheetDirtyAgainstSavedBaseline(prev)) {
+              if (nextBaseline) {
                 savedCleanRef.current = nextBaseline;
               }
               return next;

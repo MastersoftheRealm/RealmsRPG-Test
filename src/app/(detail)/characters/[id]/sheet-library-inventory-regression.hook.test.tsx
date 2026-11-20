@@ -330,7 +330,7 @@ describe('library inventory + sheet autosave baseline (hook)', () => {
 
   async function mountSheetWithSharedProvider() {
     const apiRef = { current: null as ReturnType<typeof useCharacterSheetPageData> | null };
-    let remountButton: HTMLButtonElement | null = null;
+    let remountButton: HTMLElement | null = null;
 
     function SheetHost() {
       const data = useCharacterSheetPageData('c-qa');
@@ -1143,6 +1143,119 @@ describe('library inventory + sheet autosave baseline (hook)', () => {
     const knifeOps = ops.filter((op) => op.inventoryRowId === KNIFE_ROW);
     expect(knifeOps).toHaveLength(0);
     expect(ops.filter((op) => op.op === 'update')).toHaveLength(0);
+    expect(characterMocks.lastPatchBody?.inventoryPatch).toBeUndefined();
+  });
+
+  it('concurrent remote potion qty while editing notes saves without CAS double-count', async () => {
+    resetCharacterSaveLockForTests();
+    let serverQty = 3;
+    let serverNotes = 'baseline-note';
+    let serverUpdatedAt = '2026-01-01T00:00:00.000Z';
+    const patchBodies: Array<Record<string, unknown>> = [];
+
+    const serverDoc = () => {
+      const base = characterWithHealthPotion();
+      base.notes = serverNotes;
+      base.equipment!.items![0]!.quantity = serverQty;
+      base.updatedAt = serverUpdatedAt;
+      return base;
+    };
+
+    characterMocks.getCharacter.mockImplementation(async () => ({
+      character: serverDoc(),
+      enrichment: emptyCharacterViewEnrichment(),
+    }));
+    queryClient.setQueryData(['characters', 'detail', characterViewerId('user'), 'c-qa'], {
+      character: serverDoc(),
+      enrichment: emptyCharacterViewEnrichment(),
+    });
+
+    vi.mocked(apiFetch).mockImplementation(async (_url, opts) => {
+      const body = JSON.parse(opts?.body as string) as Record<string, unknown>;
+      patchBodies.push(body);
+      characterMocks.lastPatchBody = body;
+
+      const lock = body.updatedAt as string | undefined;
+      if (lock && lock !== serverUpdatedAt) {
+        throw new ApiError('Character was modified elsewhere', 409);
+      }
+
+      const inv = body.inventoryPatch as
+        | { ops?: Array<{ expected?: { quantity?: number }; item?: { quantity?: number } }> }
+        | undefined;
+      const invOp = inv?.ops?.[0];
+      if (invOp) {
+        const expectedQty = invOp.expected?.quantity;
+        const itemQty = invOp.item?.quantity;
+        if (expectedQty !== undefined && expectedQty !== serverQty) {
+          throw new ApiError('inventory_cas_conflict', 409);
+        }
+        if (itemQty !== undefined) serverQty = itemQty;
+      }
+
+      if (typeof body.notes === 'string') serverNotes = body.notes;
+
+      serverUpdatedAt = `2026-01-03T00:00:0${patchBodies.length}.000Z`;
+      rememberCharacterLockToken('c-qa', serverUpdatedAt);
+      characterMocks.getCharacter.mockResolvedValue({
+        character: serverDoc(),
+        enrichment: emptyCharacterViewEnrichment(),
+      });
+
+      return { ok: true as const, updatedAt: serverUpdatedAt };
+    });
+
+    const { result } = await mountSheet();
+    await waitFor(() => expect(characterMocks.realtimeHandlers.length).toBeGreaterThan(0));
+
+    await act(async () => {
+      result.current.setCharacter({
+        ...(result.current.character as Character),
+        notes: 'my-notes',
+      });
+    });
+    await waitFor(() => expect(result.current.hasUnsavedChanges).toBe(true));
+
+    serverQty = 5;
+    const remote = serverDoc();
+    remote.updatedAt = '2026-01-02T00:00:00.000Z';
+    serverUpdatedAt = remote.updatedAt as string;
+    characterMocks.getCharacter.mockResolvedValue({
+      character: remote,
+      enrichment: emptyCharacterViewEnrichment(),
+    });
+
+    const handler = characterMocks.realtimeHandlers[0]!;
+    await act(async () => {
+      handler({
+        new: { id: 'c-qa', updated_at: remote.updatedAt },
+      });
+    });
+
+    await waitFor(() => expect(result.current.character?.equipment?.items?.[0]?.quantity).toBe(5));
+    expect(result.current.character?.notes).toBe('my-notes');
+
+    await act(async () => {
+      await result.current.saveNow();
+    });
+
+    await waitFor(() => expect(patchBodies.length).toBeGreaterThanOrEqual(1));
+    await waitFor(() => expect(serverNotes).toBe('my-notes'));
+    const notesPatch = patchBodies.find((body) => body.notes === 'my-notes');
+    expect(notesPatch).toBeDefined();
+    expect(notesPatch?.inventoryPatch).toBeUndefined();
+    expect(serverQty).toBe(5);
+
+    characterMocks.lastPatchBody = null;
+    patchBodies.length = 0;
+    await act(async () => {
+      await result.current.saveNow();
+    });
+    await waitFor(() => {
+      const strayRevert = patchBodies.some((body) => body.notes === 'baseline-note');
+      expect(strayRevert).toBe(false);
+    });
+    expect(serverNotes).toBe('my-notes');
   });
 
   it('swallowed edit: qty change plus updatedAt bump in one commit stays dirty and PATCHes', async () => {

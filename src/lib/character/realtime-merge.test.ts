@@ -114,6 +114,65 @@ describe('mergeSheetRealtimePayload (TASK-747)', () => {
     expect(stillDirty.energyPoints).toBe(8);
   });
 
+  it('adopts remote potion qty into baseline when only notes are locally dirty', () => {
+    const HEALTH_ROW = '10000000-0000-4000-8000-000000000001';
+    const saved = sheetCharacter({
+      equipment: {
+        weapons: [],
+        armor: [],
+        shields: [],
+        items: [
+          {
+            inventoryRowId: HEALTH_ROW,
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 3,
+          },
+        ],
+      },
+    });
+    const baseline = cleanForSave(saved) as Record<string, unknown>;
+    const local = sheetCharacter({
+      notes: 'typing',
+      equipment: saved.equipment,
+    });
+    const remote = {
+      ...(cleanForSave(saved) as Record<string, unknown>),
+      equipment: {
+        weapons: [],
+        armor: [],
+        shields: [],
+        items: [
+          {
+            inventoryRowId: HEALTH_ROW,
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 5,
+          },
+        ],
+      },
+    };
+
+    const { character: next, nextBaseline } = mergeSheetRealtimePayload(local, remote, baseline, {
+      suppressResources: true,
+      updatedAt: 'T1',
+    });
+    expect(next.notes).toBe('typing');
+    expect(
+      (next.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity,
+    ).toBe(5);
+    expect(
+      (nextBaseline?.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity,
+    ).toBe(5);
+
+    const stillDirty = pickDirtyCharacterFields(
+      cleanForSave(next) as Record<string, unknown>,
+      nextBaseline,
+    );
+    expect(stillDirty.notes).toBe('typing');
+    expect(stillDirty).not.toHaveProperty('equipment');
+  });
+
   it('adopts remote untouched keys into nextBaseline so they are not dirty', () => {
     const saved = sheetCharacter();
     const baseline = cleanForSave(saved) as Record<string, unknown>;
