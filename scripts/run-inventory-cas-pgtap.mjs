@@ -1,14 +1,18 @@
 #!/usr/bin/env node
 /**
- * Local/CI: supabase start + pgTAP for inventory CAS (branch must pass; master baseline fails).
+ * Local/CI: supabase start + pgTAP for inventory CAS (branch must pass; pinned baselines fail).
  */
 import { execFileSync, spawnSync } from 'node:child_process';
+import { runSyncWithBoundedRetry } from './lib/bounded-retry.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  validateMasterLwwNegativeOutput,
+  validatePreFixCasAnonExecuteNegativeOutput,
+} from './lib/inventory-cas-pgtap-harness.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const onlyFail = process.argv.includes('--expect-fail');
 const inventoryCasHelpersSql = path.join(
   'sql',
   `characters-inventory-cas-patch-${['86e3', 'juw0a'].join('')}.sql`,
@@ -25,7 +29,9 @@ const BRANCH_CANONICAL_SQL = [
   'sql/characters-relational-write-rpc.sql',
 ];
 
-const MASTER_CANONICAL_SQL = [
+/** Pre-#607 relational write (LWW two-tab loss); immutable git pin. */
+const PRE_CAS_LWW_REF = 'bff60f4e';
+const LWW_CANONICAL_SQL = [
   'sql/tests/pgtap-relational-fk-stubs.sql',
   'sql/tests/inventory-cas-pgtap-bootstrap.sql',
   'sql/characters-relational-expand.sql',
@@ -37,6 +43,10 @@ const MASTER_CANONICAL_SQL = [
 const MASTER_NEGATIVE_TEST = 'sql/tests/inventory_cas_pgtap_master_negative.sql';
 const RELATIONAL_TEST = 'sql/tests/inventory_cas_pgtap_relational.sql';
 const POST_ROLLBACK_TEST = 'sql/tests/inventory_cas_pgtap_post_rollback.sql';
+const ANON_EXECUTE_GATE_TEST = 'sql/tests/inventory_cas_pgtap_anon_execute_gate.sql';
+const ROLE_PRIVILEGES_TEST = 'sql/tests/inventory_cas_pgtap_role_privileges.sql';
+/** Pre-fix inventory CAS on master (missing anon REVOKE on helpers). */
+const PREF_FIX_CAS_REF = 'b9b23969';
 const ROLLBACK_MASTER_REF = '8ae31ecd';
 const ROLLBACK_RELATIONAL_MASTER = [
   'sql/characters-relational-expand.sql',
@@ -89,7 +99,12 @@ function pgtap(dbUrl, relTestFile = 'sql/tests/inventory_cas_pgtap_test.sql') {
   if (res.stderr) process.stderr.write(res.stderr);
   const tapFailed = pgtapFails(combined);
   const status = res.status !== 0 ? res.status : tapFailed ? 1 : 0;
-  return { ...res, status };
+  return { ...res, status, combined };
+}
+
+function harnessExit(message) {
+  console.error(message);
+  process.exit(2);
 }
 
 function dbUrlFromSupabase() {
@@ -99,21 +114,46 @@ function dbUrlFromSupabase() {
   return line.slice('DB_URL='.length).replace(/^"|"$/g, '');
 }
 
+const SUPABASE_START_ARGS = [
+  'start',
+  '-x',
+  'imgproxy',
+  '-x',
+  'logflare',
+  '-x',
+  'vector',
+  '--ignore-health-check',
+];
+
 function startSupabase() {
-  run('supabase', [
-    'start',
-    '-x',
-    'imgproxy',
-    '-x',
-    'logflare',
-    '-x',
-    'vector',
-    '--ignore-health-check',
-  ]);
+  runSyncWithBoundedRetry({
+    maxAttempts: 3,
+    backoffMs: [4000, 8000],
+    label: 'supabase start',
+    log: (msg) => console.error(msg),
+    attempt: () =>
+      spawnSync('supabase', SUPABASE_START_ARGS, {
+        cwd: root,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }),
+    isSuccess: (res) => (res.status ?? 1) === 0,
+  });
 }
 
 function resetDatabase(dbUrl) {
-  psqlSql(dbUrl, 'DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;');
+  psqlSql(
+    dbUrl,
+    [
+      'DROP SCHEMA IF EXISTS public CASCADE;',
+      'CREATE SCHEMA public;',
+      'GRANT USAGE ON SCHEMA public TO postgres, anon, authenticated, service_role;',
+      'GRANT ALL ON SCHEMA public TO postgres;',
+      'ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO postgres, anon, authenticated, service_role;',
+      'ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO postgres, anon, authenticated, service_role;',
+      'ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO postgres, anon, authenticated, service_role;',
+    ].join('\n'),
+  );
 }
 
 function gitShowRef(rel, ref) {
@@ -123,8 +163,15 @@ function gitShowRef(rel, ref) {
   });
 }
 
-function applySqlList(dbUrl, relPaths, { fromRef = null } = {}) {
+function applySqlList(dbUrl, relPaths, { fromRef = null, casSqlRef = null } = {}) {
   for (const rel of relPaths) {
+    if (casSqlRef && rel === inventoryCasHelpersSql) {
+      const tmp = path.join(root, '.tmp-pgtap-inventory-cas.sql');
+      fs.writeFileSync(tmp, gitShowRef(rel, casSqlRef));
+      psqlFile(dbUrl, tmp);
+      fs.unlinkSync(tmp);
+      continue;
+    }
     if (fromRef && rel.startsWith('sql/characters-relational-')) {
       const tmp = path.join(root, `.tmp-pgtap-${path.basename(rel)}`);
       const sql = gitShowRef(rel, fromRef);
@@ -145,33 +192,42 @@ function runBranchRollbackLeg(dbUrl) {
   return res.status ?? 1;
 }
 
-function masterIncludesFullInventoryCasFix() {
-  try {
-    execFileSync('git', ['cat-file', '-e', `origin/master:sql/characters-inventory-row-id.sql`], {
-      cwd: root,
-      stdio: 'ignore',
-    });
-    execFileSync('git', ['cat-file', '-e', `origin/master:${inventoryCasHelpersSql}`], {
-      cwd: root,
-      stdio: 'ignore',
-    });
-    return true;
-  } catch {
-    return false;
+function runPreCasLwwNegative(dbUrl) {
+  resetDatabase(dbUrl);
+  applySqlList(dbUrl, LWW_CANONICAL_SQL, { fromRef: PRE_CAS_LWW_REF });
+  const res = pgtap(dbUrl, MASTER_NEGATIVE_TEST);
+  if ((res.status ?? 1) === 0) {
+    return { type: 'unexpected_pass' };
   }
+  const validation = validateMasterLwwNegativeOutput(res.combined);
+  if (!validation.ok) {
+    return { type: 'harness', error: validation.error };
+  }
+  return { type: 'negative_ok' };
 }
 
-function runMasterNegative(dbUrl) {
+function runPreFixCasAnonExecuteNegative(dbUrl) {
   resetDatabase(dbUrl);
-  applySqlList(dbUrl, MASTER_CANONICAL_SQL, { fromRef: 'origin/master' });
-  const res = pgtap(dbUrl, MASTER_NEGATIVE_TEST);
-  return res.status ?? 1;
+  applySqlList(dbUrl, BRANCH_CANONICAL_SQL, { casSqlRef: PREF_FIX_CAS_REF });
+  const res = pgtap(dbUrl, ANON_EXECUTE_GATE_TEST);
+  if ((res.status ?? 1) === 0) {
+    return { type: 'unexpected_pass' };
+  }
+  const validation = validatePreFixCasAnonExecuteNegativeOutput(res.combined);
+  if (!validation.ok) {
+    return { type: 'harness', error: validation.error };
+  }
+  return { type: 'negative_ok' };
 }
 
 function runBranchPositive(dbUrl) {
   resetDatabase(dbUrl);
   applySqlList(dbUrl, BRANCH_CANONICAL_SQL);
-  let res = pgtap(dbUrl);
+  let res = pgtap(dbUrl, ANON_EXECUTE_GATE_TEST);
+  if ((res.status ?? 1) !== 0) return res.status ?? 1;
+  res = pgtap(dbUrl, ROLE_PRIVILEGES_TEST);
+  if ((res.status ?? 1) !== 0) return res.status ?? 1;
+  res = pgtap(dbUrl);
   if ((res.status ?? 1) !== 0) return res.status ?? 1;
   res = pgtap(dbUrl, RELATIONAL_TEST);
   if ((res.status ?? 1) !== 0) return res.status ?? 1;
@@ -182,30 +238,27 @@ function main() {
   startSupabase();
   const dbUrl = dbUrlFromSupabase();
 
-  if (onlyFail) {
-    if (masterIncludesFullInventoryCasFix()) {
-      console.error('Master already includes inventory CAS fix; negative leg is not applicable.');
-      process.exit(2);
-    }
-    const code = runMasterNegative(dbUrl);
-    if (code === 0) {
-      console.error('Expected pgTAP to fail on master inventory CAS SQL; it passed.');
-      process.exit(2);
-    }
-    console.log('inventory-cas-pgtap: master baseline failed as expected.');
-    return;
+  const preFixGate = runPreFixCasAnonExecuteNegative(dbUrl);
+  if (preFixGate.type === 'unexpected_pass') {
+    console.error(
+      `Expected anon execute gate to fail with pre-fix CAS at ${PREF_FIX_CAS_REF}; it passed.`,
+    );
+    process.exit(2);
   }
+  if (preFixGate.type === 'harness') {
+    harnessExit(preFixGate.error);
+  }
+  console.log('inventory-cas-pgtap: pre-fix CAS anon execute gate failed as expected.');
 
-  if (masterIncludesFullInventoryCasFix()) {
-    console.log('inventory-cas-pgtap: master already has full fix; skipping negative leg.');
-  } else {
-    const negative = runMasterNegative(dbUrl);
-    if (negative === 0) {
-      console.error('Expected pgTAP to fail on master inventory CAS SQL; it passed.');
-      process.exit(2);
-    }
-    console.log('inventory-cas-pgtap: master baseline failed as expected.');
+  const lwwNegative = runPreCasLwwNegative(dbUrl);
+  if (lwwNegative.type === 'unexpected_pass') {
+    console.error(`Expected LWW pgTAP to fail at ${PRE_CAS_LWW_REF}; it passed.`);
+    process.exit(2);
   }
+  if (lwwNegative.type === 'harness') {
+    harnessExit(lwwNegative.error);
+  }
+  console.log(`inventory-cas-pgtap: pre-#607 LWW baseline (${PRE_CAS_LWW_REF}) failed as expected.`);
 
   const positive = runBranchPositive(dbUrl);
   if (positive !== 0) process.exit(positive);

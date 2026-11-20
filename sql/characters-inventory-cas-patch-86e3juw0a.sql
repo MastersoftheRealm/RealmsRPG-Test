@@ -7,7 +7,7 @@ CREATE OR REPLACE FUNCTION public.inventory_patch_bucket_category(
   OUT p_category text,
   OUT p_slot text
 )
-RETURNS record LANGUAGE sql IMMUTABLE AS $$
+RETURNS record LANGUAGE sql IMMUTABLE SET search_path = pg_catalog, public AS $$
   SELECT
     CASE p_bucket
       WHEN 'weapons' THEN 'weapon'
@@ -26,7 +26,7 @@ RETURNS record LANGUAGE sql IMMUTABLE AS $$
 $$;
 
 CREATE OR REPLACE FUNCTION public.inventory_row_cas_snapshot(p_row public.character_inventory)
-RETURNS jsonb LANGUAGE sql IMMUTABLE AS $$
+RETURNS jsonb LANGUAGE sql IMMUTABLE SET search_path = pg_catalog, public AS $$
   SELECT jsonb_build_object(
     'quantity', p_row.quantity,
     'equipped', p_row.equipped,
@@ -43,7 +43,7 @@ CREATE OR REPLACE FUNCTION public.inventory_patch_field_clear(
   OUT p_clear boolean,
   OUT p_value text
 )
-RETURNS record LANGUAGE sql IMMUTABLE AS $$
+RETURNS record LANGUAGE sql IMMUTABLE SET search_path = pg_catalog, public AS $$
   SELECT
     (p_item ? p_key AND (p_item->p_key = 'null'::jsonb OR p_item->>p_key = '')),
     CASE
@@ -328,6 +328,13 @@ $fn$;
 
 REVOKE ALL ON FUNCTION public.apply_character_inventory_patch(text,text,jsonb) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.apply_character_inventory_patch(text,text,jsonb)
-  FROM authenticated, service_role;
+  FROM anon, authenticated, service_role;
+
+REVOKE ALL ON FUNCTION public.inventory_patch_bucket_category(text)
+  FROM PUBLIC, anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION public.inventory_row_cas_snapshot(public.character_inventory)
+  FROM PUBLIC, anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION public.inventory_patch_field_clear(jsonb, text)
+  FROM PUBLIC, anon, authenticated, service_role;
 
 COMMIT;

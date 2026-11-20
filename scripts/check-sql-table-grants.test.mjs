@@ -1026,6 +1026,62 @@ $p$;`;
 });
 
 describe('PR 564 R6 blockers', () => {
+  it('does not flag SELECT INTO plpgsql variables inside dollar-quoted DO (pgTAP throws_ok)', () => {
+    const sql = `SELECT throws_ok(
+      $q$
+        DO $do$
+        DECLARE v record;
+        BEGIN
+          SELECT * INTO v FROM public.inventory_patch_bucket_category('weapons');
+        END;
+        $do$;
+      $q$,
+      '42501', NULL, 'anon cannot EXECUTE inventory_patch_bucket_category'
+    );`;
+    expect(findSqlFileViolations(sql)).toEqual([]);
+    expect(findGrantViolations(['sql/tests/inventory_cas_pgtap_role_privileges.sql'])).toEqual([]);
+  });
+
+  it('fail-closed: fake dollar tags in comments/strings do not disable SELECT INTO / VIEW tripwire', () => {
+    const selectIntoLeak = expect.arrayContaining([
+      expect.stringMatching(/unaudited object creation \(SELECT INTO/i),
+    ]);
+    const viewLeak = expect.arrayContaining([
+      expect.stringMatching(/unaudited object creation \(VIEW/i),
+    ]);
+    const unterminated = expect.arrayContaining([
+      expect.stringMatching(/unterminated dollar-quoted literal/i),
+    ]);
+
+    expect(
+      findCreateTableSetupViolations(`-- $body$\nSELECT * INTO public.leak FROM auth.users;`),
+    ).toEqual(selectIntoLeak);
+
+    expect(
+      findCreateTableSetupViolations(`SELECT '$x$';\nSELECT * INTO public.leak FROM auth.users;`),
+    ).toEqual(selectIntoLeak);
+
+    expect(
+      findCreateTableSetupViolations(`-- $q$\nCREATE VIEW public.leak AS SELECT 1;`),
+    ).toEqual(viewLeak);
+
+    expect(
+      findCreateTableSetupViolations(
+        `SELECT lives_ok(
+      $q$
+        CREATE VIEW public.leak AS SELECT 1;
+      $q$,
+      'created'
+    );`,
+      ),
+    ).toEqual(viewLeak);
+
+    const unterminatedSql = `SELECT $foo$\nSELECT * INTO public.leak FROM auth.users;`;
+    const unterminatedViolations = findCreateTableSetupViolations(unterminatedSql);
+    expect(unterminatedViolations).toEqual(unterminated);
+    expect(unterminatedViolations).toEqual(selectIntoLeak);
+  });
+
   it('R6-B1: flags quoted and CTE SELECT INTO targets but not TEMP', () => {
     const cases = [
       `SELECT * INTO "public".cc FROM public.t;`,
