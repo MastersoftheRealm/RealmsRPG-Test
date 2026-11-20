@@ -424,6 +424,8 @@ export function cleanForSave(
         if (i.id) clean.id = i.id;
         if (typeof i.inventoryRowId === 'string' && i.inventoryRowId.trim()) {
           clean.inventoryRowId = i.inventoryRowId.trim();
+          // Relational CAS reads `custom_type` as `type` on load (`inventory_row_cas_snapshot`).
+          if (typeof i.type === 'string') clean.type = i.type;
         }
         if (i.name) clean.name = i.name;
         if (i.equipped) clean.equipped = true;

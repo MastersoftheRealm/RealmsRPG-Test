@@ -15,6 +15,9 @@ import {
 } from '@/components/character-sheet/use-sheet-auto-proficiencies';
 import { getErrorMessage } from '@/lib/api-client';
 import { buildRequiredProficiencies } from '@/lib/proficiencies';
+import { useAdvanceCharacterAutosaveBaseline } from '@/lib/character/character-autosave-baseline-context';
+import { prepareInventoryPatchForAutosave } from '@/lib/character/inventory-patch';
+import { cleanForSave } from '@/lib/data-enrichment';
 import type { Character, Item } from '@/types';
 import { useCodexItemProperties, useCodexPowerParts, useCodexTechniqueParts } from './use-codex';
 import { useCharacter, useSaveCharacter } from './use-characters';
@@ -53,6 +56,7 @@ function applyLibraryAddToCharacter(
 export function useAddToCharacterFromLibrary(kind: LibraryToCharacterKind, characterId: string) {
   const { showToast } = useToast();
   const saveCharacter = useSaveCharacter();
+  const advanceSheetAutosaveBaseline = useAdvanceCharacterAutosaveBaseline();
   const { data: characterResult, isLoading: characterLoading } = useCharacter(
     characterId || undefined,
   );
@@ -106,26 +110,34 @@ export function useAddToCharacterFromLibrary(kind: LibraryToCharacterKind, chara
       dbs,
       buildRequiredForCharacter,
     );
-    const baseline = character as unknown as Record<string, unknown>;
+    const inventorySaveBaseline = cleanForSave(character) as Record<string, unknown>;
     const dirty = libraryAddDirtyFields(kind, first.character) as Record<string, unknown>;
+    prepareInventoryPatchForAutosave(inventorySaveBaseline, dirty);
     saveCharacter.mutate(
       {
         id: character.id,
         data: dirty as Partial<Character>,
         updatedAt: character.updatedAt,
-        inventorySaveBaseline: baseline,
+        inventorySaveBaseline,
         mergeOnConflict: (remote) => {
           const next = mergeLibraryAddOnConflict(remote, kind, pending.raw, (c) =>
             applyLibraryAddToCharacter(c, kind, pending.raw, dbs, buildRequiredForCharacter),
           );
           return {
             ...next,
-            inventorySaveBaseline: remote as unknown as Record<string, unknown>,
+            inventorySaveBaseline: cleanForSave(remote) as Record<string, unknown>,
           };
         },
       },
       {
-        onSuccess: () => {
+        onSuccess: (result) => {
+          advanceSheetAutosaveBaseline(character.id, {
+            applied: result.applied as Record<string, unknown>,
+            updatedAt: result.updatedAt,
+            ...(result.inventoryPatchResult
+              ? { inventoryPatchResult: result.inventoryPatchResult }
+              : {}),
+          });
           showToast(`Added "${pending.name}" to ${character.name}.`, 'success');
           deferProficiencyOverLimitToast(showToast, first.overLimitWarning);
           setPending(null);
@@ -145,6 +157,7 @@ export function useAddToCharacterFromLibrary(kind: LibraryToCharacterKind, chara
     buildRequiredForCharacter,
     saveCharacter,
     showToast,
+    advanceSheetAutosaveBaseline,
   ]);
 
   const confirmModal = useMemo((): ReactNode => {

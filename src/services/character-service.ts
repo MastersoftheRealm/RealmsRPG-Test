@@ -123,9 +123,7 @@ export async function saveCharacter(
 
   const run = async () => {
     const body: Record<string, unknown> = { ...data };
-    if ('equipment' in body) {
-      attachRelationalInventoryPatchToDirty(body, options.inventorySaveBaseline ?? {});
-    }
+    attachRelationalInventoryPatchToDirty(body, options.inventorySaveBaseline ?? {});
     const lock = options.skipLock
       ? undefined
       : resolveCharacterLockToken(id, options.updatedAt ?? data.updatedAt);
@@ -138,13 +136,10 @@ export async function saveCharacter(
       inventoryPatchResult?: {
         createdRows?: Array<{ inventoryRowId: string; bucket: string; position: number }>;
       };
-    }>(
-      `${API_BASE}/${encodeURIComponent(id)}`,
-      {
-        method: 'PATCH',
-        body: JSON.stringify(body),
-      },
-    );
+    }>(`${API_BASE}/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
     if (result.updatedAt) rememberCharacterLockToken(id, result.updatedAt);
     return result;
   };
@@ -171,6 +166,7 @@ export async function saveCharacterWithConflictRetry(
 ): Promise<{
   updatedAt?: string | undefined;
   applied: Partial<Character>;
+  conflictRetried?: boolean | undefined;
   inventoryPatchResult?: {
     createdRows?: Array<{ inventoryRowId: string; bucket: string; position: number }>;
   };
@@ -180,19 +176,35 @@ export async function saveCharacterWithConflictRetry(
     saveGuestCharacter(id, dirty);
     const updatedAt = new Date().toISOString();
     rememberCharacterLockToken(id, updatedAt);
-    return { updatedAt, applied: dirty };
+    return { updatedAt, applied: dirty, conflictRetried: false };
   }
   return enqueueCharacterSave(id, async () => {
+    const buildPersistedApplied = (
+      payload: Record<string, unknown>,
+      inventorySaveBaseline?: Record<string, unknown> | null,
+    ): Partial<Character> => {
+      const body: Record<string, unknown> = { ...payload };
+      attachRelationalInventoryPatchToDirty(body, inventorySaveBaseline ?? {});
+      return body as Partial<Character>;
+    };
+
     try {
-      const result = await saveCharacter(id, dirty, {
+      const applied = buildPersistedApplied(
+        dirty as Record<string, unknown>,
+        options.inventorySaveBaseline,
+      );
+      const result = await saveCharacter(id, applied, {
         updatedAt: options.updatedAt,
         enqueue: false,
         inventorySaveBaseline: options.inventorySaveBaseline,
       });
       return {
         updatedAt: result.updatedAt,
-        applied: dirty,
-        ...(result.inventoryPatchResult ? { inventoryPatchResult: result.inventoryPatchResult } : {}),
+        applied,
+        conflictRetried: false,
+        ...(result.inventoryPatchResult
+          ? { inventoryPatchResult: result.inventoryPatchResult }
+          : {}),
       };
     } catch (err) {
       if (!isConflictError(err)) throw err;
@@ -202,7 +214,11 @@ export async function saveCharacterWithConflictRetry(
       if (Object.keys(next.dirty).length === 0) {
         return { updatedAt: characterLockToken(remote.updatedAt), applied: {} };
       }
-      const retried = await saveCharacter(id, next.dirty, {
+      const applied = buildPersistedApplied(
+        next.dirty as Record<string, unknown>,
+        next.inventorySaveBaseline ?? (remote as unknown as Record<string, unknown>),
+      );
+      const retried = await saveCharacter(id, applied, {
         updatedAt: next.updatedAt,
         enqueue: false,
         inventorySaveBaseline:
@@ -210,7 +226,8 @@ export async function saveCharacterWithConflictRetry(
       });
       return {
         updatedAt: retried.updatedAt,
-        applied: next.dirty,
+        applied,
+        conflictRetried: true,
         ...(retried.inventoryPatchResult
           ? { inventoryPatchResult: retried.inventoryPatchResult }
           : {}),

@@ -7,7 +7,9 @@ import {
   applySheetAutosaveConflictFields,
   characterLockToken,
   characterTimestampsMatch,
+  formatInventoryConflictOverwriteToast,
   isStaleCharacterWrite,
+  listEquipmentConflictRemoteOverwrites,
   mergeRemotePreservingDirty,
   pickDirtyCharacterFields,
   withDirtyClears,
@@ -193,6 +195,271 @@ describe('applyCharacterDirtyPatch / mergeRemotePreservingDirty', () => {
         armor: leather,
       },
     });
+  });
+
+  it('applies quantity delta after cleanForSave without rules', () => {
+    const remote = cleanForSave(
+      sheet({
+        equipment: {
+          items: [
+            {
+              inventoryRowId: '10000000-0000-4000-8000-000000000001',
+              id: 'health-potion',
+              name: 'Health Potion',
+              quantity: 4,
+            },
+          ],
+        },
+      }),
+    ) as Record<string, unknown>;
+    const local = cleanForSave(
+      sheet({
+        equipment: {
+          items: [
+            {
+              inventoryRowId: '10000000-0000-4000-8000-000000000001',
+              id: 'health-potion',
+              name: 'Health Potion',
+              quantity: 2,
+            },
+          ],
+        },
+      }),
+    ) as Record<string, unknown>;
+    const baseline = cleanForSave(
+      sheet({
+        equipment: {
+          items: [
+            {
+              inventoryRowId: '10000000-0000-4000-8000-000000000001',
+              id: 'health-potion',
+              name: 'Health Potion',
+              quantity: 3,
+            },
+          ],
+        },
+      }),
+    ) as Record<string, unknown>;
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    expect((merged.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(
+      3,
+    );
+  });
+
+  it('keeps local equip when only local toggled equipped during qty conflict merge', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 3,
+            equipped: false,
+          },
+        ],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 5,
+            equipped: false,
+          },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 3,
+            equipped: true,
+          },
+        ],
+      },
+    };
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    const row = (merged.equipment as { items: Array<Record<string, unknown>> }).items[0]!;
+    expect(row.quantity).toBe(5);
+    expect(row.equipped).toBe(true);
+  });
+
+  it('lists description when both tabs edited it and toast names the field', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          {
+            id: 'grapple-rope',
+            name: 'Grapple Rope',
+            description: 'baseline',
+            quantity: 3,
+          },
+        ],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [
+          {
+            id: 'grapple-rope',
+            name: 'Grapple Rope',
+            description: 'tab-a-note',
+            quantity: 5,
+          },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [
+          {
+            id: 'grapple-rope',
+            name: 'Grapple Rope',
+            description: 'tab-b-note',
+            quantity: 3,
+          },
+        ],
+      },
+    };
+    expect(listEquipmentConflictRemoteOverwrites(baseline.equipment, local.equipment, remote.equipment)).toEqual([
+      'description',
+    ]);
+    expect(formatInventoryConflictOverwriteToast(['description'])).toContain('description');
+  });
+
+  it('keeps local description when remote only changed quantity', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            description: 'baseline',
+            quantity: 3,
+          },
+        ],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            description: 'baseline',
+            quantity: 5,
+          },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            description: 'tab-b-note',
+            quantity: 3,
+          },
+        ],
+      },
+    };
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    const row = (merged.equipment as { items: Array<Record<string, unknown>> }).items[0]!;
+    expect(row.quantity).toBe(5);
+    expect(row.description).toBe('tab-b-note');
+  });
+
+  it('floors merged quantity at zero when delta would go negative', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          {
+            id: 'grapple-rope',
+            name: 'Grapple Rope',
+            quantity: 3,
+          },
+        ],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [
+          {
+            id: 'grapple-rope',
+            name: 'Grapple Rope',
+            quantity: 1,
+          },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [
+          {
+            id: 'grapple-rope',
+            name: 'Grapple Rope',
+            quantity: 0,
+          },
+        ],
+      },
+    };
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    expect((merged.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(0);
+  });
+
+  it('applies quantity delta from baseline onto remote during conflict merge', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 3,
+          },
+        ],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 4,
+          },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 2,
+          },
+        ],
+      },
+    };
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    expect((merged.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(
+      3,
+    );
   });
 
   it('does not restore a gear row the local sheet deleted during conflict merge', () => {

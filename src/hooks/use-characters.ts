@@ -23,6 +23,7 @@ import { getGuestCharactersList, isGuestCharacterId } from '@/lib/guest-characte
 import {
   coerceInventoryPatchCreatedRows,
   mergeInventoryCreatedRows,
+  normalizeEquipmentForInventoryRelational,
 } from '@/lib/character/inventory-patch';
 
 /** Viewer segment for `characterKeys` (ADR-0013 / TASK-741). */
@@ -81,12 +82,18 @@ export function mergeCharacterSaveResultIntoDetailQuery(
     ...(result.updatedAt ? { updatedAt: result.updatedAt } : {}),
   });
   const created = coerceInventoryPatchCreatedRows(result.inventoryPatchResult?.createdRows ?? []);
-  if (!merged?.character || created.length === 0) return merged;
+  if (!merged?.character) return merged;
+  let equipment = merged.character.equipment;
+  if (created.length > 0) {
+    equipment = mergeInventoryCreatedRows(equipment, created) as Character['equipment'];
+  }
+  const normalized = normalizeEquipmentForInventoryRelational(equipment) as Character['equipment'];
+  if (normalized === equipment && created.length === 0) return merged;
   return {
     ...merged,
     character: {
       ...merged.character,
-      equipment: mergeInventoryCreatedRows(merged.character.equipment, created) as Character['equipment'],
+      equipment: normalized,
     },
   };
 }

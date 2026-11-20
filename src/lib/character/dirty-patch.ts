@@ -166,6 +166,164 @@ function mergeEquipmentScalarBucket(
   return localValue;
 }
 
+/**
+ * Three-way merge for one inventory sheet row after a 409.
+ * - Field changed only locally → keep local.
+ * - Field changed only on server → take remote.
+ * - Quantity changed on both → remote qty + (local qty − baseline qty).
+ * - Same non-qty field changed on both → local wins (this tab is retrying its dirty save).
+ */
+function mergeInventoryRowConflict(
+  baseline: Record<string, unknown>,
+  local: Record<string, unknown>,
+  remote: Record<string, unknown>,
+): Record<string, unknown> {
+  const merged: Record<string, unknown> = { ...remote };
+  const keys = new Set([
+    ...Object.keys(baseline),
+    ...Object.keys(local),
+    ...Object.keys(remote),
+  ]);
+  for (const key of keys) {
+    if (key === 'inventoryRowId' || key === 'id') continue;
+    const b = baseline[key];
+    const l = local[key];
+    const r = remote[key];
+    const localChanged = !stableEqual(l, b);
+    const remoteChanged = !stableEqual(r, b);
+    if (!localChanged && !remoteChanged) {
+      if (r !== undefined) merged[key] = r;
+      continue;
+    }
+    if (localChanged && !remoteChanged) {
+      merged[key] = l;
+      continue;
+    }
+    if (!localChanged && remoteChanged) {
+      merged[key] = r;
+      continue;
+    }
+    if (
+      key === 'quantity' &&
+      typeof b === 'number' &&
+      typeof l === 'number' &&
+      typeof r === 'number'
+    ) {
+      merged[key] = Math.max(0, r + (l - b));
+      continue;
+    }
+    merged[key] = l;
+  }
+  return merged;
+}
+
+const INVENTORY_CONFLICT_FIELD_LABELS: Record<string, string> = {
+  name: 'name',
+  description: 'description',
+  equipped: 'equipped',
+  cost: 'cost',
+  type: 'type',
+};
+
+function inventoryRowRemoteOverwriteFields(
+  baseline: Record<string, unknown>,
+  local: Record<string, unknown>,
+  remote: Record<string, unknown>,
+): string[] {
+  const overwrites: string[] = [];
+  const keys = new Set([
+    ...Object.keys(baseline),
+    ...Object.keys(local),
+    ...Object.keys(remote),
+  ]);
+  for (const key of keys) {
+    if (key === 'inventoryRowId' || key === 'id' || key === 'quantity') continue;
+    const b = baseline[key];
+    const l = local[key];
+    const r = remote[key];
+    const localChanged = !stableEqual(l, b);
+    const remoteChanged = !stableEqual(r, b);
+    if (localChanged && remoteChanged) {
+      const label = INVENTORY_CONFLICT_FIELD_LABELS[key] ?? key;
+      overwrites.push(label);
+    }
+  }
+  return overwrites;
+}
+
+function listEquipmentBucketRemoteOverwrites(
+  remoteList: unknown,
+  localList: unknown,
+  baselineList: unknown,
+): string[] {
+  if (!Array.isArray(remoteList) || !Array.isArray(localList)) return [];
+  const remote = remoteList as Record<string, unknown>[];
+  const local = localList as Record<string, unknown>[];
+  const baseline = Array.isArray(baselineList) ? (baselineList as Record<string, unknown>[]) : [];
+  const overwrites: string[] = [];
+  const usedLocal = new Set<number>();
+
+  for (let rIdx = 0; rIdx < remote.length; rIdx++) {
+    const remoteRow = remote[rIdx]!;
+    const baselineRow = findSheetEquipmentRow(baseline, remoteRow, rIdx);
+    const localIdx = local.findIndex(
+      (row, idx) =>
+        !usedLocal.has(idx) &&
+        matchesSheetEquipmentItem(
+          row as SheetEquipmentRow,
+          sheetEquipmentRowAnchorId(remoteRow, rIdx),
+          rIdx,
+        ),
+    );
+    if (localIdx < 0 || !baselineRow) continue;
+    usedLocal.add(localIdx);
+    const localRow = local[localIdx]!;
+    const localDirty = !stableEqual(localRow, baselineRow);
+    if (!localDirty) continue;
+    overwrites.push(...inventoryRowRemoteOverwriteFields(baselineRow, localRow, remoteRow));
+  }
+  return overwrites;
+}
+
+/** Fields on inventory rows where this tab's retry overwrote the other tab's concurrent edit. */
+export function listEquipmentConflictRemoteOverwrites(
+  baselineEquipment: unknown,
+  localEquipment: unknown,
+  remoteEquipment: unknown,
+): string[] {
+  const baseline =
+    baselineEquipment && typeof baselineEquipment === 'object'
+      ? (baselineEquipment as Record<string, unknown>)
+      : {};
+  const local =
+    localEquipment && typeof localEquipment === 'object'
+      ? (localEquipment as Record<string, unknown>)
+      : {};
+  const remote =
+    remoteEquipment && typeof remoteEquipment === 'object'
+      ? (remoteEquipment as Record<string, unknown>)
+      : {};
+  const overwrites = new Set<string>();
+  for (const bucket of EQUIPMENT_ITEM_BUCKETS) {
+    for (const field of listEquipmentBucketRemoteOverwrites(
+      remote[bucket],
+      local[bucket],
+      baseline[bucket],
+    )) {
+      overwrites.add(field);
+    }
+  }
+  return [...overwrites];
+}
+
+export function formatInventoryConflictOverwriteToast(overwrittenFields: string[]): string {
+  const unique = [...new Set(overwrittenFields)];
+  if (unique.length === 0) {
+    return 'Another tab updated this character. Your changes were merged and saved.';
+  }
+  return `Another tab updated this character. Your save overwrote their change to: ${unique.join(', ')}.`;
+}
+
 function mergeEquipmentItemBucket(
   remoteList: unknown,
   localList: unknown,
@@ -207,6 +365,11 @@ function mergeEquipmentItemBucket(
       baselineRow === undefined
         ? !stableEqual(localRow, remoteRow)
         : !stableEqual(localRow!, baselineRow);
+
+    if (localDirty && baselineRow) {
+      merged.push(mergeInventoryRowConflict(baselineRow, localRow!, remoteRow));
+      continue;
+    }
 
     merged.push(localDirty ? localRow! : remoteRow);
   }
