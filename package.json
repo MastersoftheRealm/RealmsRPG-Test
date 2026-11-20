@@ -21,7 +21,6 @@
     "critic:gate": "node scripts/critic-gate-tests.mjs",
     "test:api": "vitest run src/app/api",
     "test:inventory-cas-pgtap": "node scripts/run-inventory-cas-pgtap.mjs",
-    "test:inventory-cas-pgtap:master-fail": "node scripts/run-inventory-cas-pgtap.mjs --expect-fail",
     "lint": "eslint . --max-warnings 0 && node scripts/check-task-id-ratchet.mjs && node scripts/check-test-source-read-ratchet.mjs && node scripts/check-site-chrome-barrel-imports.mjs && node scripts/check-character-legality-all-levels.mjs && node scripts/check-characters-direct-write.mjs && node scripts/check-knip-ratchet.mjs",
     "typecheck": "tsc --noEmit",
     "typecheck:strictest": "tsc --noEmit -p tsconfig.strictest.json",
