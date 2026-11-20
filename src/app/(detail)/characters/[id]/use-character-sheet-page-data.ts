@@ -55,7 +55,7 @@ import {
   applySheetAutosaveConflictFields,
   characterLockToken,
   formatInventoryConflictOverwriteToast,
-  listEquipmentConflictRemoteOverwrites,
+  listAutosaveConflictRemoteOverwrites,
   mergeRemotePreservingDirty,
   mergeSheetAutosaveBaseline,
   pickDirtyCharacterFields,
@@ -107,6 +107,8 @@ export function useCharacterSheetPageData(id: string) {
   const savedSnapshotIdRef = useRef<string | null>(null);
   const realtimeRefetchGenerationRef = useRef(0);
 
+  useRegisterCharacterAutosaveBaseline(id, savedCleanRef);
+
   const setCharacter = useCallback(
     (update: SetStateAction<Character | null>) => {
       patchCharacterDetailQuery(queryClient, viewerKey, id, update);
@@ -118,7 +120,9 @@ export function useCharacterSheetPageData(id: string) {
     if (character?.id === id) {
       if (savedSnapshotIdRef.current === id) return;
       savedSnapshotIdRef.current = id;
-      savedCleanRef.current = cleanForSave(character, rules) as Record<string, unknown>;
+      if (!savedCleanRef.current) {
+        savedCleanRef.current = cleanForSave(character, rules) as Record<string, unknown>;
+      }
       rememberCharacterLockToken(id, character.updatedAt);
       return;
     }
@@ -127,8 +131,6 @@ export function useCharacterSheetPageData(id: string) {
       savedCleanRef.current = null;
     }
   }, [character, id, rules]);
-
-  useRegisterCharacterAutosaveBaseline(id, savedCleanRef);
 
   const { data: userPowers = [] } = useUserPowers({ enabled: loadCatalog });
   const { data: userTechniques = [] } = useUserTechniques({ enabled: loadCatalog });
@@ -409,15 +411,12 @@ export function useCharacterSheetPageData(id: string) {
         mergeOnConflict: (remote) => {
           const remoteClean = cleanForSave(remote, rules) as Record<string, unknown>;
           const localClean = withDirtyClears(cleaned, dirty);
-          if (Object.prototype.hasOwnProperty.call(dirty, 'equipment')) {
-            conflictOverwriteFieldsRef.current = listEquipmentConflictRemoteOverwrites(
-              inventoryBaselineAtSave?.equipment,
-              localClean.equipment,
-              remoteClean.equipment,
-            );
-          } else {
-            conflictOverwriteFieldsRef.current = [];
-          }
+          conflictOverwriteFieldsRef.current = listAutosaveConflictRemoteOverwrites(
+            inventoryBaselineAtSave,
+            localClean,
+            remoteClean,
+            Object.keys(dirty),
+          );
           const mergedClean = mergeRemotePreservingDirty(
             remoteClean,
             localClean,

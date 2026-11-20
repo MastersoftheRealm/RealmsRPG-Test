@@ -28,9 +28,14 @@ const CharacterAutosaveBaselineContext = createContext<CharacterAutosaveBaseline
 
 export function CharacterAutosaveBaselineProvider({ children }: { children: ReactNode }) {
   const refs = useRef(new Map<string, BaselineRef>());
+  /** Survives sheet unmount (library add while user is on /library). */
+  const persisted = useRef(new Map<string, Record<string, unknown>>());
 
   const register = useCallback((characterId: string, ref: BaselineRef) => {
     const id = characterId.trim();
+    const stored = persisted.current.get(id);
+    if (stored) ref.current = stored;
+    else if (ref.current) persisted.current.set(id, ref.current);
     refs.current.set(id, ref);
     return () => {
       if (refs.current.get(id) === ref) refs.current.delete(id);
@@ -38,9 +43,12 @@ export function CharacterAutosaveBaselineProvider({ children }: { children: Reac
   }, []);
 
   const advance = useCallback((characterId: string, result: CharacterSaveBaselineResult) => {
-    const ref = refs.current.get(characterId.trim());
-    if (!ref) return;
-    ref.current = advanceAutosaveBaselineFromSaveResult(ref.current, result);
+    const id = characterId.trim();
+    const ref = refs.current.get(id);
+    const base = ref?.current ?? persisted.current.get(id) ?? null;
+    const next = advanceAutosaveBaselineFromSaveResult(base, result);
+    persisted.current.set(id, next);
+    if (ref) ref.current = next;
   }, []);
 
   const value = useMemo(

@@ -42,6 +42,7 @@ const LWW_CANONICAL_SQL = [
 
 const MASTER_NEGATIVE_TEST = 'sql/tests/inventory_cas_pgtap_master_negative.sql';
 const RELATIONAL_TEST = 'sql/tests/inventory_cas_pgtap_relational.sql';
+const LIBRARY_WEAPON_REMOVE_TEST = 'sql/tests/inventory_cas_pgtap_library_weapon_remove.sql';
 const POST_ROLLBACK_TEST = 'sql/tests/inventory_cas_pgtap_post_rollback.sql';
 const ANON_EXECUTE_GATE_TEST = 'sql/tests/inventory_cas_pgtap_anon_execute_gate.sql';
 const ROLE_PRIVILEGES_TEST = 'sql/tests/inventory_cas_pgtap_role_privileges.sql';
@@ -230,6 +231,8 @@ function runBranchPositive(dbUrl) {
   res = pgtap(dbUrl);
   if ((res.status ?? 1) !== 0) return res.status ?? 1;
   res = pgtap(dbUrl, RELATIONAL_TEST);
+  if ((res.status ?? 1) !== 0) return res.status ?? 1;
+  res = pgtap(dbUrl, LIBRARY_WEAPON_REMOVE_TEST);
   if ((res.status ?? 1) !== 0) return res.status ?? 1;
   return runBranchRollbackLeg(dbUrl);
 }

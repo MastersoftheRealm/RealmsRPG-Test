@@ -441,8 +441,10 @@ export function applyInventoryPatchToEquipment(
   patch: InventoryPatchPayload,
 ): unknown {
   if (!patch.ops.length) return equipment;
-  if (!equipment || typeof equipment !== 'object') return equipment;
-  const equip: Record<string, unknown> = { ...(equipment as Record<string, unknown>) };
+  const equip: Record<string, unknown> =
+    equipment && typeof equipment === 'object'
+      ? { ...(equipment as Record<string, unknown>) }
+      : {};
 
   for (const op of patch.ops) {
     const bucket = op.bucket;

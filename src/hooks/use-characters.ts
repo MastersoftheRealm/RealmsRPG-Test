@@ -21,9 +21,11 @@ import { useAuthStore } from '@/stores/auth-store';
 import type { Character, CharacterSummary } from '@/types';
 import { getGuestCharactersList, isGuestCharacterId } from '@/lib/guest-character-storage';
 import {
+  applyInventoryPatchToEquipment,
   coerceInventoryPatchCreatedRows,
   mergeInventoryCreatedRows,
   normalizeEquipmentForInventoryRelational,
+  type InventoryPatchPayload,
 } from '@/lib/character/inventory-patch';
 
 /** Viewer segment for `characterKeys` (ADR-0013 / TASK-741). */
@@ -77,13 +79,23 @@ export function mergeCharacterSaveResultIntoDetailQuery(
     };
   },
 ): GetCharacterResult | undefined {
+  const applied = { ...result.applied } as Record<string, unknown>;
+  const inventoryPatch = applied.inventoryPatch as InventoryPatchPayload | undefined;
+  if (inventoryPatch) delete applied.inventoryPatch;
+
   const merged = mergeCharacterDetailQueryData(prev, {
-    ...result.applied,
+    ...(applied as Partial<Character>),
     ...(result.updatedAt ? { updatedAt: result.updatedAt } : {}),
   });
   const created = coerceInventoryPatchCreatedRows(result.inventoryPatchResult?.createdRows ?? []);
   if (!merged?.character) return merged;
   let equipment = merged.character.equipment;
+  if (inventoryPatch?.ops?.length) {
+    equipment = applyInventoryPatchToEquipment(
+      equipment,
+      inventoryPatch,
+    ) as Character['equipment'];
+  }
   if (created.length > 0) {
     equipment = mergeInventoryCreatedRows(equipment, created) as Character['equipment'];
   }

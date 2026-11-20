@@ -9,6 +9,7 @@ import {
   characterTimestampsMatch,
   formatInventoryConflictOverwriteToast,
   isStaleCharacterWrite,
+  listAutosaveConflictRemoteOverwrites,
   listEquipmentConflictRemoteOverwrites,
   mergeRemotePreservingDirty,
   pickDirtyCharacterFields,
@@ -290,6 +291,34 @@ describe('applyCharacterDirtyPatch / mergeRemotePreservingDirty', () => {
     const row = (merged.equipment as { items: Array<Record<string, unknown>> }).items[0]!;
     expect(row.quantity).toBe(5);
     expect(row.equipped).toBe(true);
+  });
+
+  it('lists notes when both tabs edited the same top-level field', () => {
+    const baseline = { notes: 'start' };
+    const remote = { notes: 'tab-a' };
+    const local = { notes: 'tab-b' };
+    expect(listAutosaveConflictRemoteOverwrites(baseline, local, remote, ['notes'])).toEqual(['notes']);
+  });
+
+  it('409 retry dirty uses merged quantity delta not the local absolute', () => {
+    const baseline = {
+      equipment: {
+        items: [{ id: 'health-potion', name: 'Health Potion', quantity: 2 }],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [{ id: 'health-potion', name: 'Health Potion', quantity: 3 }],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [{ id: 'health-potion', name: 'Health Potion', quantity: 1 }],
+      },
+    };
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    const dirty = pickDirtyCharacterFields(merged, remote);
+    expect((dirty.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(2);
   });
 
   it('lists description when both tabs edited it and toast names the field', () => {
