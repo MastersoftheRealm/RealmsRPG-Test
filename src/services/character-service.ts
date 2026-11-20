@@ -124,9 +124,14 @@ export async function saveCharacter(
   const run = async () => {
     const body: Record<string, unknown> = { ...data };
     attachRelationalInventoryPatchToDirty(body, options.inventorySaveBaseline ?? {});
+    const strictInventoryLock = Boolean(
+      body.inventoryPatch && typeof body.inventoryPatch === 'object',
+    );
     const lock = options.skipLock
       ? undefined
-      : resolveCharacterLockToken(id, options.updatedAt ?? data.updatedAt);
+      : resolveCharacterLockToken(id, options.updatedAt ?? data.updatedAt, {
+          strict: strictInventoryLock,
+        });
     if (lock) body.updatedAt = lock;
     else delete body.updatedAt;
 

@@ -300,6 +300,88 @@ describe('applyCharacterDirtyPatch / mergeRemotePreservingDirty', () => {
     expect(listAutosaveConflictRemoteOverwrites(baseline, local, remote, ['notes'])).toEqual(['notes']);
   });
 
+  it('409 merge treats cleanForSave omitted quantity 1 as one', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 2,
+          },
+        ],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 3,
+          },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+          },
+        ],
+      },
+    };
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    expect((merged.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(2);
+  });
+
+  it('409 retry dirty uses merged quantity delta with inventory row id (C2)', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 2,
+          },
+        ],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 3,
+          },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 1,
+          },
+        ],
+      },
+    };
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    const dirty = pickDirtyCharacterFields(merged, remote);
+    expect((dirty.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(2);
+  });
+
   it('409 retry dirty uses merged quantity delta not the local absolute', () => {
     const baseline = {
       equipment: {

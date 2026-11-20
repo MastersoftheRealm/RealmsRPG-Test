@@ -173,6 +173,13 @@ function mergeEquipmentScalarBucket(
  * - Quantity changed on both → remote qty + (local qty − baseline qty).
  * - Same non-qty field changed on both → local wins (this tab is retrying its dirty save).
  */
+/** `cleanForSave` omits quantity when it is 1; treat that as 1 for three-way qty merge. */
+function effectiveSavedQuantity(value: unknown, baselineQty: unknown): number | undefined {
+  if (typeof value === 'number') return value;
+  if (value === undefined && typeof baselineQty === 'number') return 1;
+  return undefined;
+}
+
 function mergeInventoryRowConflict(
   baseline: Record<string, unknown>,
   local: Record<string, unknown>,
@@ -203,14 +210,13 @@ function mergeInventoryRowConflict(
       merged[key] = r;
       continue;
     }
-    if (
-      key === 'quantity' &&
-      typeof b === 'number' &&
-      typeof l === 'number' &&
-      typeof r === 'number'
-    ) {
-      merged[key] = Math.max(0, r + (l - b));
-      continue;
+    if (key === 'quantity' && typeof b === 'number') {
+      const lq = effectiveSavedQuantity(l, b);
+      const rq = effectiveSavedQuantity(r, b);
+      if (typeof lq === 'number' && typeof rq === 'number') {
+        merged[key] = Math.max(0, rq + (lq - b));
+        continue;
+      }
     }
     merged[key] = l;
   }

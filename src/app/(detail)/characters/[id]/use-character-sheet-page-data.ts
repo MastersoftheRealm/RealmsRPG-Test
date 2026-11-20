@@ -106,6 +106,7 @@ export function useCharacterSheetPageData(id: string) {
   const conflictOverwriteFieldsRef = useRef<string[]>([]);
   const savedSnapshotIdRef = useRef<string | null>(null);
   const realtimeRefetchGenerationRef = useRef(0);
+  const hasUnsavedChangesRef = useRef(false);
 
   useRegisterCharacterAutosaveBaseline(id, savedCleanRef);
 
@@ -297,11 +298,13 @@ export function useCharacterSheetPageData(id: string) {
                 updatedAt: payload.new.updated_at,
               },
             );
-            if (nextBaseline) {
+            if (nextBaseline && !hasUnsavedChangesRef.current) {
               const baseline = nextBaseline;
               // Defer so Strict Mode's double updater both read the same savedCleanRef.
               queueMicrotask(() => {
-                savedCleanRef.current = baseline;
+                if (!hasUnsavedChangesRef.current) {
+                  savedCleanRef.current = baseline;
+                }
               });
             }
             return next;
@@ -323,7 +326,9 @@ export function useCharacterSheetPageData(id: string) {
                   savedCleanRef.current,
                   { suppressResources, updatedAt: remote.updatedAt },
                 );
-                if (nextBaseline) savedCleanRef.current = nextBaseline;
+                if (nextBaseline && !hasUnsavedChangesRef.current) {
+                  savedCleanRef.current = nextBaseline;
+                }
                 return next;
               });
             })
@@ -403,7 +408,9 @@ export function useCharacterSheetPageData(id: string) {
       if (Object.keys(dirty).length === 0) {
         return;
       }
-      const inventoryBaselineAtSave = savedCleanRef.current;
+      const inventoryBaselineAtSave = savedCleanRef.current
+        ? (structuredClone(savedCleanRef.current) as Record<string, unknown>)
+        : null;
       const mergedCleanRef: { current: Record<string, unknown> | null } = { current: null };
       const result = await saveCharacterWithConflictRetry(id, dirty as Partial<Character>, {
         updatedAt: characterLockToken(data.updatedAt),
@@ -514,6 +521,10 @@ export function useCharacterSheetPageData(id: string) {
       );
     },
   });
+
+  useEffect(() => {
+    hasUnsavedChangesRef.current = hasUnsavedChanges;
+  }, [hasUnsavedChanges]);
 
   return {
     id,

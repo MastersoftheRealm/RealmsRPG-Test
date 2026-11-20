@@ -11,7 +11,16 @@ import {
 } from '@/lib/character/character-autosave-baseline-context';
 import type { CharacterSaveBaselineResult } from '@/lib/character/autosave-baseline';
 import { inventoryRowCasSnapshot } from '@/lib/character/inventory-patch';
+import { cleanForSave } from '@/lib/data-enrichment/clean-for-save';
+import {
+  mergeRemotePreservingDirty,
+  pickDirtyCharacterFields,
+} from '@/lib/character/dirty-patch';
 import { characterViewerId, mergeCharacterSaveResultIntoDetailQuery } from '@/hooks/use-characters';
+import {
+  rememberCharacterLockToken,
+  resetCharacterSaveLockForTests,
+} from '@/lib/character/save-lock';
 import { saveCharacterWithConflictRetry } from '@/services/character-service';
 import { useAuthStore } from '@/stores/auth-store';
 import { ToastProvider } from '@/components/ui';
@@ -39,11 +48,13 @@ vi.mock('@/lib/api-client', async (importOriginal) => {
   };
 });
 
-vi.mock('@/lib/character/save-lock', () => ({
-  enqueueCharacterSave: (_id: string, run: () => Promise<unknown>) => run(),
-  rememberCharacterLockToken: vi.fn(),
-  resolveCharacterLockToken: () => '2026-01-01T00:00:00.000Z',
-}));
+vi.mock('@/lib/character/save-lock', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/character/save-lock')>();
+  return {
+    ...actual,
+    enqueueCharacterSave: (_id: string, run: () => Promise<unknown>) => run(),
+  };
+});
 
 vi.mock('@/lib/supabase/client', () => ({
   createClient: () => ({
@@ -148,6 +159,12 @@ function AutosaveBaselineAdvanceBridge() {
     advanceBaselineBridge.current = advance;
   }, [advance]);
   return null;
+}
+
+function characterWithHealthPotionQty2(): Character {
+  const base = characterWithHealthPotion();
+  base.equipment!.items![0]!.quantity = 2;
+  return base;
 }
 
 function characterWithHealthPotion(): Character {
@@ -797,5 +814,172 @@ describe('library inventory + sheet autosave baseline (hook)', () => {
       ).toBe(KNIFE_ROW),
     );
     expect(result.current.character?.notes).toBe('local-edit');
+  });
+
+  it('C2 dirty-path: cleanForSave merge yields qty 2 for +1 / −1', () => {
+    const baseline = cleanForSave(characterWithHealthPotionQty2()) as Record<string, unknown>;
+    const remote = cleanForSave({
+      ...characterWithHealthPotionQty2(),
+      equipment: {
+        ...characterWithHealthPotionQty2().equipment!,
+        items: [{ ...characterWithHealthPotionQty2().equipment!.items![0]!, quantity: 3 }],
+      },
+    } as Character) as Record<string, unknown>;
+    const local = cleanForSave({
+      ...characterWithHealthPotionQty2(),
+      equipment: {
+        ...characterWithHealthPotionQty2().equipment!,
+        items: [{ ...characterWithHealthPotionQty2().equipment!.items![0]!, quantity: 1 }],
+      },
+    } as Character) as Record<string, unknown>;
+    const dirty = pickDirtyCharacterFields(local, baseline);
+    const merged = mergeRemotePreservingDirty(remote, local, Object.keys(dirty), baseline);
+    const mergedQty = (merged.equipment as { items?: Array<{ quantity?: number }> } | undefined)
+      ?.items?.[0]?.quantity;
+    expect(mergedQty, JSON.stringify({ baseline: baseline.equipment, merged: merged.equipment })).toBe(
+      2,
+    );
+  });
+
+  it('C2: tab A +1 then tab B −1 merges to qty 2 (not silent last-write-wins)', async () => {
+    resetCharacterSaveLockForTests();
+    const initial = characterWithHealthPotionQty2();
+    let serverQty = 2;
+    let serverUpdatedAt = initial.updatedAt as string;
+    const patchLog: Array<{
+      updatedAt?: string | undefined;
+      expectedQty?: number | undefined;
+      itemQty?: number | undefined;
+      outcome: 'ok' | '409';
+    }> = [];
+
+    const remoteAfterA = () => ({
+      ...characterWithHealthPotionQty2(),
+      equipment: {
+        ...initial.equipment!,
+        items: [{ ...initial.equipment!.items![0]!, quantity: serverQty }],
+      },
+      updatedAt: serverUpdatedAt,
+    });
+
+    characterMocks.getCharacter.mockImplementation(async () => ({
+      character: remoteAfterA(),
+      enrichment: emptyCharacterViewEnrichment(),
+    }));
+    queryClient.setQueryData(['characters', 'detail', characterViewerId('user'), 'c-qa'], {
+      character: initial,
+      enrichment: emptyCharacterViewEnrichment(),
+    });
+
+    vi.mocked(apiFetch).mockImplementation(async (_url, opts) => {
+      const body = JSON.parse(opts?.body as string) as Record<string, unknown>;
+      const lock = body.updatedAt as string | undefined;
+      const inv = body.inventoryPatch as
+        | { ops?: Array<{ expected?: { quantity?: number }; item?: { quantity?: number } }> }
+        | undefined;
+      const op = inv?.ops?.[0];
+      const expectedQty = op?.expected?.quantity;
+      const itemQty = op?.item?.quantity;
+
+      if (lock && lock !== serverUpdatedAt) {
+        patchLog.push({ updatedAt: lock, expectedQty, itemQty, outcome: '409' });
+        throw new ApiError('Character was modified elsewhere', 409);
+      }
+      if (
+        expectedQty !== undefined &&
+        itemQty !== undefined &&
+        expectedQty !== serverQty
+      ) {
+        patchLog.push({ updatedAt: lock, expectedQty, itemQty, outcome: '409' });
+        throw new ApiError('inventory_cas_conflict', 409);
+      }
+
+      serverQty = itemQty ?? serverQty;
+      const nextUpdatedAt = `2026-01-02T00:00:0${patchLog.filter((e) => e.outcome === 'ok').length + 1}.000Z`;
+      serverUpdatedAt = nextUpdatedAt;
+      rememberCharacterLockToken('c-qa', serverUpdatedAt);
+      patchLog.push({ updatedAt: lock, expectedQty, itemQty, outcome: 'ok' });
+
+      for (const handler of characterMocks.realtimeHandlers) {
+        await handler({
+          new: { id: 'c-qa', updated_at: serverUpdatedAt },
+        });
+      }
+      characterMocks.getCharacter.mockResolvedValue({
+        character: remoteAfterA(),
+        enrichment: emptyCharacterViewEnrichment(),
+      });
+
+      return { ok: true as const, updatedAt: serverUpdatedAt };
+    });
+
+    const tabA = await mountSheet();
+    const tabB = await mountSheet();
+    await waitFor(() => expect(tabA.result.current.character?.id).toBe('c-qa'));
+    await waitFor(() => expect(tabB.result.current.character?.id).toBe('c-qa'));
+
+    await act(async () => {
+      tabA.result.current.setCharacter({
+        ...(tabA.result.current.character as Character),
+        equipment: {
+          ...(tabA.result.current.character as Character).equipment,
+          items: [
+            {
+              inventoryRowId: HEALTH_ROW,
+              id: 'health-potion',
+              name: 'Health Potion',
+              quantity: 3,
+            },
+          ],
+        },
+      });
+    });
+    await waitFor(() =>
+      expect(tabA.result.current.character?.equipment?.items?.[0]?.quantity).toBe(3),
+    );
+    await waitFor(() => expect(tabA.result.current.hasUnsavedChanges).toBe(true));
+
+    await act(async () => {
+      await tabA.result.current.saveNow();
+    });
+
+    await waitFor(() => expect(patchLog.some((entry) => entry.outcome === 'ok')).toBe(true));
+    await waitFor(() => expect(serverQty).toBe(3));
+
+    await act(async () => {
+      tabB.result.current.setCharacter({
+        ...(tabB.result.current.character as Character),
+        equipment: {
+          ...(tabB.result.current.character as Character).equipment,
+          items: [
+            {
+              inventoryRowId: HEALTH_ROW,
+              id: 'health-potion',
+              name: 'Health Potion',
+              quantity: 1,
+            },
+          ],
+        },
+      });
+    });
+    await waitFor(() => expect(tabB.result.current.hasUnsavedChanges).toBe(true));
+
+    await new Promise((resolve) => setTimeout(resolve, 900));
+
+    await act(async () => {
+      await tabB.result.current.saveNow();
+    });
+
+    await waitFor(() => expect(patchLog.some((entry) => entry.outcome === '409')).toBe(true));
+    await waitFor(() => expect(serverQty).toBe(2));
+
+    const tabBFirstInventoryPatch = patchLog.find(
+      (entry) => entry.itemQty === 1 && entry.expectedQty !== undefined,
+    );
+    expect(tabBFirstInventoryPatch?.expectedQty).toBe(2);
+    const tabBRetry = patchLog.find(
+      (entry) => entry.outcome === 'ok' && entry.expectedQty === 3 && entry.itemQty === 2,
+    );
+    expect(tabBRetry).toBeDefined();
   });
 });
