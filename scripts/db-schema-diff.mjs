@@ -3,7 +3,7 @@
  * Live schema vs committed baseline
  * =================================
  * Dumps the live schema with the same tool and flags that produced
- * `sql/schema/0000_baseline_<date>.sql` (`pg_dump --schema-only --no-owner --no-acl`),
+ * `sql/schema/0000_baseline_<date>.sql` (`pg_dump --schema-only --no-owner`, ACLs included),
  * normalises both sides, and diffs them.
  *
  * Usage:
@@ -154,7 +154,7 @@ function normalizeDump(sql) {
 function dumpLiveSchema(pgDump, dbUrl, outFile) {
   const result = spawnSync(
     pgDump.exe,
-    ['--schema-only', '--no-owner', '--no-acl', '--file', outFile, '--dbname', dbUrl],
+    ['--schema-only', '--no-owner', '--file', outFile, '--dbname', dbUrl],
     { encoding: 'utf8' },
   );
   if (result.status !== 0) {

@@ -1472,7 +1472,7 @@ TO authenticated, service_role;`;
 describe('isIgnoredSqlGrantCheckPath', () => {
   it('ignores template and schema baselines', () => {
     expect(isIgnoredSqlGrantCheckPath('sql/_TEMPLATE_new_table.sql')).toBe(true);
-    expect(isIgnoredSqlGrantCheckPath('sql/schema/0000_baseline_2026-08-13.sql')).toBe(true);
+    expect(isIgnoredSqlGrantCheckPath('sql/schema/0000_baseline_2026-11-20.sql')).toBe(true);
     expect(isIgnoredSqlGrantCheckPath('sql/new-feature.sql')).toBe(false);
   });
 });
