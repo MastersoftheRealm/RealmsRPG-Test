@@ -349,12 +349,15 @@ describe('library inventory + sheet autosave baseline (hook)', () => {
         op: 'remove',
         bucket: 'weapons',
         inventoryRowId: KNIFE_ROW,
-        expected: inventoryRowCasSnapshot({
-          inventoryRowId: KNIFE_ROW,
-          id: 'lib-knife',
-          name: 'Knife',
-          type: 'weapon',
-        }),
+        expected: inventoryRowCasSnapshot(
+          {
+            inventoryRowId: KNIFE_ROW,
+            id: 'lib-knife',
+            name: 'Knife',
+            type: 'weapon',
+          },
+          'weapons',
+        ),
       }),
     ]);
   });
@@ -436,12 +439,15 @@ describe('library inventory + sheet autosave baseline (hook)', () => {
                 op: 'update',
                 bucket: 'items',
                 inventoryRowId: HEALTH_ROW,
-                expected: inventoryRowCasSnapshot({
-                  inventoryRowId: HEALTH_ROW,
-                  id: 'health-potion',
-                  name: 'Health Potion',
-                  quantity: 3,
-                }),
+                expected: inventoryRowCasSnapshot(
+                  {
+                    inventoryRowId: HEALTH_ROW,
+                    id: 'health-potion',
+                    name: 'Health Potion',
+                    quantity: 3,
+                  },
+                  'items',
+                ),
                 item: {
                   id: 'health-potion',
                   name: 'Health Potion',
@@ -595,12 +601,15 @@ describe('library inventory + sheet autosave baseline (hook)', () => {
         op: 'remove',
         bucket: 'items',
         inventoryRowId: HEALTH_ROW,
-        expected: inventoryRowCasSnapshot({
-          inventoryRowId: HEALTH_ROW,
-          id: 'health-potion',
-          name: 'Health Potion',
-          quantity: 3,
-        }),
+        expected: inventoryRowCasSnapshot(
+          {
+            inventoryRowId: HEALTH_ROW,
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 3,
+          },
+          'items',
+        ),
       }),
     ]);
   });

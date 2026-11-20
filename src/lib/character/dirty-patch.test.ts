@@ -7,7 +7,9 @@ import {
   applySheetAutosaveConflictFields,
   characterLockToken,
   characterTimestampsMatch,
+  formatInventoryConflictOverwriteToast,
   isStaleCharacterWrite,
+  listEquipmentConflictRemoteOverwrites,
   mergeRemotePreservingDirty,
   pickDirtyCharacterFields,
   withDirtyClears,
@@ -290,6 +292,49 @@ describe('applyCharacterDirtyPatch / mergeRemotePreservingDirty', () => {
     expect(row.equipped).toBe(true);
   });
 
+  it('lists description when both tabs edited it and toast names the field', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          {
+            id: 'grapple-rope',
+            name: 'Grapple Rope',
+            description: 'baseline',
+            quantity: 3,
+          },
+        ],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [
+          {
+            id: 'grapple-rope',
+            name: 'Grapple Rope',
+            description: 'tab-a-note',
+            quantity: 5,
+          },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [
+          {
+            id: 'grapple-rope',
+            name: 'Grapple Rope',
+            description: 'tab-b-note',
+            quantity: 3,
+          },
+        ],
+      },
+    };
+    expect(listEquipmentConflictRemoteOverwrites(baseline.equipment, local.equipment, remote.equipment)).toEqual([
+      'description',
+    ]);
+    expect(formatInventoryConflictOverwriteToast(['description'])).toContain('description');
+  });
+
   it('keeps local description when remote only changed quantity', () => {
     const baseline = {
       equipment: {
@@ -334,6 +379,44 @@ describe('applyCharacterDirtyPatch / mergeRemotePreservingDirty', () => {
     const row = (merged.equipment as { items: Array<Record<string, unknown>> }).items[0]!;
     expect(row.quantity).toBe(5);
     expect(row.description).toBe('tab-b-note');
+  });
+
+  it('floors merged quantity at zero when delta would go negative', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          {
+            id: 'grapple-rope',
+            name: 'Grapple Rope',
+            quantity: 3,
+          },
+        ],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [
+          {
+            id: 'grapple-rope',
+            name: 'Grapple Rope',
+            quantity: 1,
+          },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [
+          {
+            id: 'grapple-rope',
+            name: 'Grapple Rope',
+            quantity: 0,
+          },
+        ],
+      },
+    };
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    expect((merged.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(0);
   });
 
   it('applies quantity delta from baseline onto remote during conflict merge', () => {

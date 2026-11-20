@@ -78,7 +78,10 @@ describe('character-service inventory CAS save', () => {
         op: 'update',
         bucket: 'items',
         inventoryRowId: HEALTH_ROW,
-        expected: inventoryRowCasSnapshot(baseline.equipment.items[0] as Record<string, unknown>),
+        expected: inventoryRowCasSnapshot(
+          baseline.equipment.items[0] as Record<string, unknown>,
+          'items',
+        ),
         item: {
           id: 'health-potion',
           name: 'Health Potion',

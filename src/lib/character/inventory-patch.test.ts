@@ -56,7 +56,7 @@ describe('inventory patch', () => {
     expect(patch.ops[0]).toMatchObject({
       op: 'update',
       inventoryRowId: HEALTH_ROW,
-      expected: inventoryRowCasSnapshot(baseline.equipment.items[0]!),
+      expected: inventoryRowCasSnapshot(baseline.equipment.items[0]!, 'items'),
     });
   });
 
@@ -94,12 +94,18 @@ describe('inventory patch', () => {
 
   it('CAS snapshot mirrors relational custom_type on the sheet row', () => {
     expect(
-      inventoryRowCasSnapshot({
-        id: 'lib-bed-roll',
-        name: 'Bed Roll',
-        type: 'equipment',
-      }).type,
+      inventoryRowCasSnapshot(
+        {
+          id: 'lib-bed-roll',
+          name: 'Bed Roll',
+          type: 'equipment',
+        },
+        'items',
+      ).type,
     ).toBe('equipment');
+    expect(
+      inventoryRowCasSnapshot({ id: 'lib-knife', name: 'Knife', type: 'weapon' }, 'weapons').type,
+    ).toBe('');
   });
 
   it('sends full expected snapshot on update', () => {
@@ -127,7 +133,7 @@ describe('inventory patch', () => {
       op: 'update',
       bucket: 'items',
       inventoryRowId: HEALTH_ROW,
-      expected: inventoryRowCasSnapshot(baseline.equipment.items[0]!),
+      expected: inventoryRowCasSnapshot(baseline.equipment.items[0]!, 'items'),
       item: {
         id: 'health-potion',
         name: 'Health Potion',
@@ -228,6 +234,61 @@ describe('inventory patch', () => {
         }),
       ]),
     );
+  });
+
+  it('library weapon with UI type matches baseline without type — no spurious ops', () => {
+    const rowId = '40000000-0000-4000-8000-000000000004';
+    const baseline = {
+      weapons: [
+        {
+          inventoryRowId: rowId,
+          id: 'lib-knife',
+          name: 'Knife',
+          quantity: 1,
+        },
+      ],
+    };
+    const afterAddUiType = {
+      weapons: [
+        {
+          inventoryRowId: rowId,
+          id: 'lib-knife',
+          name: 'Knife',
+          type: 'weapon',
+          quantity: 1,
+        },
+      ],
+    };
+    expect(buildInventoryPatch(baseline, afterAddUiType).ops).toHaveLength(0);
+  });
+
+  it('library weapon qty edit does not send UI bucket type', () => {
+    const rowId = '40000000-0000-4000-8000-000000000004';
+    const baseline = {
+      weapons: [
+        {
+          inventoryRowId: rowId,
+          id: 'lib-knife',
+          name: 'Knife',
+          quantity: 1,
+        },
+      ],
+    };
+    const afterQty = {
+      weapons: [
+        {
+          inventoryRowId: rowId,
+          id: 'lib-knife',
+          name: 'Knife',
+          type: 'weapon',
+          quantity: 2,
+        },
+      ],
+    };
+    const patch = buildInventoryPatch(baseline, afterQty);
+    expect(patch.ops).toHaveLength(1);
+    expect(patch.ops[0]).toMatchObject({ op: 'update', item: { quantity: 2 } });
+    expect((patch.ops[0] as { item: Record<string, unknown> }).item).not.toHaveProperty('type');
   });
 
   it('new library weapon row omits UI bucket type from add patch item', () => {

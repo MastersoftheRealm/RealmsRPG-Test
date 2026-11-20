@@ -42,6 +42,7 @@ import {
   coerceInventoryPatchCreatedRows,
   mergeInventoryCreatedRows,
   mirrorInventoryRowIdsOntoSheetEquipment,
+  normalizeEquipmentForInventoryRelational,
   prepareInventoryPatchForAutosave,
 } from '@/lib/character/inventory-patch';
 import { cleanForSave } from '@/lib/data-enrichment';
@@ -53,6 +54,8 @@ import {
 import {
   applySheetAutosaveConflictFields,
   characterLockToken,
+  formatInventoryConflictOverwriteToast,
+  listEquipmentConflictRemoteOverwrites,
   mergeRemotePreservingDirty,
   mergeSheetAutosaveBaseline,
   pickDirtyCharacterFields,
@@ -100,6 +103,7 @@ export function useCharacterSheetPageData(id: string) {
   const error = actionError ?? loadError;
 
   const savedCleanRef = useRef<Record<string, unknown> | null>(null);
+  const conflictOverwriteFieldsRef = useRef<string[]>([]);
   const savedSnapshotIdRef = useRef<string | null>(null);
   const realtimeRefetchGenerationRef = useRef(0);
 
@@ -405,6 +409,15 @@ export function useCharacterSheetPageData(id: string) {
         mergeOnConflict: (remote) => {
           const remoteClean = cleanForSave(remote, rules) as Record<string, unknown>;
           const localClean = withDirtyClears(cleaned, dirty);
+          if (Object.prototype.hasOwnProperty.call(dirty, 'equipment')) {
+            conflictOverwriteFieldsRef.current = listEquipmentConflictRemoteOverwrites(
+              inventoryBaselineAtSave?.equipment,
+              localClean.equipment,
+              remoteClean.equipment,
+            );
+          } else {
+            conflictOverwriteFieldsRef.current = [];
+          }
           const mergedClean = mergeRemotePreservingDirty(
             remoteClean,
             localClean,
@@ -459,11 +472,16 @@ export function useCharacterSheetPageData(id: string) {
       if (result.updatedAt) {
         setCharacter((prev) => (prev ? { ...prev, updatedAt: result.updatedAt } : prev));
       }
+      setCharacter((prev) => {
+        if (!prev?.equipment) return prev;
+        const equipment = normalizeEquipmentForInventoryRelational(
+          prev.equipment,
+        ) as Character['equipment'];
+        return equipment === prev.equipment ? prev : { ...prev, equipment };
+      });
       if (result.conflictRetried) {
-        showToast(
-          'Another tab updated this character. Your changes were merged and saved.',
-          'info',
-        );
+        showToast(formatInventoryConflictOverwriteToast(conflictOverwriteFieldsRef.current), 'info');
+        conflictOverwriteFieldsRef.current = [];
         try {
           const fresh = await getCharacter(id);
           const remoteCharacter = fresh.character;

@@ -3,6 +3,7 @@ import {
   applyInventoryPatchToEquipment,
   coerceInventoryPatchCreatedRows,
   mergeInventoryCreatedRows,
+  normalizeEquipmentForInventoryRelational,
   type InventoryPatchPayload,
 } from '@/lib/character/inventory-patch';
 
@@ -41,6 +42,12 @@ export function advanceAutosaveBaselineFromSaveResult(
     next = {
       ...next,
       equipment: mergeInventoryCreatedRows(next.equipment, createdRows),
+    };
+  }
+  if (next.equipment) {
+    next = {
+      ...next,
+      equipment: normalizeEquipmentForInventoryRelational(next.equipment),
     };
   }
   return next;

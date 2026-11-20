@@ -93,62 +93,124 @@ function rowQuantity(row: Record<string, unknown>): number {
   return 1;
 }
 
-export function inventoryRowCasSnapshot(row: Record<string, unknown>): InventoryCasSnapshot {
-  const cost = row.cost;
-  return {
-    quantity: rowQuantity(row),
-    equipped: row.equipped === true,
-    name: typeof row.name === 'string' ? row.name : '',
-    type: typeof row.type === 'string' ? row.type : '',
-    description: typeof row.description === 'string' ? row.description : '',
-    cost: typeof cost === 'number' && Number.isFinite(cost) ? cost : null,
-  };
-}
-
-function isUiBucketTypeOnNewRow(
-  row: Record<string, unknown>,
+/** UI bucket labels are not stored in relational `custom_type` (prod codex rows use NULL). */
+function isUiBucketInventoryType(
+  type: string,
   bucket: InventoryPatchBucket,
 ): boolean {
-  const type = row.type;
-  if (typeof type !== 'string' || !type) return false;
+  if (!type) return false;
   if (bucket === 'weapons') return type === 'weapon';
   if (bucket === 'armor') return type === 'armor';
   if (bucket === 'shields') return type === 'shield';
   return false;
 }
 
+/** Strip UI bucket `type` from sheet rows so baseline, patch ops, and CAS stay aligned. */
+function normalizeInventoryRowForRelational(
+  row: Record<string, unknown>,
+  bucket: InventoryPatchBucket,
+): Record<string, unknown> {
+  const type = row.type;
+  if (typeof type === 'string' && isUiBucketInventoryType(type, bucket)) {
+    const next = { ...row };
+    delete next.type;
+    return next;
+  }
+  return row;
+}
+
+export function normalizeEquipmentForInventoryRelational(equipment: unknown): unknown {
+  if (!equipment || typeof equipment !== 'object') return equipment;
+  const equip = equipment as Record<string, unknown>;
+  let changed = false;
+  const next: Record<string, unknown> = { ...equip };
+
+  const normalizeBucket = (bucket: InventoryPatchBucket, value: unknown): unknown => {
+    if (bucket === 'armor') {
+      if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+      const row = value as Record<string, unknown>;
+      const normalized = normalizeInventoryRowForRelational(row, bucket);
+      if (normalized !== row) changed = true;
+      return normalized;
+    }
+    if (!Array.isArray(value)) return value;
+    const rows = value as Record<string, unknown>[];
+    const normalizedRows = rows.map((row) => {
+      const normalized = normalizeInventoryRowForRelational(row, bucket);
+      if (normalized !== row) changed = true;
+      return normalized;
+    });
+    return normalizedRows;
+  };
+
+  for (const bucket of INVENTORY_PATCH_BUCKETS) {
+    if (!(bucket in equip)) continue;
+    const normalized = normalizeBucket(bucket, equip[bucket]);
+    if (normalized !== equip[bucket]) next[bucket] = normalized;
+  }
+
+  return changed ? next : equipment;
+}
+
+function relationalInventoryCasType(
+  row: Record<string, unknown>,
+  bucket: InventoryPatchBucket,
+): string {
+  const type = typeof row.type === 'string' ? row.type : '';
+  if (isUiBucketInventoryType(type, bucket)) return '';
+  return type;
+}
+
+export function inventoryRowCasSnapshot(
+  row: Record<string, unknown>,
+  bucket: InventoryPatchBucket,
+): InventoryCasSnapshot {
+  const cost = row.cost;
+  return {
+    quantity: rowQuantity(row),
+    equipped: row.equipped === true,
+    name: typeof row.name === 'string' ? row.name : '',
+    type: relationalInventoryCasType(row, bucket),
+    description: typeof row.description === 'string' ? row.description : '',
+    cost: typeof cost === 'number' && Number.isFinite(cost) ? cost : null,
+  };
+}
+
 function leanRowForPatchOp(
   row: Record<string, unknown>,
-  bucket?: InventoryPatchBucket,
-  options?: { treatAsNewRow?: boolean },
+  bucket: InventoryPatchBucket,
 ): Record<string, unknown> {
+  const normalized = normalizeInventoryRowForRelational(row, bucket);
   const out: Record<string, unknown> = {};
-  if (row.id !== undefined) out.id = row.id;
-  if (row.name !== undefined) out.name = row.name;
-  out.equipped = row.equipped === true;
-  out.quantity = rowQuantity(row);
-  if (Object.prototype.hasOwnProperty.call(row, 'type')) {
-    if (bucket && options?.treatAsNewRow && isUiBucketTypeOnNewRow(row, bucket)) {
-      // Official codex rows use NULL custom_type; omit UI bucket labels on add.
-    } else {
-      const type = row.type;
-      out.type = typeof type === 'string' && type.length > 0 ? type : null;
-    }
+  if (normalized.id !== undefined) out.id = normalized.id;
+  if (normalized.name !== undefined) out.name = normalized.name;
+  out.equipped = normalized.equipped === true;
+  out.quantity = rowQuantity(normalized);
+  if (Object.prototype.hasOwnProperty.call(normalized, 'type')) {
+    const type = normalized.type;
+    out.type = typeof type === 'string' && type.length > 0 ? type : null;
   }
-  if (Object.prototype.hasOwnProperty.call(row, 'description')) {
-    const description = row.description;
+  if (Object.prototype.hasOwnProperty.call(normalized, 'description')) {
+    const description = normalized.description;
     out.description =
       typeof description === 'string' && description.trim().length > 0 ? description.trim() : null;
   }
-  if (Object.prototype.hasOwnProperty.call(row, 'cost')) {
-    const cost = row.cost;
+  if (Object.prototype.hasOwnProperty.call(normalized, 'cost')) {
+    const cost = normalized.cost;
     out.cost = typeof cost === 'number' && Number.isFinite(cost) ? cost : null;
   }
   return out;
 }
 
-function rowsEqual(a: Record<string, unknown>, b: Record<string, unknown>): boolean {
-  return JSON.stringify(inventoryRowCasSnapshot(a)) === JSON.stringify(inventoryRowCasSnapshot(b));
+function rowsEqual(
+  a: Record<string, unknown>,
+  b: Record<string, unknown>,
+  bucket: InventoryPatchBucket,
+): boolean {
+  return (
+    JSON.stringify(inventoryRowCasSnapshot(a, bucket)) ===
+    JSON.stringify(inventoryRowCasSnapshot(b, bucket))
+  );
 }
 
 function orderRowIds(rows: Record<string, unknown>[]): string[] {
@@ -186,7 +248,7 @@ export function buildInventoryPatch(
           op: 'remove',
           bucket,
           inventoryRowId: rowId,
-          expected: inventoryRowCasSnapshot(row),
+          expected: inventoryRowCasSnapshot(row, bucket),
         });
       }
     }
@@ -201,15 +263,15 @@ export function buildInventoryPatch(
             op: 'add',
             bucket,
             inventoryRowId: existingId,
-            item: leanRowForPatchOp(row, bucket, { treatAsNewRow: true }),
+            item: leanRowForPatchOp(row, bucket),
             position: i + 1,
           });
-        } else if (!rowsEqual(prev, row)) {
+        } else if (!rowsEqual(prev, row, bucket)) {
           ops.push({
             op: 'update',
             bucket,
             inventoryRowId: existingId,
-            expected: inventoryRowCasSnapshot(prev),
+            expected: inventoryRowCasSnapshot(prev, bucket),
             item: leanRowForPatchOp(row, bucket),
           });
         }
@@ -223,7 +285,7 @@ export function buildInventoryPatch(
         op: 'add',
         bucket,
         inventoryRowId: provisionalId,
-        item: leanRowForPatchOp(row, bucket, { treatAsNewRow: true }),
+        item: leanRowForPatchOp(row, bucket),
         position: i + 1,
       });
     }
@@ -248,7 +310,7 @@ export function buildInventoryPatch(
           op: 'reorder',
           bucket,
           inventoryRowId: rowId,
-          expected: inventoryRowCasSnapshot(prev),
+          expected: inventoryRowCasSnapshot(prev, bucket),
           position: position + 1,
         });
       }
@@ -390,7 +452,10 @@ export function applyInventoryPatchToEquipment(
       rows = rows.filter((row) => readInventoryRowId(row) !== op.inventoryRowId);
     } else if (op.op === 'add') {
       const rowId = op.inventoryRowId ?? readInventoryRowId(op.item);
-      const row: Record<string, unknown> = { ...op.item };
+      const row: Record<string, unknown> = normalizeInventoryRowForRelational(
+        { ...op.item },
+        bucket,
+      );
       if (rowId) row.inventoryRowId = rowId;
       const position = Math.max(1, op.position ?? rows.length + 1);
       const index = Math.min(position - 1, rows.length);
@@ -398,7 +463,8 @@ export function applyInventoryPatchToEquipment(
     } else if (op.op === 'update') {
       const index = rows.findIndex((row) => readInventoryRowId(row) === op.inventoryRowId);
       if (index >= 0) {
-        rows[index] = { ...rows[index], ...op.item, inventoryRowId: op.inventoryRowId };
+        const merged = { ...rows[index], ...op.item, inventoryRowId: op.inventoryRowId };
+        rows[index] = normalizeInventoryRowForRelational(merged, bucket);
       }
     } else if (op.op === 'reorder') {
       const from = rows.findIndex((row) => readInventoryRowId(row) === op.inventoryRowId);
