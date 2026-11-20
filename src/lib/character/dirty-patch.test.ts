@@ -300,6 +300,46 @@ describe('applyCharacterDirtyPatch / mergeRemotePreservingDirty', () => {
     expect(listAutosaveConflictRemoteOverwrites(baseline, local, remote, ['notes'])).toEqual(['notes']);
   });
 
+  it('409 merge fresh row default qty 1 vs local 2 remote 3 yields 4 (C2/E)', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '30000000-0000-4000-8000-000000000001',
+            id: 'new-potion',
+            name: 'New Potion',
+          },
+        ],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '30000000-0000-4000-8000-000000000001',
+            id: 'new-potion',
+            name: 'New Potion',
+            quantity: 3,
+          },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '30000000-0000-4000-8000-000000000001',
+            id: 'new-potion',
+            name: 'New Potion',
+            quantity: 2,
+          },
+        ],
+      },
+    };
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    expect((merged.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(4);
+  });
+
   it('409 merge treats cleanForSave omitted quantity 1 as one', () => {
     const baseline = {
       equipment: {

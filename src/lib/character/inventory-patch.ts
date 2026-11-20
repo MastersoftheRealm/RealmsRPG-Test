@@ -87,10 +87,14 @@ function newInventoryRowId(): string {
   return globalThis.crypto.randomUUID();
 }
 
-function rowQuantity(row: Record<string, unknown>): number {
-  const q = row.quantity;
-  if (typeof q === 'number' && Number.isFinite(q)) return q;
+/** `cleanForSave` omits quantity 1; treat missing as 1 everywhere we diff or merge inventory qty. */
+export function savedInventoryQuantity(value: unknown): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
   return 1;
+}
+
+function rowQuantity(row: Record<string, unknown>): number {
+  return savedInventoryQuantity(row.quantity);
 }
 
 /** UI bucket labels are not stored in relational `custom_type` (prod codex rows use NULL). */

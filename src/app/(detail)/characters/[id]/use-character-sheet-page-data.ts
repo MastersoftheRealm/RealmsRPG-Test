@@ -37,7 +37,10 @@ import {
 import { useGameRules } from '@/hooks/use-game-rules';
 import { sheetCatalogFromEnrichment } from '@/lib/character-view-enrichment';
 import { advanceAutosaveBaselineFromSaveResult } from '@/lib/character/autosave-baseline';
-import { useRegisterCharacterAutosaveBaseline } from '@/lib/character/character-autosave-baseline-context';
+import {
+  useAdvanceCharacterAutosaveBaseline,
+  useRegisterCharacterAutosaveBaseline,
+} from '@/lib/character/character-autosave-baseline-context';
 import {
   coerceInventoryPatchCreatedRows,
   mergeInventoryCreatedRows,
@@ -104,11 +107,12 @@ export function useCharacterSheetPageData(id: string) {
 
   const savedCleanRef = useRef<Record<string, unknown> | null>(null);
   const conflictOverwriteFieldsRef = useRef<string[]>([]);
-  const savedSnapshotIdRef = useRef<string | null>(null);
   const realtimeRefetchGenerationRef = useRef(0);
   const hasUnsavedChangesRef = useRef(false);
+  const baselineSeedTokenRef = useRef<string | null>(null);
 
   useRegisterCharacterAutosaveBaseline(id, savedCleanRef);
+  const advanceSheetAutosaveBaseline = useAdvanceCharacterAutosaveBaseline();
 
   const setCharacter = useCallback(
     (update: SetStateAction<Character | null>) => {
@@ -118,19 +122,19 @@ export function useCharacterSheetPageData(id: string) {
   );
 
   useEffect(() => {
-    if (character?.id === id) {
-      if (savedSnapshotIdRef.current === id) return;
-      savedSnapshotIdRef.current = id;
-      if (!savedCleanRef.current) {
-        savedCleanRef.current = cleanForSave(character, rules) as Record<string, unknown>;
+    if (!character || character.id !== id) {
+      if (character?.id !== id) {
+        savedCleanRef.current = null;
+        baselineSeedTokenRef.current = null;
       }
-      rememberCharacterLockToken(id, character.updatedAt);
       return;
     }
-    if (savedSnapshotIdRef.current !== id) {
-      savedSnapshotIdRef.current = null;
-      savedCleanRef.current = null;
-    }
+    rememberCharacterLockToken(id, character.updatedAt);
+    if (hasUnsavedChangesRef.current) return;
+    const seedToken = characterLockToken(character.updatedAt) ?? character.id;
+    if (baselineSeedTokenRef.current === seedToken && savedCleanRef.current) return;
+    baselineSeedTokenRef.current = seedToken;
+    savedCleanRef.current = cleanForSave(character, rules) as Record<string, unknown>;
   }, [character, id, rules]);
 
   const { data: userPowers = [] } = useUserPowers({ enabled: loadCatalog });
@@ -379,7 +383,11 @@ export function useCharacterSheetPageData(id: string) {
 
   const { hasUnsavedChanges, saveNow, syncBlockedByNetwork } = useAutoSave({
     data: character,
-    areEqual: (a, b) => characterAutosaveDocumentsEqual(a, b),
+    areEqual: (a, b) => {
+      const equal = characterAutosaveDocumentsEqual(a, b);
+      hasUnsavedChangesRef.current = !equal;
+      return equal;
+    },
     onSave: async (data) => {
       if (!data) return;
       const rawCleaned = cleanForSave(data, rules) as Record<string, unknown>;
@@ -453,13 +461,18 @@ export function useCharacterSheetPageData(id: string) {
           };
         },
       });
-      savedCleanRef.current = advanceAutosaveBaselineFromSaveResult(savedCleanRef.current, {
+      const baselineResult = {
         applied: result.applied as Record<string, unknown>,
         updatedAt: result.updatedAt,
         ...(result.inventoryPatchResult
           ? { inventoryPatchResult: result.inventoryPatchResult }
           : {}),
-      });
+      };
+      savedCleanRef.current = advanceAutosaveBaselineFromSaveResult(
+        savedCleanRef.current,
+        baselineResult,
+      );
+      advanceSheetAutosaveBaseline(id, baselineResult);
       const createdRows = coerceInventoryPatchCreatedRows(
         result.inventoryPatchResult?.createdRows ?? [],
       );
@@ -486,7 +499,9 @@ export function useCharacterSheetPageData(id: string) {
         return equipment === prev.equipment ? prev : { ...prev, equipment };
       });
       if (result.conflictRetried) {
-        showToast(formatInventoryConflictOverwriteToast(conflictOverwriteFieldsRef.current), 'info');
+        if (conflictOverwriteFieldsRef.current.length > 0) {
+          showToast(formatInventoryConflictOverwriteToast(conflictOverwriteFieldsRef.current), 'info');
+        }
         conflictOverwriteFieldsRef.current = [];
         try {
           const fresh = await getCharacter(id);
@@ -521,10 +536,6 @@ export function useCharacterSheetPageData(id: string) {
       );
     },
   });
-
-  useEffect(() => {
-    hasUnsavedChangesRef.current = hasUnsavedChanges;
-  }, [hasUnsavedChanges]);
 
   return {
     id,

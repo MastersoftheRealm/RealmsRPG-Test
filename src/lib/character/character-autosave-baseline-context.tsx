@@ -26,19 +26,16 @@ const CharacterAutosaveBaselineContext = createContext<CharacterAutosaveBaseline
   null,
 );
 
+/**
+ * Registers per-sheet `savedCleanRef` and applies library/sheet save results when the
+ * sheet is mounted. No persisted snapshot: the server row (React Query character) is the
+ * source of truth; the sheet re-seeds baseline on load/refetch while clean.
+ */
 export function CharacterAutosaveBaselineProvider({ children }: { children: ReactNode }) {
   const refs = useRef(new Map<string, BaselineRef>());
-  /** Survives sheet unmount (library add while user is on /library). */
-  const persisted = useRef(new Map<string, Record<string, unknown>>());
 
   const register = useCallback((characterId: string, ref: BaselineRef) => {
     const id = characterId.trim();
-    const stored = persisted.current.get(id);
-    if (stored) {
-      ref.current = structuredClone(stored) as Record<string, unknown>;
-    } else if (ref.current) {
-      persisted.current.set(id, structuredClone(ref.current) as Record<string, unknown>);
-    }
     refs.current.set(id, ref);
     return () => {
       if (refs.current.get(id) === ref) refs.current.delete(id);
@@ -48,11 +45,9 @@ export function CharacterAutosaveBaselineProvider({ children }: { children: Reac
   const advance = useCallback((characterId: string, result: CharacterSaveBaselineResult) => {
     const id = characterId.trim();
     const ref = refs.current.get(id);
-    const base = ref?.current ?? persisted.current.get(id) ?? null;
-    const next = advanceAutosaveBaselineFromSaveResult(base, result);
-    const snapshot = structuredClone(next) as Record<string, unknown>;
-    persisted.current.set(id, snapshot);
-    if (ref) ref.current = structuredClone(snapshot) as Record<string, unknown>;
+    if (!ref) return;
+    const next = advanceAutosaveBaselineFromSaveResult(ref.current, result);
+    ref.current = structuredClone(next) as Record<string, unknown>;
   }, []);
 
   const value = useMemo(
