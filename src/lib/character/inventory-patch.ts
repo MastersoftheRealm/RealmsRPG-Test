@@ -87,10 +87,14 @@ function newInventoryRowId(): string {
   return globalThis.crypto.randomUUID();
 }
 
-function rowQuantity(row: Record<string, unknown>): number {
-  const q = row.quantity;
-  if (typeof q === 'number' && Number.isFinite(q)) return q;
+/** `cleanForSave` omits quantity 1; treat missing as 1 everywhere we diff or merge inventory qty. */
+export function savedInventoryQuantity(value: unknown): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
   return 1;
+}
+
+function rowQuantity(row: Record<string, unknown>): number {
+  return savedInventoryQuantity(row.quantity);
 }
 
 /** UI bucket labels are not stored in relational `custom_type` (prod codex rows use NULL). */
@@ -259,13 +263,22 @@ export function buildInventoryPatch(
       if (existingId) {
         const prev = beforeMap.get(existingId);
         if (!prev) {
-          ops.push({
-            op: 'add',
-            bucket,
-            inventoryRowId: existingId,
-            item: leanRowForPatchOp(row, bucket),
-            position: i + 1,
-          });
+          const duplicateAdd = ops.some(
+            (op) =>
+              op.op === 'add' &&
+              'inventoryRowId' in op &&
+              op.inventoryRowId === existingId &&
+              op.bucket === bucket,
+          );
+          if (!duplicateAdd) {
+            ops.push({
+              op: 'add',
+              bucket,
+              inventoryRowId: existingId,
+              item: leanRowForPatchOp(row, bucket),
+              position: i + 1,
+            });
+          }
         } else if (!rowsEqual(prev, row, bucket)) {
           ops.push({
             op: 'update',
@@ -441,8 +454,10 @@ export function applyInventoryPatchToEquipment(
   patch: InventoryPatchPayload,
 ): unknown {
   if (!patch.ops.length) return equipment;
-  if (!equipment || typeof equipment !== 'object') return equipment;
-  const equip: Record<string, unknown> = { ...(equipment as Record<string, unknown>) };
+  const equip: Record<string, unknown> =
+    equipment && typeof equipment === 'object'
+      ? { ...(equipment as Record<string, unknown>) }
+      : {};
 
   for (const op of patch.ops) {
     const bucket = op.bucket;

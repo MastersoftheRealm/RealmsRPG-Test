@@ -4,6 +4,26 @@ import { advanceAutosaveBaselineFromSaveResult } from './autosave-baseline';
 const HEALTH_ROW = '10000000-0000-4000-8000-000000000001';
 
 describe('advanceAutosaveBaselineFromSaveResult', () => {
+  it('replays inventoryPatch when baseline has no equipment object yet (library-only advance)', () => {
+    const next = advanceAutosaveBaselineFromSaveResult(null, {
+      applied: {
+        inventoryPatch: {
+          ops: [
+            {
+              op: 'add',
+              bucket: 'weapons',
+              inventoryRowId: '20000000-0000-4000-8000-000000000002',
+              item: { id: 'lib-knife', name: 'Knife', quantity: 1, equipped: false },
+              position: 1,
+            },
+          ],
+        },
+      },
+    });
+    const weapons = (next.equipment as { weapons: unknown[] }).weapons;
+    expect(weapons).toHaveLength(1);
+  });
+
   it('replays inventoryPatch onto baseline equipment after a successful save', () => {
     const baseline = {
       equipment: {

@@ -4,6 +4,7 @@
  */
 
 import { matchesSheetEquipmentItem } from '@/lib/character/sheet-equipment-match';
+import { savedInventoryQuantity } from '@/lib/character/inventory-patch';
 
 export function characterLockToken(value: string | Date | null | undefined): string | undefined {
   if (value == null) return undefined;
@@ -77,6 +78,14 @@ function stableEqual(a: unknown, b: unknown): boolean {
   } catch {
     return false;
   }
+}
+
+export function characterHasAutosaveDirtyEdits(
+  current: Record<string, unknown> | null | undefined,
+  baseline: Record<string, unknown> | null | undefined,
+): boolean {
+  if (!current || !baseline) return false;
+  return Object.keys(pickDirtyCharacterFields(current, baseline)).length > 0;
 }
 
 /**
@@ -189,8 +198,14 @@ function mergeInventoryRowConflict(
     const b = baseline[key];
     const l = local[key];
     const r = remote[key];
-    const localChanged = !stableEqual(l, b);
-    const remoteChanged = !stableEqual(r, b);
+    const localChanged =
+      key === 'quantity'
+        ? savedInventoryQuantity(l) !== savedInventoryQuantity(b)
+        : !stableEqual(l, b);
+    const remoteChanged =
+      key === 'quantity'
+        ? savedInventoryQuantity(r) !== savedInventoryQuantity(b)
+        : !stableEqual(r, b);
     if (!localChanged && !remoteChanged) {
       if (r !== undefined) merged[key] = r;
       continue;
@@ -203,13 +218,11 @@ function mergeInventoryRowConflict(
       merged[key] = r;
       continue;
     }
-    if (
-      key === 'quantity' &&
-      typeof b === 'number' &&
-      typeof l === 'number' &&
-      typeof r === 'number'
-    ) {
-      merged[key] = Math.max(0, r + (l - b));
+    if (key === 'quantity' && localChanged && remoteChanged) {
+      const bq = savedInventoryQuantity(b);
+      const lq = savedInventoryQuantity(l);
+      const rq = savedInventoryQuantity(r);
+      merged[key] = Math.max(0, rq + (lq - bq));
       continue;
     }
     merged[key] = l;
@@ -225,6 +238,41 @@ const INVENTORY_CONFLICT_FIELD_LABELS: Record<string, string> = {
   type: 'type',
 };
 
+function inventoryRowFieldChanged(
+  key: string,
+  baseline: Record<string, unknown>,
+  row: Record<string, unknown>,
+): boolean {
+  if (key === 'inventoryRowId' || key === 'id') return false;
+  if (key === 'quantity') {
+    return savedInventoryQuantity(row[key]) !== savedInventoryQuantity(baseline[key]);
+  }
+  return !stableEqual(row[key], baseline[key]);
+}
+
+/** Row-level concurrent edit on both tabs (quantity delta merge or scalar local-wins). */
+function inventoryRowConcurrentConflict(
+  baseline: Record<string, unknown>,
+  local: Record<string, unknown>,
+  remote: Record<string, unknown>,
+): boolean {
+  const keys = new Set([
+    ...Object.keys(baseline),
+    ...Object.keys(local),
+    ...Object.keys(remote),
+  ]);
+  for (const key of keys) {
+    if (key === 'inventoryRowId' || key === 'id') continue;
+    if (
+      inventoryRowFieldChanged(key, baseline, local) &&
+      inventoryRowFieldChanged(key, baseline, remote)
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function inventoryRowRemoteOverwriteFields(
   baseline: Record<string, unknown>,
   local: Record<string, unknown>,
@@ -237,14 +285,12 @@ function inventoryRowRemoteOverwriteFields(
     ...Object.keys(remote),
   ]);
   for (const key of keys) {
-    if (key === 'inventoryRowId' || key === 'id' || key === 'quantity') continue;
-    const b = baseline[key];
-    const l = local[key];
-    const r = remote[key];
-    const localChanged = !stableEqual(l, b);
-    const remoteChanged = !stableEqual(r, b);
+    if (key === 'inventoryRowId' || key === 'id') continue;
+    const localChanged = inventoryRowFieldChanged(key, baseline, local);
+    const remoteChanged = inventoryRowFieldChanged(key, baseline, remote);
     if (localChanged && remoteChanged) {
-      const label = INVENTORY_CONFLICT_FIELD_LABELS[key] ?? key;
+      const label =
+        key === 'quantity' ? 'quantity' : (INVENTORY_CONFLICT_FIELD_LABELS[key] ?? key);
       overwrites.push(label);
     }
   }
@@ -279,7 +325,9 @@ function listEquipmentBucketRemoteOverwrites(
     usedLocal.add(localIdx);
     const localRow = local[localIdx]!;
     const localDirty = !stableEqual(localRow, baselineRow);
-    if (!localDirty) continue;
+    const remoteDirty = !stableEqual(remoteRow, baselineRow);
+    if (!localDirty && !remoteDirty) continue;
+    if (!inventoryRowConcurrentConflict(baselineRow, localRow, remoteRow)) continue;
     overwrites.push(...inventoryRowRemoteOverwriteFields(baselineRow, localRow, remoteRow));
   }
   return overwrites;
@@ -311,6 +359,45 @@ export function listEquipmentConflictRemoteOverwrites(
       baseline[bucket],
     )) {
       overwrites.add(field);
+    }
+  }
+  return [...overwrites];
+}
+
+const TOP_LEVEL_CONFLICT_LABELS: Record<string, string> = {
+  notes: 'notes',
+  name: 'name',
+};
+
+/** Same-field overwrites for autosave conflict retry (equipment + top-level dirty keys). */
+export function listAutosaveConflictRemoteOverwrites(
+  baselineDocument: Record<string, unknown> | null | undefined,
+  localClean: Record<string, unknown>,
+  remoteClean: Record<string, unknown>,
+  dirtyKeys: readonly string[],
+): string[] {
+  const overwrites = new Set<string>();
+  const baseline = baselineDocument ?? {};
+
+  if (dirtyKeys.includes('equipment')) {
+    for (const field of listEquipmentConflictRemoteOverwrites(
+      baseline.equipment,
+      localClean.equipment,
+      remoteClean.equipment,
+    )) {
+      overwrites.add(field);
+    }
+  }
+
+  for (const key of dirtyKeys) {
+    if (key === 'equipment' || isCharacterPatchMetaKey(key)) continue;
+    const b = baseline[key];
+    const l = localClean[key];
+    const r = remoteClean[key];
+    const localChanged = !stableEqual(l, b);
+    const remoteChanged = !stableEqual(r, b);
+    if (localChanged && remoteChanged) {
+      overwrites.add(TOP_LEVEL_CONFLICT_LABELS[key] ?? key);
     }
   }
   return [...overwrites];
@@ -365,13 +452,15 @@ function mergeEquipmentItemBucket(
       baselineRow === undefined
         ? !stableEqual(localRow, remoteRow)
         : !stableEqual(localRow!, baselineRow);
+    const remoteDirty =
+      baselineRow === undefined ? false : !stableEqual(remoteRow, baselineRow);
 
-    if (localDirty && baselineRow) {
+    if (baselineRow && (localDirty || remoteDirty)) {
       merged.push(mergeInventoryRowConflict(baselineRow, localRow!, remoteRow));
       continue;
     }
 
-    merged.push(localDirty ? localRow! : remoteRow);
+    merged.push(remoteRow);
   }
 
   for (let lIdx = 0; lIdx < local.length; lIdx++) {
@@ -446,26 +535,44 @@ function mergeEquipmentBucketAutosaveBaseline(
   nextList: unknown,
   savedList: unknown,
   localList: unknown,
+  remoteList?: unknown,
 ): unknown {
   const nextIsArray = Array.isArray(nextList);
   const savedIsArray = Array.isArray(savedList) || savedList === undefined;
   const localIsArray = Array.isArray(localList);
-  if (!nextIsArray || !savedIsArray || !localIsArray) {
+  const remoteIsArray = Array.isArray(remoteList) || remoteList === undefined;
+  if (!nextIsArray || !savedIsArray || !localIsArray || !remoteIsArray) {
     return mergeEquipmentScalarBucket(nextList, localList, savedList);
   }
   const next = nextList as Record<string, unknown>[];
   const saved = savedList ? (savedList as Record<string, unknown>[]) : [];
   const local = localList as Record<string, unknown>[];
+  const remote = remoteList ? (remoteList as Record<string, unknown>[]) : [];
   const merged: Record<string, unknown>[] = [];
 
   const emitAnchor = (
     savedRow: Record<string, unknown> | undefined,
     localRow: Record<string, unknown> | undefined,
     nextRow: Record<string, unknown> | undefined,
+    anchorIndex: number,
   ) => {
+    const remoteRow =
+      remote.length > 0 && nextRow !== undefined
+        ? findSheetEquipmentRow(remote, nextRow, anchorIndex)
+        : undefined;
+    const conflictRemote = remoteRow;
     if (equipmentBucketLocallyTouched(savedRow, localRow)) {
       if (savedRow && !localRow) {
         merged.push(savedRow);
+        return;
+      }
+      if (
+        savedRow &&
+        localRow &&
+        conflictRemote &&
+        inventoryRowConcurrentConflict(savedRow, localRow, conflictRemote)
+      ) {
+        merged.push(conflictRemote);
         return;
       }
       if (savedRow) {
@@ -478,15 +585,18 @@ function mergeEquipmentBucketAutosaveBaseline(
       if (nextRow) merged.push(nextRow);
       return;
     }
+    if (savedRow) {
+      merged.push(savedRow);
+      return;
+    }
     if (nextRow) merged.push(nextRow);
-    else if (savedRow) merged.push(savedRow);
   };
 
   for (let nIdx = 0; nIdx < next.length; nIdx++) {
     const nextRow = next[nIdx]!;
     const savedRow = findSheetEquipmentRow(saved, nextRow, nIdx);
     const localRow = findSheetEquipmentRow(local, nextRow, nIdx);
-    emitAnchor(savedRow, localRow, nextRow);
+    emitAnchor(savedRow, localRow, nextRow, nIdx);
   }
 
   for (let sIdx = 0; sIdx < saved.length; sIdx++) {
@@ -514,6 +624,7 @@ function mergeEquipmentAutosaveBaseline(
   nextEquipment: unknown,
   savedEquipment: unknown,
   localEquipmentBeforeRemote: unknown,
+  remoteEquipment?: unknown,
 ): unknown {
   const next =
     nextEquipment && typeof nextEquipment === 'object'
@@ -527,11 +638,20 @@ function mergeEquipmentAutosaveBaseline(
     localEquipmentBeforeRemote && typeof localEquipmentBeforeRemote === 'object'
       ? (localEquipmentBeforeRemote as Record<string, unknown>)
       : {};
+  const remote =
+    remoteEquipment && typeof remoteEquipment === 'object'
+      ? (remoteEquipment as Record<string, unknown>)
+      : {};
   const keys = new Set([...Object.keys(next), ...Object.keys(saved), ...Object.keys(local)]);
   const merged: Record<string, unknown> = { ...saved, ...next };
   for (const key of keys) {
     if ((EQUIPMENT_ITEM_BUCKETS as readonly string[]).includes(key)) {
-      merged[key] = mergeEquipmentBucketAutosaveBaseline(next[key], saved[key], local[key]);
+      merged[key] = mergeEquipmentBucketAutosaveBaseline(
+        next[key],
+        saved[key],
+        local[key],
+        remote[key],
+      );
       continue;
     }
     const savedRow = saved[key];
@@ -540,7 +660,23 @@ function mergeEquipmentAutosaveBaseline(
       savedRow === undefined
         ? localRow !== undefined && !stableEqual(localRow, next[key])
         : !stableEqual(localRow, savedRow);
-    if (localDirty && savedRow !== undefined) merged[key] = savedRow;
+    const remoteScalar = remote[key] ?? next[key];
+    if (
+      localDirty &&
+      savedRow !== undefined &&
+      localRow !== undefined &&
+      remoteScalar !== undefined &&
+      typeof savedRow === 'object' &&
+      typeof localRow === 'object' &&
+      typeof remoteScalar === 'object' &&
+      inventoryRowConcurrentConflict(
+        savedRow as Record<string, unknown>,
+        localRow as Record<string, unknown>,
+        remoteScalar as Record<string, unknown>,
+      )
+    ) {
+      merged[key] = remoteScalar;
+    } else if (localDirty && savedRow !== undefined) merged[key] = savedRow;
     else if (next[key] !== undefined) merged[key] = next[key];
   }
   return merged;
@@ -571,6 +707,7 @@ export function mergeSheetAutosaveBaseline<T extends Record<string, unknown>>(
   savedBaseline: T,
   dirtyKeys: readonly string[],
   localCleanBeforeRemote: T,
+  remoteClean?: T | null,
 ): T {
   const next: Record<string, unknown> = { ...nextClean };
   for (const key of dirtyKeys) {
@@ -580,6 +717,7 @@ export function mergeSheetAutosaveBaseline<T extends Record<string, unknown>>(
         nextClean[key],
         savedBaseline[key],
         localCleanBeforeRemote[key],
+        remoteClean?.[key],
       );
       continue;
     }

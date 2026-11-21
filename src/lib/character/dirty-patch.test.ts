@@ -9,8 +9,10 @@ import {
   characterTimestampsMatch,
   formatInventoryConflictOverwriteToast,
   isStaleCharacterWrite,
+  listAutosaveConflictRemoteOverwrites,
   listEquipmentConflictRemoteOverwrites,
   mergeRemotePreservingDirty,
+  mergeSheetAutosaveBaseline,
   pickDirtyCharacterFields,
   withDirtyClears,
 } from './dirty-patch';
@@ -290,6 +292,250 @@ describe('applyCharacterDirtyPatch / mergeRemotePreservingDirty', () => {
     const row = (merged.equipment as { items: Array<Record<string, unknown>> }).items[0]!;
     expect(row.quantity).toBe(5);
     expect(row.equipped).toBe(true);
+  });
+
+  it('lists notes when both tabs edited the same top-level field', () => {
+    const baseline = { notes: 'start' };
+    const remote = { notes: 'tab-a' };
+    const local = { notes: 'tab-b' };
+    expect(listAutosaveConflictRemoteOverwrites(baseline, local, remote, ['notes'])).toEqual(['notes']);
+  });
+
+  it('409 merge fresh row default qty 1 vs local 2 remote 3 yields 4 (C2/E)', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '30000000-0000-4000-8000-000000000001',
+            id: 'new-potion',
+            name: 'New Potion',
+          },
+        ],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '30000000-0000-4000-8000-000000000001',
+            id: 'new-potion',
+            name: 'New Potion',
+            quantity: 3,
+          },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '30000000-0000-4000-8000-000000000001',
+            id: 'new-potion',
+            name: 'New Potion',
+            quantity: 2,
+          },
+        ],
+      },
+    };
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    expect((merged.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(4);
+  });
+
+  it('autosave baseline adopts remote qty when both tabs changed +2/+2 (realtime CAS)', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 3,
+          },
+        ],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 5,
+          },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 5,
+          },
+        ],
+      },
+    };
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    expect((merged.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(7);
+    const nextBaseline = mergeSheetAutosaveBaseline(merged, baseline, ['equipment'], local, remote);
+    expect((nextBaseline.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(
+      5,
+    );
+  });
+
+  it('autosave baseline adopts remote qty when both tabs changed quantity (realtime CAS)', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 3,
+          },
+        ],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 5,
+          },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 4,
+          },
+        ],
+      },
+    };
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    expect((merged.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(6);
+    const nextBaseline = mergeSheetAutosaveBaseline(merged, baseline, ['equipment'], local, remote);
+    expect((nextBaseline.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(
+      5,
+    );
+    const retryDirty = pickDirtyCharacterFields(merged, nextBaseline);
+    expect((retryDirty.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(
+      6,
+    );
+  });
+
+  it('409 merge treats cleanForSave omitted quantity 1 as one', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 2,
+          },
+        ],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 3,
+          },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+          },
+        ],
+      },
+    };
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    expect((merged.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(2);
+  });
+
+  it('409 retry dirty uses merged quantity delta with inventory row id (C2)', () => {
+    const baseline = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 2,
+          },
+        ],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 3,
+          },
+        ],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 1,
+          },
+        ],
+      },
+    };
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    const dirty = pickDirtyCharacterFields(merged, remote);
+    expect((dirty.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(2);
+  });
+
+  it('409 retry dirty uses merged quantity delta not the local absolute', () => {
+    const baseline = {
+      equipment: {
+        items: [{ id: 'health-potion', name: 'Health Potion', quantity: 2 }],
+      },
+    };
+    const remote = {
+      equipment: {
+        items: [{ id: 'health-potion', name: 'Health Potion', quantity: 3 }],
+      },
+    };
+    const local = {
+      equipment: {
+        items: [{ id: 'health-potion', name: 'Health Potion', quantity: 1 }],
+      },
+    };
+    const merged = mergeRemotePreservingDirty(remote, local, ['equipment'], baseline);
+    const dirty = pickDirtyCharacterFields(merged, remote);
+    expect((dirty.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity).toBe(2);
   });
 
   it('lists description when both tabs edited it and toast names the field', () => {

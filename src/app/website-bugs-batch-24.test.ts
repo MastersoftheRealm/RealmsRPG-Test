@@ -23,8 +23,8 @@ describe('website bugs batch 24 — sheet keyboard & interaction', () => {
   });
 
   it('clears autosave dirty after save without a false leave prompt (86e3jw5pw)', () => {
-    expect(sheetPageData).toContain('characterAutosaveDocumentsEqual');
-    expect(sheetPageData).toContain('areEqual:');
+    expect(sheetPageData).toContain('characterHasAutosaveDirtyEdits');
+    expect(sheetPageData).toContain('isAutosaveDocumentClean');
   });
 
   it('stops hold-repeat steppers on a global pointer release (86e3jw5p7)', () => {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Character } from '@/types';
 import { cleanForSave } from '@/lib/data-enrichment/clean-for-save';
-import { pickDirtyCharacterFields } from '@/lib/character/dirty-patch';
+import { mergeRemotePreservingDirty, pickDirtyCharacterFields } from '@/lib/character/dirty-patch';
 import { mergeSheetRealtimePayload } from './realtime-merge';
 
 const abilities = {
@@ -112,6 +112,65 @@ describe('mergeSheetRealtimePayload (TASK-747)', () => {
       nextBaseline,
     );
     expect(stillDirty.energyPoints).toBe(8);
+  });
+
+  it('adopts remote potion qty into baseline when only notes are locally dirty', () => {
+    const HEALTH_ROW = '10000000-0000-4000-8000-000000000001';
+    const saved = sheetCharacter({
+      equipment: {
+        weapons: [],
+        armor: [],
+        shields: [],
+        items: [
+          {
+            inventoryRowId: HEALTH_ROW,
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 3,
+          },
+        ],
+      },
+    });
+    const baseline = cleanForSave(saved) as Record<string, unknown>;
+    const local = sheetCharacter({
+      notes: 'typing',
+      equipment: saved.equipment,
+    });
+    const remote = {
+      ...(cleanForSave(saved) as Record<string, unknown>),
+      equipment: {
+        weapons: [],
+        armor: [],
+        shields: [],
+        items: [
+          {
+            inventoryRowId: HEALTH_ROW,
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 5,
+          },
+        ],
+      },
+    };
+
+    const { character: next, nextBaseline } = mergeSheetRealtimePayload(local, remote, baseline, {
+      suppressResources: true,
+      updatedAt: 'T1',
+    });
+    expect(next.notes).toBe('typing');
+    expect(
+      (next.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity,
+    ).toBe(5);
+    expect(
+      (nextBaseline?.equipment as { items: Array<{ quantity?: number }> }).items[0]?.quantity,
+    ).toBe(5);
+
+    const stillDirty = pickDirtyCharacterFields(
+      cleanForSave(next) as Record<string, unknown>,
+      nextBaseline,
+    );
+    expect(stillDirty.notes).toBe('typing');
+    expect(stillDirty).not.toHaveProperty('equipment');
   });
 
   it('adopts remote untouched keys into nextBaseline so they are not dirty', () => {
@@ -327,6 +386,158 @@ describe('mergeSheetRealtimePayload (TASK-747)', () => {
         (row) => row.id,
       ),
     ).toEqual(['bed-roll']);
+  });
+
+  it('merges concurrent inventory qty using frozen localCleanBeforeRemote', () => {
+    const saved = sheetCharacter({
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 5,
+          },
+        ],
+        weapons: [],
+        armor: [],
+        shields: [],
+      },
+    });
+    const baseline = cleanForSave(
+      sheetCharacter({
+        equipment: {
+          items: [
+            {
+              inventoryRowId: '10000000-0000-4000-8000-000000000001',
+              id: 'health-potion',
+              name: 'Health Potion',
+              quantity: 3,
+            },
+          ],
+          weapons: [],
+          armor: [],
+          shields: [],
+        },
+      }),
+    ) as Record<string, unknown>;
+    const localSnapshot = cleanForSave(
+      sheetCharacter({
+        equipment: {
+          items: [
+            {
+              inventoryRowId: '10000000-0000-4000-8000-000000000001',
+              id: 'health-potion',
+              name: 'Health Potion',
+              quantity: 4,
+            },
+          ],
+          weapons: [],
+          armor: [],
+          shields: [],
+        },
+      }),
+    ) as Record<string, unknown>;
+  const remote = cleanForSave(saved) as Record<string, unknown>;
+    const { character: next } = mergeSheetRealtimePayload(saved, remote, baseline, {
+      localCleanBeforeRemote: localSnapshot,
+      updatedAt: 'T1',
+    });
+    expect(
+      (next.equipment as { items?: Array<{ quantity?: number }> } | undefined)?.items?.[0]
+        ?.quantity,
+    ).toBe(6);
+  });
+
+  it('scalar timestamp then relational refetch merges concurrent qty (+1/+2)', () => {
+    const baseline = cleanForSave(
+      sheetCharacter({
+        equipment: {
+          items: [
+            {
+              inventoryRowId: '10000000-0000-4000-8000-000000000001',
+              id: 'health-potion',
+              name: 'Health Potion',
+              quantity: 3,
+            },
+          ],
+          weapons: [],
+          armor: [],
+          shields: [],
+        },
+      }),
+    ) as Record<string, unknown>;
+    const prev = sheetCharacter({
+      equipment: {
+        items: [
+          {
+            inventoryRowId: '10000000-0000-4000-8000-000000000001',
+            id: 'health-potion',
+            name: 'Health Potion',
+            quantity: 4,
+          },
+        ],
+        weapons: [],
+        armor: [],
+        shields: [],
+      },
+    });
+    const localSnapshot = cleanForSave(prev) as Record<string, unknown>;
+    const afterScalar = mergeSheetRealtimePayload(prev, {}, baseline, {
+      suppressResources: true,
+      updatedAt: '2026-01-02T00:00:00.000Z',
+      localCleanBeforeRemote: localSnapshot,
+    });
+    expect(
+      (
+        afterScalar.character.equipment as { items?: Array<{ quantity?: number }> } | undefined
+      )?.items?.[0]?.quantity,
+    ).toBe(4);
+    const afterScalarBaseline = afterScalar.nextBaseline ?? baseline;
+    const remote = cleanForSave(
+      sheetCharacter({
+        equipment: {
+          items: [
+            {
+              inventoryRowId: '10000000-0000-4000-8000-000000000001',
+              id: 'health-potion',
+              name: 'Health Potion',
+              quantity: 5,
+            },
+          ],
+          weapons: [],
+          armor: [],
+          shields: [],
+        },
+        updatedAt: '2026-01-02T00:00:00.000Z',
+      }),
+    ) as Record<string, unknown>;
+    const directMerged = mergeRemotePreservingDirty(
+      remote,
+      localSnapshot,
+      ['equipment'],
+      afterScalarBaseline,
+    );
+    expect(
+      (
+        directMerged.equipment as { items?: Array<{ quantity?: number }> } | undefined
+      )?.items?.[0]?.quantity,
+    ).toBe(6);
+    const afterRefetch = mergeSheetRealtimePayload(
+      afterScalar.character,
+      remote,
+      afterScalarBaseline,
+      {
+        suppressResources: true,
+        updatedAt: '2026-01-02T00:00:00.000Z',
+        localCleanBeforeRemote: localSnapshot,
+      },
+    );
+    expect(
+      (
+        afterRefetch.character.equipment as { items?: Array<{ quantity?: number }> } | undefined
+      )?.items?.[0]?.quantity,
+    ).toBe(6);
   });
 
   it('returns the same character object when nothing non-resource changed', () => {

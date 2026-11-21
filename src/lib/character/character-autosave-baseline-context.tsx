@@ -26,6 +26,11 @@ const CharacterAutosaveBaselineContext = createContext<CharacterAutosaveBaseline
   null,
 );
 
+/**
+ * Registers per-sheet `savedCleanRef` and applies library/sheet save results when the
+ * sheet is mounted. No persisted snapshot: the server row (React Query character) is the
+ * source of truth; the sheet re-seeds baseline on load/refetch while clean.
+ */
 export function CharacterAutosaveBaselineProvider({ children }: { children: ReactNode }) {
   const refs = useRef(new Map<string, BaselineRef>());
 
@@ -38,9 +43,11 @@ export function CharacterAutosaveBaselineProvider({ children }: { children: Reac
   }, []);
 
   const advance = useCallback((characterId: string, result: CharacterSaveBaselineResult) => {
-    const ref = refs.current.get(characterId.trim());
+    const id = characterId.trim();
+    const ref = refs.current.get(id);
     if (!ref) return;
-    ref.current = advanceAutosaveBaselineFromSaveResult(ref.current, result);
+    const next = advanceAutosaveBaselineFromSaveResult(ref.current, result);
+    ref.current = structuredClone(next) as Record<string, unknown>;
   }, []);
 
   const value = useMemo(

@@ -8,7 +8,15 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useRef, useCallback, type SetStateAction } from 'react';
+import {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useCallback,
+  type SetStateAction,
+} from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getCharacter, saveCharacterWithConflictRetry } from '@/services/character-service';
 import {
@@ -36,8 +44,10 @@ import {
 } from '@/hooks';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { sheetCatalogFromEnrichment } from '@/lib/character-view-enrichment';
-import { advanceAutosaveBaselineFromSaveResult } from '@/lib/character/autosave-baseline';
-import { useRegisterCharacterAutosaveBaseline } from '@/lib/character/character-autosave-baseline-context';
+import {
+  useAdvanceCharacterAutosaveBaseline,
+  useRegisterCharacterAutosaveBaseline,
+} from '@/lib/character/character-autosave-baseline-context';
 import {
   coerceInventoryPatchCreatedRows,
   mergeInventoryCreatedRows,
@@ -53,15 +63,15 @@ import {
 } from '@/lib/character/character-name-limit';
 import {
   applySheetAutosaveConflictFields,
+  characterHasAutosaveDirtyEdits,
   characterLockToken,
   formatInventoryConflictOverwriteToast,
-  listEquipmentConflictRemoteOverwrites,
+  listAutosaveConflictRemoteOverwrites,
   mergeRemotePreservingDirty,
   mergeSheetAutosaveBaseline,
   pickDirtyCharacterFields,
   withDirtyClears,
 } from '@/lib/character/dirty-patch';
-import { characterAutosaveDocumentsEqual } from '@/lib/character/character-autosave-equal';
 import { rememberCharacterLockToken } from '@/lib/character/save-lock';
 import { mergeSheetRealtimePayload } from '@/lib/character/realtime-merge';
 import {
@@ -103,32 +113,84 @@ export function useCharacterSheetPageData(id: string) {
   const error = actionError ?? loadError;
 
   const savedCleanRef = useRef<Record<string, unknown> | null>(null);
+  const localCleanSnapshotRef = useRef<Record<string, unknown> | null>(null);
   const conflictOverwriteFieldsRef = useRef<string[]>([]);
-  const savedSnapshotIdRef = useRef<string | null>(null);
   const realtimeRefetchGenerationRef = useRef(0);
+  const [realtimeMergeAutosavePaused, setRealtimeMergeAutosavePaused] = useState(false);
+  const rulesRef = useRef(rules);
+  useEffect(() => {
+    rulesRef.current = rules;
+  }, [rules]);
+
+  useRegisterCharacterAutosaveBaseline(id, savedCleanRef);
+  const advanceSheetAutosaveBaseline = useAdvanceCharacterAutosaveBaseline();
+
+  const sheetDirtyAgainstSavedBaseline = useCallback((doc: Character | null | undefined) => {
+    if (!doc || !savedCleanRef.current) return false;
+    const cleaned = cleanForSave(doc, rulesRef.current) as Record<string, unknown>;
+    return characterHasAutosaveDirtyEdits(cleaned, savedCleanRef.current);
+  }, []);
 
   const setCharacter = useCallback(
     (update: SetStateAction<Character | null>) => {
-      patchCharacterDetailQuery(queryClient, viewerKey, id, update);
+      patchCharacterDetailQuery(queryClient, viewerKey, id, (prev) => {
+        const next = typeof update === 'function' ? update(prev) : update;
+        if (next) {
+          characterLiveRef.current = next;
+          if (savedCleanRef.current && sheetDirtyAgainstSavedBaseline(next)) {
+            localCleanSnapshotRef.current = cleanForSave(next, rulesRef.current) as Record<
+              string,
+              unknown
+            >;
+          } else if (!sheetDirtyAgainstSavedBaseline(next)) {
+            localCleanSnapshotRef.current = null;
+          }
+        }
+        return next;
+      });
     },
-    [queryClient, viewerKey, id],
+    [queryClient, viewerKey, id, sheetDirtyAgainstSavedBaseline],
   );
 
-  useEffect(() => {
-    if (character?.id === id) {
-      if (savedSnapshotIdRef.current === id) return;
-      savedSnapshotIdRef.current = id;
-      savedCleanRef.current = cleanForSave(character, rules) as Record<string, unknown>;
-      rememberCharacterLockToken(id, character.updatedAt);
+  useLayoutEffect(() => {
+    if (!character || !savedCleanRef.current) {
+      localCleanSnapshotRef.current = null;
       return;
     }
-    if (savedSnapshotIdRef.current !== id) {
-      savedSnapshotIdRef.current = null;
+    if (sheetDirtyAgainstSavedBaseline(character)) {
+      localCleanSnapshotRef.current = cleanForSave(character, rules) as Record<string, unknown>;
+    } else {
+      localCleanSnapshotRef.current = null;
+    }
+  }, [character, rules, sheetDirtyAgainstSavedBaseline]);
+
+  useLayoutEffect(() => {
+    if (!character || character.id !== id) {
       savedCleanRef.current = null;
+      localCleanSnapshotRef.current = null;
+      return;
+    }
+    rememberCharacterLockToken(id, character.updatedAt);
+    if (!savedCleanRef.current) {
+      savedCleanRef.current = cleanForSave(character, rules) as Record<string, unknown>;
     }
   }, [character, id, rules]);
 
-  useRegisterCharacterAutosaveBaseline(id, savedCleanRef);
+  const isAutosaveDocumentClean = useCallback(
+    (doc: Character | null | undefined) => !sheetDirtyAgainstSavedBaseline(doc),
+    [sheetDirtyAgainstSavedBaseline],
+  );
+
+  const characterLiveRef = useRef(character);
+  useLayoutEffect(() => {
+    characterLiveRef.current = character;
+  }, [character]);
+
+  const localCleanBeforeRealtimeMerge = useCallback((doc: Character | null | undefined) => {
+    if (localCleanSnapshotRef.current) return localCleanSnapshotRef.current;
+    if (!doc || !savedCleanRef.current || !sheetDirtyAgainstSavedBaseline(doc)) return null;
+    return cleanForSave(doc, rulesRef.current) as Record<string, unknown>;
+  }, [sheetDirtyAgainstSavedBaseline]);
 
   const { data: userPowers = [] } = useUserPowers({ enabled: loadCatalog });
   const { data: userTechniques = [] } = useUserTechniques({ enabled: loadCatalog });
@@ -271,7 +333,9 @@ export function useCharacterSheetPageData(id: string) {
           };
         }) => {
           const charId = payload.new.id;
+          const localCleanAtEvent = localCleanBeforeRealtimeMerge(characterLiveRef.current);
           rememberCharacterLockToken(charId, payload.new.updated_at);
+          setRealtimeMergeAutosavePaused(true);
           const suppressResources = shouldSuppressRemoteResourceMerge(charId);
           const scalarResources: Record<string, unknown> = {
             ...(typeof payload.new.current_health === 'number' && {
@@ -293,14 +357,12 @@ export function useCharacterSheetPageData(id: string) {
               {
                 suppressResources,
                 updatedAt: payload.new.updated_at,
+                rules: rulesRef.current,
+                ...(localCleanAtEvent ? { localCleanBeforeRemote: localCleanAtEvent } : {}),
               },
             );
             if (nextBaseline) {
-              const baseline = nextBaseline;
-              // Defer so Strict Mode's double updater both read the same savedCleanRef.
-              queueMicrotask(() => {
-                savedCleanRef.current = baseline;
-              });
+              savedCleanRef.current = nextBaseline;
             }
             return next;
           });
@@ -315,27 +377,47 @@ export function useCharacterSheetPageData(id: string) {
               if (!remote) return;
               setCharacter((prev) => {
                 if (!prev || prev.id !== charId) return prev;
-                const { character: next, nextBaseline } = mergeSheetRealtimePayload(
-                  prev,
-                  remote as unknown as Record<string, unknown>,
-                  savedCleanRef.current,
-                  { suppressResources, updatedAt: remote.updatedAt },
-                );
-                if (nextBaseline) savedCleanRef.current = nextBaseline;
+                const { character: next, nextBaseline, conflictRemoteOverwrites } =
+                  mergeSheetRealtimePayload(
+                    prev,
+                    remote as unknown as Record<string, unknown>,
+                    savedCleanRef.current,
+                    {
+                      suppressResources,
+                      updatedAt: remote.updatedAt,
+                      rules: rulesRef.current,
+                      ...(localCleanAtEvent ? { localCleanBeforeRemote: localCleanAtEvent } : {}),
+                    },
+                  );
+                if (nextBaseline) {
+                  savedCleanRef.current = nextBaseline;
+                }
+                if (conflictRemoteOverwrites.length > 0) {
+                  showToast(
+                    formatInventoryConflictOverwriteToast([...conflictRemoteOverwrites]),
+                    'info',
+                  );
+                }
                 return next;
               });
             })
             .catch((error: unknown) => {
               console.warn('[character realtime] relational refetch failed', error);
+            })
+            .finally(() => {
+              if (refetchGeneration === realtimeRefetchGenerationRef.current) {
+                setRealtimeMergeAutosavePaused(false);
+              }
             });
         },
       )
       .subscribe();
     return () => {
       realtimeRefetchGenerationRef.current += 1;
+      setRealtimeMergeAutosavePaused(false);
       supabase.removeChannel(channel);
     };
-  }, [character?.id, setCharacter]);
+  }, [character?.id, queryClient, setCharacter, sheetDirtyAgainstSavedBaseline, viewerKey]);
 
   const isOwner = Boolean(character && (isGuestSheet || (user && character.userId === user.uid)));
 
@@ -372,7 +454,7 @@ export function useCharacterSheetPageData(id: string) {
 
   const { hasUnsavedChanges, saveNow, syncBlockedByNetwork } = useAutoSave({
     data: character,
-    areEqual: (a, b) => characterAutosaveDocumentsEqual(a, b),
+    areEqual: (a) => isAutosaveDocumentClean(a),
     onSave: async (data) => {
       if (!data) return;
       const rawCleaned = cleanForSave(data, rules) as Record<string, unknown>;
@@ -401,7 +483,9 @@ export function useCharacterSheetPageData(id: string) {
       if (Object.keys(dirty).length === 0) {
         return;
       }
-      const inventoryBaselineAtSave = savedCleanRef.current;
+      const inventoryBaselineAtSave = savedCleanRef.current
+        ? (structuredClone(savedCleanRef.current) as Record<string, unknown>)
+        : null;
       const mergedCleanRef: { current: Record<string, unknown> | null } = { current: null };
       const result = await saveCharacterWithConflictRetry(id, dirty as Partial<Character>, {
         updatedAt: characterLockToken(data.updatedAt),
@@ -409,15 +493,12 @@ export function useCharacterSheetPageData(id: string) {
         mergeOnConflict: (remote) => {
           const remoteClean = cleanForSave(remote, rules) as Record<string, unknown>;
           const localClean = withDirtyClears(cleaned, dirty);
-          if (Object.prototype.hasOwnProperty.call(dirty, 'equipment')) {
-            conflictOverwriteFieldsRef.current = listEquipmentConflictRemoteOverwrites(
-              inventoryBaselineAtSave?.equipment,
-              localClean.equipment,
-              remoteClean.equipment,
-            );
-          } else {
-            conflictOverwriteFieldsRef.current = [];
-          }
+          conflictOverwriteFieldsRef.current = listAutosaveConflictRemoteOverwrites(
+            inventoryBaselineAtSave,
+            localClean,
+            remoteClean,
+            Object.keys(dirty),
+          );
           const mergedClean = mergeRemotePreservingDirty(
             remoteClean,
             localClean,
@@ -425,12 +506,14 @@ export function useCharacterSheetPageData(id: string) {
             inventoryBaselineAtSave,
           );
           mergedCleanRef.current = mergedClean;
-          savedCleanRef.current = mergeSheetAutosaveBaseline(
-            remoteClean,
+          const nextBaseline = mergeSheetAutosaveBaseline(
+            mergedClean,
             savedCleanRef.current ?? {},
             Object.keys(dirty),
             cleaned,
+            remoteClean,
           );
+          savedCleanRef.current = nextBaseline;
           setCharacter((prev) => {
             if (!prev || prev.id !== remote.id) return prev;
             return applySheetAutosaveConflictFields(
@@ -441,19 +524,21 @@ export function useCharacterSheetPageData(id: string) {
             ) as Character;
           });
           return {
-            dirty: pickDirtyCharacterFields(mergedClean, remoteClean) as Partial<Character>,
+            dirty: pickDirtyCharacterFields(mergedClean, nextBaseline) as Partial<Character>,
             updatedAt: remote.updatedAt,
-            inventorySaveBaseline: remoteClean,
+            inventorySaveBaseline: nextBaseline,
           };
         },
       });
-      savedCleanRef.current = advanceAutosaveBaselineFromSaveResult(savedCleanRef.current, {
+      const baselineResult = {
         applied: result.applied as Record<string, unknown>,
         updatedAt: result.updatedAt,
         ...(result.inventoryPatchResult
           ? { inventoryPatchResult: result.inventoryPatchResult }
           : {}),
-      });
+      };
+      advanceSheetAutosaveBaseline(id, baselineResult);
+      localCleanSnapshotRef.current = null;
       const createdRows = coerceInventoryPatchCreatedRows(
         result.inventoryPatchResult?.createdRows ?? [],
       );
@@ -469,18 +554,28 @@ export function useCharacterSheetPageData(id: string) {
           };
         });
       }
-      if (result.updatedAt) {
-        setCharacter((prev) => (prev ? { ...prev, updatedAt: result.updatedAt } : prev));
-      }
       setCharacter((prev) => {
-        if (!prev?.equipment) return prev;
-        const equipment = normalizeEquipmentForInventoryRelational(
-          prev.equipment,
-        ) as Character['equipment'];
-        return equipment === prev.equipment ? prev : { ...prev, equipment };
+        if (!prev) return prev;
+        let next = prev;
+        if (result.updatedAt && prev.updatedAt !== result.updatedAt) {
+          next = { ...next, updatedAt: result.updatedAt };
+        }
+        if (next.equipment) {
+          const equipment = normalizeEquipmentForInventoryRelational(
+            next.equipment,
+          ) as Character['equipment'];
+          if (equipment !== next.equipment) next = { ...next, equipment };
+        }
+        savedCleanRef.current = structuredClone(
+          cleanForSave(next, rulesRef.current) as Record<string, unknown>,
+        );
+        return next === prev ? prev : next;
       });
       if (result.conflictRetried) {
-        showToast(formatInventoryConflictOverwriteToast(conflictOverwriteFieldsRef.current), 'info');
+        showToast(
+          formatInventoryConflictOverwriteToast(conflictOverwriteFieldsRef.current),
+          'info',
+        );
         conflictOverwriteFieldsRef.current = [];
         try {
           const fresh = await getCharacter(id);
@@ -492,9 +587,15 @@ export function useCharacterSheetPageData(id: string) {
                 prev,
                 remoteCharacter as unknown as Record<string, unknown>,
                 savedCleanRef.current,
-                { updatedAt: remoteCharacter.updatedAt },
+                {
+                  updatedAt: remoteCharacter.updatedAt,
+                  rules: rulesRef.current,
+                  localCleanBeforeRemote: localCleanBeforeRealtimeMerge(prev),
+                },
               );
-              if (nextBaseline) savedCleanRef.current = nextBaseline;
+              if (nextBaseline) {
+                savedCleanRef.current = nextBaseline;
+              }
               return next;
             });
           }
@@ -504,7 +605,7 @@ export function useCharacterSheetPageData(id: string) {
       }
     },
     delay: 2000,
-    enabled: isOwner,
+    enabled: isOwner && !realtimeMergeAutosavePaused,
     onSaveError: (error) => {
       const message = getErrorMessage(error, 'Failed to save character');
       showToast(

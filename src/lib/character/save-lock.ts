@@ -42,12 +42,12 @@ export function rememberCharacterLockToken(
 export function resolveCharacterLockToken(
   characterId: string,
   provided?: string | Date | null,
+  options?: { strict?: boolean | undefined },
 ): string | undefined {
+  const providedToken = characterLockToken(provided);
+  if (options?.strict) return providedToken;
   const id = characterId.trim();
-  return preferNewerCharacterLock(
-    characterLockToken(provided),
-    id ? latestLockTokens.get(id) : undefined,
-  );
+  return preferNewerCharacterLock(providedToken, id ? latestLockTokens.get(id) : undefined);
 }
 
 export function enqueueCharacterSave<T>(characterId: string, work: () => Promise<T>): Promise<T> {

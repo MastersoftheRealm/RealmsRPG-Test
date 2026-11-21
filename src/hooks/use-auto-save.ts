@@ -95,6 +95,7 @@ export function useAutoSave<T>({
   const saveInProgressRef = useRef(false);
   const pendingResaveRef = useRef(false);
   const prevEnabledRef = useRef(false);
+  const autosavePrimedRef = useRef(false);
   const retryAttemptRef = useRef(0);
   const performSaveRef = useRef<(dataToSave: T, flush?: AutoSaveFlush) => Promise<void>>(
     async () => {},
@@ -207,18 +208,28 @@ export function useAutoSave<T>({
   useEffect(() => {
     if (!enabled) {
       prevEnabledRef.current = false;
-      initialDataRef.current = data;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
       clearRetry();
       return;
     }
 
-    if (!prevEnabledRef.current) {
+    if (!autosavePrimedRef.current) {
+      autosavePrimedRef.current = true;
       prevEnabledRef.current = true;
       initialDataRef.current = data;
       retryAttemptRef.current = 0;
       clearRetry();
       setHasUnsavedChanges(false);
       return;
+    }
+
+    if (!prevEnabledRef.current) {
+      prevEnabledRef.current = true;
+      retryAttemptRef.current = 0;
+      clearRetry();
     }
 
     const hasChanges = !documentsEqual(data, initialDataRef.current);

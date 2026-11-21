@@ -5,9 +5,11 @@
  */
 
 import type { Character } from '@/types';
+import type { CoreRulesMap } from '@/types/core-rules';
 import { cleanForSave } from '@/lib/data-enrichment/clean-for-save';
 import {
   characterLockToken,
+  listAutosaveConflictRemoteOverwrites,
   mergeRemotePreservingDirty,
   mergeSheetAutosaveBaseline,
   pickDirtyCharacterFields,
@@ -36,10 +38,24 @@ function stableEqual(a: unknown, b: unknown): boolean {
   }
 }
 
+function buildLocalDocumentForMerge(
+  prev: Record<string, unknown>,
+  localClean: Record<string, unknown>,
+  dirtyKeys: readonly string[],
+): Record<string, unknown> {
+  const localForMerge: Record<string, unknown> = { ...prev };
+  for (const key of dirtyKeys) {
+    if (key in localClean) localForMerge[key] = localClean[key];
+    else if (localClean[key] === undefined) delete localForMerge[key];
+  }
+  return localForMerge;
+}
+
 function overlayRemoteNonResource(
   prev: Record<string, unknown>,
   remoteData: Record<string, unknown>,
   dirtyKeys: readonly string[],
+  localForMerge: Record<string, unknown>,
   updatedAt?: string | Date | null | undefined,
   baseline?: Record<string, unknown> | null,
 ): Record<string, unknown> {
@@ -65,20 +81,29 @@ function overlayRemoteNonResource(
       : undefined,
   );
   const stamp = Boolean(token && token !== prevToken);
-  if (!adopted && !stamp) return prev;
+  if (!adopted && !stamp) {
+    if (dirtyKeys.length === 0 || Object.keys(stripped).length === 0) {
+      return prev;
+    }
+  }
+  if (!adopted && stamp && token && Object.keys(stripped).length === 0) {
+    return { ...prev, updatedAt: token };
+  }
 
   const remoteDoc: Record<string, unknown> = {
     ...prev,
     ...stripped,
     ...(stamp && token ? { updatedAt: token } : {}),
   };
-  return mergeRemotePreservingDirty(remoteDoc, prev, dirtyKeys, baseline);
+  return mergeRemotePreservingDirty(remoteDoc, localForMerge, dirtyKeys, baseline);
 }
 
 export type SheetRealtimeMerge = {
   character: Character;
   /** Null when `character` is the same object — do not touch `savedCleanRef`. */
   nextBaseline: Record<string, unknown> | null;
+  /** Same-tab merge fields overwritten from the other tab (toast). */
+  conflictRemoteOverwrites: readonly string[];
 };
 
 export function mergeSheetRealtimePayload(
@@ -88,17 +113,30 @@ export function mergeSheetRealtimePayload(
   options?: {
     suppressResources?: boolean | undefined;
     updatedAt?: string | Date | null | undefined;
+    rules?: Partial<CoreRulesMap> | undefined;
+    localCleanBeforeRemote?: Record<string, unknown> | null | undefined;
   },
 ): SheetRealtimeMerge {
   const prevRecord = prev as unknown as Record<string, unknown>;
-  const cleaned = cleanForSave(prev) as Record<string, unknown>;
-  const dirty = pickDirtyCharacterFields(cleaned, baseline);
+  const cleaned = cleanForSave(prev, options?.rules) as Record<string, unknown>;
+  const frozenLocal =
+    options?.localCleanBeforeRemote !== undefined && options.localCleanBeforeRemote !== null
+      ? options.localCleanBeforeRemote
+      : null;
+  const localClean = frozenLocal ?? cleaned;
+  const dirty = pickDirtyCharacterFields(localClean, baseline);
   const dirtyKeys = Object.keys(dirty);
-  const localPrev = withDirtyClears(prevRecord, dirty);
+  const localForOverlay = withDirtyClears(
+    frozenLocal
+      ? buildLocalDocumentForMerge(prevRecord, frozenLocal, dirtyKeys)
+      : prevRecord,
+    dirty,
+  );
   const overlaid = overlayRemoteNonResource(
-    localPrev,
+    prevRecord,
     remoteData,
     dirtyKeys,
+    localForOverlay,
     options?.updatedAt,
     baseline,
   );
@@ -107,13 +145,49 @@ export function mergeSheetRealtimePayload(
     next = mergeResourceUpdatesIntoCharacter(next, remoteData) ?? next;
   }
   if (next === prev) {
-    return { character: prev, nextBaseline: null };
+    return { character: prev, nextBaseline: null, conflictRemoteOverwrites: [] };
   }
 
   const nextClean = cleanForSave(next) as Record<string, unknown>;
   const base = baseline ?? nextClean;
+  const remoteClean = cleanForSave(remoteData as Character) as Record<string, unknown>;
+  const hasRelationalPayload = Object.keys(remoteData).some(
+    (key) =>
+      !PATCH_META_KEYS.has(key) &&
+      !REALTIME_RESOURCE_KEYS.has(key) &&
+      key !== 'updatedAt' &&
+      key !== 'updated_at',
+  );
+  const lockToken =
+    characterLockToken(options?.updatedAt) ??
+    characterLockToken(
+      typeof remoteData.updatedAt === 'string' || remoteData.updatedAt instanceof Date
+        ? remoteData.updatedAt
+        : undefined,
+    ) ??
+    characterLockToken(
+      typeof remoteData.updated_at === 'string' ? remoteData.updated_at : undefined,
+    );
+  let conflictRemoteOverwrites: string[] = [];
+  if (dirtyKeys.length > 0 && hasRelationalPayload) {
+    conflictRemoteOverwrites = listAutosaveConflictRemoteOverwrites(
+      base,
+      localClean,
+      remoteClean,
+      dirtyKeys,
+    );
+  }
+  let nextBaseline: Record<string, unknown> | null;
+  if (dirtyKeys.length === 0) {
+    nextBaseline = lockToken ? ({ ...base, updatedAt: lockToken } as Record<string, unknown>) : base;
+  } else if (!hasRelationalPayload) {
+    nextBaseline = lockToken ? ({ ...base, updatedAt: lockToken } as Record<string, unknown>) : base;
+  } else {
+    nextBaseline = mergeSheetAutosaveBaseline(nextClean, base, dirtyKeys, localClean, remoteClean);
+  }
   return {
     character: next,
-    nextBaseline: mergeSheetAutosaveBaseline(nextClean, base, dirtyKeys, cleaned),
+    nextBaseline,
+    conflictRemoteOverwrites,
   };
 }

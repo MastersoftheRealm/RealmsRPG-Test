@@ -27,6 +27,9 @@ describe('remember / resolve character lock', () => {
     expect(resolveCharacterLockToken('c1', '2026-08-15T11:00:00.000Z')).toBe(
       '2026-08-15T13:00:00.000Z',
     );
+    expect(resolveCharacterLockToken('c1', '2026-08-15T11:00:00.000Z', { strict: true })).toBe(
+      '2026-08-15T11:00:00.000Z',
+    );
   });
 
   it('does not leak tokens across character ids', () => {
