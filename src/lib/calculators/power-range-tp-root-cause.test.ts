@@ -223,7 +223,7 @@ describe('Power Range Training Points on the live paths', () => {
     expect(costs.totalTP).not.toBe(1);
   });
 
-  it('keeps item chips on a raw sum while the character budget uses the whole-option price', () => {
+  it('matches item property chips and item costs to the character proficiency price', () => {
     const property = {
       id: 501,
       name: 'Reach',
@@ -238,8 +238,6 @@ describe('Power Range Training Points on the live paths', () => {
       [{ id: property.id, name: property.name, op_1_lvl: 3 }],
       [property],
     ).totalTP;
-    expect(atUsedLevel1).toBe(1);
-    expect(atUsedLevel3).toBe(2);
 
     const required = buildRequiredProficiencies({
       powers: [],
@@ -254,7 +252,10 @@ describe('Power Range Training Points on the live paths', () => {
       armor: [],
       itemPropertiesDb: [property],
     });
-    expect(calculateProficiencyTP(required[0]!)).toBe(2);
+    const proficiencyTp = calculateProficiencyTP(required[0]!);
+    expect(atUsedLevel1).toBe(proficiencyTp);
+    expect(atUsedLevel1).toBe(2);
+    expect(atUsedLevel3).toBe(3);
 
     const statBlock = propertiesToChips(
       [
@@ -263,10 +264,11 @@ describe('Power Range Training Points on the live paths', () => {
       ],
       [property],
     );
-    expect(statBlock[0]?.cost).toBeUndefined();
-    expect(statBlock[1]?.cost).toBe(1);
+    expect(statBlock[0]?.cost).toBe(1);
+    expect(statBlock[1]?.cost).toBe(2);
 
     const partChip = partsToChips([{ id: range.id, name: range.name, op_1_lvl: 1 }], [range]);
     expect(partChip[0]?.cost).toBe(2);
+    expect(partChip[0]?.cost).toBe(atUsedLevel1);
   });
 });

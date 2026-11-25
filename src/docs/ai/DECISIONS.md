@@ -45,7 +45,7 @@ Game runner = **RM (Realm Master)** — never GM.
 - Site max(0) on a power that had positive energy is a bug.
 - Max Power EN = max(Power Prof, ½ Archetype Prof) × **15**, applied to calculated cost **before** feat/attribute reductions. Reductions cannot make an over-limit power usable.
 - Max EN in creator: **informational** (like Innate Power), not limiting.
-- Range (and similar mechanics) **does cost TP**. Training Points round up once per part instance (the whole part's raw sum, base plus options), not per term and never floored. Power Range at 6 spaces is 1 TP and at 12 spaces is 2 TP. A power's TP total is informational (see Power composition pricing below).
+- Range (and similar mechanics) **does cost TP**. Each option is raised to the lowest whole-number level before summing with the base (same rule as **TP and proficiency** below). Power Range at 3 spaces is 1 TP, at 6 spaces is 2 TP, at 12 spaces is 3 TP. A power's TP total is informational (see Power composition pricing below).
 - Duration: 1 round and Instant cost the same (no duration). Duration modifiers multiply each other before applying. Rounds capped at 5; 6 rounds = 1 minute option only. 1 minute = 6 rounds (10-second rounds). Sustain up to 4 AP is fine.
 - Empowered techniques: whole-thing scalers (e.g. action type / Quick Action) apply to both halves; type-specific only to that half. Creator out of MVP/Open Beta scope for remaining empowered design.
 
