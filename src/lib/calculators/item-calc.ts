@@ -93,7 +93,6 @@ export interface ProficiencyInfo {
   name: string;
   level: number;
   baseTP: number;
-  optionTP: number;
   totalTP: number;
   description: string;
 }
@@ -351,7 +350,7 @@ export function trainingPointsForItemPropertyRef(
     {
       id: data.id ?? data.name ?? '',
       name: String(data.name ?? ''),
-      base_tp: data.base_tp ?? data.tp_cost ?? 0,
+      base_tp: data.base_tp ?? 0,
       op_1_tp: data.op_1_tp,
     },
     { op_1_lvl: payload.op_1_lvl ?? 0 },
@@ -768,15 +767,11 @@ function extractProficiencies(
     const totalTP = trainingPointsForItemPropertyRef(ref, propertiesData);
 
     if (totalTP > 0) {
-      const baseTP = data.base_tp || 0;
-      const op1TP = data.op_1_tp || 0;
-      const optTP = lvl > 0 ? op1TP * lvl : 0;
       profs.push({
         id: data.id || 0,
         name: data.name || '',
         level: lvl,
-        baseTP,
-        optionTP: optTP,
+        baseTP: data.base_tp || 0,
         totalTP,
         description: data.description || '',
       });

@@ -1,5 +1,9 @@
 import type { ChipData } from '@/components/patterns/list/grid-list-row';
-import { trainingPointsForItemPropertyRef } from '@/lib/calculators/item-calc';
+import {
+  resolveItemPropertyCodexRow,
+  trainingPointsForItemPropertyRef,
+  type ItemPropertyTpRow,
+} from '@/lib/calculators/item-calc';
 import {
   computePartTrainingPoints,
   type PartTpVariant,
@@ -212,14 +216,11 @@ export function propertiesToChips(
   codexProperties: CodexProperty[],
 ): ChipData[] {
   if (!properties || properties.length === 0) return [];
+  const db = codexProperties as unknown as ItemPropertyTpRow[];
   return properties.map((p) => {
-    const codexProp = codexProperties.find(
-      (cp) =>
-        (p.id != null && String(cp.id) === String(p.id)) ||
-        String(cp.name ?? '').toLowerCase() === String(p.name ?? '').toLowerCase(),
-    );
+    const codexProp = resolveItemPropertyCodexRow(p, db);
     const level = Number(p.op_1_lvl ?? 0);
-    const tp = trainingPointsForItemPropertyRef(p, codexProperties);
+    const tp = trainingPointsForItemPropertyRef(p, db);
     return {
       name: codexProp?.name || p.name || 'Property',
       description: codexProp?.description,

@@ -36,7 +36,7 @@ interface PropertyFilters {
 
 function PropertyCard({ property }: { property: ItemProperty }) {
   const ip = property.base_ip ?? 0;
-  const tp = property.base_tp ?? property.tp_cost ?? 0;
+  const tp = property.base_tp ?? 0;
   const cost = property.base_c ?? property.gold_cost ?? 0;
 
   const optionChips: Array<{
@@ -138,7 +138,7 @@ export function CodexPropertiesTab({
       if (col === 'type') return dir * (a.type || 'general').localeCompare(b.type || 'general');
       if (col === 'ip') return dir * ((a.base_ip ?? 0) - (b.base_ip ?? 0));
       if (col === 'tp')
-        return dir * ((a.base_tp ?? a.tp_cost ?? 0) - (b.base_tp ?? b.tp_cost ?? 0));
+        return dir * ((a.base_tp ?? 0) - (b.base_tp ?? 0));
       if (col === 'cost')
         return dir * ((a.base_c ?? a.gold_cost ?? 0) - (b.base_c ?? b.gold_cost ?? 0));
       return 0;

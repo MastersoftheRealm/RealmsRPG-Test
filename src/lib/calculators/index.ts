@@ -163,6 +163,7 @@ export {
   isGeneralProperty,
   isMechanicProperty,
   filterSavedItemPropertiesForList,
+  trainingPointsForItemPropertyRef,
   type ItemPropertyTpRow,
   type ItemPropertyPayload,
   type ItemCalcSectionId,
