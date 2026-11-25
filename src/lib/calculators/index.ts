@@ -147,12 +147,7 @@ export {
   type BuildEmpoweredAdvancedCalculationGroupsInput,
 } from './empowered-energy-breakdown';
 
-export {
-  pickCheaperEnPart,
-  toEmpoweredAutoMechanicPart,
-  type EmpoweredPartSide,
-  type EmpoweredPartCostCandidate,
-} from './empowered-overlap-parts';
+export type { EmpoweredPartSide, EmpoweredPartCostCandidate } from './empowered-overlap-parts';
 
 // Item Calculator
 export {

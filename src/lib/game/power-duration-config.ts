@@ -5,7 +5,7 @@ export function isShortPowerDuration(duration: Pick<DurationConfig, 'type' | 'va
   return duration.type === 'instant' || (duration.type === 'rounds' && duration.value === 1);
 }
 
-export function clearedShortDurationModifiers(): Pick<
+function clearedShortDurationModifiers(): Pick<
   DurationConfig,
   'focus' | 'noHarm' | 'endsOnActivation' | 'sustain'
 > {

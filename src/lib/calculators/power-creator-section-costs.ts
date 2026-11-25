@@ -7,15 +7,15 @@ import { coerceSavedPartId } from '@/lib/game/saved-part-id';
 import type { PowerPartPayload } from './power-calc';
 import type { MechanicPartResult } from './mechanic-builder';
 
-export const POWER_SECTION_ACTION_IDS = new Set<number>([
+const POWER_SECTION_ACTION_IDS = new Set<number>([
   PART_IDS.POWER_REACTION,
   PART_IDS.POWER_LONG_ACTION,
   PART_IDS.POWER_QUICK_OR_FREE_ACTION,
 ]);
 
-export const POWER_SECTION_RANGE_IDS = new Set<number>([PART_IDS.POWER_RANGE]);
+const POWER_SECTION_RANGE_IDS = new Set<number>([PART_IDS.POWER_RANGE]);
 
-export const POWER_SECTION_AREA_IDS = new Set<number>([
+const POWER_SECTION_AREA_IDS = new Set<number>([
   PART_IDS.LINE_OF_EFFECT,
   PART_IDS.CONE_OF_EFFECT,
   PART_IDS.CYLINDER_OF_EFFECT,
@@ -23,7 +23,7 @@ export const POWER_SECTION_AREA_IDS = new Set<number>([
   PART_IDS.TRAIL_OF_EFFECT,
 ]);
 
-export const POWER_SECTION_DURATION_IDS = new Set<number>([
+const POWER_SECTION_DURATION_IDS = new Set<number>([
   PART_IDS.DURATION_ROUND,
   PART_IDS.DURATION_MINUTE,
   PART_IDS.DURATION_HOUR,
@@ -35,7 +35,7 @@ export const POWER_SECTION_DURATION_IDS = new Set<number>([
   PART_IDS.DURATION_SUSTAIN,
 ]);
 
-export const POWER_SECTION_DAMAGE_IDS = new Set<number>([
+const POWER_SECTION_DAMAGE_IDS = new Set<number>([
   PART_IDS.MAGIC_DAMAGE,
   PART_IDS.LIGHT_DAMAGE,
   PART_IDS.PHYSICAL_DAMAGE,

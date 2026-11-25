@@ -9,6 +9,12 @@ import type { PowerPart, TechniquePart } from '@/hooks';
 import { DURATION_VALUES } from '@/lib/game/creator-constants';
 import type { DurationConfig } from '@/lib/calculators';
 import type { SelectedPowerPart, SelectedTechniquePart } from './empowered-technique-bootstrap';
+import {
+  emptyPowerPartSelection,
+  emptyTechniquePartSelection,
+  nextPowerPartToAdd,
+  nextTechniquePartToAdd,
+} from '@/lib/game/creator-part-add';
 
 type UseEmpoweredTechniquePartActionsArgs = {
   nonMechanicPowerParts: PowerPart[];
@@ -30,53 +36,21 @@ export function useEmpoweredTechniquePartActions({
   setDuration,
 }: UseEmpoweredTechniquePartActionsArgs) {
   const addPowerPart = useCallback(() => {
-    if (nonMechanicPowerParts.length === 0) return;
-    const first = nonMechanicPowerParts[0];
+    const first = nextPowerPartToAdd(nonMechanicPowerParts);
     if (!first) return;
-    setSelectedPowerParts((previous) => [
-      ...previous,
-      {
-        part: first,
-        op_1_lvl: 0,
-        op_2_lvl: 0,
-        op_3_lvl: 0,
-        applyDuration: false,
-        selectedCategory: 'any',
-      },
-    ]);
+    setSelectedPowerParts((previous) => [...previous, emptyPowerPartSelection(first)]);
   }, [nonMechanicPowerParts, setSelectedPowerParts]);
 
   const addPowerMechanicPart = useCallback(() => {
-    if (powerMechanicsForList.length === 0) return;
-    const first = powerMechanicsForList[0];
+    const first = nextPowerPartToAdd(powerMechanicsForList);
     if (!first) return;
-    setSelectedPowerAdvancedParts((previous) => [
-      ...previous,
-      {
-        part: first,
-        op_1_lvl: 0,
-        op_2_lvl: 0,
-        op_3_lvl: 0,
-        applyDuration: false,
-        selectedCategory: 'any',
-      },
-    ]);
+    setSelectedPowerAdvancedParts((previous) => [...previous, emptyPowerPartSelection(first)]);
   }, [powerMechanicsForList, setSelectedPowerAdvancedParts]);
 
   const addTechniquePart = useCallback(() => {
-    if (nonMechanicTechniqueParts.length === 0) return;
-    const first = nonMechanicTechniqueParts[0];
+    const first = nextTechniquePartToAdd(nonMechanicTechniqueParts);
     if (!first) return;
-    setSelectedTechniqueParts((previous) => [
-      ...previous,
-      {
-        part: first,
-        op_1_lvl: 0,
-        op_2_lvl: 0,
-        op_3_lvl: 0,
-        selectedCategory: 'any',
-      },
-    ]);
+    setSelectedTechniqueParts((previous) => [...previous, emptyTechniquePartSelection(first)]);
   }, [nonMechanicTechniqueParts, setSelectedTechniqueParts]);
 
   const updatePowerPart = useCallback(
