@@ -1,6 +1,17 @@
 # 1dfe8wf38zz — Fail-open resource-access checks (root cause only)
 
-**Reviewed SHA:** `f57027a6` (origin/master, Nov 20, 2026). No fix in this PR. Database: one read-only SELECT on `role_policies`.
+**Reviewed SHA:** `f57027a6` (origin/master). Re-verified Nov 25, 2026: master is still this SHA.
+
+**Nov 25 re-verification.** The allegation below is still right: the original "deny only on 404" bug is fixed, and it does not reproduce. The Nov 20 survey was not complete. The fix to follow is specified in `plans/resource-access-fail-closed-plan.md` (site list, design, tests, risk, questions). Corrections that matter:
+
+- The codex hole is not the filter at `route.ts:399-404` by itself. `mapCodexSpecies` (`row-map.ts:172`) runs `parseCatalogListing` first, so a null listing is already `listed` when the filter runs.
+- `role_policy_limits_for_role` does **not** raise on a missing row. It uses the same built-in numbers as `ROLE_LIMITS`. It fails closed only when the `SELECT` errors. It does not cover campaign count or the player cap.
+- The join player cap fails open only when the **number** passed into the RPC is the built-in. The RPC recounts members (baseline `:2633-2652`). A failed `campaign_members` read in the action is not the grant.
+- A failed profile read becomes `new_player` (strictest built-in), which is a different branch from a failed `role_policies` read.
+- Live `role_policies` still matches `ROLE_LIMITS` (read-only SELECT, Nov 25). Listing and character-visibility constraints still hold on the database.
+- Direct insert into `campaigns` skips the action quota entirely. That is a separate hole, called out in the plan. It is not the failed-read bug.
+
+The sections below are the Nov 20 note, kept so the allegation disposition stays in one place. Where they disagree with the plan, the plan wins.
 
 ## Symptom (allegation LIB3-002)
 
@@ -47,15 +58,6 @@ Neither one leaks today. `catalog_listing` is NOT NULL + CHECK (sql `:9332-9335`
 - `src/app/api/codex/route.test.ts`, "hides a species with no catalog_listing value…": the species is served to the public.
 - `src/app/(main)/campaigns/create-campaign-role-policy.test.ts`, "refuses the campaign when the role policy read fails…": the campaign is created under the built-in limit. Its two controls (policy allows one, policy allows none) pass.
 
-## Fix direction (not implemented)
+## Fix direction and open questions
 
-1. Filter species in the codex query the same way the official path does, which removes the JS default.
-2. In `role-policy.ts`, check `{ error }` and throw (callers already turn throws into failures). Keep the missing-row fallback.
-3. Collapsing the three copies of the limits is a separate cleanup.
-
-## Open questions
-
-1. Are role-policy quotas in scope here, or a separate task? (Suggest separate. It touches roles.)
-2. Fix the latent codex fork even though the constraint blocks it today? (Suggest yes. It is small and deletes a fork.)
-3. The preflight treats any 2xx as allowed, including after a followed redirect. `/api/` is never redirected by `src/proxy.ts` today. Leave as is?
-4. Some swallowed errors are data integrity, not access: `encounters/[id]/tabletop/route.ts:62,86,92`, `tabletop/server.ts:337-349`, `campaigns/actions.ts:213`. File them separately?
+Moved to `plans/resource-access-fail-closed-plan.md`. The Nov 20 suggestion to split the role-policy work into another task is withdrawn: the plan keeps both remaining grants in this PR and does not change SQL.
