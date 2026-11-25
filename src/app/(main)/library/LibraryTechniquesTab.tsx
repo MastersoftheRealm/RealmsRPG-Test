@@ -112,7 +112,7 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
   const saveType = mode === 'empowered' ? 'empowered-techniques' : 'techniques';
   const duplicateMutation = mode === 'empowered' ? duplicateEmpoweredTechnique : duplicateTechnique;
   const cardData = useMemo(() => {
-    return buildOfficialTechniqueRows(techniques, partsDb, mode).map((row) => {
+    return buildOfficialTechniqueRows(techniques, partsDb, mode, powerPartsDb).map((row) => {
       const syncResult = getTechniqueSyncResult(row.raw, partsDb);
       return {
         ...row,
@@ -121,7 +121,7 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
         syncIssues: syncResult.issues,
       };
     });
-  }, [mode, techniques, partsDb]);
+  }, [mode, powerPartsDb, techniques, partsDb]);
 
   const categoryOptions = useMemo(
     () => (mode === 'empowered' ? [] : collectCategoryOptionsFromItems(techniques, partsDb)),

@@ -76,7 +76,6 @@ export function PowerCreatorEditorPowerConfig({
               onChange={(v) => onRangeChange((r) => ({ ...r, steps: v }))}
               label="Range:"
               min={0}
-              max={10}
             />
             <span className="text-sm text-text-secondary">
               {range.steps === 0 ? '(1 Space / Melee)' : `(${range.steps * 3} spaces)`}
@@ -129,7 +128,6 @@ export function PowerCreatorEditorPowerConfig({
                   onChange={(v) => onAreaChange((a) => ({ ...a, level: v }))}
                   label="Level:"
                   min={1}
-                  max={10}
                 />
               )}
             </div>

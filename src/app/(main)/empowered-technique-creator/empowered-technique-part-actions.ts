@@ -148,10 +148,6 @@ export function useEmpoweredTechniquePartActions({
         ...previous,
         type: nextType,
         value: nextValue,
-        focus: nextType === 'instant' ? false : previous.focus,
-        noHarm: nextType === 'instant' ? false : previous.noHarm,
-        endsOnActivation: nextType === 'instant' ? false : previous.endsOnActivation,
-        sustain: nextType === 'instant' ? 0 : previous.sustain,
       }));
     },
     [setDuration],

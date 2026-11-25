@@ -24,12 +24,13 @@ import {
   buildPowerAdvancedCalculationGroups,
   POWER_CALC_SECTION_BY_NAME,
   POWER_DURATION_TYPE_PART_NAMES,
+  filterMechanicPartsBySection,
+  mechanicPartsToSectionPayload,
   type PowerPartPayload,
   type AreaConfig,
   type DurationConfig,
   type MechanicPartResult,
 } from '@/lib/calculators';
-import { coerceSavedPartId } from '@/lib/game/saved-part-id';
 import { formatDurationFromTypeAndValue } from '@/lib/utils/duration';
 import { attackModeColumnLabel, type AttackMode } from '@/lib/attack-mode';
 import type { SelectedPart, AdvancedPart, DamageConfig, RangeConfig } from './power-creator-types';
@@ -272,59 +273,21 @@ export function usePowerCreatorCostDerivation({
   }, [duration.type, duration.value]);
 
   const sectionCosts = useMemo(() => {
-    const toPayload = (mp: {
-      id: number | string;
-      name: string;
-      op_1_lvl: number;
-      op_2_lvl: number;
-      op_3_lvl: number;
-      applyDuration?: boolean | undefined;
-    }) => ({
-      id: coerceSavedPartId(mp.id),
-      name: mp.name,
-      op_1_lvl: mp.op_1_lvl,
-      op_2_lvl: mp.op_2_lvl,
-      op_3_lvl: mp.op_3_lvl,
-      applyDuration: mp.applyDuration ?? false,
-    });
-    const rangeParts = mechanicParts.filter((mp) => mp.name === 'Power Range').map(toPayload);
-    const areaNames = [
-      'Sphere of Effect',
-      'Cylinder of Effect',
-      'Cone of Effect',
-      'Line of Effect',
-      'Trail of Effect',
-    ];
-    const areaParts = mechanicParts.filter((mp) => areaNames.includes(mp.name)).map(toPayload);
-    const durationNames = [
-      'Duration (Round)',
-      'Duration (Minute)',
-      'Duration (Hour)',
-      'Duration (Days)',
-      'Duration (Permanent)',
-      'Focus for Duration',
-      'No Harm or Adaptation for Duration',
-      'Duration Ends On Activation',
-      'Sustain for Duration',
-    ];
-    const durationParts = mechanicParts
-      .filter((mp) => durationNames.includes(mp.name))
-      .map(toPayload);
-    const damageNames = [
-      'Magic Damage',
-      'Light Damage',
-      'Elemental Damage',
-      'Poison or Necrotic Damage',
-      'Sonic Damage',
-      'Spiritual Damage',
-      'Psychic Damage',
-      'Physical Damage',
-      'Power Split Damage Dice',
-      'Split Damage Dice',
-    ];
-    const damageParts = mechanicParts.filter((mp) => damageNames.includes(mp.name)).map(toPayload);
-    const actionNames = ['Power Reaction', 'Power Quick or Free Action', 'Power Long Action'];
-    const actionParts = mechanicParts.filter((mp) => actionNames.includes(mp.name)).map(toPayload);
+    const rangeParts = mechanicPartsToSectionPayload(
+      filterMechanicPartsBySection(mechanicParts, 'range'),
+    );
+    const areaParts = mechanicPartsToSectionPayload(
+      filterMechanicPartsBySection(mechanicParts, 'area'),
+    );
+    const durationParts = mechanicPartsToSectionPayload(
+      filterMechanicPartsBySection(mechanicParts, 'duration'),
+    );
+    const damageParts = mechanicPartsToSectionPayload(
+      filterMechanicPartsBySection(mechanicParts, 'damage'),
+    );
+    const actionParts = mechanicPartsToSectionPayload(
+      filterMechanicPartsBySection(mechanicParts, 'action'),
+    );
     const partsPayloadForSections = selectedParts.map((sp) => ({
       part: sp.part,
       op_1_lvl: sp.op_1_lvl,

@@ -4,7 +4,8 @@
 
 import type { ChipData } from '@/components/patterns';
 import type { ColumnValue } from '@/components/patterns/list/grid-list-row';
-import type { TechniquePart } from '@/hooks/codex-types';
+import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
+import { computeEmpoweredTechniqueEnergyFromSaved } from '@/lib/calculators';
 import type { LibraryTechnique } from '@/types/library';
 import { parseCatalogListing } from '@/lib/library/catalog-listing';
 import { formatEnergyStat } from '@/lib/calculators/power-calc';
@@ -54,28 +55,20 @@ export interface OfficialTechniqueRow {
   catalogListing?: LibraryTechnique['catalogListing'];
 }
 
-function getEmpoweredTechniqueTotals(
-  item: LibraryTechnique & {
-    totals?: { energy?: number | undefined; trainingPoints?: number | undefined } | undefined;
-  },
-): { energy?: number | undefined; tp?: number | undefined } {
-  const totals = item.totals;
-  const energy = typeof totals?.energy === 'number' ? totals.energy : undefined;
-  const tp = typeof totals?.trainingPoints === 'number' ? totals.trainingPoints : undefined;
-  return { energy, tp };
-}
-
 export function buildOfficialTechniqueRows(
   items: LibraryTechnique[],
   partsDb: TechniquePart[],
   mode: 'standard' | 'empowered' = 'standard',
+  powerPartsDb: PowerPart[] = [],
 ): OfficialTechniqueRow[] {
   return items.map((t) => {
     const empowered = mode === 'empowered';
     const doc = libraryItemToTechniqueDocument(t);
     const savedParts = doc.parts ?? [];
     const display = deriveTechniqueDisplay(doc, partsDb);
-    const totals = empowered ? getEmpoweredTechniqueTotals(t) : {};
+    const totals = empowered
+      ? computeEmpoweredTechniqueEnergyFromSaved(t, powerPartsDb, partsDb)
+      : null;
     const damageStr = formatTechniqueDamage(doc.damage);
     const parts = empowered
       ? []
@@ -88,8 +81,8 @@ export function buildOfficialTechniqueRows(
       description: display.description,
       categories,
       category: formatPartCategoriesColumn(categories),
-      energy: empowered ? (totals.energy ?? display.energy) : display.energy,
-      tp: empowered ? (totals.tp ?? display.tp) : display.tp,
+      energy: empowered ? (totals?.totalEnergy ?? display.energy) : display.energy,
+      tp: empowered ? (totals?.trainingPoints ?? display.tp) : display.tp,
       action: display.actionType,
       actionTypeRaw: t.actionType ?? display.actionType,
       isReaction: t.isReaction === true,

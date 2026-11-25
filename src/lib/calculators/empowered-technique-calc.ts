@@ -1,5 +1,6 @@
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import {
+  analyzePowerEnergy,
   calculatePowerCosts,
   energyFloorApplies,
   finalizePowerEnergy,
@@ -7,6 +8,7 @@ import {
 } from './power-calc';
 import { calculateTechniqueCosts, type TechniquePartPayload } from './technique-calc';
 import { findByIdOrName } from '@/lib/id-constants';
+import { POWER_CALC_SECTION_BY_NAME } from './power-mechanic-constants';
 
 export interface EmpoweredTechniqueCostResult {
   totalEnergy: number;
@@ -16,7 +18,10 @@ export interface EmpoweredTechniqueCostResult {
   powerEnergyRaw: number;
   techniqueEnergyRaw: number;
   techniquePercentageMultiplier: number;
+  actionEnergyMultiplier: number;
 }
+
+const TECHNIQUE_ACTION_PART_NAMES = new Set(['Reaction', 'Long Action', 'Quick or Free Action']);
 
 function getTechniquePartEnergyContribution(
   part: TechniquePart,
@@ -30,7 +35,35 @@ function getTechniquePartEnergyContribution(
   );
 }
 
-function getTechniquePercentageMultiplier(
+function isPowerActionPercentagePart(pl: PowerPartPayload, partsDb: PowerPart[]): boolean {
+  const def = findByIdOrName(partsDb, {
+    id: pl.id ?? pl.part?.id,
+    name: pl.name ?? pl.part?.name,
+  });
+  if (!def?.percentage) return false;
+  return POWER_CALC_SECTION_BY_NAME[def.name] === 'action';
+}
+
+function getPowerActionEnergyMultiplier(
+  powerPartsPayload: PowerPartPayload[],
+  powerPartsDb: PowerPart[],
+): number {
+  const actionPercentageRows = powerPartsPayload.filter((pl) =>
+    isPowerActionPercentagePart(pl, powerPartsDb),
+  );
+  if (actionPercentageRows.length === 0) return 1;
+  const analysis = analyzePowerEnergy(actionPercentageRows, powerPartsDb);
+  return analysis.percAll > 1e-9 ? analysis.percAll : 1;
+}
+
+function withoutPowerActionPercentageParts(
+  powerPartsPayload: PowerPartPayload[],
+  powerPartsDb: PowerPart[],
+): PowerPartPayload[] {
+  return powerPartsPayload.filter((pl) => !isPowerActionPercentagePart(pl, powerPartsDb));
+}
+
+function getTechniqueNonActionPercentageMultiplier(
   techniquePartsPayload: TechniquePartPayload[],
   techniquePartsDb: TechniquePart[],
 ): number {
@@ -41,6 +74,7 @@ function getTechniquePercentageMultiplier(
       name: payload.name ?? payload.part?.name,
     });
     if (!part || !part.percentage) return;
+    if (TECHNIQUE_ACTION_PART_NAMES.has(part.name)) return;
     multiplier *= getTechniquePartEnergyContribution(part, payload);
   });
   return multiplier;
@@ -58,18 +92,25 @@ export function calculateEmpoweredTechniqueCosts(
 ): EmpoweredTechniqueCostResult {
   const { powerPartsPayload, techniquePartsPayload, powerPartsDb, techniquePartsDb } = input;
 
-  const powerCosts = calculatePowerCosts(powerPartsPayload, powerPartsDb);
-  const techniqueCosts = calculateTechniqueCosts(techniquePartsPayload, techniquePartsDb);
-  const techniquePercentageMultiplier = getTechniquePercentageMultiplier(
+  const actionEnergyMultiplier = getPowerActionEnergyMultiplier(powerPartsPayload, powerPartsDb);
+  const techniquePercentageMultiplier = getTechniqueNonActionPercentageMultiplier(
     techniquePartsPayload,
     techniquePartsDb,
   );
 
-  // Empowered rule: technique percentage mechanics also scale the power side.
-  const adjustedPowerEnergyRaw = powerCosts.energyRaw * techniquePercentageMultiplier;
-  const energyRaw = adjustedPowerEnergyRaw + techniqueCosts.energyRaw;
-  // Same floor as powers and techniques: only a positive flat (or a raw total
-  // still above 0) publishes a number. No Attack alone stays a dash.
+  const powerPayloadWithoutActionPerc = withoutPowerActionPercentageParts(
+    powerPartsPayload,
+    powerPartsDb,
+  );
+
+  const powerCosts = calculatePowerCosts(powerPayloadWithoutActionPerc, powerPartsDb);
+  const techniqueCosts = calculateTechniqueCosts(techniquePartsPayload, techniquePartsDb);
+
+  const adjustedPowerEnergyRaw =
+    powerCosts.energyRaw * actionEnergyMultiplier * techniquePercentageMultiplier;
+  const adjustedTechniqueEnergyRaw = techniqueCosts.energyRaw * actionEnergyMultiplier;
+  const energyRaw = adjustedPowerEnergyRaw + adjustedTechniqueEnergyRaw;
+
   const hasPositiveEnergy = energyFloorApplies(
     powerCosts.hasPositiveEnergy || techniqueCosts.hasPositiveEnergy,
     energyRaw,
@@ -84,7 +125,8 @@ export function calculateEmpoweredTechniqueCosts(
     ],
     energyRaw,
     powerEnergyRaw: adjustedPowerEnergyRaw,
-    techniqueEnergyRaw: techniqueCosts.energyRaw,
+    techniqueEnergyRaw: adjustedTechniqueEnergyRaw,
     techniquePercentageMultiplier,
+    actionEnergyMultiplier,
   };
 }

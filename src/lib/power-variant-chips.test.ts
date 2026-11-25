@@ -76,6 +76,22 @@ describe('buildPowerVariantChips', () => {
     expect(powerVariantsDetailSection(res)).toBeUndefined();
   });
 
+  it('shows repeated part names as a count on the version Parts line', () => {
+    const doc: PowerDocument = {
+      ...burst,
+      parts: [
+        { id: PART_IDS.ELEMENTAL_DAMAGE, name: 'Elemental Damage' },
+        { id: PART_IDS.ELEMENTAL_DAMAGE, name: 'Elemental Damage' },
+      ],
+      composition: burst.composition,
+    };
+    const res = resolvePowerComposition(doc, partsDb)!;
+    const chips = buildPowerVariantChips(res);
+    expect(chips.some((chip) => chip.description?.includes('Parts: Elemental Damage ×2'))).toBe(
+      true,
+    );
+  });
+
   it('rolls the Randomize die onto the face variant', () => {
     const res = resolvePowerComposition(
       {

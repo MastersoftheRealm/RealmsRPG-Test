@@ -26,6 +26,9 @@ export interface BuildEmpoweredAdvancedCalculationGroupsInput {
   powerAnalysis: PowerEnergyAnalysis;
   techniqueAnalysis: TechniqueEnergyAnalysis;
   techniquePercentageMultiplier: number;
+  actionEnergyMultiplier?: number | undefined;
+  powerEnergyRaw?: number | undefined;
+  techniqueEnergyRaw?: number | undefined;
   energyRaw: number;
   totalEnergy: number;
 }
@@ -42,6 +45,9 @@ export function buildEmpoweredAdvancedCalculationGroups(
     powerAnalysis,
     techniqueAnalysis,
     techniquePercentageMultiplier,
+    actionEnergyMultiplier = 1,
+    powerEnergyRaw,
+    techniqueEnergyRaw,
     energyRaw,
     totalEnergy,
   } = input;
@@ -51,13 +57,23 @@ export function buildEmpoweredAdvancedCalculationGroups(
     ...buildTechniqueEnergySectionGroups(techniqueAnalysis, 'Technique · '),
   ];
 
-  const adjustedPowerRaw = powerAnalysis.energyRaw * techniquePercentageMultiplier;
+  const adjustedPowerRaw =
+    powerEnergyRaw ??
+    powerAnalysis.energyRaw * techniquePercentageMultiplier * actionEnergyMultiplier;
   const totalsRows: EmpoweredAdvancedCalcGroup['rows'] = [];
 
   if (!nearlyEqual(powerAnalysis.energyRaw, 0)) {
     totalsRows.push({
       label: 'Power Energy (before technique %)',
       value: formatEnergyNumber(powerAnalysis.energyRaw),
+    });
+  }
+
+  if (!nearlyEqual(actionEnergyMultiplier, 1)) {
+    totalsRows.push({
+      label: 'Action Energy multiplier',
+      value: `× ${formatEnergyNumber(actionEnergyMultiplier)}`,
+      note: 'Scales both power and technique Energy',
     });
   }
 
@@ -75,10 +91,11 @@ export function buildEmpoweredAdvancedCalculationGroups(
     }
   }
 
-  if (!nearlyEqual(techniqueAnalysis.energyRaw, 0)) {
+  const techniqueShown = techniqueEnergyRaw ?? techniqueAnalysis.energyRaw * actionEnergyMultiplier;
+  if (!nearlyEqual(techniqueShown, 0)) {
     totalsRows.push({
       label: 'Technique Energy',
-      value: formatEnergyNumber(techniqueAnalysis.energyRaw),
+      value: formatEnergyNumber(techniqueShown),
     });
   }
 

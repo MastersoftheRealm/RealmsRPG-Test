@@ -93,7 +93,50 @@ function powerNoAttackIncompatibleWarning(input: PowerNoAttackWarningInput): str
   return powerHasNoAttackAttackConflict(input) ? POWER_NO_ATTACK_INCOMPATIBLE_WARNING : null;
 }
 
-type NoAttackCreatorKind = 'technique' | 'power';
+/* PLACEHOLDER_COPY (Kadin): Empowered technique creator — No Weapon/Attack with power or technique damage. */
+const EMPOWERED_NO_ATTACK_WARNING =
+  'Attack is set to No Weapon/Attack, but this empowered technique still has damage or area that requires an attack. They will not apply without an attack.';
+
+type EmpoweredNoAttackWarningInput = {
+  attackMode: AttackMode;
+  areaType?: PowerNoAttackWarningInput['areaType'];
+  powerDamages?:
+    | ReadonlyArray<{
+        amount?: number | undefined;
+        size?: number | undefined;
+        type?: string | undefined;
+      }>
+    | undefined;
+  techniqueDamage?: { amount?: number | undefined; size?: number | undefined } | undefined;
+  selectedPowerParts?: PowerNoAttackWarningInput['selectedParts'];
+  selectedPowerAdvancedParts?: PowerNoAttackWarningInput['advancedParts'];
+  selectedTechniqueParts?:
+    | ReadonlyArray<{ id?: number | string | undefined; name?: string | undefined }>
+    | undefined;
+};
+
+function empoweredHasNoAttackConflict(input: EmpoweredNoAttackWarningInput): boolean {
+  if (input.attackMode !== 'none') return false;
+  if (input.areaType === 'cone') return true;
+  const powerDamage = (input.powerDamages ?? []).some(
+    (row) => (row.amount ?? 0) > 0 && row.type !== 'none',
+  );
+  const techniqueAmount = input.techniqueDamage?.amount ?? 0;
+  const techniqueSize = input.techniqueDamage?.size ?? 0;
+  const techniqueDamage = techniqueAmount > 0 && techniqueSize >= 4;
+  const techniqueParts = (input.selectedTechniqueParts ?? []).some((part) =>
+    isTechniqueDamagePartRef(part),
+  );
+  const powerConflict = powerHasNoAttackAttackConflict({
+    attackMode: input.attackMode,
+    areaType: input.areaType,
+    selectedParts: input.selectedPowerParts,
+    advancedParts: input.selectedPowerAdvancedParts,
+  });
+  return powerDamage || techniqueDamage || techniqueParts || powerConflict;
+}
+
+type NoAttackCreatorKind = 'technique' | 'power' | 'empowered';
 
 /** Single entry for creator workspaces — dispatches to technique vs power rules. */
 export function noAttackCreatorWarning(
@@ -105,11 +148,20 @@ export function noAttackCreatorWarning(
   input: PowerNoAttackWarningInput,
 ): string | null;
 export function noAttackCreatorWarning(
+  kind: 'empowered',
+  input: EmpoweredNoAttackWarningInput,
+): string | null;
+export function noAttackCreatorWarning(
   kind: NoAttackCreatorKind,
-  input: TechniqueNoAttackWarningInput | PowerNoAttackWarningInput,
+  input: TechniqueNoAttackWarningInput | PowerNoAttackWarningInput | EmpoweredNoAttackWarningInput,
 ): string | null {
   if (kind === 'technique') {
     return techniqueNoAttackDamageWarning(input as TechniqueNoAttackWarningInput);
+  }
+  if (kind === 'empowered') {
+    return empoweredHasNoAttackConflict(input as EmpoweredNoAttackWarningInput)
+      ? EMPOWERED_NO_ATTACK_WARNING
+      : null;
   }
   return powerNoAttackIncompatibleWarning(input as PowerNoAttackWarningInput);
 }

@@ -128,7 +128,7 @@ export function OfficialTechniqueList({
         isLoading={isLoading}
         error={error}
         onRetry={onRetry}
-        buildRows={(raw) => buildOfficialTechniqueRows(raw, partsDb, mode)}
+        buildRows={(raw) => buildOfficialTechniqueRows(raw, partsDb, mode, powerPartsDb)}
         filterRows={filterRows}
         gridColumns={OFFICIAL_TECHNIQUE_GRID}
         headerColumns={OFFICIAL_TECHNIQUE_HEADER_COLUMNS}

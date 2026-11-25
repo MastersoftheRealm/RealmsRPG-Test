@@ -76,4 +76,5 @@ export type EmpoweredTechniqueCreatorEditorProps = {
   techniqueDamageSummary: string;
 
   sectionCosts: EmpoweredSectionCosts;
+  noAttackWarning?: string | null;
 };

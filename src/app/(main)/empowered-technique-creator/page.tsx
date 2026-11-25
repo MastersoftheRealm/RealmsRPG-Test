@@ -336,6 +336,7 @@ function EmpoweredTechniqueWorkspace({
         onTechniqueDamageChange={ws.setTechniqueDamage}
         techniqueDamageSummary={ws.techniqueDamageSummary}
         sectionCosts={ws.sectionCosts}
+        noAttackWarning={ws.noAttackWarning}
       />
     </CreatorPageShell>
   );

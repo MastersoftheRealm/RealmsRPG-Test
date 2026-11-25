@@ -111,7 +111,6 @@ export function EmpoweredTechniqueEditorTechniqueParts({
             }
             label="Dice:"
             min={0}
-            max={20}
           />
           <div className="flex items-center gap-1">
             <span className="text-lg font-bold">d</span>

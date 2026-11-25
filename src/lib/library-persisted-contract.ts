@@ -13,6 +13,7 @@ import {
   LIBRARY_SCALAR_KEYS,
   type ColumnarLibraryType,
 } from '@/lib/library-columnar-keys';
+import { libraryDocumentDiceShapeError } from '@/lib/library/library-dice-shape';
 
 export type { ColumnarLibraryType };
 
@@ -364,6 +365,8 @@ export function persistedLibraryBodyShapeError(
   if ('damage' in body && body.damage !== undefined && !Array.isArray(body.damage)) {
     return 'damage must be an array';
   }
+  const diceErr = libraryDocumentDiceShapeError(body);
+  if (diceErr) return diceErr;
   const propsErr = validatePartsArray(body.properties, 'properties');
   if (propsErr) return propsErr;
   if ('composition' in body && body.composition !== undefined && !isPlainObject(body.composition)) {
