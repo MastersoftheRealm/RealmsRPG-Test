@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import { computePartTrainingPoints } from '@/lib/calculators/part-training-points';
+import { itemPropertiesToPartData } from '@/lib/library/part-display';
 import {
   calculateCurrencyCostAndRarity,
   deriveCriticalRangeIncreaseFromProperties,
   resolveItemMarketPricing,
+  trainingPointsForItemPropertyRef,
   type ItemPropertyTpRow,
 } from './item-calc';
 
@@ -72,6 +75,24 @@ describe('resolveItemMarketPricing (TASK-870)', () => {
     const pricing = resolveItemMarketPricing([], []);
     expect(pricing.currencyCost).toBe(0);
     expect(pricing.resolvedFromProperties).toBe(false);
+  });
+});
+
+describe('trainingPointsForItemPropertyRef', () => {
+  it('matches computePartTrainingPoints and item property chips for fractional rates', () => {
+    const reach = {
+      id: 501,
+      name: 'Reach',
+      base_tp: 0.5,
+      op_1_tp: 0.5,
+    };
+    const ref = { id: reach.id, name: reach.name, op_1_lvl: 1 };
+    const calculatorTp = computePartTrainingPoints(reach, { op_1_lvl: 1 });
+    const chipTp = trainingPointsForItemPropertyRef(ref, [reach]);
+    const partData = itemPropertiesToPartData([ref], [reach])[0]?.tpCost;
+    expect(chipTp).toBe(calculatorTp);
+    expect(partData).toBe(calculatorTp);
+    expect(chipTp).toBe(2);
   });
 });
 

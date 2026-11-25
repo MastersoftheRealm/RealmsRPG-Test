@@ -16,6 +16,7 @@ import { isGeneralProperty, isMechanicProperty } from '@/lib/calculators';
 import { PROPERTY_IDS } from '@/lib/id-constants';
 import { formatCost, WEAPON_RANGE_TYPES } from '@/lib/game/creator-constants';
 import { formatWeaponRangeConfig, type WeaponRangeType } from '@/lib/calculators';
+import { trainingPointsForItemPropertyRef } from '@/lib/calculators/item-calc';
 import { rarityChipVariant } from '@/lib/chip/rarity-chip-variant';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
 import type {
@@ -90,18 +91,12 @@ export function propertyPointTotal(base: unknown, perLevel: unknown, level: numb
   return finitePropertyCost(base) + finitePropertyCost(perLevel) * level;
 }
 
-/** base_tp of 0 falls through to legacy tp_cost, matching the previous card total. */
-function propertyTrainingPointTotal(
-  property: {
-    base_tp?: number | null | undefined;
-    tp_cost?: number | null | undefined;
-    op_1_tp?: number | null | undefined;
-  },
-  level: number,
-): number {
-  const baseTp = finitePropertyCost(property.base_tp);
-  const base = baseTp !== 0 ? baseTp : finitePropertyCost(property.tp_cost);
-  return base + finitePropertyCost(property.op_1_tp) * level;
+/** Training Points on the property card (same path as library chips and budgets). */
+export function creatorPropertyTrainingPoints(property: ItemProperty, op_1_lvl: number): number {
+  return trainingPointsForItemPropertyRef(
+    { id: property.id, name: property.name, op_1_lvl },
+    [property],
+  );
 }
 
 /** Header total. Zero is omitted so a negative-IP property does not show "TP: 0" or "C: 0". */
@@ -179,7 +174,7 @@ export function PropertyCard({
 
   const level = selectedProperty.op_1_lvl;
   const propIP = propertyPointTotal(property.base_ip, property.op_1_ip, level);
-  const propTP = propertyTrainingPointTotal(property, level);
+  const propTP = creatorPropertyTrainingPoints(property, level);
   const propC = propertyPointTotal(property.base_c, property.op_1_c, level);
   const headerCosts = (
     [

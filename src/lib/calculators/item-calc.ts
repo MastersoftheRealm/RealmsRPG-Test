@@ -20,6 +20,7 @@ import {
   normalizeRangeDisplay,
 } from '@/lib/utils/string';
 import type { ItemProperty } from '@/hooks/codex-types';
+import { computePartTrainingPoints } from '@/lib/calculators/part-training-points';
 
 export type { WeaponRangeType };
 
@@ -92,7 +93,6 @@ export interface ProficiencyInfo {
   name: string;
   level: number;
   baseTP: number;
-  optionTP: number;
   totalTP: number;
   description: string;
 }
@@ -336,9 +336,8 @@ export function resolveItemPropertyCodexRow(
 }
 
 /**
- * Training points for one property instance: one round-up of base TP (+ legacy tp_cost)
- * plus option-1 TP × op_1_lvl. Matches `calculateItemCosts` per property (used for chips
- * so TP is visible when base is 0 but options cost TP).
+ * Training points for one property instance: same whole-option round-up as power/technique
+ * parts (`computePartTrainingPoints`). Used for chips and `calculateItemCosts` per property.
  */
 export function trainingPointsForItemPropertyRef(
   ref: unknown,
@@ -347,10 +346,15 @@ export function trainingPointsForItemPropertyRef(
   const payload = normalizeItemPropertyRef(ref);
   const data = resolveItemPropertyCodexRow(payload, propertiesData);
   if (!data) return 0;
-  const lvl = payload.op_1_lvl || 0;
-  const baseTP = data.base_tp || data.tp_cost || 0;
-  const op1TP = data.op_1_tp || 0;
-  return Math.ceil(baseTP + op1TP * lvl);
+  return computePartTrainingPoints(
+    {
+      id: data.id ?? data.name ?? '',
+      name: String(data.name ?? ''),
+      base_tp: data.base_tp ?? 0,
+      op_1_tp: data.op_1_tp,
+    },
+    { op_1_lvl: payload.op_1_lvl ?? 0 },
+  );
 }
 
 /**
@@ -760,18 +764,14 @@ function extractProficiencies(
     if (!data) return;
 
     const lvl = ref.op_1_lvl || 0;
-    const baseTP = data.base_tp || 0;
-    const op1TP = data.op_1_tp || 0;
-    const optTP = lvl > 0 ? op1TP * lvl : 0;
-    const totalTP = Math.ceil(baseTP + optTP);
+    const totalTP = trainingPointsForItemPropertyRef(ref, propertiesData);
 
     if (totalTP > 0) {
       profs.push({
         id: data.id || 0,
         name: data.name || '',
         level: lvl,
-        baseTP,
-        optionTP: optTP,
+        baseTP: data.base_tp || 0,
         totalTP,
         description: data.description || '',
       });
