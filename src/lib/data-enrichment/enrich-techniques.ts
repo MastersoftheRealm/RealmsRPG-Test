@@ -1,8 +1,12 @@
 import type { CharacterTechnique } from '@/types';
 import type { UserTechnique } from '@/hooks/use-user-library';
 import type { TechniquePart } from '@/hooks/codex-types';
-import { deriveTechniqueDisplay } from '@/lib/calculators';
-import { dedupeEntityRefs, dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
+import {
+  computeEmpoweredTechniqueEnergyFromSaved,
+  deriveTechniqueDisplay,
+} from '@/lib/calculators';
+import { dedupeEntityRefs } from '@/lib/game/dedupe-saved-parts';
+import type { PowerPart } from '@/hooks/codex-types';
 import type { EnrichedTechnique } from './types';
 import { findInLibrary } from './find-in-library';
 
@@ -15,6 +19,7 @@ export function enrichTechniques(
   userTechniqueLibrary: UserTechnique[],
   techniquePartsDb: TechniquePart[] = [],
   publicTechniqueLibrary?: UserTechnique[],
+  powerPartsDb: PowerPart[] = [],
 ): EnrichedTechnique[] {
   if (!characterTechniques || characterTechniques.length === 0) return [];
 
@@ -32,13 +37,20 @@ export function enrichTechniques(
         libraryItem.empoweredTechnique === true ||
         libraryItem.empowered_technique === true ||
         (libraryItem.power != null && libraryItem.technique != null);
-      const empoweredTotals = libraryItem.totals;
+      const empoweredComputed = isEmpowered
+        ? computeEmpoweredTechniqueEnergyFromSaved(libraryItem, powerPartsDb, techniquePartsDb)
+        : null;
       const empoweredEnergy =
-        typeof empoweredTotals?.energy === 'number' ? empoweredTotals.energy : undefined;
+        typeof empoweredComputed?.totalEnergy === 'number'
+          ? empoweredComputed.totalEnergy
+          : typeof libraryItem.totals?.energy === 'number'
+            ? libraryItem.totals.energy
+            : undefined;
       const empoweredTP =
-        typeof empoweredTotals?.trainingPoints === 'number'
-          ? empoweredTotals.trainingPoints
-          : undefined;
+        empoweredComputed?.trainingPoints ??
+        (typeof libraryItem.totals?.trainingPoints === 'number'
+          ? libraryItem.totals.trainingPoints
+          : undefined);
       // Extract first damage object if damage is an array
       const damageObj =
         Array.isArray(libraryItem.damage) && libraryItem.damage.length > 0
@@ -63,7 +75,7 @@ export function enrichTechniques(
         id: libraryItem.id,
         name: libraryItem.name,
         description: libraryItem.description || '',
-        parts: dedupeSavedParts(libraryItem.parts || []).map((part) => ({
+        parts: (libraryItem.parts || []).map((part) => ({
           id: String(part.id || ''),
           name: part.name || '',
           op_1_lvl: part.op_1_lvl,

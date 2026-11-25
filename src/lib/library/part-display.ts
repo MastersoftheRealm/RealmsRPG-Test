@@ -115,8 +115,7 @@ export function characterPartsToPartData(
   variant: PartTpVariant = 'power',
 ): PartData[] {
   if (!parts || parts.length === 0) return [];
-  const unique = dedupeSavedParts(parts as Array<string | PartPayload>);
-  return unique.map((part) =>
+  return (parts as Array<string | PartPayload>).map((part) =>
     partPayloadToPartData(part as string | PartPayload, codexParts, variant),
   );
 }

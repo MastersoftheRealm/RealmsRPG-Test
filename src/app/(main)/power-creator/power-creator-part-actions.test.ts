@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import type { PowerPart } from '@/hooks';
-import { nextMechanicPartToAdd } from './power-creator-part-actions';
+import { nextPowerPartToAdd } from '@/lib/game/creator-part-add';
 import type { AdvancedPart } from './power-creator-types';
 
 function part(id: string, name: string): PowerPart {
@@ -18,12 +18,10 @@ function part(id: string, name: string): PowerPart {
   };
 }
 
-describe('86e3jwt68 Power Mechanics Add Part', () => {
-  it('picks the next mechanic not already selected', () => {
+describe('Power Mechanics Add Part', () => {
+  it('always offers the first mechanic entry, even when already selected', () => {
     const mechanicPartsForList = [part('1', 'Range'), part('2', 'Area'), part('3', 'Duration')];
     const range = mechanicPartsForList[0]!;
-    const areaPart = mechanicPartsForList[1]!;
-    const durationPart = mechanicPartsForList[2]!;
     const selected: AdvancedPart[] = [
       {
         part: range,
@@ -35,27 +33,16 @@ describe('86e3jwt68 Power Mechanics Add Part', () => {
       },
     ];
 
-    expect(nextMechanicPartToAdd(mechanicPartsForList, selected)?.id).toBe('2');
-
+    expect(nextPowerPartToAdd(mechanicPartsForList)?.id).toBe('1');
     selected.push({
-      part: areaPart,
+      part: range,
       op_1_lvl: 0,
       op_2_lvl: 0,
       op_3_lvl: 0,
       applyDuration: false,
       selectedCategory: 'any',
     });
-    expect(nextMechanicPartToAdd(mechanicPartsForList, selected)?.id).toBe('3');
-
-    selected.push({
-      part: durationPart,
-      op_1_lvl: 0,
-      op_2_lvl: 0,
-      op_3_lvl: 0,
-      applyDuration: false,
-      selectedCategory: 'any',
-    });
-    expect(nextMechanicPartToAdd(mechanicPartsForList, selected)).toBeUndefined();
+    expect(nextPowerPartToAdd(mechanicPartsForList)?.id).toBe('1');
   });
 });
 

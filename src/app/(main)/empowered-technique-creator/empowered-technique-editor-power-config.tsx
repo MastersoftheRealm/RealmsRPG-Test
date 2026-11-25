@@ -6,6 +6,8 @@ import { Checkbox } from '@/components/ui';
 import { formatAreaForDisplay, type AreaConfig, type DurationConfig } from '@/lib/calculators';
 import { formatDurationFromTypeAndValue } from '@/lib/utils/duration';
 import { AREA_TYPES, DURATION_TYPES, DURATION_VALUES } from '@/lib/game/creator-constants';
+import { applyShortDurationClear, isShortPowerDuration } from '@/lib/game/power-duration-config';
+import { cn } from '@/lib/utils/cn';
 import type { EmpoweredTechniqueCreatorEditorProps } from './empowered-technique-editor-config';
 
 export type EmpoweredTechniqueEditorPowerConfigProps = Pick<
@@ -17,7 +19,6 @@ export type EmpoweredTechniqueEditorPowerConfigProps = Pick<
   | 'onAreaChange'
   | 'duration'
   | 'onDurationChange'
-  | 'onDurationTypeChange'
   | 'sectionCosts'
 >;
 
@@ -29,7 +30,6 @@ export function EmpoweredTechniqueEditorPowerConfig({
   onAreaChange,
   duration,
   onDurationChange,
-  onDurationTypeChange,
   sectionCosts,
 }: EmpoweredTechniqueEditorPowerConfigProps) {
   const powerConfigSummary = `${rangeDisplay} • ${area.type === 'none' ? 'Single target' : formatAreaForDisplay(area.type, area.level)} • ${duration.type === 'instant' ? 'Instant' : formatDurationFromTypeAndValue(duration.type, duration.value)}`;
@@ -40,13 +40,7 @@ export function EmpoweredTechniqueEditorPowerConfig({
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-4">
           <SectionCostBadge en={sectionCosts.range.energyRaw} tp={sectionCosts.range.totalTP} />
-          <ValueStepper
-            value={range.steps}
-            onChange={onRangeStepsChange}
-            label="Range:"
-            min={0}
-            max={10}
-          />
+          <ValueStepper value={range.steps} onChange={onRangeStepsChange} label="Range:" min={0} />
         </div>
         <div className="flex flex-wrap items-center gap-4">
           <SectionCostBadge en={sectionCosts.area.energyRaw} tp={sectionCosts.area.totalTP} />
@@ -74,7 +68,6 @@ export function EmpoweredTechniqueEditorPowerConfig({
                 onChange={(value) => onAreaChange((previous) => ({ ...previous, level: value }))}
                 label="Area Level:"
                 min={1}
-                max={10}
               />
               <Checkbox
                 checked={area.applyDuration ?? false}
@@ -97,9 +90,16 @@ export function EmpoweredTechniqueEditorPowerConfig({
             />
             <select
               value={duration.type}
-              onChange={(event) =>
-                onDurationTypeChange(event.target.value as DurationConfig['type'])
-              }
+              onChange={(event) => {
+                const newType = event.target.value as DurationConfig['type'];
+                const newValue = DURATION_VALUES[newType]?.[0]?.value || 1;
+                const next = applyShortDurationClear({
+                  ...duration,
+                  type: newType,
+                  value: newValue,
+                });
+                onDurationChange(() => next);
+              }}
               className="touch-tier-standard rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
               aria-label="Empowered technique duration type"
             >
@@ -114,12 +114,15 @@ export function EmpoweredTechniqueEditorPowerConfig({
               durationValueOptions && (
                 <select
                   value={duration.value}
-                  onChange={(event) =>
-                    onDurationChange((previous) => ({
-                      ...previous,
-                      value: Number(event.target.value),
-                    }))
-                  }
+                  onChange={(event) => {
+                    const newValue = Number(event.target.value);
+                    onDurationChange((previous) =>
+                      applyShortDurationClear({
+                        ...previous,
+                        value: newValue,
+                      }),
+                    );
+                  }}
                   className="touch-tier-standard rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
                   aria-label="Empowered technique duration value"
                 >
@@ -131,57 +134,66 @@ export function EmpoweredTechniqueEditorPowerConfig({
                 </select>
               )}
           </div>
-          {duration.type !== 'instant' && (
-            <div className="flex flex-wrap items-center gap-4">
-              <Checkbox
-                checked={duration.focus || false}
-                onChange={(event) =>
-                  onDurationChange((previous) => ({
-                    ...previous,
-                    focus: event.target.checked,
-                  }))
-                }
-                label="Focus"
-              />
-              <Checkbox
-                checked={duration.noHarm || false}
-                onChange={(event) =>
-                  onDurationChange((previous) => ({
-                    ...previous,
-                    noHarm: event.target.checked,
-                  }))
-                }
-                label="No Harm or Adaptation Parts"
-              />
-              <Checkbox
-                checked={duration.endsOnActivation || false}
-                onChange={(event) =>
-                  onDurationChange((previous) => ({
-                    ...previous,
-                    endsOnActivation: event.target.checked,
-                  }))
-                }
-                label="Ends on Activation"
-              />
-              <select
-                value={duration.sustain || 0}
-                onChange={(event) =>
-                  onDurationChange((previous) => ({
-                    ...previous,
-                    sustain: Number(event.target.value),
-                  }))
-                }
-                className="touch-tier-standard rounded border border-border-light bg-surface px-2 py-1 text-sm text-text-primary"
-                aria-label="Empowered technique sustain action points"
+          {(() => {
+            const shortDuration = isShortPowerDuration(duration);
+            return (
+              <div
+                className={cn('flex flex-wrap items-center gap-4', shortDuration && 'opacity-50')}
               >
-                <option value={0}>Sustain: None</option>
-                <option value={1}>Sustain: 1 AP</option>
-                <option value={2}>Sustain: 2 AP</option>
-                <option value={3}>Sustain: 3 AP</option>
-                <option value={4}>Sustain: 4 AP</option>
-              </select>
-            </div>
-          )}
+                <Checkbox
+                  checked={duration.focus || false}
+                  onChange={(event) =>
+                    onDurationChange((previous) => ({
+                      ...previous,
+                      focus: event.target.checked,
+                    }))
+                  }
+                  label="Focus"
+                  disabled={shortDuration}
+                />
+                <Checkbox
+                  checked={duration.noHarm || false}
+                  onChange={(event) =>
+                    onDurationChange((previous) => ({
+                      ...previous,
+                      noHarm: event.target.checked,
+                    }))
+                  }
+                  label="No Harm or Adaptation Parts"
+                  disabled={shortDuration}
+                />
+                <Checkbox
+                  checked={duration.endsOnActivation || false}
+                  onChange={(event) =>
+                    onDurationChange((previous) => ({
+                      ...previous,
+                      endsOnActivation: event.target.checked,
+                    }))
+                  }
+                  label="Ends on Activation"
+                  disabled={shortDuration}
+                />
+                <select
+                  value={duration.sustain || 0}
+                  onChange={(event) =>
+                    onDurationChange((previous) => ({
+                      ...previous,
+                      sustain: Number(event.target.value),
+                    }))
+                  }
+                  className="touch-tier-standard rounded border border-border-light bg-surface px-2 py-1 text-sm text-text-primary"
+                  aria-label="Empowered technique sustain action points"
+                  disabled={shortDuration}
+                >
+                  <option value={0}>Sustain: None</option>
+                  <option value={1}>Sustain: 1 AP</option>
+                  <option value={2}>Sustain: 2 AP</option>
+                  <option value={3}>Sustain: 3 AP</option>
+                  <option value={4}>Sustain: 4 AP</option>
+                </select>
+              </div>
+            );
+          })()}
         </div>
       </div>
     </CollapsibleSection>

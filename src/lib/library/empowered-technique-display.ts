@@ -10,7 +10,6 @@ import type { ChipData } from '@/components/patterns/list/grid-list-row-types';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
 import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
 import type { MetadataDetailSection } from '@/lib/chip/list-row-metadata';
-import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 
 type EmpoweredRecord = Record<string, unknown>;
 
@@ -25,7 +24,7 @@ function collectEmpoweredPowerSavedParts(power: EmpoweredRecord): PowerDocument[
   if (Array.isArray(power.parts)) parts.push(...power.parts);
   if (Array.isArray(power.mechanics)) parts.push(...power.mechanics);
   if (power.addWeaponPowerPart) parts.push(power.addWeaponPowerPart);
-  return dedupeSavedParts(parts as NonNullable<PowerDocument['parts']>);
+  return parts as NonNullable<PowerDocument['parts']>;
 }
 
 function collectEmpoweredTechniqueSavedParts(
@@ -37,7 +36,7 @@ function collectEmpoweredTechniqueSavedParts(
   if (Array.isArray(technique.autoMechanics)) parts.push(...technique.autoMechanics);
   // Legacy rows may still store technique parts at the top level.
   if (Array.isArray(raw.parts)) parts.push(...raw.parts);
-  return dedupeSavedParts(parts as NonNullable<TechniqueDocument['parts']>);
+  return parts as NonNullable<TechniqueDocument['parts']>;
 }
 
 function resolveEmpoweredTechniqueDamage(

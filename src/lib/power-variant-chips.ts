@@ -47,6 +47,16 @@ export function rollPowerRandomizeDie(
   return variant ? { face, variant } : null;
 }
 
+function formatPartNameCounts(names: string[]): string {
+  const counts = new Map<string, number>();
+  for (const name of names) {
+    counts.set(name, (counts.get(name) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .map(([name, count]) => (count > 1 ? `${name} ×${count}` : name))
+    .join(', ');
+}
+
 function formatFaces(faces: number[]): string {
   if (faces.length === 0) return 'No faces';
   return `${faces.length === 1 ? 'Face' : 'Faces'} ${faces.join(', ')}`;
@@ -79,7 +89,7 @@ function powerVariantChipDescription(
   if (v.display.duration) lines.push(`Duration: ${v.display.duration}`);
   if (v.display.area && v.display.area !== '1 target') lines.push(`Area: ${v.display.area}`);
   const partNames = (v.doc.parts ?? []).map((p) => p.name).filter((n): n is string => !!n);
-  if (partNames.length > 0) lines.push(`Parts: ${[...new Set(partNames)].join(', ')}`);
+  if (partNames.length > 0) lines.push(`Parts: ${formatPartNameCounts(partNames)}`);
   if (v.description) lines.push(v.description);
   return lines.join('\n');
 }

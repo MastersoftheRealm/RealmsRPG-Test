@@ -129,17 +129,25 @@ export {
 } from './empowered-technique-calc';
 
 export {
+  buildEmpoweredTechniqueCostPayloads,
+  computeEmpoweredTechniqueEnergyFromSaved,
+  type BuildEmpoweredTechniqueCostPayloadsInput,
+  type EmpoweredTechniqueBuiltPayloads,
+} from './empowered-technique-payload';
+
+export {
+  filterMechanicPartsBySection,
+  mechanicPartsToSectionPayload,
+  type PowerCreatorSectionKey,
+} from './power-creator-section-costs';
+
+export {
   buildEmpoweredAdvancedCalculationGroups,
   type EmpoweredAdvancedCalcGroup,
   type BuildEmpoweredAdvancedCalculationGroupsInput,
 } from './empowered-energy-breakdown';
 
-export {
-  pickCheaperEnPart,
-  toEmpoweredAutoMechanicPart,
-  type EmpoweredPartSide,
-  type EmpoweredPartCostCandidate,
-} from './empowered-overlap-parts';
+export type { EmpoweredPartSide, EmpoweredPartCostCandidate } from './empowered-overlap-parts';
 
 // Item Calculator
 export {

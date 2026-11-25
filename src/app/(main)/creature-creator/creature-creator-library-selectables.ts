@@ -8,6 +8,7 @@ import { buildEmpoweredPowerSelectableItem } from '@/hooks/add-library-item/buil
 import type { ItemProperty, UserPower, UserTechnique, UserItem } from '@/hooks';
 import { equipmentCurrency } from '@/lib/codex/equipment-list';
 import { buildSelectableItem } from '@/lib/library-selectable-builders';
+import { computeEmpoweredTechniqueEnergyFromSaved } from '@/lib/calculators';
 import { mergeLibraryBySource, type LibrarySourceScope } from '@/lib/library/source-scope';
 import {
   collectCreatureInventoryItems,
@@ -182,9 +183,13 @@ export function buildEmpoweredTechniqueSelectableItems(
       techniquePartsDb: techniquePartsDb ?? [],
     });
     const powerData = technique.power ?? {};
-    const totals = technique.totals ?? {};
-    const energy = totals.energy ?? 0;
-    const tp = totals.trainingPoints ?? 0;
+    const computed = computeEmpoweredTechniqueEnergyFromSaved(
+      technique,
+      powerPartsDb ?? [],
+      techniquePartsDb ?? [],
+    );
+    const energy = computed?.totalEnergy ?? technique.totals?.energy ?? 0;
+    const tp = computed?.trainingPoints ?? technique.totals?.trainingPoints ?? 0;
     const actionCol = empowered.columns?.find((c) => c.key === 'Action');
     const damageCol = empowered.columns?.find((c) => c.key === 'Damage');
     const areaCol = empowered.columns?.find((c) => c.key === 'Area');

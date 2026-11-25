@@ -18,8 +18,8 @@ import {
   useCreatorEditDraftDecision,
   useCreatorEditMissNotice,
 } from '@/lib/library/use-creator-edit-draft';
-import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import type { AreaConfig, DurationConfig } from '@/lib/calculators';
+import { noAttackCreatorWarning } from '@/lib/calculators';
 import { EXCLUDED_PARTS } from '@/app/(main)/power-creator/power-creator-constants';
 import { attackModeColumnLabel, type AttackMode } from '@/lib/attack-mode';
 import {
@@ -265,7 +265,7 @@ export function useEmpoweredTechniqueCreatorWorkspace({
         power: {
           parts: powerPartsToSave,
           mechanics: powerAdvancedToSave,
-          autoMechanics: dedupeSavedParts(powerMechanicParts),
+          autoMechanics: powerMechanicParts,
           damage: powerDamages.filter((damage) => damage.type !== 'none' && damage.amount > 0),
           range,
           area,
@@ -278,10 +278,10 @@ export function useEmpoweredTechniqueCreatorWorkspace({
             techniqueDamage.amount > 0
               ? [{ amount: techniqueDamage.amount, size: techniqueDamage.size }]
               : [],
-          autoMechanics: dedupeSavedParts([
+          autoMechanics: [
             ...techniqueDamageMechanicParts,
             ...(attackModeTechniquePart ? [attackModeTechniquePart] : []),
-          ]),
+          ],
         },
         totals: {
           energy: costs.totalEnergy,
@@ -438,6 +438,31 @@ export function useEmpoweredTechniqueCreatorWorkspace({
           ? new Error(`Failed to load technique parts: ${techniquePartsError.message}`)
           : null;
 
+  const noAttackWarning = useMemo(
+    () =>
+      noAttackCreatorWarning('empowered', {
+        attackMode,
+        areaType: area.type,
+        powerDamages,
+        techniqueDamage,
+        selectedPowerParts: selectedPowerParts.map((row) => ({ name: row.part.name })),
+        selectedPowerAdvancedParts: selectedPowerAdvancedParts,
+        selectedTechniqueParts: selectedTechniqueParts.map((row) => ({
+          id: row.part.id,
+          name: row.part.name,
+        })),
+      }),
+    [
+      area.type,
+      attackMode,
+      powerDamages,
+      selectedPowerAdvancedParts,
+      selectedPowerParts,
+      selectedTechniqueParts,
+      techniqueDamage,
+    ],
+  );
+
   const handleReset = useCallback(() => {
     resetState();
     save.forgetLoadedLibraryItem();
@@ -507,5 +532,6 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     unsavedDirty,
     discardLocalDraft,
     attackModeLabel: attackModeColumnLabel(attackMode),
+    noAttackWarning,
   };
 }

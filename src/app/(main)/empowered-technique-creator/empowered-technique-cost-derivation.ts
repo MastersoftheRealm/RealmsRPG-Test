@@ -11,25 +11,24 @@
 
 import { useMemo } from 'react';
 import type { PowerPart, TechniquePart } from '@/hooks';
-import { findByIdOrName, PART_IDS } from '@/lib/id-constants';
 import {
-  buildMechanicParts,
   calculatePowerCosts,
   calculateTechniqueCosts,
+  calculatePowerSectionContribution,
   calculateEmpoweredTechniqueCosts,
   computePowerActionTypeFromSelection,
   deriveRange,
   deriveArea,
   deriveDuration,
-  pickCheaperEnPart,
-  toEmpoweredAutoMechanicPart,
   analyzePowerEnergy,
   analyzeTechniqueEnergy,
   buildEmpoweredAdvancedCalculationGroups,
-  type PowerPartPayload,
-  type TechniquePartPayload,
+  buildEmpoweredTechniqueCostPayloads,
+  filterMechanicPartsBySection,
+  mechanicPartsToSectionPayload,
   type AreaConfig,
   type DurationConfig,
+  type TechniquePartPayload,
 } from '@/lib/calculators';
 import type { AttackMode } from '@/lib/attack-mode';
 import type {
@@ -90,149 +89,46 @@ export function useEmpoweredTechniqueCostDerivation({
   powerParts,
   techniqueParts,
 }: UseEmpoweredTechniqueCostDerivationArgs) {
-  const powerMechanicParts = useMemo(
+  const builtPayloads = useMemo(
     () =>
-      buildMechanicParts({
-        creatorType: 'power',
-        partsDb: powerParts,
-        action: { type: actionType, isReaction },
-        powerDamage: powerDamages.map((damage) => ({
-          type: damage.type,
-          diceAmount: damage.amount,
-          dieSize: damage.size,
-          applyDuration: damage.applyDuration ?? false,
-        })),
-        range: { steps: range.steps },
-        area:
-          area.type !== 'none'
-            ? { type: area.type, level: area.level, applyDuration: area.applyDuration ?? false }
-            : undefined,
-        duration:
-          duration.type !== 'instant'
-            ? {
-                type: duration.type,
-                value: duration.value,
-                applyDuration: duration.applyDuration ?? false,
-                focus: duration.focus,
-                noHarm: duration.noHarm,
-                endsOnActivation: duration.endsOnActivation,
-                sustain: duration.sustain,
-              }
-            : undefined,
+      buildEmpoweredTechniqueCostPayloads({
+        actionType,
+        isReaction,
+        powerDamages,
+        techniqueDamage,
+        range,
+        area,
+        duration,
+        attackMode,
+        selectedPowerParts,
+        selectedPowerAdvancedParts,
+        selectedTechniqueParts,
+        powerParts,
+        techniqueParts,
       }),
-    [actionType, area, duration, isReaction, powerDamages, powerParts, range.steps],
-  );
-
-  const techniqueDamageMechanicParts = useMemo(
-    () =>
-      buildMechanicParts({
-        creatorType: 'technique',
-        partsDb: techniqueParts,
-        techniqueDamage:
-          techniqueDamage.amount > 0
-            ? { diceAmount: techniqueDamage.amount, dieSize: techniqueDamage.size }
-            : undefined,
-      }),
-    [techniqueDamage, techniqueParts],
-  );
-
-  /** Attack-mode auto parts: cheaper Add Weapon (power vs technique) or No Attack. */
-  const attackModeParts = useMemo(() => {
-    if (attackMode === 'weapon') {
-      const powerWeapon = findByIdOrName(powerParts, {
-        id: PART_IDS.ADD_WEAPON_TO_POWER,
-        name: 'Add Weapon to Power',
-      });
-      const techniqueWeapon = findByIdOrName(techniqueParts, {
-        id: PART_IDS.ADD_WEAPON_TO_TECHNIQUE,
-        name: 'Add Weapon to Technique',
-      });
-      const picked = pickCheaperEnPart([
-        powerWeapon ? { side: 'power' as const, part: powerWeapon } : null,
-        techniqueWeapon ? { side: 'technique' as const, part: techniqueWeapon } : null,
-      ]);
-      if (!picked) {
-        return { powerPart: null, techniquePart: null };
-      }
-      const row = toEmpoweredAutoMechanicPart(picked.part);
-      return picked.side === 'power'
-        ? { powerPart: row, techniquePart: null }
-        : { powerPart: null, techniquePart: row };
-    }
-
-    if (attackMode === 'none') {
-      const noAttack = findByIdOrName(techniqueParts, {
-        id: PART_IDS.NO_ATTACK,
-        name: 'No Attack',
-      });
-      if (!noAttack || !noAttack.mechanic) {
-        return { powerPart: null, techniquePart: null };
-      }
-      return {
-        powerPart: null,
-        techniquePart: toEmpoweredAutoMechanicPart(noAttack),
-      };
-    }
-
-    return { powerPart: null, techniquePart: null };
-  }, [attackMode, powerParts, techniqueParts]);
-
-  const attackModePowerPart = attackModeParts.powerPart;
-  const attackModeTechniquePart = attackModeParts.techniquePart;
-
-  const powerPayload: PowerPartPayload[] = useMemo(
-    () => [
-      ...selectedPowerParts.map((selected) => ({
-        part: selected.part,
-        op_1_lvl: selected.op_1_lvl,
-        op_2_lvl: selected.op_2_lvl,
-        op_3_lvl: selected.op_3_lvl,
-        applyDuration: selected.applyDuration,
-      })),
-      ...selectedPowerAdvancedParts.map((selected) => ({
-        part: selected.part,
-        op_1_lvl: selected.op_1_lvl,
-        op_2_lvl: selected.op_2_lvl,
-        op_3_lvl: selected.op_3_lvl,
-        applyDuration: selected.applyDuration,
-      })),
-      ...powerMechanicParts,
-      ...(attackModePowerPart ? [attackModePowerPart] : []),
+    [
+      actionType,
+      area,
+      attackMode,
+      duration,
+      isReaction,
+      powerDamages,
+      powerParts,
+      range,
+      selectedPowerAdvancedParts,
+      selectedPowerParts,
+      selectedTechniqueParts,
+      techniqueDamage,
+      techniqueParts,
     ],
-    [attackModePowerPart, powerMechanicParts, selectedPowerAdvancedParts, selectedPowerParts],
   );
 
-  const techniquePayload: TechniquePartPayload[] = useMemo(
-    () => [
-      ...selectedTechniqueParts.map((selected) => ({
-        part: selected.part,
-        id: Number(selected.part.id),
-        name: selected.part.name,
-        op_1_lvl: selected.op_1_lvl,
-        op_2_lvl: selected.op_2_lvl,
-        op_3_lvl: selected.op_3_lvl,
-      })),
-      ...techniqueDamageMechanicParts.map((part) => ({
-        id: Number(part.id),
-        name: part.name,
-        op_1_lvl: part.op_1_lvl,
-        op_2_lvl: part.op_2_lvl,
-        op_3_lvl: part.op_3_lvl,
-      })),
-      ...(attackModeTechniquePart
-        ? [
-            {
-              id: Number(attackModeTechniquePart.id),
-              name: attackModeTechniquePart.name,
-              op_1_lvl: attackModeTechniquePart.op_1_lvl,
-              op_2_lvl: attackModeTechniquePart.op_2_lvl,
-              op_3_lvl: attackModeTechniquePart.op_3_lvl,
-            },
-          ]
-        : []),
-    ],
-    [attackModeTechniquePart, selectedTechniqueParts, techniqueDamageMechanicParts],
-  );
+  const powerMechanicParts = builtPayloads.powerMechanicParts;
+  const techniqueDamageMechanicParts = builtPayloads.techniqueDamageMechanicParts;
+  const attackModePowerPart = builtPayloads.attackModePowerPart;
+  const attackModeTechniquePart = builtPayloads.attackModeTechniquePart;
+  const powerPayload = builtPayloads.powerPayload;
+  const techniquePayload = builtPayloads.techniquePayload;
 
   const costs = useMemo(
     () =>
@@ -251,11 +147,17 @@ export function useEmpoweredTechniqueCostDerivation({
         powerAnalysis: analyzePowerEnergy(powerPayload, powerParts),
         techniqueAnalysis: analyzeTechniqueEnergy(techniquePayload, techniqueParts),
         techniquePercentageMultiplier: costs.techniquePercentageMultiplier,
+        actionEnergyMultiplier: costs.actionEnergyMultiplier,
+        powerEnergyRaw: costs.powerEnergyRaw,
+        techniqueEnergyRaw: costs.techniqueEnergyRaw,
         energyRaw: costs.energyRaw,
         totalEnergy: costs.totalEnergy,
       }),
     [
+      costs.actionEnergyMultiplier,
       costs.energyRaw,
+      costs.powerEnergyRaw,
+      costs.techniqueEnergyRaw,
       costs.techniquePercentageMultiplier,
       costs.totalEnergy,
       powerPayload,
@@ -266,47 +168,20 @@ export function useEmpoweredTechniqueCostDerivation({
   );
 
   const sectionCosts = useMemo((): EmpoweredSectionCosts => {
-    const actionPartNames = ['Power Reaction', 'Power Quick or Free Action', 'Power Long Action'];
-    const rangePartNames = ['Power Range'];
-    const areaPartNames = [
-      'Sphere of Effect',
-      'Cylinder of Effect',
-      'Cone of Effect',
-      'Line of Effect',
-      'Trail of Effect',
-    ];
-    const durationPartNames = [
-      'Duration (Round)',
-      'Duration (Minute)',
-      'Duration (Hour)',
-      'Duration (Days)',
-      'Duration (Permanent)',
-      'Focus for Duration',
-      'No Harm or Adaptation for Duration',
-      'Duration Ends On Activation',
-      'Sustain for Duration',
-    ];
-    const powerDamageNames = [
-      'Magic Damage',
-      'Light Damage',
-      'Elemental Damage',
-      'Poison or Necrotic Damage',
-      'Sonic Damage',
-      'Spiritual Damage',
-      'Psychic Damage',
-      'Physical Damage',
-      'Power Split Damage Dice',
-      'Split Damage Dice',
-    ];
-
-    const actionParts = powerMechanicParts.filter((part) => actionPartNames.includes(part.name));
-    const rangeParts = powerMechanicParts.filter((part) => rangePartNames.includes(part.name));
-    const areaParts = powerMechanicParts.filter((part) => areaPartNames.includes(part.name));
-    const durationParts = powerMechanicParts.filter((part) =>
-      durationPartNames.includes(part.name),
+    const actionParts = mechanicPartsToSectionPayload(
+      filterMechanicPartsBySection(powerMechanicParts, 'action'),
     );
-    const powerDamageParts = powerMechanicParts.filter((part) =>
-      powerDamageNames.includes(part.name),
+    const rangeParts = mechanicPartsToSectionPayload(
+      filterMechanicPartsBySection(powerMechanicParts, 'range'),
+    );
+    const areaParts = mechanicPartsToSectionPayload(
+      filterMechanicPartsBySection(powerMechanicParts, 'area'),
+    );
+    const durationParts = mechanicPartsToSectionPayload(
+      filterMechanicPartsBySection(powerMechanicParts, 'duration'),
+    );
+    const powerDamageParts = mechanicPartsToSectionPayload(
+      filterMechanicPartsBySection(powerMechanicParts, 'damage'),
     );
     const techniqueDamageParts: TechniquePartPayload[] = techniqueDamageMechanicParts.map(
       (part) => ({
@@ -336,14 +211,16 @@ export function useEmpoweredTechniqueCostDerivation({
       );
     }
 
+    const durationContext = durationParts;
+
     return {
       action: calculatePowerCosts(actionParts, powerParts),
       weapon: weaponCost,
-      range: calculatePowerCosts(rangeParts, powerParts),
-      area: calculatePowerCosts(areaParts, powerParts),
+      range: calculatePowerSectionContribution(rangeParts, powerParts, durationContext),
+      area: calculatePowerSectionContribution(areaParts, powerParts, durationContext),
       duration: calculatePowerCosts(durationParts, powerParts),
-      powerDamage: calculatePowerCosts(powerDamageParts, powerParts),
-      powerParts: calculatePowerCosts(
+      powerDamage: calculatePowerSectionContribution(powerDamageParts, powerParts, durationContext),
+      powerParts: calculatePowerSectionContribution(
         selectedPowerParts.map((selected) => ({
           part: selected.part,
           op_1_lvl: selected.op_1_lvl,
@@ -352,8 +229,9 @@ export function useEmpoweredTechniqueCostDerivation({
           applyDuration: selected.applyDuration,
         })),
         powerParts,
+        durationContext,
       ),
-      powerMechanics: calculatePowerCosts(
+      powerMechanics: calculatePowerSectionContribution(
         selectedPowerAdvancedParts.map((selected) => ({
           part: selected.part,
           op_1_lvl: selected.op_1_lvl,
@@ -362,6 +240,7 @@ export function useEmpoweredTechniqueCostDerivation({
           applyDuration: selected.applyDuration,
         })),
         powerParts,
+        durationContext,
       ),
       techniqueParts: calculateTechniqueCosts(
         selectedTechniqueParts.map((selected) => ({

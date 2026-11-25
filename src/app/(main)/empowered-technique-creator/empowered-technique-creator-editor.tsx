@@ -50,6 +50,7 @@ export function EmpoweredTechniqueCreatorEditor(props: EmpoweredTechniqueCreator
         attackMode={props.attackMode}
         onAttackModeChange={props.onAttackModeChange}
         sectionCosts={props.sectionCosts}
+        noAttackWarning={props.noAttackWarning ?? null}
       />
 
       <EmpoweredTechniqueEditorPowerConfig
@@ -60,7 +61,6 @@ export function EmpoweredTechniqueCreatorEditor(props: EmpoweredTechniqueCreator
         onAreaChange={props.onAreaChange}
         duration={props.duration}
         onDurationChange={props.onDurationChange}
-        onDurationTypeChange={props.onDurationTypeChange}
         sectionCosts={props.sectionCosts}
       />
 

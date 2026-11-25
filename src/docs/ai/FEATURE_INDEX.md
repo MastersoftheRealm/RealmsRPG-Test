@@ -326,6 +326,7 @@ These siblings exist. The folder's `index.ts` does not `export ... from` them. T
 - `src/lib/game/character-legality.ts`
 - `src/lib/game/crafting-utils.ts`
 - `src/lib/game/creator-cache.ts`
+- `src/lib/game/creator-part-add.ts`
 - `src/lib/game/creature-ability-bounds.ts`
 - `src/lib/game/creator-constants.ts`
 - `src/lib/game/creature-power-instances.ts`
@@ -339,6 +340,7 @@ These siblings exist. The folder's `index.ts` does not `export ... from` them. T
 - `src/lib/game/path-ability-labels.ts`
 - `src/lib/game/path-recommendation-index.ts`
 - `src/lib/game/path-validation.ts`
+- `src/lib/game/power-duration-config.ts`
 - `src/lib/game/resolve-armor-damage-reduction.ts`
 - `src/lib/game/saved-part-id.ts`
 - `src/lib/game/size-table.ts`
@@ -352,6 +354,8 @@ These siblings exist. The folder's `index.ts` does not `export ... from` them. T
 
 - `src/lib/calculators/action-type.ts` — exports `deriveActionType`. This is not `src/lib/utils/action-type.ts`.
 - `src/lib/calculators/dice-splits.ts`
+- `src/lib/calculators/empowered-technique-payload.ts`
+- `src/lib/calculators/power-creator-section-costs.ts`
 - `src/lib/calculators/part-training-points.ts`
 - `src/lib/calculators/power-composition.fixture.ts` — imported by tests, not by app pages.
 
@@ -749,7 +753,7 @@ Every path below is a non-test source file. The checker fails if one is missing 
 - Damage dice controls. Each file has its own `ValueStepper` and `DIE_SIZES` select. None renders another: `src/app/(main)/power-creator/power-creator-editor-power-damage.tsx`, `src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-damage.tsx`, `src/app/(main)/empowered-technique-creator/empowered-technique-editor-technique-parts.tsx`, the Additional Damage section in `technique-creator-editor.tsx`, `src/app/(main)/item-creator/item-creator-editor-weapon-shield.tsx`, and `src/app/(main)/item-creator/item-creator-editor-shield-panels.tsx` (shield block and shield damage).
 - Range, area, and duration. `src/app/(main)/power-creator/power-creator-editor-power-config.tsx` is three sections (Range, Area of Effect, Duration). `src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-config.tsx` is one Power Configuration section. Both use `ValueStepper`, `AREA_TYPES`, `DURATION_TYPES`, and `DURATION_VALUES`. Neither renders the other.
 - Part lists. `src/app/(main)/power-creator/power-creator-editor-power-parts.tsx`, `src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-parts.tsx`, and `technique-creator-editor.tsx` each map rows onto `PowerPartCard` inside their own `CollapsibleSection`.
-- Add-part handlers. `addPart` in `src/app/(main)/power-creator/power-creator-part-actions.ts` and `addPowerPart` in `src/app/(main)/empowered-technique-creator/empowered-technique-part-actions.ts` both append the first list entry with the same option-level fields. Power's mechanic add calls `nextMechanicPartToAdd`, which skips an id already selected. Empowered's mechanic add takes the first list entry and does not call that function.
+- Add-part handlers. `addPart` in `src/app/(main)/power-creator/power-creator-part-actions.ts` and `addPowerPart` in `src/app/(main)/empowered-technique-creator/empowered-technique-part-actions.ts` both append the first list entry via `src/lib/game/creator-part-add.ts` (duplicates allowed).
 - Name and description cards. `src/app/(main)/power-creator/power-creator-editor-meta.tsx`, `src/app/(main)/empowered-technique-creator/empowered-technique-editor-meta.tsx`, and `src/app/(main)/item-creator/item-creator-editor-meta.tsx` each render `CreatorNameField` and `CreatorDescriptionField`. They do not render each other. The item card also has an item-type `SegmentedControl`.
 - Reset helpers. `applySpeciesCreatorReset` in `src/app/(main)/species-creator/species-creator-reset.ts` and `applyTechniqueCreatorReset` in `src/app/(main)/technique-creator/technique-creator-reset.ts` are separate functions. Both clear the draft, reset the form, forget the loaded library row, and clear the save message. Technique also calls `acceptDraft`. Species does not.
 - Condition names. `CONDITIONS` in `src/lib/game/creator-constants.ts` and `CONDITION_OPTIONS` in `src/components/encounters/encounter-constants.ts` are the same 23 names in the same order. Only the encounter list stores `leveled` and `description`. `src/app/(main)/creature-creator/creature-creator-editor-traits-section.tsx` imports `CONDITIONS`. The description strings were not compared to anything else.
@@ -889,6 +893,7 @@ Every path below is a non-test source file. The checker fails if one is missing 
 - `src/app/(main)/power-creator/layout.tsx`
 - `src/app/(main)/power-creator/page.tsx`
 - `src/app/(main)/power-creator/power-creator-bootstrap.ts`
+- `src/app/(main)/power-creator/creator-section-fork-drift.test.ts`
 - `src/app/(main)/power-creator/power-creator-composition-band.tsx`
 - `src/app/(main)/power-creator/power-creator-composition.ts`
 - `src/app/(main)/power-creator/power-creator-constants.ts`
@@ -1515,6 +1520,7 @@ Every path below is a non-test source file. The checker fails if one is missing 
 - `src/lib/library/empowered-technique-display.ts`
 - `src/lib/library/fetch-library-tab-counts.ts`
 - `src/lib/library/library-tab-counts.ts`
+- `src/lib/library/library-dice-shape.ts`
 - `src/lib/library/official-catalog-row-filter.ts`
 - `src/lib/library/official-creature-list.ts`
 - `src/lib/library/official-enhanced-list.ts`
@@ -3226,7 +3232,7 @@ No production file imports these names. A test import does not count. The file t
 - `src/app/(main)/item-creator/item-creator-property-options.ts`: `ADD_PROPERTY_DISABLED_REASON`, `ADD_PROPERTY_SHIELD_DISABLED_REASON`
 - `src/app/(main)/my-account/_components/account-profile-card.tsx`: `PROFILE_PICTURE_UPLOAD_DENIED`
 - `src/app/(main)/power-creator/power-creator-composition.ts`: `overlayFlagsFromVariants`
-- `src/app/(main)/power-creator/power-creator-part-actions.ts`: `nextMechanicPartToAdd`
+- `src/lib/library/library-dice-shape.ts`: `LIBRARY_DICE_SHAPE_ERROR`
 - `src/app/(main)/species-creator/species-creator-bootstrap.ts`: `resolveSpeciesEditForm`
 - `src/app/robots.ts`: `ROBOTS_DISALLOW`
 - `src/app/sitemap.ts`: `SITEMAP_PATHS`

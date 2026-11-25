@@ -1,7 +1,11 @@
 import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import type { UserTechnique } from '../use-user-library';
-import { formatPowerDamage, formatPowerRangeFromSteps } from '@/lib/calculators/power-calc';
+import {
+  computeEmpoweredTechniqueEnergyFromSaved,
+  formatPowerDamage,
+  formatPowerRangeFromSteps,
+} from '@/lib/calculators';
 import { buildGlrFactDetailSections } from '@/lib/chip/list-row-metadata';
 import { resolveSurfaceLayout } from '@/lib/glr';
 import { empoweredTechniquePartsSection } from '@/lib/library/empowered-technique-display';
@@ -34,9 +38,13 @@ export function buildEmpoweredPowerSelectableItem(
     : [];
   const damageValue = formatPowerDamage(damageRows) || '-';
 
-  const energyRaw = totals.energy ?? powerData.energy ?? raw.energy;
+  const computed =
+    codex?.powerPartsDb?.length && codex?.techniquePartsDb?.length
+      ? computeEmpoweredTechniqueEnergyFromSaved(item, codex.powerPartsDb, codex.techniquePartsDb)
+      : null;
+  const energyRaw = computed?.totalEnergy ?? totals.energy ?? powerData.energy ?? raw.energy;
   const energyValue =
-    typeof energyRaw === 'number' || (typeof energyRaw === 'string' && energyRaw.trim())
+    typeof energyRaw === 'number' || (typeof energyRaw === 'string' && String(energyRaw).trim())
       ? String(energyRaw)
       : '-';
   const durationValue = formatDurationDisplay(powerData.duration ?? raw.duration);

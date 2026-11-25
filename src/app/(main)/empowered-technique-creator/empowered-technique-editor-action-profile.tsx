@@ -21,6 +21,7 @@ export type EmpoweredTechniqueEditorActionProfileProps = Pick<
   | 'attackMode'
   | 'onAttackModeChange'
   | 'sectionCosts'
+  | 'noAttackWarning'
 >;
 
 export function EmpoweredTechniqueEditorActionProfile({
@@ -32,6 +33,7 @@ export function EmpoweredTechniqueEditorActionProfile({
   attackMode,
   onAttackModeChange,
   sectionCosts,
+  noAttackWarning = null,
 }: EmpoweredTechniqueEditorActionProfileProps) {
   return (
     <CollapsibleSection
@@ -83,6 +85,11 @@ export function EmpoweredTechniqueEditorActionProfile({
           </select>
         </div>
       </div>
+      {noAttackWarning ? (
+        <p className="mt-3 text-sm text-warning-fg" role="status">
+          {noAttackWarning}
+        </p>
+      ) : null}
       <div className="mt-4">
         <Checkbox
           checked={isReaction}

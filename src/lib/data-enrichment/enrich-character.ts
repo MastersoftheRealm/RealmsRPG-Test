@@ -106,6 +106,7 @@ export function enrichCharacterData(
       userTechniques,
       techniquePartsDb || [],
       publicLibraries?.techniques,
+      powerPartsDb || [],
     ),
     weapons: enrichItems(
       toEquipmentArray(character.equipment?.weapons),
